@@ -15,8 +15,8 @@
   --es-ok: #3d9a6a;
   --es-warn: #c4a15a;
   --es-radius: 15px;
-  --es-radius-sm: 8px;
-  --es-radius-md: 10px;
+  --es-radius-sm: 15px;
+  --es-radius-md: 15px;
   --es-font: "Outfit", ui-sans-serif, system-ui, sans-serif;
 }
 
@@ -91,6 +91,8 @@ img {
   background: rgba(7, 7, 8, 0.94);
   color: var(--es-paper);
   border-bottom: 1px solid var(--es-line);
+  border-radius: var(--es-radius);
+  overflow: hidden;
   backdrop-filter: blur(12px);
 }
 
@@ -225,7 +227,9 @@ img {
   margin-top: 4rem;
   background: var(--es-ink);
   color: var(--es-paper);
-  border-top: 1px solid var(--es-line);
+  border: 1px solid var(--es-line);
+  border-radius: var(--es-radius);
+  overflow: hidden;
 }
 
 .es-footer-grid {
@@ -412,7 +416,7 @@ img {
   min-height: 48px;
   padding: 0 1.5rem;
   border: 0;
-  border-radius: var(--es-radius-md);
+  border-radius: var(--es-radius);
   background: var(--es-red);
   color: var(--es-paper);
   font: inherit;
@@ -547,4 +551,5 @@ img {
 .border-line { border-color: var(--es-line); }
 .rounded-card { border-radius: var(--es-radius); }
 .rounded-lg { border-radius: var(--es-radius); }
-.rounded-md { border-radius: var(--es-radius-md); }
+.rounded-md { border-radius: var(--es-radius); }
+.rounded-sm { border-radius: var(--es-radius); }

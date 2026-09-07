@@ -13,10 +13,10 @@
   --color-ok: #3d9a6a;
   --color-warn: #c4a15a;
   --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
-  --radius-sm: 8px;
-  --radius-md: 10px;
+  --radius-sm: 15px;
+  --radius-md: 15px;
   --radius-lg: 15px;
-  --radius-xl: 22px;
+  --radius-xl: 15px;
   --radius-card: 15px;
 }
 
