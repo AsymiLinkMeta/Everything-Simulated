@@ -92,7 +92,6 @@ img {
   color: var(--es-paper);
   border-bottom: 1px solid var(--es-line);
   border-radius: var(--es-radius);
-  overflow: hidden;
   backdrop-filter: blur(12px);
 }
 
