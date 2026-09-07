@@ -1,8 +1,8 @@
 import "./es-chrome";
 import { Link, Outlet } from "@tanstack/react-router";
+import { Navigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { Boxes, Calendar, ClipboardList, Shield, Users, Wrench } from "lucide-react";
-import { RedirectToSignIn } from "@/lib/auth/gates";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { getProfile } from "@/lib/es/server";
 import { AuthSlot, Logo } from "./bits";
@@ -27,7 +27,7 @@ export function StaffShell() {
   if (isPending || (user && profile.isPending)) {
     return <div className="es-page" style={{ display: "grid", placeItems: "center" }}>Opening workshop…</div>;
   }
-  if (!user) return <RedirectToSignIn />;
+  if (!user) return <Navigate to="/login" replace />;
   if (!profile.data?.isStaff) {
     return (
       <div className="es-page" style={{ display: "grid", placeItems: "center", padding: 24 }}>

@@ -22,7 +22,7 @@ function Catalog() {
     const dollars = Number(draft[sku]);
     if (!Number.isFinite(dollars)) return;
     try {
-      await staffOverridePrice({ data: { sku, sellExGst: Math.round(dollars * 100) } });
+      await staffOverridePrice({ sku, sellExGst: Math.round(dollars * 100) });
       toast.success(`${sku} updated`);
       await qc.invalidateQueries({ queryKey: ["overrides"] });
     } catch {

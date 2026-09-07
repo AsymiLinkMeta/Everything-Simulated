@@ -20,7 +20,7 @@ function Book() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     try {
-      await requestBooking({ data: { kind, slot, notes } });
+      await requestBooking({ kind, slot, notes });
       toast.success("Booking requested");
       setNotes("");
       await qc.invalidateQueries({ queryKey: ["my-bookings"] });

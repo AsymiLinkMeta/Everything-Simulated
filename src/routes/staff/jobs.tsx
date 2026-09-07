@@ -16,7 +16,7 @@ function Jobs() {
 
   async function setStage(id: number, stage: string) {
     try {
-      await staffSetJobStage({ data: { id, stage } });
+      await staffSetJobStage({ id, stage });
       await qc.invalidateQueries({ queryKey: ["staff-jobs"] });
     } catch {
       toast.error("Could not update stage");

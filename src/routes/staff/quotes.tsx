@@ -15,7 +15,7 @@ function StaffQuotes() {
 
   async function convert(id: string) {
     try {
-      await staffCreateJob({ data: { quoteId: id, notes: "From quote" } });
+      await staffCreateJob({ quoteId: id, notes: "From quote" });
       toast.success("Job created");
       await qc.invalidateQueries({ queryKey: ["staff-jobs"] });
     } catch {

@@ -1,257 +1,242 @@
-import { createServerFn } from "@tanstack/react-start";
-import { authMiddleware } from "@/lib/auth/middleware";
-import { getSql } from "@/lib/db";
+import { supabase } from "@/lib/db";
 import { BRAND, GUIDES, PACKAGES, PRODUCT_MAP, PRODUCTS, RULES } from "./catalog";
 import { checkCart } from "./checkCart";
 import type { CartLine, StaffRole } from "./types";
 
 const STAFF: StaffRole[] = ["sales", "workshop", "content", "support", "admin"];
 
-async function ensureProfile(userId: string, email?: string | null, name?: string | null) {
-  const sql = await getSql();
-  const existing = await sql<{ user_id: string; role: string }>`
-    select user_id, role from profiles where user_id = ${userId}
-  `;
-  if (existing[0]) return existing[0];
-  const count = await sql<{ n: number }>`select count(*)::int as n from profiles where role = 'admin'`;
-  const role = (count[0]?.n ?? 0) === 0 ? "admin" : "customer";
-  await sql`
-    insert into profiles (user_id, email, display_name, role)
-    values (${userId}, ${email ?? null}, ${name ?? null}, ${role})
-  `;
-  return { user_id: userId, role };
+type Profile = { user_id: string; role: string; email: string | null; display_name: string | null };
+
+async function getCurrentUser() {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error("Not signed in");
+  return user;
 }
 
-export const getProfile = createServerFn({ method: "GET" })
-  .middleware([authMiddleware])
-  .handler(async ({ context }) => {
-    const row = await ensureProfile(context.userId);
-    return { userId: context.userId, role: row.role as StaffRole, isStaff: STAFF.includes(row.role as StaffRole) };
-  });
+async function ensureProfile(userId: string, email?: string | null, name?: string | null): Promise<Profile> {
+  const { data: existing } = await supabase
+    .from("profiles")
+    .select("user_id, role, email, display_name")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (existing) return existing as Profile;
 
-export const saveQuote = createServerFn({ method: "POST" })
-  .middleware([authMiddleware])
-  .validator((d: { lines: CartLine[]; postcode?: string; title?: string }) => d)
-  .handler(async ({ context, data }) => {
-    const sql = await getSql();
-    await ensureProfile(context.userId);
-    const result = checkCart({ lines: data.lines });
-    const id = `ES-${Date.now().toString(36).toUpperCase()}`;
-    await sql`
-      insert into quotes (id, user_id, title, status, lines, check_ok, total_ex_gst, postcode)
-      values (
-        ${id},
-        ${context.userId},
-        ${data.title ?? "Custom build"},
-        ${result.ok ? "quoted" : "draft"},
-        ${JSON.stringify(data.lines)}::jsonb,
-        ${result.ok},
-        ${result.totalExGst},
-        ${data.postcode ?? null}
-      )
-    `;
-    return { id, result };
-  });
+  const { data: allProfiles } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("role", "admin");
+  const role = (allProfiles?.length ?? 0) === 0 ? "admin" : "customer";
 
-export const listMyQuotes = createServerFn({ method: "GET" })
-  .middleware([authMiddleware])
-  .handler(async ({ context }) => {
-    const sql = await getSql();
-    return sql<{
-      id: string;
-      title: string;
-      status: string;
-      total_ex_gst: number;
-      check_ok: boolean;
-      created_at: string;
-    }>`
-      select id, title, status, total_ex_gst, check_ok, created_at
-      from quotes where user_id = ${context.userId}
-      order by created_at desc
-    `;
-  });
+  const { data: created } = await supabase
+    .from("profiles")
+    .insert({ user_id: userId, email: email ?? null, display_name: name ?? null, role })
+    .select("user_id, role, email, display_name")
+    .maybeSingle();
+  return (created ?? { user_id: userId, role, email: email ?? null, display_name: name ?? null }) as Profile;
+}
 
-export const requestBooking = createServerFn({ method: "POST" })
-  .middleware([authMiddleware])
-  .validator((d: { kind: string; slot?: string; notes?: string }) => d)
-  .handler(async ({ context, data }) => {
-    const sql = await getSql();
-    await ensureProfile(context.userId);
-    const rows = await sql<{ id: number }>`
-      insert into bookings (user_id, kind, slot, notes)
-      values (${context.userId}, ${data.kind}, ${data.slot ?? null}, ${data.notes ?? ""})
-      returning id
-    `;
-    return { id: rows[0]?.id };
-  });
+async function getProfileData() {
+  const user = await getCurrentUser();
+  const row = await ensureProfile(user.id, user.email, user.user_metadata?.display_name);
+  return {
+    userId: user.id,
+    role: row.role as StaffRole,
+    isStaff: STAFF.includes(row.role as StaffRole),
+  };
+}
 
-export const listMyBookings = createServerFn({ method: "GET" })
-  .middleware([authMiddleware])
-  .handler(async ({ context }) => {
-    const sql = await getSql();
-    return sql<{ id: number; kind: string; slot: string | null; status: string }>`
-      select id, kind, slot, status from bookings
-      where user_id = ${context.userId}
-      order by created_at desc
-    `;
-  });
+export async function getProfile() {
+  return getProfileData();
+}
 
-export const listMyJobs = createServerFn({ method: "GET" })
-  .middleware([authMiddleware])
-  .handler(async ({ context }) => {
-    const sql = await getSql();
-    return sql<{ id: number; stage: string; notes: string; quote_id: string | null }>`
-      select id, stage, notes, quote_id from jobs
-      where user_id = ${context.userId}
-      order by created_at desc
-    `;
+export async function saveQuote(data: { lines: CartLine[]; postcode?: string; title?: string }) {
+  const user = await getCurrentUser();
+  await ensureProfile(user.id, user.email);
+  const result = checkCart({ lines: data.lines });
+  const id = `ES-${Date.now().toString(36).toUpperCase()}`;
+  const { error } = await supabase.from("quotes").insert({
+    id,
+    user_id: user.id,
+    title: data.title ?? "Custom build",
+    status: result.ok ? "quoted" : "draft",
+    lines: JSON.stringify(data.lines),
+    check_ok: result.ok,
+    total_ex_gst: result.totalExGst,
+    postcode: data.postcode ?? null,
   });
+  if (error) throw new Error(error.message);
+  return { id, result };
+}
 
-async function requireStaff(userId: string) {
+export async function listMyQuotes() {
+  const user = await getCurrentUser();
+  const { data, error } = await supabase
+    .from("quotes")
+    .select("id, title, status, total_ex_gst, check_ok, created_at")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
+
+export async function requestBooking(data: { kind: string; slot?: string; notes?: string }) {
+  const user = await getCurrentUser();
+  await ensureProfile(user.id, user.email);
+  const { data: row, error } = await supabase
+    .from("bookings")
+    .insert({ user_id: user.id, kind: data.kind, slot: data.slot ?? null, notes: data.notes ?? "" })
+    .select("id")
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return { id: row?.id };
+}
+
+export async function listMyBookings() {
+  const user = await getCurrentUser();
+  const { data, error } = await supabase
+    .from("bookings")
+    .select("id, kind, slot, status")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
+
+export async function listMyJobs() {
+  const user = await getCurrentUser();
+  const { data, error } = await supabase
+    .from("jobs")
+    .select("id, stage, notes, quote_id")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
+
+async function requireStaff(userId: string): Promise<StaffRole> {
   const row = await ensureProfile(userId);
-  if (!STAFF.includes(row.role as StaffRole)) {
-    throw new Error("Staff access required");
-  }
+  if (!STAFF.includes(row.role as StaffRole)) throw new Error("Staff access required");
   return row.role as StaffRole;
 }
 
-export const staffListQuotes = createServerFn({ method: "GET" })
-  .middleware([authMiddleware])
-  .handler(async ({ context }) => {
-    await requireStaff(context.userId);
-    const sql = await getSql();
-    return sql<{
-      id: string;
-      user_id: string;
-      title: string;
-      status: string;
-      total_ex_gst: number;
-      check_ok: boolean;
-    }>`
-      select id, user_id, title, status, total_ex_gst, check_ok
-      from quotes order by created_at desc limit 50
-    `;
-  });
+export async function staffListQuotes() {
+  const user = await getCurrentUser();
+  await requireStaff(user.id);
+  const { data, error } = await supabase
+    .from("quotes")
+    .select("id, user_id, title, status, total_ex_gst, check_ok")
+    .order("created_at", { ascending: false })
+    .limit(50);
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
 
-export const staffListJobs = createServerFn({ method: "GET" })
-  .middleware([authMiddleware])
-  .handler(async ({ context }) => {
-    await requireStaff(context.userId);
-    const sql = await getSql();
-    return sql<{ id: number; user_id: string; stage: string; notes: string; quote_id: string | null }>`
-      select id, user_id, stage, notes, quote_id from jobs order by created_at desc limit 50
-    `;
-  });
+export async function staffListJobs() {
+  const user = await getCurrentUser();
+  await requireStaff(user.id);
+  const { data, error } = await supabase
+    .from("jobs")
+    .select("id, user_id, stage, notes, quote_id")
+    .order("created_at", { ascending: false })
+    .limit(50);
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
 
-export const staffListBookings = createServerFn({ method: "GET" })
-  .middleware([authMiddleware])
-  .handler(async ({ context }) => {
-    await requireStaff(context.userId);
-    const sql = await getSql();
-    return sql<{
-      id: number;
-      user_id: string;
-      kind: string;
-      slot: string | null;
-      status: string;
-      notes: string;
-    }>`
-      select id, user_id, kind, slot, status, notes from bookings
-      order by created_at desc limit 50
-    `;
-  });
+export async function staffListBookings() {
+  const user = await getCurrentUser();
+  await requireStaff(user.id);
+  const { data, error } = await supabase
+    .from("bookings")
+    .select("id, user_id, kind, slot, status, notes")
+    .order("created_at", { ascending: false })
+    .limit(50);
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
 
-export const staffSetJobStage = createServerFn({ method: "POST" })
-  .middleware([authMiddleware])
-  .validator((d: { id: number; stage: string }) => d)
-  .handler(async ({ context, data }) => {
-    await requireStaff(context.userId);
-    const sql = await getSql();
-    await sql`update jobs set stage = ${data.stage} where id = ${data.id}`;
-    return { ok: true };
-  });
+export async function staffSetJobStage(data: { id: number; stage: string }) {
+  const user = await getCurrentUser();
+  await requireStaff(user.id);
+  const { error } = await supabase.from("jobs").update({ stage: data.stage }).eq("id", data.id);
+  if (error) throw new Error(error.message);
+  return { ok: true };
+}
 
-export const staffCreateJob = createServerFn({ method: "POST" })
-  .middleware([authMiddleware])
-  .validator((d: { quoteId?: string; notes?: string }) => d)
-  .handler(async ({ context, data }) => {
-    await requireStaff(context.userId);
-    const sql = await getSql();
-    const q = data.quoteId
-      ? await sql<{ user_id: string }>`select user_id from quotes where id = ${data.quoteId}`
-      : [];
-    const owner = q[0]?.user_id ?? context.userId;
-    const rows = await sql<{ id: number }>`
-      insert into jobs (user_id, quote_id, notes)
-      values (${owner}, ${data.quoteId ?? null}, ${data.notes ?? ""})
-      returning id
-    `;
-    return { id: rows[0]?.id };
-  });
+export async function staffCreateJob(data: { quoteId?: string; notes?: string }) {
+  const user = await getCurrentUser();
+  await requireStaff(user.id);
+  let owner = user.id;
+  if (data.quoteId) {
+    const { data: q } = await supabase
+      .from("quotes")
+      .select("user_id")
+      .eq("id", data.quoteId)
+      .maybeSingle();
+    if (q?.user_id) owner = q.user_id;
+  }
+  const { data: row, error } = await supabase
+    .from("jobs")
+    .insert({ user_id: owner, quote_id: data.quoteId ?? null, notes: data.notes ?? "" })
+    .select("id")
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return { id: row?.id };
+}
 
-export const staffSetRole = createServerFn({ method: "POST" })
-  .middleware([authMiddleware])
-  .validator((d: { userId: string; role: StaffRole }) => d)
-  .handler(async ({ context, data }) => {
-    const role = await requireStaff(context.userId);
-    if (role !== "admin") throw new Error("Admin only");
-    const sql = await getSql();
-    await sql`update profiles set role = ${data.role} where user_id = ${data.userId}`;
-    return { ok: true };
-  });
+export async function staffSetRole(data: { userId: string; role: StaffRole }) {
+  const user = await getCurrentUser();
+  const role = await requireStaff(user.id);
+  if (role !== "admin") throw new Error("Admin only");
+  const { error } = await supabase.from("profiles").update({ role: data.role }).eq("user_id", data.userId);
+  if (error) throw new Error(error.message);
+  return { ok: true };
+}
 
-export const staffListProfiles = createServerFn({ method: "GET" })
-  .middleware([authMiddleware])
-  .handler(async ({ context }) => {
-    const role = await requireStaff(context.userId);
-    if (role !== "admin") throw new Error("Admin only");
-    const sql = await getSql();
-    return sql<{ user_id: string; email: string | null; display_name: string | null; role: string }>`
-      select user_id, email, display_name, role from profiles order by created_at desc
-    `;
-  });
+export async function staffListProfiles() {
+  const user = await getCurrentUser();
+  const role = await requireStaff(user.id);
+  if (role !== "admin") throw new Error("Admin only");
+  const { data, error } = await supabase
+    .from("profiles")
+    .select("user_id, email, display_name, role")
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
 
-export const staffOverridePrice = createServerFn({ method: "POST" })
-  .middleware([authMiddleware])
-  .validator((d: { sku: string; sellExGst: number }) => d)
-  .handler(async ({ context, data }) => {
-    const role = await requireStaff(context.userId);
-    if (role !== "admin" && role !== "sales") throw new Error("Not allowed");
-    const sql = await getSql();
-    await sql`
-      insert into product_overrides (sku, sell_ex_gst, updated_at)
-      values (${data.sku}, ${data.sellExGst}, now())
-      on conflict (sku) do update set sell_ex_gst = ${data.sellExGst}, updated_at = now()
-    `;
-    return { ok: true };
-  });
+export async function staffOverridePrice(data: { sku: string; sellExGst: number }) {
+  const user = await getCurrentUser();
+  const role = await requireStaff(user.id);
+  if (role !== "admin" && role !== "sales") throw new Error("Not allowed");
+  const { error } = await supabase
+    .from("product_overrides")
+    .upsert({ sku: data.sku, sell_ex_gst: data.sellExGst, updated_at: new Date().toISOString() });
+  if (error) throw new Error(error.message);
+  return { ok: true };
+}
 
-export const staffListOverrides = createServerFn({ method: "GET" })
-  .middleware([authMiddleware])
-  .handler(async ({ context }) => {
-    await requireStaff(context.userId);
-    const sql = await getSql();
-    return sql<{ sku: string; sell_ex_gst: number | null; stock_status: string | null }>`
-      select sku, sell_ex_gst, stock_status from product_overrides
-    `;
-  });
+export async function staffListOverrides() {
+  const user = await getCurrentUser();
+  await requireStaff(user.id);
+  const { data, error } = await supabase
+    .from("product_overrides")
+    .select("sku, sell_ex_gst, stock_status");
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
 
-export const askBuilder = createServerFn({ method: "POST" })
-  .middleware([authMiddleware])
-  .validator((d: { message: string; lines: CartLine[]; driverWeightKg?: number }) => d)
-  .handler(async ({ context, data }) => {
-    const sql = await getSql();
-    await ensureProfile(context.userId);
-    await sql`
-      insert into chat_messages (user_id, role, content)
-      values (${context.userId}, 'user', ${data.message.slice(0, 4000)})
-    `;
-    const result = checkCart({ lines: data.lines, driverWeightKg: data.driverWeightKg });
-    const apiKey = process.env.XAI_API_KEY;
-    let reply: string;
-    if (!apiKey) {
-      reply = fallbackReply(data.message, result);
-    } else {
+export async function askBuilder(data: { message: string; lines: CartLine[]; driverWeightKg?: number }) {
+  const user = await getCurrentUser();
+  await ensureProfile(user.id, user.email);
+  await supabase.from("chat_messages").insert({ user_id: user.id, role: "user", content: data.message.slice(0, 4000) });
+  const result = checkCart({ lines: data.lines, driverWeightKg: data.driverWeightKg });
+  const apiKey = import.meta.env.VITE_XAI_API_KEY;
+  let reply: string;
+  if (!apiKey) {
+    reply = fallbackReply(data.message, result);
+  } else {
+    try {
       const res = await fetch("https://api.x.ai/v1/chat/completions", {
         method: "POST",
         headers: {
@@ -279,24 +264,25 @@ export const askBuilder = createServerFn({ method: "POST" })
         const body = (await res.json()) as { choices: { message: { content: string } }[] };
         reply = body.choices[0]?.message.content ?? fallbackReply(data.message, result);
       }
+    } catch {
+      reply = fallbackReply(data.message, result);
     }
-    await sql`
-      insert into chat_messages (user_id, role, content)
-      values (${context.userId}, 'assistant', ${reply})
-    `;
-    return { reply, result };
-  });
+  }
+  await supabase.from("chat_messages").insert({ user_id: user.id, role: "assistant", content: reply });
+  return { reply, result };
+}
 
-export const listChat = createServerFn({ method: "GET" })
-  .middleware([authMiddleware])
-  .handler(async ({ context }) => {
-    const sql = await getSql();
-    return sql<{ role: string; content: string }>`
-      select role, content from chat_messages
-      where user_id = ${context.userId}
-      order by id desc limit 20
-    `;
-  });
+export async function listChat() {
+  const user = await getCurrentUser();
+  const { data, error } = await supabase
+    .from("chat_messages")
+    .select("role, content")
+    .eq("user_id", user.id)
+    .order("id", { ascending: false })
+    .limit(20);
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
 
 function fallbackReply(message: string, result: ReturnType<typeof checkCart>) {
   const q = message.toLowerCase();
@@ -316,8 +302,8 @@ function fallbackReply(message: string, result: ReturnType<typeof checkCart>) {
   return `Cart is compatible. Total ${Math.round(result.totalExGst / 100)} AUD ex GST. Save a quote in your account or book a showroom session. Guides covering cost, motion vs haptic, and delivery are on the site.`;
 }
 
-export const publicCatalog = createServerFn({ method: "GET" }).handler(async () => {
+export async function publicCatalog() {
   return { products: PRODUCTS, packages: PACKAGES, guides: GUIDES, rules: RULES, brand: BRAND };
-});
+}
 
 export { PRODUCT_MAP };

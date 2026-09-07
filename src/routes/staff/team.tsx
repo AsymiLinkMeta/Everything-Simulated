@@ -26,7 +26,7 @@ function Team() {
 
   async function setRole(userId: string, role: StaffRole) {
     try {
-      await staffSetRole({ data: { userId, role } });
+      await staffSetRole({ userId, role });
       toast.success("Role updated");
       await qc.invalidateQueries({ queryKey: ["profiles"] });
     } catch {

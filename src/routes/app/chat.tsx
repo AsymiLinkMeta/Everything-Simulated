@@ -28,7 +28,7 @@ function Chat() {
     setLocal((m) => [...m, { role: "user", content: text }]);
     setPending(true);
     try {
-      const res = await askBuilder({ data: { message: text, lines, driverWeightKg } });
+      const res = await askBuilder({ message: text, lines, driverWeightKg });
       setLocal((m) => [...m, { role: "assistant", content: res.reply }]);
     } catch {
       setLocal((m) => [...m, { role: "assistant", content: "Could not reach the expert. Try again." }]);

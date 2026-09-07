@@ -1,7 +1,7 @@
 import "./es-chrome";
 import { Link, Outlet } from "@tanstack/react-router";
+import { Navigate } from "react-router-dom";
 import { Calendar, Gauge, LayoutDashboard, MessageSquare, Wrench } from "lucide-react";
-import { RedirectToSignIn } from "@/lib/auth/gates";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { useQuery } from "@tanstack/react-query";
 import { getProfile } from "@/lib/es/server";
@@ -26,7 +26,7 @@ export function AppShell() {
   if (isPending) {
     return <div className="es-page" style={{ display: "grid", placeItems: "center" }}>Loading account…</div>;
   }
-  if (!user) return <RedirectToSignIn />;
+  if (!user) return <Navigate to="/login" replace />;
 
   return (
     <div className="es-page">

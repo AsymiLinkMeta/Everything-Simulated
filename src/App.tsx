@@ -1,5 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { SiteShell } from "@/components/es/site-shell";
+import { AppShell } from "@/components/es/app-shell";
+import { StaffShell } from "@/components/es/staff-shell";
 import { Home } from "@/routes/index";
 import { Route as BuildsRoute } from "@/routes/_site/builds/index";
 import { Route as BuildSlugRoute } from "@/routes/_site/builds/$slug";
@@ -15,6 +17,17 @@ import { Route as ContactRoute } from "@/routes/_site/contact";
 import { Route as PrivacyRoute } from "@/routes/_site/privacy";
 import { Route as TermsRoute } from "@/routes/_site/terms";
 import { Route as LoginRoute } from "@/routes/login";
+import { Route as AppIndexRoute } from "@/routes/app/index";
+import { Route as AppBuildRoute } from "@/routes/app/build";
+import { Route as AppChatRoute } from "@/routes/app/chat";
+import { Route as AppQuotesRoute } from "@/routes/app/quotes";
+import { Route as AppBookRoute } from "@/routes/app/book";
+import { Route as StaffIndexRoute } from "@/routes/staff/index";
+import { Route as StaffCatalogRoute } from "@/routes/staff/catalog";
+import { Route as StaffQuotesRoute } from "@/routes/staff/quotes";
+import { Route as StaffJobsRoute } from "@/routes/staff/jobs";
+import { Route as StaffBookingsRoute } from "@/routes/staff/bookings";
+import { Route as StaffTeamRoute } from "@/routes/staff/team";
 
 function Page({ C }: { C: React.ComponentType }) {
   return (
@@ -39,6 +52,17 @@ export default function App() {
   const Privacy = PrivacyRoute.component!;
   const Terms = TermsRoute.component!;
   const Login = LoginRoute.component!;
+  const AppIndex = AppIndexRoute.component!;
+  const AppBuild = AppBuildRoute.component!;
+  const AppChat = AppChatRoute.component!;
+  const AppQuotes = AppQuotesRoute.component!;
+  const AppBook = AppBookRoute.component!;
+  const StaffIndex = StaffIndexRoute.component!;
+  const StaffCatalog = StaffCatalogRoute.component!;
+  const StaffQuotes = StaffQuotesRoute.component!;
+  const StaffJobs = StaffJobsRoute.component!;
+  const StaffBookings = StaffBookingsRoute.component!;
+  const StaffTeam = StaffTeamRoute.component!;
 
   return (
     <Routes>
@@ -57,8 +81,21 @@ export default function App() {
       <Route path="/privacy" element={<Page C={Privacy} />} />
       <Route path="/terms" element={<Page C={Terms} />} />
       <Route path="/login" element={<Login />} />
-      <Route path="/app/*" element={<Navigate to="/login" replace />} />
-      <Route path="/staff/*" element={<Navigate to="/login" replace />} />
+      <Route path="/app" element={<AppShell />}>
+        <Route index element={<AppIndex />} />
+        <Route path="build" element={<AppBuild />} />
+        <Route path="chat" element={<AppChat />} />
+        <Route path="quotes" element={<AppQuotes />} />
+        <Route path="book" element={<AppBook />} />
+      </Route>
+      <Route path="/staff" element={<StaffShell />}>
+        <Route index element={<StaffIndex />} />
+        <Route path="catalog" element={<StaffCatalog />} />
+        <Route path="quotes" element={<StaffQuotes />} />
+        <Route path="jobs" element={<StaffJobs />} />
+        <Route path="bookings" element={<StaffBookings />} />
+        <Route path="team" element={<StaffTeam />} />
+      </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

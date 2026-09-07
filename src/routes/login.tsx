@@ -48,20 +48,24 @@ function Login() {
         </div>
         {authEnabled ? (
           <>
-            <div className="space-y-2">
-              {GROK_PROVIDERS.map((p) => (
-                <Button
-                  key={p.providerId}
-                  type="button"
-                  variant="outline"
-                  className="w-full"
-                  onClick={() => signIn(p.providerId, { callbackURL: "/app" })}
-                >
-                  Continue with {p.label}
-                </Button>
-              ))}
-            </div>
-            <p className="text-center text-xs text-subtle">or email</p>
+            {GROK_PROVIDERS.length > 0 && (
+              <>
+                <div className="space-y-2">
+                  {GROK_PROVIDERS.map((p) => (
+                    <Button
+                      key={p.providerId}
+                      type="button"
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => signIn(p.providerId, { callbackURL: "/app" })}
+                    >
+                      Continue with {p.label}
+                    </Button>
+                  ))}
+                </div>
+                <p className="text-center text-xs text-subtle">or email</p>
+              </>
+            )}
             <form className="space-y-3" onSubmit={onEmail}>
               {mode === "up" ? (
                 <Input
