@@ -1,6 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { GROK_PROVIDERS, authClient, authEnabled, signIn } from "@/lib/auth/client";
+import { useAuthState } from "@/lib/auth/provider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Logo } from "@/components/es/bits";
@@ -23,19 +25,33 @@ function Login() {
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
+  const navigate = useNavigate();
+  const { user } = useAuthState();
+
+  if (user) {
+    navigate("/app", { replace: true });
+  }
 
   async function onEmail(e: React.FormEvent) {
     e.preventDefault();
     setPending(true);
     setError(null);
-    const fn =
-      mode === "up"
-        ? authClient.signUp.email({ email, password, name, callbackURL: "/app" })
-        : authClient.signIn.email({ email, password, callbackURL: "/app" });
-    const { error: err } = await fn;
-    setPending(false);
-    if (err) setError(err.message ?? "Could not sign in");
-    else window.location.href = "/app";
+    if (mode === "up") {
+      const { error: err } = await authClient.signUp.email({ email, password, name, callbackURL: "/app" });
+      setPending(false);
+      if (err) {
+        setError(err.message ?? "Could not create account");
+        return;
+      }
+    } else {
+      const { error: err } = await authClient.signIn.email({ email, password, callbackURL: "/app" });
+      setPending(false);
+      if (err) {
+        setError(err.message ?? "Could not sign in");
+        return;
+      }
+    }
+    navigate("/app", { replace: true });
   }
 
   return (
