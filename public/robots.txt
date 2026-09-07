@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /app
+Disallow: /staff
+Disallow: /login
+Disallow: /api/
+
+Sitemap: https://everythingsimulated.com.au/sitemap.xml
