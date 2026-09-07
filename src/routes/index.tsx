@@ -22,11 +22,11 @@ export function Home() {
       <JsonLd data={localBusinessLd()} />
       <JsonLd data={faqLd(FAQS)} />
       <section className="es-hero">
-        <img src="/rigs/hero.jpg" alt="Everything Simulated Gold Coast racing simulator studio" className="es-hero-img" />
+        <img src="/rigs/Everything_Simulated_Hero.jpg" alt="Driver using a triple-screen racing simulator" className="es-hero-img" />
         <div className="es-hero-mask" />
         <div className="es-hero-copy">
           <p className="es-kicker">Gold Coast · Australia-wide</p>
-          <h1>Racing simulators, built properly.</h1>
+          <h1>Turn Your Racing Dreams Into Reality.</h1>
           <p className="lead">
             Assembled and QA’d in our Gold Coast workshop. Compatibility checked before deposit.
             Crate freight to every capital city.
