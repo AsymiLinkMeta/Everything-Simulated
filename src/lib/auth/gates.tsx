@@ -12,7 +12,7 @@ export function RedirectToSignIn() {
         </p>
         <Link
           to="/login"
-          className="inline-flex min-h-11 items-center text-sm text-paper"
+          className="inline-flex min-h-11 items-center rounded-[15px] border border-white/10 bg-black px-4 text-sm text-white transition-colors hover:border-white/20 hover:bg-black/90"
         >
           Go to sign in
         </Link>
@@ -32,7 +32,7 @@ export function UserButton() {
       </span>
       <button
         type="button"
-        className="grid size-8 place-items-center rounded-md border border-line text-xs font-medium text-paper"
+        className="grid size-8 place-items-center rounded-[15px] border border-white/10 bg-black text-xs font-medium text-white"
         onClick={() => authClient.signOut().then(() => (window.location.href = "/"))}
         title="Sign out"
       >

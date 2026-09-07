@@ -29,7 +29,7 @@ export function AuthSlot() {
   return (
     <Link
       to="/login"
-      className="inline-flex min-h-11 items-center px-3 text-sm text-muted hover:text-paper"
+      className="inline-flex min-h-11 items-center rounded-[15px] border border-white/10 bg-black px-4 text-sm text-white transition-colors hover:border-white/20 hover:bg-black/90"
     >
       Sign in
     </Link>

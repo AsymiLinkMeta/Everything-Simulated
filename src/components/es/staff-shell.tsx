@@ -38,7 +38,7 @@ export function StaffShell() {
           <p className="text-sm text-muted">
             This portal is for workshop, sales and admin. The first signed-in account becomes admin.
           </p>
-          <Link to="/app" className="inline-flex min-h-11 items-center text-sm text-paper">
+          <Link to="/app" className="inline-flex min-h-11 items-center rounded-[15px] border border-white/10 bg-black px-4 text-sm text-white transition-colors hover:border-white/20 hover:bg-black/90">
             Back to customer app
           </Link>
         </div>
@@ -61,7 +61,7 @@ export function StaffShell() {
             <Link
               key={t.to}
               to={t.to}
-              className="flex min-h-11 items-center gap-2 rounded-md px-3 text-sm text-muted hover:bg-raised hover:text-paper"
+              className="flex min-h-11 items-center gap-2 rounded-[15px] border border-white/10 bg-black px-3 text-sm text-white transition-colors hover:border-white/20 hover:bg-black/90"
               activeOptions={{ exact: t.to === "/staff" }}
               activeProps={{ className: "bg-raised text-paper" }}
             >
@@ -70,7 +70,7 @@ export function StaffShell() {
             </Link>
           ))}
         </nav>
-        <Link to="/app" className="mt-auto px-4 py-4 text-sm text-muted hover:text-paper">
+        <Link to="/app" className="mt-auto rounded-[15px] border border-white/10 bg-black px-4 py-4 text-sm text-white transition-colors hover:border-white/20 hover:bg-black/90">
           Customer app
         </Link>
       </aside>
@@ -87,7 +87,7 @@ export function StaffShell() {
             <Link
               key={t.to}
               to={t.to}
-              className="flex min-h-14 flex-col items-center justify-center gap-1 text-xs text-muted"
+              className="flex min-h-14 flex-col items-center justify-center gap-1 rounded-[15px] px-2 text-xs text-white"
               activeOptions={{ exact: t.to === "/staff" }}
               activeProps={{ className: "text-paper" }}
             >

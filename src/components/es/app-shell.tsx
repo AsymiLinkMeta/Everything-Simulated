@@ -42,7 +42,7 @@ export function AppShell() {
               <Link
                 key={t.to}
                 to={t.to}
-                className="inline-flex min-h-11 items-center gap-2 px-3 text-sm text-muted hover:text-paper"
+                className="inline-flex min-h-11 items-center gap-2 rounded-[15px] border border-white/10 bg-black px-3 text-sm text-white transition-colors hover:border-white/20 hover:bg-black/90"
                 activeOptions={{ exact: t.to === "/app" }}
                 activeProps={{ className: "text-paper" }}
               >
@@ -52,7 +52,7 @@ export function AppShell() {
             ))}
           </nav>
           {profile.data?.isStaff ? (
-            <Link to="/staff" className="hidden text-sm text-esred md:inline">
+            <Link to="/staff" className="hidden rounded-[15px] border border-white/10 bg-black px-4 text-sm text-esred md:inline">
               Staff
             </Link>
           ) : null}
@@ -68,7 +68,7 @@ export function AppShell() {
             <Link
               key={t.to}
               to={t.to}
-              className="flex min-h-14 flex-col items-center justify-center gap-1 text-xs text-muted"
+              className="flex min-h-14 flex-col items-center justify-center gap-1 rounded-[15px] px-2 text-xs text-white"
               activeOptions={{ exact: t.to === "/app" }}
               activeProps={{ className: "text-paper" }}
             >
