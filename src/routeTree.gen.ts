@@ -38,7 +38,6 @@ import { Route as SiteGuidesIndexRouteImport } from './routes/_site/guides/index
 import { Route as SiteGuidesSlugRouteImport } from './routes/_site/guides/$slug'
 import { Route as SiteShopIndexRouteImport } from './routes/_site/shop/index'
 import { Route as SiteShopSkuRouteImport } from './routes/_site/shop/$sku'
-import { Route as ApiAuthSplatRouteImport } from './routes/api/auth/$'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -184,11 +183,6 @@ const SiteShopSkuRoute = SiteShopSkuRouteImport.update({
   path: '/shop/$sku',
   getParentRoute: () => SiteRoute,
 } as any)
-const ApiAuthSplatRoute = ApiAuthSplatRouteImport.update({
-  id: '/api/auth/$',
-  path: '/api/auth/$',
-  getParentRoute: () => rootRouteImport,
-} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -215,7 +209,6 @@ export interface FileRoutesByFullPath {
   '/builds/$slug': typeof SiteBuildsSlugRoute
   '/guides/$slug': typeof SiteGuidesSlugRoute
   '/shop/$sku': typeof SiteShopSkuRoute
-  '/api/auth/$': typeof ApiAuthSplatRoute
   '/au/': typeof SiteAuIndexRoute
   '/builds/': typeof SiteBuildsIndexRoute
   '/guides/': typeof SiteGuidesIndexRoute
@@ -244,7 +237,6 @@ export interface FileRoutesByTo {
   '/builds/$slug': typeof SiteBuildsSlugRoute
   '/guides/$slug': typeof SiteGuidesSlugRoute
   '/shop/$sku': typeof SiteShopSkuRoute
-  '/api/auth/$': typeof ApiAuthSplatRoute
   '/au': typeof SiteAuIndexRoute
   '/builds': typeof SiteBuildsIndexRoute
   '/guides': typeof SiteGuidesIndexRoute
@@ -277,7 +269,6 @@ export interface FileRoutesById {
   '/_site/builds/$slug': typeof SiteBuildsSlugRoute
   '/_site/guides/$slug': typeof SiteGuidesSlugRoute
   '/_site/shop/$sku': typeof SiteShopSkuRoute
-  '/api/auth/$': typeof ApiAuthSplatRoute
   '/_site/au/': typeof SiteAuIndexRoute
   '/_site/builds/': typeof SiteBuildsIndexRoute
   '/_site/guides/': typeof SiteGuidesIndexRoute
@@ -310,7 +301,6 @@ export interface FileRouteTypes {
     | '/builds/$slug'
     | '/guides/$slug'
     | '/shop/$sku'
-    | '/api/auth/$'
     | '/au/'
     | '/builds/'
     | '/guides/'
@@ -339,7 +329,6 @@ export interface FileRouteTypes {
     | '/builds/$slug'
     | '/guides/$slug'
     | '/shop/$sku'
-    | '/api/auth/$'
     | '/au'
     | '/builds'
     | '/guides'
@@ -371,7 +360,6 @@ export interface FileRouteTypes {
     | '/_site/builds/$slug'
     | '/_site/guides/$slug'
     | '/_site/shop/$sku'
-    | '/api/auth/$'
     | '/_site/au/'
     | '/_site/builds/'
     | '/_site/guides/'
@@ -384,7 +372,6 @@ export interface RootRouteChildren {
   StaffRouteRoute: typeof StaffRouteRouteWithChildren
   SiteRoute: typeof SiteRouteWithChildren
   LoginRoute: typeof LoginRoute
-  ApiAuthSplatRoute: typeof ApiAuthSplatRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -592,13 +579,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SiteShopSkuRouteImport
       parentRoute: typeof SiteRoute
     }
-    '/api/auth/$': {
-      id: '/api/auth/$'
-      path: '/api/auth/$'
-      fullPath: '/api/auth/$'
-      preLoaderRoute: typeof ApiAuthSplatRouteImport
-      parentRoute: typeof rootRouteImport
-    }
   }
 }
 
@@ -684,7 +664,6 @@ const rootRouteChildren: RootRouteChildren = {
   StaffRouteRoute: StaffRouteRouteWithChildren,
   SiteRoute: SiteRouteWithChildren,
   LoginRoute: LoginRoute,
-  ApiAuthSplatRoute: ApiAuthSplatRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
