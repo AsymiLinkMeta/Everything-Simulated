@@ -495,41 +495,144 @@ img {
   color: var(--es-paper);
 }
 
-@media (min-width: 768px) {
-  .es-staff {
-    display: grid;
-    grid-template-columns: 220px minmax(0, 1fr);
-  }
+.es-staff-main {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
 }
 
-.es-sidebar a {
+/* ---- sidebar (desktop) ---- */
+.es-sidebar {
+  display: none;
+  flex-direction: column;
+  border-right: 1px solid var(--es-line);
+  background: var(--es-ink);
+  position: sticky;
+  top: 0;
+  height: 100dvh;
+}
+
+.es-sidebar-head {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 1rem;
+  border-bottom: 1px solid var(--es-line);
+}
+
+.es-sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.75rem 0.5rem;
+  flex: 1;
+  overflow-y: auto;
+}
+
+.es-sidebar-nav a,
+.es-sidebar-link {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   min-height: 44px;
   padding: 0 0.9rem;
-  margin: 0.15rem 0.5rem;
   color: var(--es-muted);
   text-decoration: none;
   font-size: 0.875rem;
   border: 1px solid transparent;
   border-radius: var(--es-radius);
+  transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease;
 }
 
-.es-sidebar a:hover,
-.es-sidebar a.is-active {
+.es-sidebar-nav a:hover,
+.es-sidebar-nav a.is-active {
   color: var(--es-paper);
   background: #151519;
   border-color: var(--es-red);
 }
 
-@media (min-width: 768px) {
-  .es-tabbar {
+.es-sidebar-link {
+  margin: 0.5rem 0.5rem 0.75rem;
+  color: var(--es-muted);
+  border-color: var(--es-line);
+}
+
+.es-sidebar-link:hover {
+  color: var(--es-red);
+  border-color: var(--es-red);
+}
+
+/* ---- staff top nav (mobile + tablet) ---- */
+.es-staff-topnav {
+  display: flex;
+  align-items: center;
+  gap: 0.15rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+  flex: 1;
+  min-width: 0;
+}
+
+.es-staff-topnav::-webkit-scrollbar {
+  display: none;
+}
+
+.es-staff-topnav-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 44px;
+  padding: 0 0.75rem;
+  color: var(--es-muted);
+  text-decoration: none;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+  border: 1px solid transparent;
+  border-radius: var(--es-radius);
+  transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease;
+}
+
+.es-staff-topnav-link:hover,
+.es-staff-topnav-link.is-active {
+  color: var(--es-paper);
+  background: #151519;
+  border-color: var(--es-red);
+}
+
+@media (min-width: 1024px) {
+  .es-staff-topnav {
     display: none;
   }
+}
+
+@media (min-width: 768px) {
+  .es-staff {
+    display: grid;
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+
   .es-sidebar {
     display: flex;
   }
+
+  .es-tabbar {
+    display: none;
+  }
+}
+
+/* ---- mobile tab bar (scrollable, shows all tabs) ---- */
+.es-tabbar-scroll {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.es-tabbar-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.es-tabbar-scroll a {
+  flex-shrink: 0;
 }
 
 /* Token utility fallbacks so Tailwind v3 / Bolt still paint the theme */

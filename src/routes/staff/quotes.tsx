@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { staffCreateJob, staffListQuotes } from "@/lib/es/server";
 import { aud } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { FileText } from "lucide-react";
 
 export const Route = createFileRoute("/staff/quotes")({
   component: StaffQuotes,
@@ -18,6 +19,7 @@ function StaffQuotes() {
       await staffCreateJob({ quoteId: id, notes: "From quote" });
       toast.success("Job created");
       await qc.invalidateQueries({ queryKey: ["staff-jobs"] });
+      await qc.invalidateQueries({ queryKey: ["staff-quotes"] });
     } catch {
       toast.error("Could not create job");
     }
@@ -29,21 +31,36 @@ function StaffQuotes() {
         <p className="es-kicker">Sales</p>
         <h1 className="mt-2 text-3xl font-medium">Quotes</h1>
       </div>
-      <ul className="space-y-3">
-        {quotes.data?.map((q) => (
-          <li key={q.id} className="es-card flex flex-wrap items-center justify-between gap-3 p-5">
-            <div>
-              <p className="font-medium">{q.id}</p>
-              <p className="text-sm text-muted">
-                {q.title} · {q.status} · {q.check_ok ? "clear" : "blocked"} · {aud(q.total_ex_gst)}
-              </p>
-            </div>
-            <Button size="sm" variant="outline" onClick={() => convert(q.id)}>
-              Convert to job
-            </Button>
-          </li>
-        ))}
-      </ul>
+      {quotes.isPending ? (
+        <ul className="space-y-3">
+          {[1, 2, 3].map((i) => (
+            <li key={i} className="es-card p-5">
+              <p className="text-muted">Loading…</p>
+            </li>
+          ))}
+        </ul>
+      ) : !quotes.data?.length ? (
+        <div className="es-card p-6 text-center">
+          <FileText className="mx-auto size-5 text-muted" />
+          <p className="mt-2 text-sm text-muted">No quotes submitted yet.</p>
+        </div>
+      ) : (
+        <ul className="space-y-3">
+          {quotes.data.map((q) => (
+            <li key={q.id} className="es-card flex flex-wrap items-center justify-between gap-3 p-5">
+              <div>
+                <p className="font-medium">{q.id}</p>
+                <p className="text-sm text-muted">
+                  {q.title} · <span className="capitalize">{q.status}</span> · {q.check_ok ? "clear" : "blocked"} · {aud(q.total_ex_gst)}
+                </p>
+              </div>
+              <Button size="sm" variant="outline" onClick={() => convert(q.id)}>
+                Convert to job
+              </Button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }

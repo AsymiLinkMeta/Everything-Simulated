@@ -2,7 +2,15 @@ import "./es-chrome";
 import { Link, Outlet } from "@tanstack/react-router";
 import { Navigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { Boxes, Calendar, ClipboardList, Shield, Users, Wrench } from "lucide-react";
+import {
+  Boxes,
+  Calendar,
+  ClipboardList,
+  FileText,
+  Shield,
+  Users,
+  Wrench,
+} from "lucide-react";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { getProfile } from "@/lib/es/server";
 import { AuthSlot, Logo } from "./bits";
@@ -10,7 +18,7 @@ import { AuthSlot, Logo } from "./bits";
 const TABS = [
   { to: "/staff", label: "Pipeline", icon: ClipboardList },
   { to: "/staff/catalog", label: "Catalog", icon: Boxes },
-  { to: "/staff/quotes", label: "Quotes", icon: Wrench },
+  { to: "/staff/quotes", label: "Quotes", icon: FileText },
   { to: "/staff/jobs", label: "Jobs", icon: Wrench },
   { to: "/staff/bookings", label: "Bookings", icon: Calendar },
   { to: "/staff/team", label: "Team", icon: Users },
@@ -25,7 +33,11 @@ export function StaffShell() {
   });
 
   if (isPending || (user && profile.isPending)) {
-    return <div className="es-page" style={{ display: "grid", placeItems: "center" }}>Opening workshop…</div>;
+    return (
+      <div className="es-page" style={{ display: "grid", placeItems: "center" }}>
+        Opening workshop…
+      </div>
+    );
   }
   if (!user) return <Navigate to="/login" replace />;
   if (!profile.data?.isStaff) {
@@ -48,7 +60,7 @@ export function StaffShell() {
   return (
     <div className="es-staff">
       <aside className="es-sidebar">
-        <div className="es-appbar" style={{ position: "static" }}>
+        <div className="es-sidebar-head">
           <Logo compact />
           <div>
             <p style={{ margin: 0, fontSize: 14, fontWeight: 500 }}>Staff</p>
@@ -57,7 +69,7 @@ export function StaffShell() {
             </p>
           </div>
         </div>
-        <nav>
+        <nav className="es-sidebar-nav">
           {TABS.map((t) => (
             <Link
               key={t.to}
@@ -70,20 +82,33 @@ export function StaffShell() {
             </Link>
           ))}
         </nav>
-        <Link to="/app" className="es-nav-link" style={{ marginTop: "auto" }}>
+        <Link to="/app" className="es-sidebar-link">
           Customer app
         </Link>
       </aside>
-      <div>
-        <header className="es-appbar" style={{ justifyContent: "flex-end" }}>
-          <Logo compact />
+      <div className="es-staff-main">
+        <header className="es-appbar" style={{ justifyContent: "space-between" }}>
+          <div className="es-staff-topnav">
+            {TABS.map((t) => (
+              <Link
+                key={t.to}
+                to={t.to}
+                activeOptions={{ exact: t.to === "/staff" }}
+                activeProps={{ className: "is-active" }}
+                className="es-staff-topnav-link"
+              >
+                <t.icon className="size-4" />
+                <span>{t.label}</span>
+              </Link>
+            ))}
+          </div>
           <AuthSlot />
         </header>
         <div className="es-wrap" style={{ paddingTop: 24, paddingBottom: 96 }}>
           <Outlet />
         </div>
-        <nav className="es-tabbar">
-          {TABS.slice(0, 5).map((t) => (
+        <nav className="es-tabbar es-tabbar-scroll">
+          {TABS.map((t) => (
             <Link
               key={t.to}
               to={t.to}
