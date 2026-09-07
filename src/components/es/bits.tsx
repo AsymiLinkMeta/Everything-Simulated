@@ -47,8 +47,16 @@ export function AuthSlot() {
   );
 }
 
+const COOKIE_KEY = "es-cookie-ack";
+
 export function CookieDisclaimer() {
-  const [dismissed, setDismissed] = useState(false);
+  const [dismissed, setDismissed] = useState(() => {
+    try {
+      return localStorage.getItem(COOKIE_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
   if (dismissed) return null;
   return (
     <div className="es-cookie-bar">
@@ -56,7 +64,19 @@ export function CookieDisclaimer() {
         We use essential cookies to keep you signed in and the cart working. By continuing you accept our use of cookies.{" "}
         <Link to="/privacy" className="es-cookie-link">Privacy policy</Link>
       </p>
-      <button type="button" className="es-cookie-close" aria-label="Dismiss cookie notice" onClick={() => setDismissed(true)}>
+      <button
+        type="button"
+        className="es-cookie-close"
+        aria-label="Dismiss cookie notice"
+        onClick={() => {
+          try {
+            localStorage.setItem(COOKIE_KEY, "1");
+          } catch {
+            // ignore storage errors (private mode, quota, etc.)
+          }
+          setDismissed(true);
+        }}
+      >
         OK
       </button>
     </div>
