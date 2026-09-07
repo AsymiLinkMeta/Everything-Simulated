@@ -1,4 +1,4 @@
-import { supabase } from "@/lib/db";
+import { supabase, supabaseAnonKey, supabaseUrl } from "@/lib/db";
 import { BRAND, GUIDES, PACKAGES, PRODUCT_MAP, PRODUCTS, RULES } from "./catalog";
 import { checkCart } from "./checkCart";
 import type { CartLine, StaffRole } from "./types";
@@ -303,42 +303,29 @@ export async function askBuilder(data: { message: string; lines: CartLine[]; dri
   await ensureProfile(user.id, user.email);
   await supabase.from("chat_messages").insert({ user_id: user.id, role: "user", content: data.message.slice(0, 4000) });
   const result = checkCart({ lines: data.lines, driverWeightKg: data.driverWeightKg });
-  const apiKey = import.meta.env.VITE_XAI_API_KEY;
+  const systemPrompt = `You are the Everything Simulated build expert on the Gold Coast. Phone ${BRAND.phone}. Never invent SKUs. Only recommend these packages: ${PACKAGES.map((p) => p.slug).join(", ")} and catalogue SKUs: ${PRODUCTS.map((p) => p.sku).join(", ")}. Compatibility is decided by the checker JSON — do not override a block. Prices are AUD ex GST. Be concise and premium.`;
+  const userContent = `Checker JSON: ${JSON.stringify(result)}\nCart: ${JSON.stringify(data.lines)}\nQuestion: ${data.message}`;
+
   let reply: string;
-  if (!apiKey) {
+  try {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData.session?.access_token;
+    if (!accessToken) throw new Error("No session");
+
+    const response = await fetch(`${supabaseUrl}/functions/v1/ask-builder`, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        Apikey: supabaseAnonKey,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ systemPrompt, userContent }),
+    });
+    if (!response.ok) throw new Error("AI request failed");
+    const body = (await response.json()) as { reply?: string };
+    reply = body.reply ?? fallbackReply(data.message, result);
+  } catch {
     reply = fallbackReply(data.message, result);
-  } else {
-    try {
-      const res = await fetch("https://api.x.ai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${apiKey}`,
-        },
-        body: JSON.stringify({
-          model: "grok-4.5",
-          max_tokens: 700,
-          messages: [
-            {
-              role: "system",
-              content: `You are the Everything Simulated build expert on the Gold Coast. Phone ${BRAND.phone}. Never invent SKUs. Only recommend these packages: ${PACKAGES.map((p) => p.slug).join(", ")} and catalogue SKUs: ${PRODUCTS.map((p) => p.sku).join(", ")}. Compatibility is decided by the checker JSON — do not override a block. Prices are AUD ex GST. Be concise and premium.`,
-            },
-            {
-              role: "user",
-              content: `Checker JSON: ${JSON.stringify(result)}\nCart: ${JSON.stringify(data.lines)}\nQuestion: ${data.message}`,
-            },
-          ],
-        }),
-      });
-      if (!res.ok) {
-        reply = fallbackReply(data.message, result);
-      } else {
-        const body = (await res.json()) as { choices: { message: { content: string } }[] };
-        reply = body.choices[0]?.message.content ?? fallbackReply(data.message, result);
-      }
-    } catch {
-      reply = fallbackReply(data.message, result);
-    }
   }
   await supabase.from("chat_messages").insert({ user_id: user.id, role: "assistant", content: reply });
   return { reply, result };

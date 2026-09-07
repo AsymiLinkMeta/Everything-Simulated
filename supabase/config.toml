@@ -3,3 +3,6 @@ verify_jwt = true
 
 [functions.create-staff-account]
 verify_jwt = true
+
+[functions.ask-builder]
+verify_jwt = true
