@@ -1,2 +1,5 @@
 [functions.generate-product-listing]
 verify_jwt = true
+
+[functions.create-staff-account]
+verify_jwt = true
