@@ -25,7 +25,7 @@ function Compatibility() {
         package, swap a chassis, and watch payload and torque update.
       </p>
       <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_360px]">
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-2">
           {PRODUCTS.map((item) => (
             <ProductTile key={item.sku} item={item} />
           ))}
