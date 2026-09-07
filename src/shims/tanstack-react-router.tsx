@@ -8,7 +8,7 @@ import {
   useParams,
 } from "react-router-dom";
 
-export { Outlet, Navigate };
+export { Outlet, Navigate, useLocation };
 
 type LinkProps = {
   to: string;

@@ -29,6 +29,7 @@ html {
 body {
   margin: 0;
   min-height: 100dvh;
+  overflow-x: hidden;
   background: var(--es-ink);
   color: var(--es-paper);
   font-family: var(--es-font);
@@ -45,6 +46,8 @@ img {
 /* ---- layout ---- */
 .es-page {
   min-height: 100dvh;
+  max-width: 100vw;
+  overflow-x: hidden;
   background: var(--es-ink);
   color: var(--es-paper);
   font-family: var(--es-font);
@@ -160,24 +163,19 @@ img {
   margin-left: auto;
 }
 
-.es-menu summary {
+.es-menu-toggle {
   display: flex;
   align-items: center;
   justify-content: center;
   min-height: 44px;
   min-width: 44px;
   padding: 0 0.75rem;
-  list-style: none;
   cursor: pointer;
   border: 1px solid var(--es-line);
   border-radius: var(--es-radius);
   background: var(--es-ink);
   color: var(--es-paper);
   font-size: 0.875rem;
-}
-
-.es-menu summary::-webkit-details-marker {
-  display: none;
 }
 
 .es-menu-panel {

@@ -1,6 +1,7 @@
 import "./es-chrome";
-import { Link, Outlet } from "@tanstack/react-router";
+import { Link, Outlet, useLocation } from "@tanstack/react-router";
 import { Phone } from "lucide-react";
+import { useEffect, useState } from "react";
 import { BRAND, CITIES, GUIDES, PACKAGES } from "@/lib/es/catalog";
 import { AuthSlot, CookieDisclaimer, Logo } from "./bits";
 
@@ -14,6 +15,13 @@ const NAV = [
 ] as const;
 
 export function SiteShell({ children }: { children?: React.ReactNode }) {
+  const location = useLocation();
+  const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    setMenuOpen(false);
+  }, [location.pathname]);
+
   return (
     <div className="es-page">
       <header className="es-header">
@@ -34,19 +42,23 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
             Account
           </Link>
           <AuthSlot />
-          <details className="es-menu">
-            <summary>Menu</summary>
-            <div className="es-menu-panel">
-              {NAV.map((n) => (
-                <Link key={n.to} to={n.to}>
-                  {n.label}
-                </Link>
-              ))}
-              <Link to="/app">Customer app</Link>
-              <Link to="/contact">Contact</Link>
-              <a href={`tel:${BRAND.phone.replace(/\s/g, "")}`}>{BRAND.phone}</a>
-            </div>
-          </details>
+          <div className={`es-menu ${menuOpen ? "is-open" : ""}`}>
+            <button type="button" className="es-menu-toggle" onClick={() => setMenuOpen((v) => !v)} aria-expanded={menuOpen}>
+              Menu
+            </button>
+            {menuOpen && (
+              <div className="es-menu-panel">
+                {NAV.map((n) => (
+                  <Link key={n.to} to={n.to}>
+                    {n.label}
+                  </Link>
+                ))}
+                <Link to="/app">Customer app</Link>
+                <Link to="/contact">Contact</Link>
+                <a href={`tel:${BRAND.phone.replace(/\s/g, "")}`}>{BRAND.phone}</a>
+              </div>
+            )}
+          </div>
         </div>
       </header>
       <main>{children ?? <Outlet />}</main>
