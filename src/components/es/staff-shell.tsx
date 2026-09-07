@@ -59,6 +59,9 @@ export function StaffShell() {
 
   return (
     <div className="es-staff">
+      <div className="es-staff-bg" aria-hidden="true">
+        <img src="/rigs/Everything_Simulated_Hero copy.jpg" alt="" />
+      </div>
       <aside className="es-sidebar">
         <div className="es-sidebar-head">
           <Logo compact />
