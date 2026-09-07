@@ -89,7 +89,10 @@ export function StaffShell() {
           Customer app
         </Link>
       </aside>
-      <div className="es-staff-main">
+      <div
+        className="es-staff-main"
+        style={{ height: "100dvh", minHeight: 0, overflowY: "auto", overscrollBehavior: "contain" }}
+      >
         <header className="es-appbar" style={{ justifyContent: "space-between" }}>
           <div className="es-staff-topnav">
             {TABS.map((t) => (
