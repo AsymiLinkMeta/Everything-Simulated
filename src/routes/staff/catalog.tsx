@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { Boxes, Sparkles, Trash2, X } from "lucide-react";
-import { PRODUCTS } from "@/lib/es/catalog";
+import { fetchProducts, invalidateProductCache } from "@/lib/es/product-cache";
 import {
   staffDeleteCatalogProduct,
   staffListCatalogProducts,
@@ -63,6 +63,7 @@ function Catalog() {
     queryKey: ["catalog-products"],
     queryFn: () => staffListCatalogProducts(),
   });
+  const allProducts = useQuery({ queryKey: ["products"], queryFn: () => fetchProducts() });
   const map = Object.fromEntries((overrides.data ?? []).map((o) => [o.sku, o.sell_ex_gst]));
   const [priceDraft, setPriceDraft] = useState<Record<string, string>>({});
 
@@ -119,7 +120,9 @@ function Catalog() {
         notes: editListing.notes,
       });
       toast.success(`${editListing.sku} saved to catalogue`);
+      invalidateProductCache();
       await qc.invalidateQueries({ queryKey: ["catalog-products"] });
+      await qc.invalidateQueries({ queryKey: ["products"] });
       resetGenerator();
     } catch {
       toast.error("Could not save listing");
@@ -132,7 +135,9 @@ function Catalog() {
     try {
       await staffDeleteCatalogProduct(id);
       toast.success(`${sku} removed`);
+      invalidateProductCache();
       await qc.invalidateQueries({ queryKey: ["catalog-products"] });
+      await qc.invalidateQueries({ queryKey: ["products"] });
     } catch {
       toast.error("Could not delete listing");
     }
@@ -416,7 +421,7 @@ function Catalog() {
               </tr>
             </thead>
             <tbody>
-              {PRODUCTS.map((p) => (
+              {(allProducts.data ?? []).map((p) => (
                 <tr key={p.sku} className="border-t border-line">
                   <td className="py-3 font-medium">{p.sku}</td>
                   <td>

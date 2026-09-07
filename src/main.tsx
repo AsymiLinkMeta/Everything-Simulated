@@ -5,8 +5,11 @@ import App from "./App";
 import { AuthProvider } from "@/lib/auth/provider";
 import { AppProviders } from "@/components/es/providers";
 import { ScrollManager } from "@/components/es/scroll-manager";
+import { fetchProducts } from "@/lib/es/product-cache";
 import "./es.css";
 import "./index.css";
+
+fetchProducts().catch(() => {});
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

@@ -1,4 +1,5 @@
-import { BRAND, CITIES, GUIDES, PACKAGES, PRODUCTS } from "./catalog";
+import { BRAND, CITIES, GUIDES, PACKAGES } from "./catalog";
+import { getCachedProducts } from "./product-cache";
 
 export const ORIGIN = "https://everythingsimulated.com.au";
 
@@ -96,7 +97,7 @@ export const allIndexPaths = [
   "/builds",
   ...PACKAGES.map((p) => `/builds/${p.slug}`),
   "/shop",
-  ...PRODUCTS.map((p) => `/shop/${p.sku}`),
+  ...getCachedProducts().map((p) => `/shop/${p.sku}`),
   "/compatibility",
   "/studio",
   "/guides",

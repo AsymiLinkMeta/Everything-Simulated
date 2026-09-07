@@ -2,7 +2,8 @@ import { Link } from "@tanstack/react-router";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { PACKAGES, PRODUCT_MAP } from "@/lib/es/catalog";
+import { PACKAGES } from "@/lib/es/catalog";
+import { getCachedProductMap } from "@/lib/es/product-cache";
 import { useCart } from "@/lib/es/cart-store";
 import { saveQuote } from "@/lib/es/server";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
@@ -66,7 +67,7 @@ export function CartPanel({ compact = false }: { compact?: boolean }) {
           <li className="text-sm text-muted">Cart is empty. Load a package or add parts from the shop.</li>
         ) : (
           lines.map((line) => {
-            const item = PRODUCT_MAP[line.sku];
+            const item = getCachedProductMap()[line.sku];
             return (
               <li key={line.sku} className="flex items-center gap-3 border-b border-line pb-3">
                 <div className="min-w-0 flex-1">

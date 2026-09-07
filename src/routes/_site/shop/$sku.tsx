@@ -1,32 +1,39 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { CartPanel } from "@/components/es/cart-panel";
 import { BackButton, JsonLd, Money, IncGst } from "@/components/es/bits";
-import { product, productImage, PRODUCTS } from "@/lib/es/catalog";
+import { fetchProducts, productImage } from "@/lib/es/product-cache";
 import { useCart } from "@/lib/es/cart-store";
 import { abs, breadcrumbLd, pageHead } from "@/lib/es/seo";
 
 export const Route = createFileRoute("/_site/shop/$sku")({
-  loader: ({ params }) => {
-    const item = product(params.sku);
-    if (!item) throw notFound();
-    return item;
-  },
-  head: ({ loaderData }) => {
-    if (!loaderData) return {};
+  head: ({ params }) => {
     return pageHead({
-      title: `${loaderData.brand} ${loaderData.name} | Sim racing Australia`,
-      description: `Buy ${loaderData.brand} ${loaderData.name} as part of a Gold Coast assembled racing simulator. Compatibility checked. Australia-wide freight.`,
-      path: `/shop/${loaderData.sku}`,
+      title: `${params.sku} | Sim racing Australia`,
+      description: "Gold Coast assembled racing simulator part. Compatibility checked. Australia-wide freight.",
+      path: `/shop/${params.sku}`,
     });
   },
   component: ProductPage,
 });
 
 function ProductPage() {
-  const item = Route.useLoaderData();
+  const { sku } = Route.useParams();
+  const products = useQuery({ queryKey: ["products"], queryFn: () => fetchProducts() });
+  const item = products.data?.find((p) => p.sku === sku);
+
   const add = useCart((s) => s.add);
-  const related = PRODUCTS.filter((p) => p.category === item.category && p.sku !== item.sku).slice(0, 3);
+  const related = item
+    ? (products.data ?? []).filter((p) => p.category === item.category && p.sku !== item.sku).slice(0, 3)
+    : [];
+
+  if (products.isPending) {
+    return <div className="mx-auto max-w-6xl px-4 py-16"><BackButton /><p className="text-sm text-muted">Loading…</p></div>;
+  }
+
+  if (!item) throw notFound();
+
   return (
     <div className="mx-auto max-w-6xl px-4 py-16">
       <BackButton />

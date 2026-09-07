@@ -1,4 +1,5 @@
-import { PRODUCT_MAP, RULES } from "./catalog";
+import { RULES } from "./catalog";
+import { getCachedProductMap } from "./product-cache";
 import type { CartLine, CheckIssue, CheckResult, CompatibilityRule, Product } from "./types";
 
 const UNIQUE = new Set(["chassis", "wheelbase", "motion", "pc", "seat"]);
@@ -13,7 +14,7 @@ export function checkCart(input: {
   rules?: CompatibilityRule[];
   driverWeightKg?: number;
 }): CheckResult {
-  const products = input.products ?? PRODUCT_MAP;
+  const products = input.products ?? getCachedProductMap();
   const rules = input.rules ?? RULES;
   const issues: CheckIssue[] = [];
   const expanded: { sku: string; qty: number; product: Product }[] = [];

@@ -1,4 +1,5 @@
-import type { CartLine, CityPage, CompatibilityRule, Guide, PackageSpec, Product } from "./types";
+import type { CartLine, CityPage, CompatibilityRule, Guide, PackageSpec } from "./types";
+import { getCachedProductMap } from "./product-cache";
 
 export const BRAND = {
   name: "Everything Simulated",
@@ -7,208 +8,6 @@ export const BRAND = {
   region: "Gold Coast, Queensland",
   shipping: "Australia-wide crate freight and optional install",
 };
-
-export const PRODUCTS: Product[] = [
-  {
-    sku: "tr120s",
-    brand: "Trak Racer",
-    name: "TR120S V2 Chassis",
-    category: "chassis",
-    sellExGst: 84900,
-    stock: "stock",
-    leadWeeks: [1, 2],
-    maxNm: 15,
-    payloadKg: 180,
-    mounts: ["tr_front_plate"],
-    image: "/rigs/starter.jpg",
-  },
-  {
-    sku: "xr1",
-    brand: "Exodus",
-    name: "XR1 Heavy-Duty Frame",
-    category: "chassis",
-    sellExGst: 89900,
-    stock: "stock",
-    leadWeeks: [2, 3],
-    maxNm: 28,
-    payloadKg: 260,
-    mounts: ["exodus_deck", "simagic_side"],
-    image: "/rigs/haptic.jpg",
-  },
-  {
-    sku: "alpha-evo-12",
-    brand: "Simagic",
-    name: "Alpha EVO 12Nm Wheelbase",
-    category: "wheelbase",
-    sellExGst: 72900,
-    stock: "stock",
-    leadWeeks: [1, 2],
-    maxNm: 12,
-    qr: "simagic_qr",
-    mounts: ["simagic_side", "tr_front_plate"],
-  },
-  {
-    sku: "alpha-15",
-    brand: "Simagic",
-    name: "Alpha 15Nm Wheelbase",
-    category: "wheelbase",
-    sellExGst: 98900,
-    stock: "stock",
-    leadWeeks: [2, 3],
-    maxNm: 15,
-    qr: "simagic_qr",
-    mounts: ["simagic_side", "exodus_deck"],
-  },
-  {
-    sku: "gt-neo",
-    brand: "Simagic",
-    name: "GT NEO Wheel",
-    category: "wheel",
-    sellExGst: 42900,
-    stock: "stock",
-    leadWeeks: [1, 2],
-    qr: "simagic_qr",
-  },
-  {
-    sku: "p1000",
-    brand: "Simagic",
-    name: "P1000 Load Cell Pedals",
-    category: "pedals",
-    sellExGst: 54900,
-    stock: "stock",
-    leadWeeks: [1, 2],
-    weightKg: 8,
-  },
-  {
-    sku: "p1000-haptic",
-    brand: "Simagic",
-    name: "P1000 Hydraulic + Haptics",
-    category: "pedals",
-    sellExGst: 98900,
-    stock: "indent",
-    leadWeeks: [3, 5],
-    weightKg: 12,
-    notes: "Needs the heavy pedal tray on compact chassis.",
-  },
-  {
-    sku: "seq-shifter",
-    brand: "Simagic",
-    name: "Sequential Shifter",
-    category: "shifter",
-    sellExGst: 28900,
-    stock: "stock",
-    leadWeeks: [1, 2],
-  },
-  {
-    sku: "handbrake",
-    brand: "Simagic",
-    name: "Handbrake",
-    category: "handbrake",
-    sellExGst: 24900,
-    stock: "stock",
-    leadWeeks: [1, 2],
-  },
-  {
-    sku: "touring-seat",
-    brand: "Exodus",
-    name: "Large Touring Race Seat",
-    category: "seat",
-    sellExGst: 49900,
-    stock: "stock",
-    leadWeeks: [1, 2],
-    weightKg: 14,
-  },
-  {
-    sku: "sr2",
-    brand: "SIMRIG",
-    name: "SR2 3-DOF Motion System",
-    category: "motion",
-    sellExGst: 620000,
-    stock: "indent",
-    leadWeeks: [4, 6],
-    payloadKg: 225,
-    weightKg: 48,
-  },
-  {
-    sku: "aoc-32",
-    brand: "AOC",
-    name: "32\" Curved 240Hz Monitor",
-    category: "monitor",
-    sellExGst: 64900,
-    stock: "stock",
-    leadWeeks: [1, 2],
-    weightKg: 7,
-  },
-  {
-    sku: "aux-27",
-    brand: "AOC",
-    name: "27\" 100Hz Aux Monitor",
-    category: "monitor",
-    sellExGst: 28900,
-    stock: "stock",
-    leadWeeks: [1, 2],
-    weightKg: 4,
-  },
-  {
-    sku: "quad-mount",
-    brand: "Exodus",
-    name: "Free-standing 4-screen Mount",
-    category: "mount",
-    sellExGst: 129000,
-    stock: "stock",
-    leadWeeks: [2, 3],
-  },
-  {
-    sku: "pc-race",
-    brand: "Everything Simulated",
-    name: "Race PC (i9 / RTX 5070 Ti)",
-    category: "pc",
-    sellExGst: 389000,
-    stock: "indent",
-    leadWeeks: [2, 4],
-  },
-  {
-    sku: "logi-surround",
-    brand: "Logitech",
-    name: "1000W Surround System",
-    category: "audio",
-    sellExGst: 49900,
-    stock: "stock",
-    leadWeeks: [1, 2],
-  },
-  {
-    sku: "pro-x",
-    brand: "Logitech",
-    name: "Pro X Headset",
-    category: "headset",
-    sellExGst: 24900,
-    stock: "stock",
-    leadWeeks: [1, 1],
-  },
-  {
-    sku: "iracing-12",
-    brand: "iRacing",
-    name: "12-month iRacing + Sprintcar skin",
-    category: "software",
-    sellExGst: 18900,
-    stock: "stock",
-    leadWeeks: [0, 0],
-  },
-  {
-    sku: "side-mount",
-    brand: "Simagic",
-    name: "Side Mount Kit for Trak Racer",
-    category: "adapter",
-    sellExGst: 18900,
-    stock: "stock",
-    leadWeeks: [1, 1],
-  },
-];
-
-export const PRODUCT_MAP = Object.fromEntries(PRODUCTS.map((p) => [p.sku, p])) as Record<
-  string,
-  Product
->;
 
 export const RULES: CompatibilityRule[] = [
   {
@@ -271,7 +70,8 @@ export const RULES: CompatibilityRule[] = [
 ];
 
 function linesTotal(lines: CartLine[]) {
-  return lines.reduce((sum, l) => sum + (PRODUCT_MAP[l.sku]?.sellExGst ?? 0) * l.qty, 0);
+  const map = getCachedProductMap();
+  return lines.reduce((sum, l) => sum + (map[l.sku]?.sellExGst ?? 0) * l.qty, 0);
 }
 
 const starterLines: CartLine[] = [
@@ -422,10 +222,6 @@ export const CITIES: CityPage[] = [
   { slug: "sunshine-coast", name: "Sunshine Coast", state: "QLD", note: "SEQ run from the Gold Coast workshop — fastest install outside the Coast." },
 ];
 
-export function product(sku: string) {
-  return PRODUCT_MAP[sku];
-}
-
 export function packageBySlug(slug: string) {
   return PACKAGES.find((p) => p.slug === slug);
 }
@@ -436,12 +232,4 @@ export function guideBySlug(slug: string) {
 
 export function cityBySlug(slug: string) {
   return CITIES.find((c) => c.slug === slug);
-}
-
-export function productImage(p: Product) {
-  if (p.image) return p.image;
-  if (p.category === "motion") return "/rigs/motion.jpg";
-  if (p.category === "chassis") return p.sku === "tr120s" ? "/rigs/starter.jpg" : "/rigs/haptic.jpg";
-  if (p.category === "pc" || p.category === "monitor" || p.category === "mount") return "/rigs/haptic.jpg";
-  return "/rigs/starter.jpg";
 }

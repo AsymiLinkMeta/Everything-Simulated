@@ -1,8 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { ProductTile } from "@/components/es/bits";
 import { CartPanel } from "@/components/es/cart-panel";
-import { PRODUCTS } from "@/lib/es/catalog";
+import { fetchProducts } from "@/lib/es/product-cache";
 import { pageHead } from "@/lib/es/seo";
 import type { ProductCategory } from "@/lib/es/types";
 
@@ -31,9 +32,10 @@ const CATS: { id: ProductCategory | "all"; label: string }[] = [
 
 function Shop() {
   const [cat, setCat] = useState<(typeof CATS)[number]["id"]>("all");
+  const products = useQuery({ queryKey: ["products"], queryFn: () => fetchProducts() });
   const items = useMemo(
-    () => PRODUCTS.filter((p) => cat === "all" || p.category === cat),
-    [cat],
+    () => (products.data ?? []).filter((p) => cat === "all" || p.category === cat),
+    [cat, products.data],
   );
   return (
     <div className="mx-auto max-w-6xl px-4 py-16">

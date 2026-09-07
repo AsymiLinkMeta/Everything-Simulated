@@ -1,7 +1,8 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { BackButton, IncGst, JsonLd, LineName, Money } from "@/components/es/bits";
-import { packageBySlug, PACKAGES, PRODUCT_MAP } from "@/lib/es/catalog";
+import { packageBySlug, PACKAGES } from "@/lib/es/catalog";
+import { getCachedProductMap } from "@/lib/es/product-cache";
 import { useCart } from "@/lib/es/cart-store";
 import { abs, breadcrumbLd, pageHead } from "@/lib/es/seo";
 import { checkCart } from "@/lib/es/checkCart";
@@ -93,7 +94,7 @@ function BuildPage() {
       <h2 className="mt-16 text-2xl font-medium">What’s in the crate</h2>
       <ul className="mt-6 divide-y divide-line rounded-card border border-line">
         {pack.lines.map((line) => {
-          const item = PRODUCT_MAP[line.sku];
+          const item = getCachedProductMap()[line.sku];
           return (
             <li key={line.sku} className="flex items-center justify-between px-4 py-3 text-sm">
               <Link to="/shop/$sku" params={{ sku: line.sku }} className="hover:text-paper">

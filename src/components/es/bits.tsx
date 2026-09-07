@@ -6,7 +6,7 @@ import { UserButton } from "@/lib/auth/gates";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { aud, gstInclusive } from "@/lib/utils";
 import type { CheckIssue, CheckResult, PackageSpec, Product } from "@/lib/es/types";
-import { product, productImage } from "@/lib/es/catalog";
+import { product, productImage } from "@/lib/es/product-cache";
 import { cn } from "@/lib/utils";
 
 export function BackButton({ label = "Back" }: { label?: string }) {

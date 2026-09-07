@@ -1,5 +1,6 @@
 import { supabase, supabaseAnonKey, supabaseUrl } from "@/lib/db";
-import { BRAND, GUIDES, PACKAGES, PRODUCT_MAP, PRODUCTS, RULES } from "./catalog";
+import { BRAND, GUIDES, PACKAGES, RULES } from "./catalog";
+import { getCachedProducts, getCachedProductMap } from "./product-cache";
 import { checkCart } from "./checkCart";
 import type { CartLine, StaffRole } from "./types";
 
@@ -303,7 +304,7 @@ export async function askBuilder(data: { message: string; lines: CartLine[]; dri
   await ensureProfile(user.id, user.email);
   await supabase.from("chat_messages").insert({ user_id: user.id, role: "user", content: data.message.slice(0, 4000) });
   const result = checkCart({ lines: data.lines, driverWeightKg: data.driverWeightKg });
-  const systemPrompt = `You are the Everything Simulated build expert on the Gold Coast. Phone ${BRAND.phone}. Never invent SKUs. Only recommend these packages: ${PACKAGES.map((p) => p.slug).join(", ")} and catalogue SKUs: ${PRODUCTS.map((p) => p.sku).join(", ")}. Compatibility is decided by the checker JSON — do not override a block. Prices are AUD ex GST. Be concise and premium.`;
+  const systemPrompt = `You are the Everything Simulated build expert on the Gold Coast. Phone ${BRAND.phone}. Never invent SKUs. Only recommend these packages: ${PACKAGES.map((p) => p.slug).join(", ")} and catalogue SKUs: ${getCachedProducts().map((p) => p.sku).join(", ")}. Compatibility is decided by the checker JSON — do not override a block. Prices are AUD ex GST. Be concise and premium.`;
   const userContent = `Checker JSON: ${JSON.stringify(result)}\nCart: ${JSON.stringify(data.lines)}\nQuestion: ${data.message}`;
 
   let reply: string;
@@ -362,7 +363,5 @@ function fallbackReply(message: string, result: ReturnType<typeof checkCart>) {
 }
 
 export async function publicCatalog() {
-  return { products: PRODUCTS, packages: PACKAGES, guides: GUIDES, rules: RULES, brand: BRAND };
+  return { products: getCachedProducts(), productMap: getCachedProductMap(), packages: PACKAGES, guides: GUIDES, rules: RULES, brand: BRAND };
 }
-
-export { PRODUCT_MAP };
