@@ -1,3 +1,4 @@
+import "./es-chrome";
 import { Link, Outlet } from "@tanstack/react-router";
 import { Phone } from "lucide-react";
 import { BRAND, CITIES, GUIDES, PACKAGES } from "@/lib/es/catalog";
@@ -14,126 +15,98 @@ const NAV = [
 
 export function SiteShell({ children }: { children?: React.ReactNode }) {
   return (
-    <div className="min-h-dvh bg-ink text-paper">
-      <header className="relative sticky top-0 z-40 border-b border-line bg-ink/90 backdrop-blur">
-        <div className="mx-auto flex max-w-6xl items-center gap-4 px-4 py-3">
+    <div className="es-page">
+      <header className="es-header">
+        <div className="es-header-inner">
           <Logo />
-          <nav className="ml-auto hidden items-center gap-1 md:flex">
+          <nav className="es-nav" aria-label="Primary">
             {NAV.map((n) => (
-              <Link
-                key={n.to}
-                to={n.to}
-                className="inline-flex min-h-11 items-center rounded-[15px] border border-white/10 bg-black px-3 text-sm text-white transition-colors hover:border-white/20 hover:bg-black/90"
-                activeProps={{ className: "text-paper" }}
-              >
+              <Link key={n.to} to={n.to} className="es-nav-link">
                 {n.label}
               </Link>
             ))}
           </nav>
-          <a
-            href={`tel:${BRAND.phone.replace(/\s/g, "")}`}
-            className="hidden min-h-11 items-center gap-2 rounded-[15px] border border-white/10 bg-black px-4 text-sm text-white transition-colors hover:border-white/20 hover:bg-black/90 lg:inline-flex"
-          >
+          <a href={`tel:${BRAND.phone.replace(/\s/g, "")}`} className="es-header-phone">
             <Phone className="size-4" />
             {BRAND.phone}
           </a>
-          <Link
-            to="/app"
-            className="hidden min-h-11 items-center rounded-[15px] border border-white/10 bg-black px-4 text-sm text-white transition-colors hover:border-white/20 hover:bg-black/90 md:inline-flex"
-          >
+          <Link to="/app" className="es-header-account">
             Account
           </Link>
           <AuthSlot />
-          <details className="md:hidden">
-            <summary className="flex min-h-11 min-w-11 list-none items-center justify-center rounded-[15px] border border-white/10 bg-black px-3 text-sm text-white transition-colors hover:border-white/20 hover:bg-black/90">
-              Menu
-            </summary>
-            <div className="absolute inset-x-0 top-full border-b border-line bg-ink p-4">
-              <div className="flex flex-col">
-                {NAV.map((n) => (
-                  <Link key={n.to} to={n.to} className="min-h-11 rounded-[15px] border border-white/10 bg-black px-4 py-2 text-sm text-white transition-colors hover:border-white/20 hover:bg-black/90">
-                    {n.label}
-                  </Link>
-                ))}
-                <Link to="/app" className="min-h-11 rounded-[15px] border border-white/10 bg-black px-4 py-2 text-sm text-white transition-colors hover:border-white/20 hover:bg-black/90">
-                  Customer app
+          <details className="es-menu">
+            <summary>Menu</summary>
+            <div className="es-menu-panel">
+              {NAV.map((n) => (
+                <Link key={n.to} to={n.to}>
+                  {n.label}
                 </Link>
-                <Link to="/contact" className="min-h-11 rounded-[15px] border border-white/10 bg-black px-4 py-2 text-sm text-white transition-colors hover:border-white/20 hover:bg-black/90">
-                  Contact
-                </Link>
-              </div>
+              ))}
+              <Link to="/app">Customer app</Link>
+              <Link to="/contact">Contact</Link>
+              <a href={`tel:${BRAND.phone.replace(/\s/g, "")}`}>{BRAND.phone}</a>
             </div>
           </details>
         </div>
       </header>
       <main>{children ?? <Outlet />}</main>
-      <footer className="mt-16 border-t border-line">
-        <div className="mx-auto grid max-w-6xl gap-10 px-4 py-12 md:grid-cols-4">
-          <div className="space-y-3">
+      <footer className="es-footer">
+        <div className="es-footer-grid">
+          <div className="es-footer-col">
             <Logo />
-            <p className="text-sm text-muted">
-              Gold Coast built racing simulators. Crate freight Australia-wide.
-            </p>
-            <p className="rounded-[15px] border border-white/10 bg-black px-3 py-1 text-sm text-white">{BRAND.phone}</p>
-            <p className="rounded-[15px] border border-white/10 bg-black px-3 py-1 text-sm text-white">{BRAND.email}</p>
+            <p>Gold Coast built racing simulators. Crate freight Australia-wide.</p>
+            <p>{BRAND.phone}</p>
+            <p>{BRAND.email}</p>
           </div>
-          <div>
-            <p className="es-kicker mb-3">Builds</p>
-            <ul className="space-y-2 text-sm">
+          <div className="es-footer-col">
+            <p className="es-kicker">Builds</p>
+            <ul>
               {PACKAGES.map((p) => (
                 <li key={p.slug}>
-                  <Link to="/builds/$slug" params={{ slug: p.slug }} className="rounded-[15px] border border-white/10 bg-black px-3 py-1 text-sm text-white transition-colors hover:border-white/20 hover:bg-black/90">
+                  <Link to="/builds/$slug" params={{ slug: p.slug }}>
                     {p.name}
                   </Link>
                 </li>
               ))}
               <li>
-                <Link to="/compatibility" className="rounded-[15px] border border-white/10 bg-black px-3 py-1 text-sm text-white transition-colors hover:border-white/20 hover:bg-black/90">
-                  Compatibility checker
-                </Link>
+                <Link to="/compatibility">Compatibility checker</Link>
               </li>
             </ul>
           </div>
-          <div>
-            <p className="es-kicker mb-3">Australia</p>
-            <ul className="space-y-2 text-sm">
+          <div className="es-footer-col">
+            <p className="es-kicker">Australia</p>
+            <ul>
               {CITIES.slice(0, 6).map((c) => (
                 <li key={c.slug}>
-                  <Link to="/au/$city" params={{ city: c.slug }} className="rounded-[15px] border border-white/10 bg-black px-3 py-1 text-sm text-white transition-colors hover:border-white/20 hover:bg-black/90">
+                  <Link to="/au/$city" params={{ city: c.slug }}>
                     Sim racing {c.name}
                   </Link>
                 </li>
               ))}
               <li>
-                <Link to="/au" className="rounded-[15px] border border-white/10 bg-black px-3 py-1 text-sm text-white transition-colors hover:border-white/20 hover:bg-black/90">
-                  All cities
-                </Link>
+                <Link to="/au">All cities</Link>
               </li>
             </ul>
           </div>
-          <div>
-            <p className="es-kicker mb-3">Guides</p>
-            <ul className="space-y-2 text-sm">
+          <div className="es-footer-col">
+            <p className="es-kicker">Guides</p>
+            <ul>
               {GUIDES.slice(0, 4).map((g) => (
                 <li key={g.slug}>
-                  <Link to="/guides/$slug" params={{ slug: g.slug }} className="rounded-[15px] border border-white/10 bg-black px-3 py-1 text-sm text-white transition-colors hover:border-white/20 hover:bg-black/90">
+                  <Link to="/guides/$slug" params={{ slug: g.slug }}>
                     {g.title}
                   </Link>
                 </li>
               ))}
               <li>
-                <Link to="/privacy" className="rounded-[15px] border border-white/10 bg-black px-3 py-1 text-sm text-white transition-colors hover:border-white/20 hover:bg-black/90">
-                  Privacy
-                </Link>
+                <Link to="/privacy">Privacy</Link>
                 {" · "}
-                <Link to="/terms" className="rounded-[15px] border border-white/10 bg-black px-3 py-1 text-sm text-white transition-colors hover:border-white/20 hover:bg-black/90">
-                  Terms
-                </Link>
+                <Link to="/terms">Terms</Link>
               </li>
             </ul>
           </div>
         </div>
-        <p className="border-t border-line px-4 py-6 text-center text-xs text-subtle">
+        <p className="es-footer-copy">
           © {new Date().getFullYear()} Everything Simulated · Gold Coast, Queensland · Prices AUD ex GST
         </p>
       </footer>

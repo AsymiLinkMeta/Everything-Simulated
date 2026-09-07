@@ -1,3 +1,4 @@
+import "../../es.css";
 import { Link } from "@tanstack/react-router";
 import { UserButton } from "@/lib/auth/gates";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
@@ -8,14 +9,11 @@ import { cn } from "@/lib/utils";
 
 export function Logo({ compact = false }: { compact?: boolean }) {
   return (
-    <Link to="/" className="flex items-center gap-3 text-paper">
-      <span className="grid size-9 place-items-center rounded-md bg-esred text-xs font-semibold tracking-widest">
-        ES
-      </span>
+    <Link to="/" className="es-logo">
+      <span className="es-logo-mark">ES</span>
       {compact ? null : (
-        <span className="text-sm font-medium tracking-wide">
-          Everything
-          <span className="block text-xs font-normal text-muted">Simulated</span>
+        <span className="es-logo-word">
+          Everything Simulated
         </span>
       )}
     </Link>
@@ -27,10 +25,7 @@ export function AuthSlot() {
   if (isPending) return <div className="h-8 w-24 animate-pulse rounded-md bg-raised" />;
   if (user) return <UserButton />;
   return (
-    <Link
-      to="/login"
-      className="inline-flex min-h-11 items-center rounded-[15px] border border-white/10 bg-black px-4 text-sm text-white transition-colors hover:border-white/20 hover:bg-black/90"
-    >
+    <Link to="/login" className="es-nav-link">
       Sign in
     </Link>
   );
@@ -108,14 +103,10 @@ export function IssueList({ issues }: { issues: CheckIssue[] }) {
 
 export function PackageCard({ pack }: { pack: PackageSpec }) {
   return (
-    <Link
-      to="/builds/$slug"
-      params={{ slug: pack.slug }}
-      className="es-card group flex flex-col overflow-hidden"
-    >
+    <Link to="/builds/$slug" params={{ slug: pack.slug }} className="es-card group flex flex-col overflow-hidden">
       <div className="relative aspect-video overflow-hidden">
         <img src={pack.image} alt={pack.name} className="size-full object-cover transition-transform duration-300 group-hover:scale-105" />
-        <span className="absolute left-4 top-4 rounded-md bg-ink/80 px-2 py-1 text-xs uppercase tracking-widest">
+        <span className="es-kicker" style={{ position: "absolute", left: 16, top: 16, background: "rgba(7,7,8,0.8)", padding: "4px 8px", borderRadius: 8 }}>
           {pack.kicker}
         </span>
       </div>

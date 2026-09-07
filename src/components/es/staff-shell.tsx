@@ -1,3 +1,4 @@
+import "./es-chrome";
 import { Link, Outlet } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { Boxes, Calendar, ClipboardList, Shield, Users, Wrench } from "lucide-react";
@@ -24,21 +25,19 @@ export function StaffShell() {
   });
 
   if (isPending || (user && profile.isPending)) {
-    return (
-      <div className="grid min-h-dvh place-items-center bg-ink text-muted">Opening workshop…</div>
-    );
+    return <div className="es-page" style={{ display: "grid", placeItems: "center" }}>Opening workshop…</div>;
   }
   if (!user) return <RedirectToSignIn />;
   if (!profile.data?.isStaff) {
     return (
-      <div className="grid min-h-dvh place-items-center bg-ink px-6 text-center">
-        <div className="es-card max-w-md space-y-3 p-6">
+      <div className="es-page" style={{ display: "grid", placeItems: "center", padding: 24 }}>
+        <div className="es-card" style={{ maxWidth: 420, padding: 24, textAlign: "center" }}>
           <Shield className="mx-auto size-6 text-muted" />
-          <h1 className="text-xl font-medium">Staff only</h1>
-          <p className="text-sm text-muted">
+          <h1>Staff only</h1>
+          <p className="text-muted">
             This portal is for workshop, sales and admin. The first signed-in account becomes admin.
           </p>
-          <Link to="/app" className="inline-flex min-h-11 items-center rounded-[15px] border border-white/10 bg-black px-4 text-sm text-white transition-colors hover:border-white/20 hover:bg-black/90">
+          <Link to="/app" className="es-btn" style={{ marginTop: 16 }}>
             Back to customer app
           </Link>
         </div>
@@ -47,49 +46,49 @@ export function StaffShell() {
   }
 
   return (
-    <div className="min-h-dvh bg-ink text-paper md:grid md:grid-cols-[220px_1fr]">
-      <aside className="hidden border-r border-line md:flex md:flex-col">
-        <div className="flex items-center gap-2 border-b border-line px-4 py-4">
+    <div className="es-staff">
+      <aside className="es-sidebar">
+        <div className="es-appbar" style={{ position: "static" }}>
           <Logo compact />
           <div>
-            <p className="text-sm font-medium">Staff</p>
-            <p className="text-xs capitalize text-muted">{profile.data.role}</p>
+            <p style={{ margin: 0, fontSize: 14, fontWeight: 500 }}>Staff</p>
+            <p className="es-kicker" style={{ textTransform: "capitalize" }}>
+              {profile.data.role}
+            </p>
           </div>
         </div>
-        <nav className="flex flex-col p-2">
+        <nav>
           {TABS.map((t) => (
             <Link
               key={t.to}
               to={t.to}
-              className="flex min-h-11 items-center gap-2 rounded-[15px] border border-white/10 bg-black px-3 text-sm text-white transition-colors hover:border-white/20 hover:bg-black/90"
               activeOptions={{ exact: t.to === "/staff" }}
-              activeProps={{ className: "bg-raised text-paper" }}
+              activeProps={{ className: "is-active" }}
             >
               <t.icon className="size-4" />
               {t.label}
             </Link>
           ))}
         </nav>
-        <Link to="/app" className="mt-auto rounded-[15px] border border-white/10 bg-black px-4 py-4 text-sm text-white transition-colors hover:border-white/20 hover:bg-black/90">
+        <Link to="/app" style={{ marginTop: "auto", padding: 16, fontSize: 14, color: "#9a9aa3" }}>
           Customer app
         </Link>
       </aside>
       <div>
-        <header className="flex items-center justify-between border-b border-line px-4 py-3 md:justify-end">
+        <header className="es-appbar" style={{ justifyContent: "flex-end" }}>
           <Logo compact />
           <AuthSlot />
         </header>
-        <div className="px-4 py-6 pb-24 md:px-8">
+        <div className="es-wrap" style={{ paddingTop: 24, paddingBottom: 96 }}>
           <Outlet />
         </div>
-        <nav className="fixed inset-x-0 bottom-0 z-40 grid grid-cols-5 border-t border-line bg-ink pb-[env(safe-area-inset-bottom)] md:hidden">
+        <nav className="es-tabbar">
           {TABS.slice(0, 5).map((t) => (
             <Link
               key={t.to}
               to={t.to}
-              className="flex min-h-14 flex-col items-center justify-center gap-1 rounded-[15px] px-2 text-xs text-white"
               activeOptions={{ exact: t.to === "/staff" }}
-              activeProps={{ className: "text-paper" }}
+              activeProps={{ className: "is-active" }}
             >
               <t.icon className="size-4" />
               {t.label}

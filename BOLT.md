@@ -1,59 +1,43 @@
-# Bolt.new port
+# Bolt.new
 
-This repository runs on **TanStack Start** in the Grok preview. Bolt.new prefers **Vite + React + TypeScript + Tailwind + Supabase (or Edge Functions)**.
+This repo is a **Vite + React + TypeScript + Tailwind v3** app. Open it in Bolt from GitHub.
 
-Do **not** rewrite the business logic. Copy these files as-is:
+## Header / footer must stay dark
 
-```
-src/lib/es/types.ts
-src/lib/es/catalog.ts
-src/lib/es/checkCart.ts
-src/lib/es/cart-store.ts
-src/lib/es/seo.ts
-```
+Do **not** restyle header or footer with Tailwind-only utilities. Chrome lives in [`src/es.css`](src/es.css) and is imported from the shells:
 
-`checkCart` is the source of truth. The chatbot may only **explain** its JSON. Never let the model invent SKUs or override a `block`.
+- `es-header` / `es-nav` / `es-nav-link` / `es-menu`
+- `es-footer` / `es-footer-grid` / `es-footer-col`
+- `es-logo` / `es-logo-mark` / `es-logo-word`
+- `es-hero` / `es-card` / `es-btn`
 
-## Bolt scaffold
+Those classes are plain CSS. They render even if Tailwind tokens (`bg-ink`, `text-paper`) are missing.
 
-1. Create a Vite React-TS app with Tailwind.
-2. Paste the files above into `src/lib/es/`.
-3. Recreate routes as React Router / Bolt pages:
-   - `/` marketing
-   - `/builds/:slug`
-   - `/shop/:sku`
-   - `/compatibility`
-   - `/au/:city`
-   - `/guides/:slug`
-   - `/app/*` customer (auth required)
-   - `/staff/*` staff
-4. Replace `createServerFn` in `src/lib/es/server.ts` with **Supabase Edge Functions** (or Bolt cloud functions) that:
-   - read `auth.uid()` — never a client-sent user id
-   - apply `migrations/0002_es.sql` (profiles, quotes, jobs, bookings, chat_messages, product_overrides)
-5. Keep design tokens:
+`src/components/es/es-chrome.ts` imports `src/es.css` so Bolt always bundles the chrome stylesheet with the header.
+
+## Theme
 
 ```css
---color-ink: #070708;
---color-panel: #111114;
---color-paper: #f4f4f5;
---color-esred: #E10600;
---radius-card: 15px;
+--es-ink: #070708;
+--es-panel: #111114;
+--es-paper: #f4f4f5;
+--es-red: #E10600;
+--es-radius: 15px;
 ```
 
-Font: Outfit. Cards: 15px radius. No emoji icons.
+Font: Outfit. Cards: 15px. No emoji icons.
 
-## Auth mapping
+## Domain logic (do not rewrite)
 
-| Here | Bolt / Supabase |
-| --- | --- |
-| Better Auth Google / X / email | Supabase Auth (Google + email). Add X if the project allows. |
-| `authMiddleware` + `context.userId` | `auth.uid()` in RLS and Edge Functions |
-| First profile becomes admin | Same rule in a `profiles` trigger |
+```
+src/lib/es/catalog.ts
+src/lib/es/checkCart.ts
+src/lib/es/types.ts
+src/lib/es/cart-store.ts
+```
 
-## AI
+`checkCart` is the source of truth. Chat may only explain its JSON.
 
-Call xAI (`grok-4.5`) **from the server / edge function only**. Pass `checkCart()` JSON in the prompt. Cap `max_tokens`. User-initiated sends only.
+## Auth / data in Bolt
 
-## Images
-
-Place workshop photos in `public/rigs/`: `hero.jpg`, `starter.jpg`, `haptic.jpg`, `motion.jpg`, `showroom.jpg`.
+Wire Supabase Auth in place of the stubs under `src/lib/auth/*`. Apply `migrations/0002_es.sql`. Replace `src/lib/es/server.ts` `createServerFn` calls with Edge Functions using `auth.uid()`.

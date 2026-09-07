@@ -2,7 +2,6 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { ArrowRight, Check, MapPin } from "lucide-react";
 import { SiteShell } from "@/components/es/site-shell";
 import { JsonLd, Money, PackageCard } from "@/components/es/bits";
-import { Button } from "@/components/ui/button";
 import { BRAND, CITIES, GUIDES, PACKAGES } from "@/lib/es/catalog";
 import { FAQS, faqLd, localBusinessLd, pageHead } from "@/lib/es/seo";
 
@@ -17,32 +16,28 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
-function Home() {
+export function Home() {
   return (
     <SiteShell>
       <JsonLd data={localBusinessLd()} />
       <JsonLd data={faqLd(FAQS)} />
-      <section className="relative isolate min-h-dvh overflow-hidden">
-        <img src="/rigs/hero.jpg" alt="Everything Simulated Gold Coast racing simulator studio" className="absolute inset-0 size-full object-cover" />
-        <div className="absolute inset-0 bg-ink/75" />
-        <div className="relative mx-auto flex min-h-dvh max-w-6xl flex-col justify-end px-4 pb-16 pt-28">
-          <p className="es-kicker mb-4">Gold Coast · Australia-wide</p>
-          <h1 className="max-w-3xl text-4xl font-medium leading-tight tracking-tight md:text-6xl">
-            Racing simulators, built properly.
-          </h1>
-          <p className="mt-5 max-w-xl text-base text-muted md:text-lg">
+      <section className="es-hero">
+        <img src="/rigs/hero.jpg" alt="Everything Simulated Gold Coast racing simulator studio" className="es-hero-img" />
+        <div className="es-hero-mask" />
+        <div className="es-hero-copy">
+          <p className="es-kicker">Gold Coast · Australia-wide</p>
+          <h1>Racing simulators, built properly.</h1>
+          <p className="lead">
             Assembled and QA’d in our Gold Coast workshop. Compatibility checked before deposit.
             Crate freight to every capital city.
           </p>
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-            <Button asChild size="lg">
-              <Link to="/builds">
-                Configure a build <ArrowRight className="size-4" />
-              </Link>
-            </Button>
-            <Button asChild variant="paper" size="lg">
-              <Link to="/studio">Book a studio demo</Link>
-            </Button>
+          <div className="es-hero-actions">
+            <Link to="/builds" className="es-btn">
+              Configure a build <ArrowRight className="size-4" />
+            </Link>
+            <Link to="/studio" className="es-btn es-btn-paper">
+              Book a studio demo
+            </Link>
           </div>
         </div>
       </section>
@@ -57,7 +52,7 @@ function Home() {
             Or spec from parts
           </Link>
         </div>
-        <div className="grid gap-6 md:grid-cols-3">
+        <div className="es-pack-grid">
           {PACKAGES.map((pack) => (
             <PackageCard key={pack.slug} pack={pack} />
           ))}
@@ -96,7 +91,7 @@ function Home() {
       </section>
 
       <section className="mx-auto max-w-6xl px-4 py-8">
-        <div className="es-card grid overflow-hidden md:grid-cols-2">
+        <div className="es-card es-split" style={{ overflow: "hidden" }}>
           <img src="/rigs/showroom.jpg" alt="Gold Coast showroom" className="h-72 w-full object-cover md:h-full" />
           <div className="flex flex-col justify-center gap-4 p-8">
             <p className="es-kicker">Studio</p>
@@ -104,9 +99,9 @@ function Home() {
             <p className="text-sm text-muted">
               Book a session at the {BRAND.region} workshop. We set pedal spacing and wheel height on the actual chassis.
             </p>
-            <Button asChild className="w-fit">
-              <Link to="/studio">Book the studio</Link>
-            </Button>
+            <Link to="/studio" className="es-btn" style={{ width: "fit-content" }}>
+              Book the studio
+            </Link>
           </div>
         </div>
       </section>
@@ -116,11 +111,10 @@ function Home() {
           <MapPin className="size-4 text-esred" />
           <h2 className="text-2xl font-medium">Delivered Australia-wide</h2>
         </div>
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+        <div className="es-city-grid">
           {CITIES.map((c) => (
-            <Link key={c.slug} to="/au/$city" params={{ city: c.slug }} className="es-card px-4 py-4 text-sm hover:bg-raised">
-              {c.name}
-              <span className="block text-xs text-muted">{c.state}</span>
+            <Link key={c.slug} to="/au/$city" params={{ city: c.slug }} className="es-card es-city-card">
+              {c.name} <span>{c.state}</span>
             </Link>
           ))}
         </div>
@@ -128,11 +122,13 @@ function Home() {
 
       <section className="mx-auto max-w-6xl px-4 py-8">
         <h2 className="text-2xl font-medium">Guides</h2>
-        <div className="mt-6 grid gap-4 md:grid-cols-2">
+        <div className="es-guide-grid" style={{ marginTop: 24 }}>
           {GUIDES.map((g) => (
-            <Link key={g.slug} to="/guides/$slug" params={{ slug: g.slug }} className="es-card p-5 hover:bg-raised">
-              <h3 className="font-medium">{g.title}</h3>
-              <p className="mt-2 text-sm text-muted">{g.description}</p>
+            <Link key={g.slug} to="/guides/$slug" params={{ slug: g.slug }} className="es-card" style={{ padding: 20 }}>
+              <h3 style={{ margin: 0 }}>{g.title}</h3>
+              <p className="text-muted" style={{ marginTop: 8, fontSize: 14 }}>
+                {g.description}
+              </p>
             </Link>
           ))}
         </div>
@@ -142,7 +138,7 @@ function Home() {
         <h2 className="text-2xl font-medium">Questions</h2>
         <ul className="mt-6 space-y-4">
           {FAQS.map((f) => (
-            <li key={f.q} className="es-card p-5">
+            <li key={f.q} className="es-card" style={{ padding: 20 }}>
               <p className="flex gap-2 font-medium">
                 <Check className="mt-1 size-4 shrink-0 text-esred" />
                 {f.q}

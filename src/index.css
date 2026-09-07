@@ -1,0 +1,16 @@
+@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap");
+@import "./es.css";
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#root {
+  min-height: 100%;
+  background: #070708;
+  color: #f4f4f5;
+  margin: 0;
+  font-family: "Outfit", ui-sans-serif, system-ui, sans-serif;
+}

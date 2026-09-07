@@ -1,12 +1,18 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
-import tsconfigPaths from "vite-tsconfig-paths";
-import { tanstackStart } from "@tanstack/react-start/plugin/vite";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+const root = path.dirname(fileURLToPath(import.meta.url));
 
 export default defineConfig({
-  plugins: [
-    tanstackStart(),
-    tsconfigPaths(),
-    react(),
-  ],
+  plugins: [react()],
+  resolve: {
+    alias: {
+      "@": path.resolve(root, "src"),
+      "@tanstack/react-router": path.resolve(root, "src/shims/tanstack-react-router.tsx"),
+      "@tanstack/react-start": path.resolve(root, "src/shims/tanstack-start.ts"),
+    },
+  },
+  server: { host: true, port: 5173 },
 });
