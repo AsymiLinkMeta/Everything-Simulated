@@ -239,6 +239,7 @@ img {
 /* ---- footer ---- */
 .es-footer {
   margin-top: 4rem;
+  padding-bottom: 3.5rem;
   background: var(--es-ink);
   color: var(--es-paper);
   border: 1px solid var(--es-line);
@@ -285,13 +286,20 @@ img {
   color: var(--es-subtle);
 }
 
+.es-footer-col a.es-footer-login,
 .es-footer-login {
-  color: var(--es-subtle);
-  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--es-paper);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  font-size: 0.875rem;
 }
 
+.es-footer-col a.es-footer-login:hover,
 .es-footer-login:hover {
-  color: var(--es-muted);
+  color: var(--es-red);
 }
 
 @media (min-width: 768px) {

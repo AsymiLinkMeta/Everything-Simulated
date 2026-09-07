@@ -53,7 +53,7 @@ export function AuthSlot() {
 
 export function StaffLoginLink() {
   return (
-    <a href="/login?portal=staff" className="es-footer-login">
+    <a href="/login?portal=staff" className="es-footer-login" aria-label="Staff login">
       Login
     </a>
   );

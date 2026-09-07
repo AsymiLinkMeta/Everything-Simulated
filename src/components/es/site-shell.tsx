@@ -66,6 +66,10 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
             <p>Gold Coast built racing simulators. Crate freight Australia-wide.</p>
             <p>{BRAND.phone}</p>
             <p>{BRAND.email}</p>
+            <p className="es-kicker" style={{ marginTop: 16 }}>Staff</p>
+            <p>
+              <StaffLoginLink />
+            </p>
           </div>
           <div className="es-footer-col">
             <p className="es-kicker">Builds</p>
@@ -117,8 +121,6 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
         </div>
         <p className="es-footer-copy">
           © {new Date().getFullYear()} Everything Simulated · Gold Coast, Queensland · Prices AUD ex GST
-          {" · "}
-          <StaffLoginLink />
         </p>
       </footer>
       <CookieDisclaimer />
