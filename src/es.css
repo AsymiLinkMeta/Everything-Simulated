@@ -552,3 +552,51 @@ img {
 .rounded-lg { border-radius: var(--es-radius); }
 .rounded-md { border-radius: var(--es-radius); }
 .rounded-sm { border-radius: var(--es-radius); }
+
+.es-cookie-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 60;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.5rem 1rem;
+  background: rgba(7, 7, 8, 0.96);
+  border-top: 1px solid var(--es-line);
+  color: var(--es-muted);
+  font-size: 0.75rem;
+  backdrop-filter: blur(8px);
+}
+
+.es-cookie-bar p { margin: 0; }
+
+.es-cookie-link {
+  color: var(--es-paper);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.es-cookie-link:hover { color: var(--es-red); }
+
+.es-cookie-close {
+  flex-shrink: 0;
+  min-height: 28px;
+  padding: 0 0.75rem;
+  background: var(--es-red);
+  color: var(--es-paper);
+  border: none;
+  border-radius: var(--es-radius);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: opacity 160ms ease;
+}
+
+.es-cookie-close:hover { opacity: 0.85; }
+
+@media (min-width: 768px) {
+  .es-cookie-bar { font-size: 0.8125rem; }
+}

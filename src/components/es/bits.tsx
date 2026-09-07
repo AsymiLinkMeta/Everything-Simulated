@@ -1,3 +1,4 @@
+import { useState } from "react";
 import "../../es.css";
 import { Link } from "@tanstack/react-router";
 import { UserButton } from "@/lib/auth/gates";
@@ -29,6 +30,22 @@ export function AuthSlot() {
     <Link to="/login" className="es-nav-link">
       Sign in
     </Link>
+  );
+}
+
+export function CookieDisclaimer() {
+  const [dismissed, setDismissed] = useState(false);
+  if (dismissed) return null;
+  return (
+    <div className="es-cookie-bar">
+      <p>
+        We use essential cookies to keep you signed in and the cart working. By continuing you accept our use of cookies.{" "}
+        <Link to="/privacy" className="es-cookie-link">Privacy policy</Link>
+      </p>
+      <button type="button" className="es-cookie-close" aria-label="Dismiss cookie notice" onClick={() => setDismissed(true)}>
+        OK
+      </button>
+    </div>
   );
 }
 

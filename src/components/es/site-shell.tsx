@@ -2,7 +2,7 @@ import "./es-chrome";
 import { Link, Outlet } from "@tanstack/react-router";
 import { Phone } from "lucide-react";
 import { BRAND, CITIES, GUIDES, PACKAGES } from "@/lib/es/catalog";
-import { AuthSlot, Logo } from "./bits";
+import { AuthSlot, CookieDisclaimer, Logo } from "./bits";
 
 const NAV = [
   { to: "/builds", label: "Builds" },
@@ -110,6 +110,7 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
           © {new Date().getFullYear()} Everything Simulated · Gold Coast, Queensland · Prices AUD ex GST
         </p>
       </footer>
+      <CookieDisclaimer />
     </div>
   );
 }
