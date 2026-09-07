@@ -22,7 +22,7 @@ export function Home() {
       <JsonLd data={localBusinessLd()} />
       <JsonLd data={faqLd(FAQS)} />
       <section className="es-hero">
-        <img src="/rigs/Everything_Simulated_Hero.jpg" alt="Driver using a triple-screen racing simulator" className="es-hero-img" />
+        <img src="/rigs/Everything_Simulated_Hero copy.jpg" alt="Driver using a triple-screen racing simulator" className="es-hero-img" />
         <div className="es-hero-mask" />
         <div className="es-hero-copy">
           <p className="es-kicker">Gold Coast · Australia-wide</p>
