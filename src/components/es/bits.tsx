@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { ArrowLeft } from "lucide-react";
 import "../../es.css";
 import { Link } from "@tanstack/react-router";
 import { UserButton } from "@/lib/auth/gates";
@@ -7,6 +8,19 @@ import { aud, gstInclusive } from "@/lib/utils";
 import type { CheckIssue, CheckResult, PackageSpec, Product } from "@/lib/es/types";
 import { product, productImage } from "@/lib/es/catalog";
 import { cn } from "@/lib/utils";
+
+export function BackButton({ label = "Back" }: { label?: string }) {
+  return (
+    <button
+      type="button"
+      onClick={() => window.history.back()}
+      className="mb-6 inline-flex min-h-11 items-center gap-2 rounded-md border border-line px-4 text-sm text-muted transition-colors hover:border-esred hover:text-paper"
+    >
+      <ArrowLeft className="size-4" />
+      {label}
+    </button>
+  );
+}
 
 export function Logo({ compact = false }: { compact?: boolean }) {
   return (

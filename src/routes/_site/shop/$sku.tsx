@@ -1,7 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { CartPanel } from "@/components/es/cart-panel";
-import { JsonLd, Money, IncGst } from "@/components/es/bits";
+import { BackButton, JsonLd, Money, IncGst } from "@/components/es/bits";
 import { product, productImage, PRODUCTS } from "@/lib/es/catalog";
 import { useCart } from "@/lib/es/cart-store";
 import { abs, breadcrumbLd, pageHead } from "@/lib/es/seo";
@@ -29,6 +29,7 @@ function ProductPage() {
   const related = PRODUCTS.filter((p) => p.category === item.category && p.sku !== item.sku).slice(0, 3);
   return (
     <div className="mx-auto max-w-6xl px-4 py-16">
+      <BackButton />
       <JsonLd
         data={breadcrumbLd([
           { name: "Home", path: "/" },

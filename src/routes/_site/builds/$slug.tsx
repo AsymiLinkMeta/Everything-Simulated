@@ -1,6 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
-import { IncGst, JsonLd, LineName, Money } from "@/components/es/bits";
+import { BackButton, IncGst, JsonLd, LineName, Money } from "@/components/es/bits";
 import { packageBySlug, PACKAGES, PRODUCT_MAP } from "@/lib/es/catalog";
 import { useCart } from "@/lib/es/cart-store";
 import { abs, breadcrumbLd, pageHead } from "@/lib/es/seo";
@@ -29,6 +29,7 @@ function BuildPage() {
   const result = checkCart({ lines: pack.lines });
   return (
     <div className="mx-auto max-w-6xl px-4 py-16">
+      <BackButton />
       <JsonLd
         data={breadcrumbLd([
           { name: "Home", path: "/" },

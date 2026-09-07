@@ -1,5 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { JsonLd } from "@/components/es/bits";
+import { BackButton, JsonLd } from "@/components/es/bits";
 import { guideBySlug, GUIDES } from "@/lib/es/catalog";
 import { breadcrumbLd, pageHead } from "@/lib/es/seo";
 
@@ -24,6 +24,7 @@ function GuidePage() {
   const guide = Route.useLoaderData();
   return (
     <article className="mx-auto max-w-2xl px-4 py-16">
+      <BackButton />
       <JsonLd
         data={breadcrumbLd([
           { name: "Home", path: "/" },

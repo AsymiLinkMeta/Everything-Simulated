@@ -1,5 +1,5 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
-import { JsonLd, PackageCard } from "@/components/es/bits";
+import { BackButton, JsonLd, PackageCard } from "@/components/es/bits";
 import { CITIES, cityBySlug, PACKAGES } from "@/lib/es/catalog";
 import { breadcrumbLd, faqLd, FAQS, localBusinessLd, pageHead } from "@/lib/es/seo";
 
@@ -24,6 +24,7 @@ function CityPage() {
   const city = Route.useLoaderData();
   return (
     <div className="mx-auto max-w-6xl px-4 py-16">
+      <BackButton />
       <JsonLd data={localBusinessLd()} />
       <JsonLd data={faqLd(FAQS)} />
       <JsonLd
