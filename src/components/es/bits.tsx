@@ -11,7 +11,6 @@ export function Logo({ compact = false }: { compact?: boolean }) {
   return (
     <Link to="/" className="es-logo" aria-label="Everything Simulated">
       <picture>
-        <source media="(prefers-color-scheme: light)" srcSet="/Everything_Simulated_LOGO_B+R.png" />
         <img
           src="/Everything_Simulated_LOGO_W+R.png"
           alt="Everything Simulated"
