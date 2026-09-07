@@ -56,7 +56,7 @@ function Shop() {
         ))}
       </div>
       <div className="mt-8 grid gap-8 lg:grid-cols-[1fr_320px]">
-        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+        <div className="grid grid-cols-2 gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {items.map((item) => (
             <ProductTile key={item.sku} item={item} />
           ))}
