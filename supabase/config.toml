@@ -1,0 +1,2 @@
+[functions.generate-product-listing]
+verify_jwt = true

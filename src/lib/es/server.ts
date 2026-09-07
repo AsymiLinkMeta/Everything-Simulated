@@ -226,6 +226,78 @@ export async function staffListOverrides() {
   return data ?? [];
 }
 
+export type CatalogProduct = {
+  id: string;
+  sku: string;
+  brand: string;
+  name: string;
+  category: string;
+  sell_ex_gst: number;
+  stock_status: string;
+  lead_weeks_min: number;
+  lead_weeks_max: number;
+  description: string;
+  notes: string;
+  created_by: string;
+  created_at: string;
+};
+
+export async function staffListCatalogProducts(): Promise<CatalogProduct[]> {
+  const user = await getCurrentUser();
+  await requireStaff(user.id);
+  const { data, error } = await supabase
+    .from("catalog_products")
+    .select(
+      "id, sku, brand, name, category, sell_ex_gst, stock_status, lead_weeks_min, lead_weeks_max, description, notes, created_by, created_at",
+    )
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as CatalogProduct[];
+}
+
+export async function staffSaveCatalogProduct(input: {
+  sku: string;
+  brand: string;
+  name: string;
+  category: string;
+  sell_ex_gst: number;
+  stock_status: string;
+  lead_weeks_min: number;
+  lead_weeks_max: number;
+  description: string;
+  notes: string;
+}) {
+  const user = await getCurrentUser();
+  await requireStaff(user.id);
+  const { data, error } = await supabase
+    .from("catalog_products")
+    .insert({
+      sku: input.sku,
+      brand: input.brand,
+      name: input.name,
+      category: input.category,
+      sell_ex_gst: input.sell_ex_gst,
+      stock_status: input.stock_status,
+      lead_weeks_min: input.lead_weeks_min,
+      lead_weeks_max: input.lead_weeks_max,
+      description: input.description,
+      notes: input.notes,
+    })
+    .select("id, sku")
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  return { id: data?.id, sku: data?.sku };
+}
+
+export async function staffDeleteCatalogProduct(id: string) {
+  const user = await getCurrentUser();
+  const role = await requireStaff(user.id);
+  if (role !== "admin") throw new Error("Admin only");
+  const { error } = await supabase.from("catalog_products").delete().eq("id", id);
+  if (error) throw new Error(error.message);
+  return { ok: true };
+}
+
 export async function askBuilder(data: { message: string; lines: CartLine[]; driverWeightKg?: number }) {
   const user = await getCurrentUser();
   await ensureProfile(user.id, user.email);
