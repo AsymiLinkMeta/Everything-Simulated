@@ -39,7 +39,7 @@ export function StaffShell() {
       </div>
     );
   }
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) return <Navigate to="/login?portal=staff" replace />;
   if (!profile.data?.isStaff) {
     return (
       <div className="es-page" style={{ display: "grid", placeItems: "center", padding: 24 }}>

@@ -136,8 +136,7 @@ img {
   background: #151519;
 }
 
-.es-header-phone,
-.es-header-account {
+.es-header-phone {
   display: none;
   align-items: center;
   gap: 0.5rem;
@@ -152,8 +151,27 @@ img {
   border-radius: var(--es-radius);
 }
 
-.es-header-phone:hover,
-.es-header-account:hover {
+.es-header-phone:hover {
+  color: var(--es-paper);
+  border-color: var(--es-red);
+}
+
+.es-header-signin {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 0.9rem;
+  color: var(--es-paper);
+  background: var(--es-ink);
+  border: 1px solid var(--es-line);
+  text-decoration: none;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  border-radius: var(--es-radius);
+  flex-shrink: 0;
+}
+
+.es-header-signin:hover {
   color: var(--es-paper);
   border-color: var(--es-red);
 }
@@ -204,8 +222,7 @@ img {
 }
 
 @media (min-width: 768px) {
-  .es-nav,
-  .es-header-account {
+  .es-nav {
     display: flex;
   }
   .es-menu {
@@ -266,6 +283,15 @@ img {
   text-align: center;
   font-size: 0.75rem;
   color: var(--es-subtle);
+}
+
+.es-footer-login {
+  color: var(--es-subtle);
+  text-decoration: none;
+}
+
+.es-footer-login:hover {
+  color: var(--es-muted);
 }
 
 @media (min-width: 768px) {

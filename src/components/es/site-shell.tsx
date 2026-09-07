@@ -3,7 +3,7 @@ import { Link, Outlet, useLocation } from "@tanstack/react-router";
 import { Phone } from "lucide-react";
 import { useEffect, useState } from "react";
 import { BRAND, CITIES, GUIDES, PACKAGES } from "@/lib/es/catalog";
-import { AuthSlot, CookieDisclaimer, Logo } from "./bits";
+import { CookieDisclaimer, CustomerSignInLink, Logo, StaffLoginLink } from "./bits";
 
 const NAV = [
   { to: "/builds", label: "Builds" },
@@ -38,10 +38,7 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
             <Phone className="size-4" />
             {BRAND.phone}
           </a>
-          <Link to="/app" className="es-header-account">
-            Account
-          </Link>
-          <AuthSlot />
+          <CustomerSignInLink />
           <div className={`es-menu ${menuOpen ? "is-open" : ""}`}>
             <button type="button" className="es-menu-toggle" onClick={() => setMenuOpen((v) => !v)} aria-expanded={menuOpen}>
               Menu
@@ -53,7 +50,7 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
                     {n.label}
                   </Link>
                 ))}
-                <Link to="/app">Customer app</Link>
+                <CustomerSignInLink className="" />
                 <Link to="/contact">Contact</Link>
                 <a href={`tel:${BRAND.phone.replace(/\s/g, "")}`}>{BRAND.phone}</a>
               </div>
@@ -120,6 +117,8 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
         </div>
         <p className="es-footer-copy">
           © {new Date().getFullYear()} Everything Simulated · Gold Coast, Queensland · Prices AUD ex GST
+          {" · "}
+          <StaffLoginLink />
         </p>
       </footer>
       <CookieDisclaimer />

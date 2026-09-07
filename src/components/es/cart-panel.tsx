@@ -28,14 +28,14 @@ export function CartPanel({ compact = false }: { compact?: boolean }) {
 
   async function onSave() {
     if (!user) {
-      toast.message("Sign in to save this quote to your account.");
+      toast.message("Sign In to save this quote to your account.");
       return;
     }
     try {
       const saved = await saveQuote({ data: { lines, postcode, title: "Custom build" } });
       toast.success(`Quote ${saved.id} saved`);
     } catch {
-      toast.error("Could not save quote. Sign in and try again.");
+      toast.error("Could not save quote. Sign In and try again.");
     }
   }
 
@@ -136,7 +136,7 @@ export function CartPanel({ compact = false }: { compact?: boolean }) {
         <p className="text-sm text-muted">{aud(gstInclusive(result.totalExGst))} inc GST</p>
       </div>
       <div className="flex flex-col gap-2">
-        <Button onClick={onSave}>{user ? "Save quote" : "Sign in to save quote"}</Button>
+        <Button onClick={onSave}>{user ? "Save quote" : "Sign In to save quote"}</Button>
         <Button variant="outline" asChild>
           <Link to="/app/chat">Ask the build expert</Link>
         </Button>

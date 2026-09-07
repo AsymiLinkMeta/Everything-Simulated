@@ -36,14 +36,26 @@ export function Logo({ compact = false }: { compact?: boolean }) {
   );
 }
 
+export function CustomerSignInLink({ className }: { className?: string }) {
+  return (
+    <Link to="/login" className={className ?? "es-nav-link es-header-signin"}>
+      Sign In
+    </Link>
+  );
+}
+
 export function AuthSlot() {
   const { user, isPending } = useCurrentUserState();
   if (isPending) return <div className="h-8 w-24 animate-pulse rounded-md bg-raised" />;
   if (user) return <UserButton />;
+  return <CustomerSignInLink />;
+}
+
+export function StaffLoginLink() {
   return (
-    <Link to="/login" className="es-nav-link">
-      Sign in
-    </Link>
+    <a href="/login?portal=staff" className="es-footer-login">
+      Login
+    </a>
   );
 }
 

@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { GROK_PROVIDERS, authClient, authEnabled, signIn } from "@/lib/auth/client";
 import { useAuthState } from "@/lib/auth/provider";
 import { Button } from "@/components/ui/button";
@@ -11,14 +11,17 @@ import { pageHead } from "@/lib/es/seo";
 export const Route = createFileRoute("/login")({
   head: () =>
     pageHead({
-      title: "Sign in | Everything Simulated",
-      description: "Customer and staff sign-in for quotes, bookings and the workshop portal.",
+      title: "Sign In | Everything Simulated",
+      description: "Sign in to your Everything Simulated customer account for quotes, orders and bookings.",
       path: "/login",
     }),
   component: Login,
 });
 
 function Login() {
+  const [params] = useSearchParams();
+  const staff = params.get("portal") === "staff";
+  const next = staff ? "/staff" : "/app";
   const [mode, setMode] = useState<"in" | "up">("in");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -29,29 +32,29 @@ function Login() {
   const { user } = useAuthState();
 
   if (user) {
-    navigate("/app", { replace: true });
+    navigate(next, { replace: true });
   }
 
   async function onEmail(e: React.FormEvent) {
     e.preventDefault();
     setPending(true);
     setError(null);
-    if (mode === "up") {
-      const { error: err } = await authClient.signUp.email({ email, password, name, callbackURL: "/app" });
+    if (!staff && mode === "up") {
+      const { error: err } = await authClient.signUp.email({ email, password, name, callbackURL: next });
       setPending(false);
       if (err) {
         setError(err.message ?? "Could not create account");
         return;
       }
     } else {
-      const { error: err } = await authClient.signIn.email({ email, password, callbackURL: "/app" });
+      const { error: err } = await authClient.signIn.email({ email, password, callbackURL: next });
       setPending(false);
       if (err) {
-        setError(err.message ?? "Could not sign in");
+        setError(err.message ?? (staff ? "Could not log in" : "Could not sign in"));
         return;
       }
     }
-    navigate("/app", { replace: true });
+    navigate(next, { replace: true });
   }
 
   return (
@@ -59,8 +62,12 @@ function Login() {
       <div className="es-card w-full max-w-sm space-y-5 p-6">
         <Logo />
         <div>
-          <h1 className="text-xl font-medium">Sign in</h1>
-          <p className="mt-1 text-sm text-muted">Quotes, bookings and the workshop live here.</p>
+          <h1 className="text-xl font-medium">{staff ? "Login" : "Sign In"}</h1>
+          <p className="mt-1 text-sm text-muted">
+            {staff
+              ? "Workshop, sales and admin. Customer accounts use Sign In in the header."
+              : "Quotes, orders and bookings. Your customer account lives here."}
+          </p>
         </div>
         {authEnabled ? (
           <>
@@ -73,7 +80,7 @@ function Login() {
                       type="button"
                       variant="outline"
                       className="w-full"
-                      onClick={() => signIn(p.providerId, { callbackURL: "/app" })}
+                      onClick={() => signIn(p.providerId, { callbackURL: next })}
                     >
                       Continue with {p.label}
                     </Button>
@@ -83,7 +90,7 @@ function Login() {
               </>
             )}
             <form className="space-y-3" onSubmit={onEmail}>
-              {mode === "up" ? (
+              {!staff && mode === "up" ? (
                 <Input
                   placeholder="Name"
                   value={name}
@@ -108,19 +115,25 @@ function Login() {
               />
               {error ? <p className="text-sm text-esred">{error}</p> : null}
               <Button type="submit" className="w-full" disabled={pending}>
-                {pending ? "Please wait…" : mode === "up" ? "Create account" : "Sign in"}
+                {pending ? "Please wait…" : staff ? "Login" : mode === "up" ? "Create account" : "Sign In"}
               </Button>
             </form>
-            <button
-              type="button"
-              className="text-sm text-muted"
-              onClick={() => setMode(mode === "up" ? "in" : "up")}
-            >
-              {mode === "up" ? "Have an account? Sign in" : "New here? Create an account"}
-            </button>
+            {staff ? (
+              <a href="/login" className="block text-sm text-muted">
+                Customer? Sign In in the header.
+              </a>
+            ) : (
+              <button
+                type="button"
+                className="text-sm text-muted"
+                onClick={() => setMode(mode === "up" ? "in" : "up")}
+              >
+                {mode === "up" ? "Have an account? Sign In" : "New here? Create an account"}
+              </button>
+            )}
           </>
         ) : (
-          <p className="text-sm text-muted">Sign-in is disabled.</p>
+          <p className="text-sm text-muted">{staff ? "Login is disabled." : "Sign-in is disabled."}</p>
         )}
         <Link to="/" className="block text-sm text-muted">
           Back to the site
