@@ -48,7 +48,7 @@ export function AppShell() {
           ))}
         </nav>
         {profile.data?.isStaff ? (
-          <Link to="/staff" className="es-nav-link" style={{ color: "#e10600" }}>
+          <Link to="/staff" className="es-nav-link" style={{ color: "var(--es-red)", borderColor: "var(--es-red)" }}>
             Staff
           </Link>
         ) : null}

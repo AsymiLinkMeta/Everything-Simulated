@@ -70,7 +70,7 @@ export function StaffShell() {
             </Link>
           ))}
         </nav>
-        <Link to="/app" style={{ marginTop: "auto", padding: 16, fontSize: 14, color: "#9a9aa3" }}>
+        <Link to="/app" className="es-nav-link" style={{ marginTop: "auto" }}>
           Customer app
         </Link>
       </aside>

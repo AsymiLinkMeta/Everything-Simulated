@@ -9,13 +9,15 @@ import { cn } from "@/lib/utils";
 
 export function Logo({ compact = false }: { compact?: boolean }) {
   return (
-    <Link to="/" className="es-logo">
-      <span className="es-logo-mark">ES</span>
-      {compact ? null : (
-        <span className="es-logo-word">
-          Everything Simulated
-        </span>
-      )}
+    <Link to="/" className="es-logo" aria-label="Everything Simulated">
+      <picture>
+        <source media="(prefers-color-scheme: light)" srcSet="/Everything_Simulated_LOGO_B+R.png" />
+        <img
+          src="/Everything_Simulated_LOGO_W+R.png"
+          alt="Everything Simulated"
+          className={compact ? "es-logo-image es-logo-image-compact" : "es-logo-image"}
+        />
+      </picture>
     </Link>
   );
 }

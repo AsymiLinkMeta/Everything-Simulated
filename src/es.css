@@ -4,11 +4,14 @@
   --es-ink: #070708;
   --es-panel: #111114;
   --es-raised: #18181c;
-  --es-paper: #f4f4f5;
-  --es-muted: #9a9aa3;
-  --es-subtle: #6b6b74;
-  --es-line: #222228;
-  --es-red: #e10600;
+  --es-paper: #ffffff;
+  --es-muted: #d2d2d6;
+  --es-subtle: #a0a0a8;
+  --es-line: #34343b;
+  --es-red: #ef2412;
+  --es-light: #ffffff;
+  --es-light-ink: #070708;
+  --es-light-line: #dedede;
   --es-ok: #3d9a6a;
   --es-warn: #c4a15a;
   --es-radius: 15px;
@@ -59,32 +62,25 @@ img {
 .es-logo {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
-  color: var(--es-paper);
-  text-decoration: none;
   min-height: 44px;
   flex-shrink: 0;
 }
 
-.es-logo-mark {
-  display: grid;
-  place-items: center;
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: var(--es-radius-md);
-  background: var(--es-red);
-  color: var(--es-paper);
-  font-size: 0.7rem;
-  font-weight: 600;
-  letter-spacing: 0.12em;
+.es-logo picture,
+.es-logo-image {
+  display: block;
 }
 
-.es-logo-word {
-  font-size: 0.8rem;
-  font-weight: 500;
-  letter-spacing: 0.06em;
-  line-height: 1.2;
-  max-width: 9.5rem;
+.es-logo-image {
+  width: 9.5rem;
+  height: 2.6rem;
+  object-fit: contain;
+  object-position: left center;
+}
+
+.es-logo-image-compact {
+  width: 2.6rem;
+  object-position: left center;
 }
 
 /* ---- header / nav ---- */
@@ -118,17 +114,22 @@ img {
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  padding: 0 0.75rem;
-  color: var(--es-muted);
+  padding: 0 0.9rem;
+  color: var(--es-paper);
+  background: var(--es-ink);
+  border: 1px solid var(--es-line);
   text-decoration: none;
   font-size: 0.875rem;
   white-space: nowrap;
-  border-radius: var(--es-radius-md);
+  border-radius: var(--es-radius);
+  transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease;
 }
 
 .es-nav-link:hover,
 .es-nav-link.is-active {
   color: var(--es-paper);
+  border-color: var(--es-red);
+  background: #151519;
 }
 
 .es-header-phone,
@@ -137,16 +138,20 @@ img {
   align-items: center;
   gap: 0.5rem;
   min-height: 44px;
-  padding: 0 0.5rem;
-  color: var(--es-muted);
+  padding: 0 0.9rem;
+  color: var(--es-paper);
+  background: var(--es-ink);
+  border: 1px solid var(--es-line);
   text-decoration: none;
   font-size: 0.875rem;
   white-space: nowrap;
+  border-radius: var(--es-radius);
 }
 
 .es-header-phone:hover,
 .es-header-account:hover {
   color: var(--es-paper);
+  border-color: var(--es-red);
 }
 
 .es-menu {
@@ -164,7 +169,8 @@ img {
   list-style: none;
   cursor: pointer;
   border: 1px solid var(--es-line);
-  border-radius: var(--es-radius-md);
+  border-radius: var(--es-radius);
+  background: var(--es-ink);
   color: var(--es-paper);
   font-size: 0.875rem;
 }
@@ -244,12 +250,12 @@ img {
 }
 
 .es-footer-col a {
-  color: var(--es-muted);
+  color: var(--es-paper);
   text-decoration: none;
 }
 
 .es-footer-col a:hover {
-  color: var(--es-paper);
+  color: var(--es-red);
 }
 
 .es-footer-copy {
@@ -276,6 +282,11 @@ img {
   color: var(--es-paper);
   text-decoration: none;
   overflow: hidden;
+  transition: border-color 160ms ease, transform 160ms ease;
+}
+
+.es-card:hover {
+  border-color: var(--es-red);
 }
 
 .es-kicker {
@@ -414,12 +425,24 @@ img {
 .es-btn-paper {
   background: var(--es-paper);
   color: var(--es-ink);
+  border: 1px solid var(--es-paper);
+}
+
+.es-btn-paper:hover {
+  background: var(--es-red);
+  color: var(--es-paper);
+  border-color: var(--es-red);
 }
 
 .es-btn-ghost {
   background: transparent;
   color: var(--es-paper);
   border: 1px solid var(--es-line);
+}
+
+.es-btn-ghost:hover {
+  color: var(--es-red);
+  border-color: var(--es-red);
 }
 
 /* ---- app / staff chrome ---- */
@@ -460,8 +483,9 @@ img {
   font-size: 0.7rem;
 }
 
+.es-tabbar a:hover,
 .es-tabbar a.is-active {
-  color: var(--es-paper);
+  color: var(--es-red);
 }
 
 .es-staff {
@@ -482,18 +506,20 @@ img {
   align-items: center;
   gap: 0.5rem;
   min-height: 44px;
-  padding: 0 0.75rem;
+  padding: 0 0.9rem;
   margin: 0.15rem 0.5rem;
   color: var(--es-muted);
   text-decoration: none;
   font-size: 0.875rem;
-  border-radius: var(--es-radius-md);
+  border: 1px solid transparent;
+  border-radius: var(--es-radius);
 }
 
 .es-sidebar a:hover,
 .es-sidebar a.is-active {
   color: var(--es-paper);
-  background: var(--es-raised);
+  background: #151519;
+  border-color: var(--es-red);
 }
 
 @media (min-width: 768px) {

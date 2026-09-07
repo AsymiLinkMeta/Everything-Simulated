@@ -1,12 +1,12 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16" role="img" aria-label="Everything Simulated">
-  <circle cx="8" cy="8" r="8" fill="#070708"/>
-  <rect x="2" y="3" width="2" height="10" fill="#F4F4F5"/>
-  <rect x="2" y="3" width="5" height="2" fill="#F4F4F5"/>
-  <rect x="2" y="7" width="4" height="2" fill="#F4F4F5"/>
-  <rect x="2" y="11" width="5" height="2" fill="#F4F4F5"/>
-  <rect x="9" y="3" width="5" height="2" fill="#E10600"/>
-  <rect x="9" y="3" width="2" height="6" fill="#E10600"/>
-  <rect x="9" y="7" width="5" height="2" fill="#E10600"/>
-  <rect x="12" y="7" width="2" height="6" fill="#E10600"/>
-  <rect x="9" y="11" width="5" height="2" fill="#E10600"/>
+  <rect width="16" height="16" rx="3" fill="#ffffff"/>
+  <rect x="2" y="3" width="2" height="10" fill="#070708"/>
+  <rect x="2" y="3" width="5" height="2" fill="#070708"/>
+  <rect x="2" y="7" width="4" height="2" fill="#070708"/>
+  <rect x="2" y="11" width="5" height="2" fill="#070708"/>
+  <rect x="9" y="3" width="5" height="2" fill="#ef2412"/>
+  <rect x="9" y="3" width="2" height="6" fill="#ef2412"/>
+  <rect x="9" y="7" width="5" height="2" fill="#ef2412"/>
+  <rect x="12" y="7" width="2" height="6" fill="#ef2412"/>
+  <rect x="9" y="11" width="5" height="2" fill="#ef2412"/>
 </svg>
