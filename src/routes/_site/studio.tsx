@@ -19,7 +19,10 @@ function Studio() {
     <div>
       <section className="relative isolate min-h-[70dvh] overflow-hidden">
         <img src="/rigs/showroom.jpg" alt="Everything Simulated Gold Coast showroom" className="absolute inset-0 size-full object-cover" />
-        <div className="absolute inset-0 bg-ink/70" />
+        <div
+          className="absolute inset-0 bg-cover bg-center"
+          style={{ backgroundImage: "url('/rigs/WNI7y.jpg')" }}
+        />
         <div className="relative mx-auto flex min-h-[70dvh] max-w-6xl flex-col justify-end px-4 pb-16">
           <p className="es-kicker">Showroom</p>
           <h1 className="mt-3 max-w-2xl text-4xl font-medium md:text-5xl">Sit in the rig before it ships.</h1>
