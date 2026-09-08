@@ -71,7 +71,7 @@ img {
   flex-shrink: 0;
   padding: 0.4rem;
   background: #070708;
-  border: 1px solid var(--es-line);
+  border: 0;
   border-radius: var(--es-radius);
   overflow: hidden;
 }
