@@ -50,10 +50,10 @@ export async function getProfile() {
   return getProfileData();
 }
 
-export async function saveQuote(data: { lines: CartLine[]; postcode?: string; title?: string }) {
+export async function saveQuote(data: { lines: CartLine[]; postcode?: string; title?: string; driverWeightKg?: number }) {
   const user = await getCurrentUser();
   await ensureProfile(user.id, user.email);
-  const result = checkCart({ lines: data.lines });
+  const result = checkCart({ lines: data.lines, driverWeightKg: data.driverWeightKg });
   const id = `ES-${Date.now().toString(36).toUpperCase()}`;
   const { error } = await supabase.from("quotes").insert({
     id,
@@ -299,13 +299,18 @@ export async function staffDeleteCatalogProduct(id: string) {
   return { ok: true };
 }
 
-export async function askBuilder(data: { message: string; lines: CartLine[]; driverWeightKg?: number }) {
+export async function askBuilder(data: {
+  message: string;
+  lines: CartLine[];
+  driverWeightKg?: number;
+  task?: "chat" | "recommend" | "compatibility";
+}) {
   const user = await getCurrentUser();
   await ensureProfile(user.id, user.email);
   await supabase.from("chat_messages").insert({ user_id: user.id, role: "user", content: data.message.slice(0, 4000) });
   const result = checkCart({ lines: data.lines, driverWeightKg: data.driverWeightKg });
-  const systemPrompt = `You are the Everything Simulated build expert on the Gold Coast. Phone ${BRAND.phone}. Never invent SKUs. Only recommend these packages: ${PACKAGES.map((p) => p.slug).join(", ")} and catalogue SKUs: ${getCachedProducts().map((p) => p.sku).join(", ")}. Compatibility is decided by the checker JSON — do not override a block. Prices are AUD ex GST. Be concise and premium.`;
-  const userContent = `Checker JSON: ${JSON.stringify(result)}\nCart: ${JSON.stringify(data.lines)}\nQuestion: ${data.message}`;
+  const systemPrompt = `You are the Everything Simulated build agent on the Gold Coast. Phone ${BRAND.phone}. You help customers choose parts, understand compatibility, and prepare accurate quotes. Never invent SKUs, products, prices, stock or lead times. Only recommend these packages: ${PACKAGES.map((p) => p.slug).join(", ")} and catalogue SKUs: ${getCachedProducts().map((p) => p.sku).join(", ")}. Compatibility is decided by the checker JSON — never override a block. Prices are AUD ex GST. If the cart is blocked, explain the exact issue and suggest only fixes supported by the checker. Be concise, practical and premium. Current agent task: ${data.task ?? "chat"}.`;
+  const userContent = `Checker JSON: ${JSON.stringify(result)}\nCart: ${JSON.stringify(data.lines)}\nDriver weight kg: ${data.driverWeightKg ?? 80}\nQuestion: ${data.message}`;
 
   let reply: string;
   try {

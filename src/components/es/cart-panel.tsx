@@ -33,7 +33,7 @@ export function CartPanel({ compact = false }: { compact?: boolean }) {
       return;
     }
     try {
-      const saved = await saveQuote({ data: { lines, postcode, title: "Custom build" } });
+      const saved = await saveQuote({ data: { lines, postcode, title: "Custom build", driverWeightKg } });
       toast.success(`Quote ${saved.id} saved`);
     } catch {
       toast.error("Could not save quote. Sign In and try again.");
