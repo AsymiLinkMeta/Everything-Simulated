@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { Boxes, Sparkles, Trash2, WandSparkles, X } from "lucide-react";
+import { Boxes, Search, Sparkles, Trash2, WandSparkles, X } from "lucide-react";
 import { ListingImages } from "@/components/es/listing-images";
 import { fetchProducts, invalidateProductCache } from "@/lib/es/product-cache";
 import { sanitizeListingImages, uniqueImages } from "@/lib/es/listing-images";
@@ -79,6 +79,8 @@ function Catalog() {
   const [saving, setSaving] = useState(false);
   const [draftImages, setDraftImages] = useState<string[]>([]);
   const [editingWithAi, setEditingWithAi] = useState(false);
+  const [skuSearch, setSkuSearch] = useState("");
+  const [searchingSku, setSearchingSku] = useState(false);
 
   async function savePrice(sku: string) {
     const dollars = Number(priceDraft[sku]);
@@ -89,6 +91,50 @@ function Catalog() {
       await qc.invalidateQueries({ queryKey: ["overrides"] });
     } catch {
       toast.error("Could not save price");
+    }
+  }
+
+  async function handleAiSkuSearch() {
+    const query = skuSearch.trim();
+    if (!query) {
+      toast.error("Enter a SKU, model number, or product name");
+      return;
+    }
+    setSearchingSku(true);
+    try {
+      const result = await generateProductListing({
+        brand: draft.brand,
+        productName: query,
+        category: draft.category,
+        price: draft.price,
+        details: `Use AI to identify the exact retail product for this SKU or model query: ${query}. Return accurate catalogue data and do not invent specifications. ${draft.details}`,
+        url: draft.url,
+      });
+      const photos = uniqueImages([
+        ...draftImages,
+        ...(result.listing.images ?? []),
+        result.listing.imageUrl ?? "",
+      ]);
+      setDraft((current) => ({
+        ...current,
+        brand: result.listing.brand,
+        productName: result.listing.name,
+        category: result.listing.category,
+        price: String(result.listing.price / 100 || ""),
+        details: result.listing.description,
+        url: result.listing.manufacturerUrl ?? current.url,
+      }));
+      setGenerated(result);
+      setEditListing({
+        ...result.listing,
+        images: photos,
+        imageUrl: photos[0] || result.listing.imageUrl,
+      });
+      toast.success(`AI found ${result.listing.sku}`);
+    } catch {
+      toast.error("Could not search for that SKU");
+    } finally {
+      setSearchingSku(false);
     }
   }
 
@@ -223,6 +269,33 @@ function Catalog() {
 
         {showGenerator && !editListing && (
           <div className="mt-4 grid gap-3 sm:grid-cols-2">
+            <div className="sm:col-span-2 rounded-lg border border-esred/30 bg-esred/5 p-3">
+              <div className="flex items-center gap-2">
+                <Search className="size-4 text-esred" />
+                <div>
+                  <p className="text-sm font-medium">AI SKU search</p>
+                  <p className="text-xs text-muted">Enter a SKU or model number and let AI find the matching product listing.</p>
+                </div>
+              </div>
+              <div className="mt-3 flex flex-col gap-2 sm:flex-row">
+                <Input
+                  value={skuSearch}
+                  onChange={(e) => setSkuSearch(e.target.value)}
+                  placeholder="e.g. TR120S V2 or P1000-RS"
+                  disabled={searchingSku || generating}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      void handleAiSkuSearch();
+                    }
+                  }}
+                />
+                <Button type="button" onClick={handleAiSkuSearch} disabled={searchingSku || generating || !skuSearch.trim()}>
+                  <Search className="size-4" />
+                  {searchingSku ? "Searching…" : "Search with AI"}
+                </Button>
+              </div>
+            </div>
             <label className="space-y-1">
               <span className="text-xs text-muted">Brand</span>
               <Input
