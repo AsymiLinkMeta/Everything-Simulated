@@ -16,16 +16,24 @@ type IconState =
   | { kind: "preview"; dataUrl: string; hasBg: boolean }
   | { kind: "removed"; dataUrl: string };
 
-async function fileToCompressedPng(file: File, maxSize = 512): Promise<string | null> {
+const LOGO_CANVAS = 220;
+
+async function fileToCroppedLogo(file: File): Promise<string | null> {
   try {
     const bitmap = await createImageBitmap(file);
-    const scale = Math.min(1, maxSize / Math.max(bitmap.width, bitmap.height));
+    const srcW = bitmap.width;
+    const srcH = bitmap.height;
+    const target = LOGO_CANVAS;
+    const scale = Math.min(target / srcW, target / srcH);
+    const drawW = Math.max(1, Math.round(srcW * scale));
+    const drawH = Math.max(1, Math.round(srcH * scale));
     const canvas = document.createElement("canvas");
-    canvas.width = Math.max(1, Math.round(bitmap.width * scale));
-    canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+    canvas.width = target;
+    canvas.height = target;
     const ctx = canvas.getContext("2d");
     if (!ctx) return null;
-    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    ctx.clearRect(0, 0, target, target);
+    ctx.drawImage(bitmap, (target - drawW) / 2, (target - drawH) / 2, drawW, drawH);
     return canvas.toDataURL("image/png");
   } catch {
     return null;
@@ -129,7 +137,7 @@ function BrandsAdmin() {
   const [urlInput, setUrlInput] = useState("");
 
   async function handleFile(file: File) {
-    const png = await fileToCompressedPng(file);
+    const png = await fileToCroppedLogo(file);
     if (!png) {
       toast.error("Could not process that image");
       return;
@@ -286,9 +294,10 @@ function BrandsAdmin() {
 
             {icon.kind !== "empty" && (
               <div className="flex flex-wrap items-center gap-3">
-                <div className="flex size-20 items-center justify-center rounded-lg border border-line bg-checker p-2">
-                  <img src={icon.dataUrl} alt="Brand icon preview" className="max-h-full max-w-full object-contain" />
+                <div className="flex size-24 items-center justify-center rounded-lg border border-line bg-checker p-2">
+                  <img src={icon.dataUrl} alt="Brand icon preview" className="size-20 object-contain" />
                 </div>
+                <p className="text-xs text-muted">Cropped to {LOGO_CANVAS}×{LOGO_CANVAS}px — fits the banner card.</p>
                 <div className="space-y-1">
                   {icon.kind === "preview" && icon.hasBg && (
                     <p className="text-xs text-yellow-400">
@@ -354,7 +363,7 @@ function BrandsAdmin() {
                   <tr key={b.id} className="border-t border-line">
                     <td className="py-3">
                       {b.icon_url ? (
-                        <img src={b.icon_url} alt={b.name} className="h-8 w-auto max-w-[100px] object-contain" />
+                        <img src={b.icon_url} alt={b.name} className="size-10 rounded-md border border-line bg-checker object-contain p-1" />
                       ) : (
                         <span className="text-muted">—</span>
                       )}

@@ -176,11 +176,11 @@ function BrandLogo({
   ariaHidden?: boolean;
 }) {
   const content = brand.icon_url ? (
-    <img src={brand.icon_url} alt={ariaHidden ? "" : brand.name} className="h-8 w-auto max-w-[132px] object-contain" />
+    <img src={brand.icon_url} alt={ariaHidden ? "" : brand.name} className="h-16 w-16 object-contain" />
   ) : (
     <span className="text-base font-medium text-paper">{brand.name}</span>
   );
-  const className = "group flex min-h-14 shrink-0 items-center justify-center rounded-xl border border-line bg-black px-6 transition-all duration-300 hover:border-muted hover:bg-raised";
+  const className = "group flex h-24 w-24 shrink-0 items-center justify-center rounded-xl border border-line bg-black p-4 transition-all duration-300 hover:border-muted hover:bg-raised sm:h-28 sm:w-28";
   if (!brand.link_url) return <div className={className}>{content}</div>;
   return (
     <a href={brand.link_url} target="_blank" rel="noopener noreferrer" className={className} aria-hidden={ariaHidden} tabIndex={ariaHidden ? -1 : 0}>
