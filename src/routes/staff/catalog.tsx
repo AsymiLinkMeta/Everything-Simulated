@@ -390,6 +390,8 @@ function Catalog() {
                   }}
                 />
               </label>
+              <label className="space-y-1 sm:col-span-2">
+                <span className="text-xs text-muted">Primary image URL</span>
                 <Input
                   value={editListing.imageUrl ?? ""}
                   onChange={(e) => setEditListing((l) => ({ ...l!, imageUrl: e.target.value }))}
