@@ -21,7 +21,7 @@ type CartState = {
 export const useCart = create<CartState>()(
   persist(
     (set, get) => ({
-      lines: PACKAGES[1]?.lines.map((l) => ({ ...l })) ?? [],
+      lines: [],
       driverWeightKg: 80,
       postcode: "4215",
       setWeight: (driverWeightKg) => set({ driverWeightKg }),
@@ -47,6 +47,6 @@ export const useCart = create<CartState>()(
       clear: () => set({ lines: [] }),
       result: () => checkCart({ lines: get().lines, driverWeightKg: get().driverWeightKg }),
     }),
-    { name: "es-cart" },
+    { name: "es-cart-v2" }
   ),
 );
