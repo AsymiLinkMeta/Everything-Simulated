@@ -1,4 +1,5 @@
 import { supabase, supabaseAnonKey, supabaseUrl } from "@/lib/db";
+import type { DiscoveredProduct } from "./discover";
 
 export type ProductListing = {
   sku: string;
@@ -30,6 +31,7 @@ export async function generateProductListing(input: {
   price: string;
   details: string;
   url?: string;
+  discovered?: DiscoveredProduct;
 }) {
   const { data: sessionData } = await supabase.auth.getSession();
   const accessToken = sessionData.session?.access_token;

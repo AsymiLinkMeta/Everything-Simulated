@@ -9,6 +9,13 @@ export type DiscoveredProduct = {
   sku?: string | null;
   image?: string | null;
   vendor?: string;
+  images?: string[];
+  bodyHtml?: string;
+  bodyText?: string;
+  productType?: string;
+  tags?: string[];
+  variants?: { sku?: string; title?: string; price?: string }[];
+  options?: { name: string; values: string[] }[];
 };
 
 export async function discoverProducts(input: { query?: string; url?: string }): Promise<{

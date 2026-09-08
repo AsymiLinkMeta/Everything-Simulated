@@ -650,6 +650,35 @@ img {
   border-color: var(--es-red);
 }
 
+/* ---- staff header layout: logo left, user center, hamburger right ---- */
+.es-staff-header {
+  justify-content: space-between;
+}
+
+.es-staff-header-left {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.es-staff-header-center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+}
+
+@media (max-width: 767px) {
+  .es-staff-header-center {
+    position: static;
+    transform: none;
+    flex: 1;
+    justify-content: center;
+    min-width: 0;
+  }
+}
+
 /* ---- staff top nav (mobile + tablet) ---- */
 .es-staff-topnav {
   display: flex;
@@ -735,14 +764,17 @@ img {
 }
 
 .es-staff-hamburger-menu {
-  position: absolute;
-  top: calc(100% + 0.5rem);
-  right: 0;
+  position: fixed;
+  top: 64px;
+  right: 16px;
+  left: auto;
   z-index: 60;
   display: flex;
   flex-direction: column;
   gap: 0.15rem;
-  min-width: 200px;
+  width: min(240px, calc(100vw - 32px));
+  min-width: 0;
+  box-sizing: border-box;
   padding: 0.5rem;
   background: rgba(7, 7, 8, 0.96);
   backdrop-filter: blur(12px);

@@ -143,6 +143,7 @@ function Catalog() {
         price: draft.price,
         details: draft.details,
         url,
+        discovered: hit,
       });
       const photos = uniqueImages([
         ...draftImages,
@@ -210,6 +211,7 @@ function Catalog() {
           price: draft.price,
           details: draft.details,
           url: hit.url,
+          discovered: hit,
         });
         const photos = uniqueImages([hit.image ?? "", ...(result.listing.images ?? []), result.listing.imageUrl ?? ""]);
         await staffSaveCatalogProduct({
@@ -471,12 +473,12 @@ function Catalog() {
               </select>
             </label>
             <label className="space-y-1">
-              <span className="text-xs text-muted">Indicative price (AUD ex GST)</span>
+              <span className="text-xs text-muted">Price (optional — AI leaves this at 0 for admins to set)</span>
               <Input
                 type="number"
                 value={draft.price}
                 onChange={(e) => setDraft((d) => ({ ...d, price: e.target.value }))}
-                placeholder="e.g. 599"
+                placeholder="Admin sets price after generate"
               />
             </label>
             <label className="space-y-1 sm:col-span-2">
@@ -602,7 +604,7 @@ function Catalog() {
                 </select>
               </label>
               <label className="space-y-1">
-                <span className="text-xs text-muted">Price (AUD ex GST, cents)</span>
+                <span className="text-xs text-muted">Price (AUD ex GST, cents) — admin only</span>
                 <Input
                   type="number"
                   value={editListing.price}

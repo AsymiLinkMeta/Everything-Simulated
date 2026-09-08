@@ -105,7 +105,10 @@ export function StaffShell() {
         className="es-staff-main"
         style={{ height: "100dvh", minHeight: 0, overflowY: "auto", overscrollBehavior: "contain" }}
       >
-        <header className="es-appbar" style={{ justifyContent: "space-between" }}>
+        <header className="es-appbar es-staff-header">
+          <div className="es-staff-header-left">
+            <Logo compact />
+          </div>
           <div className="es-staff-topnav">
             {TABS.map((t) => (
               <Link
@@ -119,6 +122,9 @@ export function StaffShell() {
                 <span>{t.label}</span>
               </Link>
             ))}
+          </div>
+          <div className="es-staff-header-center">
+            <AuthSlot />
           </div>
           <div className="es-staff-hamburger-wrap">
             <button
@@ -146,7 +152,6 @@ export function StaffShell() {
               </nav>
             ) : null}
           </div>
-          <AuthSlot />
         </header>
         <div className="es-wrap" style={{ paddingTop: 24, paddingBottom: 96 }}>
           <Outlet />
