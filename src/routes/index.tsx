@@ -39,30 +39,6 @@ export function Home() {
               Book a studio demo
             </Link>
           </div>
-          <section className="mt-8 max-w-xl rounded-2xl border border-white/20 bg-black/35 p-5 backdrop-blur-sm">
-            <p className="es-kicker">Your rig, your roadmap</p>
-            <h2 className="mt-2 text-xl font-medium text-white sm:text-2xl">
-              Create an account to design, upgrade or maintain your rig.
-            </h2>
-            <p className="mt-2 max-w-lg text-sm leading-6 text-white/75">
-              Save your build, check every part for compatibility, request quotes, and keep your
-              service history in one place.
-            </p>
-            <div className="mt-4 grid gap-2 text-sm text-white/90 sm:grid-cols-2">
-              <span>Design a compatible build</span>
-              <span>Upgrade parts with confidence</span>
-              <span>Save and compare quotes</span>
-              <span>Maintain your rig over time</span>
-            </div>
-            <div className="mt-5 flex flex-wrap items-center gap-3">
-              <Link to="/login" className="es-btn">
-                Create your account <ArrowRight className="size-4" />
-              </Link>
-              <Link to="/login" className="text-sm text-white/75 underline-offset-4 hover:text-white hover:underline">
-                Sign in
-              </Link>
-            </div>
-          </section>
         </div>
       </section>
 
@@ -80,6 +56,78 @@ export function Home() {
           {PACKAGES.map((pack) => (
             <PackageCard key={pack.slug} pack={pack} />
           ))}
+        </div>
+      </section>
+
+      <section className="border-y border-line bg-panel">
+        <div className="mx-auto max-w-6xl px-4 py-20">
+          <div className="max-w-2xl">
+            <p className="es-kicker">Your rig, your roadmap</p>
+            <h2 className="mt-3 text-3xl font-medium sm:text-4xl">
+              Create an account to design, upgrade or maintain your rig.
+            </h2>
+            <p className="mt-4 text-muted">
+              Keep every decision in one place, from the first compatible build to future upgrades,
+              saved quotes and ongoing care.
+            </p>
+          </div>
+          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              {
+                title: "Design your build",
+                body: "Configure a complete rig with the parts we actually assemble and ship.",
+                image: "/rigs/starter.jpg",
+                to: "/app/build",
+              },
+              {
+                title: "Check compatibility",
+                body: "Validate torque, payload, QR and mount choices before you commit.",
+                image: "/rigs/haptic.jpg",
+                to: "/compatibility",
+              },
+              {
+                title: "Upgrade with confidence",
+                body: "Save your current setup, compare options and request a tailored quote.",
+                image: "/rigs/motion.jpg",
+                to: "/app/quotes",
+              },
+              {
+                title: "Maintain over time",
+                body: "Keep your build history close and get help when your rig evolves.",
+                image: "/rigs/showroom.jpg",
+                to: "/app/chat",
+              },
+            ].map((feature) => (
+              <Link
+                key={feature.title}
+                to={feature.to}
+                className="group overflow-hidden rounded-2xl border border-line bg-black transition-transform duration-300 hover:-translate-y-1"
+              >
+                <div className="aspect-[4/3] overflow-hidden">
+                  <img
+                    src={feature.image}
+                    alt=""
+                    className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  />
+                </div>
+                <div className="p-5">
+                  <h3 className="text-lg font-medium text-paper">{feature.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-muted">{feature.body}</p>
+                  <span className="mt-5 inline-block text-sm text-paper underline-offset-4 group-hover:underline">
+                    Explore tool
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+          <div className="mt-10 flex flex-wrap items-center gap-4">
+            <Link to="/login" className="es-btn">
+              Create your account <ArrowRight className="size-4" />
+            </Link>
+            <Link to="/login" className="text-sm text-muted underline-offset-4 hover:text-paper hover:underline">
+              Already have an account? Sign in
+            </Link>
+          </div>
         </div>
       </section>
 
