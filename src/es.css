@@ -176,6 +176,14 @@ img {
   border-color: var(--es-red);
 }
 
+@media (max-width: 767px) {
+  .es-header-signin {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+  }
+}
+
 .es-menu {
   position: relative;
   margin-left: auto;
