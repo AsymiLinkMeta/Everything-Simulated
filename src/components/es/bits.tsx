@@ -39,7 +39,7 @@ export function Logo({ compact = false }: { compact?: boolean }) {
 export function CustomerSignInLink({ className }: { className?: string }) {
   return (
     <Link to="/login" className={className ?? "es-nav-link es-header-signin"}>
-      Sign In
+      Customer Sign In
     </Link>
   );
 }
@@ -54,7 +54,7 @@ export function AuthSlot() {
 export function StaffLoginLink() {
   return (
     <a href="/login?portal=staff" className="es-footer-login" aria-label="Staff login">
-      Login
+      Staff / Admin Login
     </a>
   );
 }

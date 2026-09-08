@@ -87,7 +87,7 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
                 <Instagram className="size-5" />
               </a>
             </div>
-            <p className="es-kicker" style={{ marginTop: 16 }}>Staff</p>
+            <p className="es-kicker" style={{ marginTop: 16 }}>Staff / Admin</p>
             <p>
               <StaffLoginLink />
             </p>
