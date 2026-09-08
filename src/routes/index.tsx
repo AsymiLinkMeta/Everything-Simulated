@@ -24,6 +24,28 @@ export function Home() {
       <JsonLd data={localBusinessLd()} />
       <section className="es-hero">
         <img src="/rigs/Everything_Simulated_Hero copy.jpg" alt="Driver using a triple-screen racing simulator" className="es-hero-img" />
+        <video
+          className="es-hero-video es-hero-video-desktop"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          poster="/rigs/Everything_Simulated_Hero copy.jpg"
+        >
+          <source src="/videos/hero-uw.mp4" type="video/mp4" />
+        </video>
+        <video
+          className="es-hero-video es-hero-video-mobile"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          poster="/rigs/Everything_Simulated_Hero copy.jpg"
+        >
+          <source src="/videos/hero-mobile.mp4" type="video/mp4" />
+        </video>
         <div className="es-hero-mask" />
         <div className="es-hero-copy">
           <p className="es-kicker">Gold Coast · Australia-wide</p>
