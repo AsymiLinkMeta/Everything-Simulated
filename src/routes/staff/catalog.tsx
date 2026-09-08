@@ -1,8 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { toast } from "sonner";
-import { Boxes, Sparkles, Trash2, X } from "lucide-react";
+import { Boxes, ImagePlus, Sparkles, Trash2, Upload, WandSparkles, X } from "lucide-react";
 import { fetchProducts, invalidateProductCache } from "@/lib/es/product-cache";
 import {
   staffDeleteCatalogProduct,
@@ -92,6 +92,9 @@ function Catalog() {
   const [generated, setGenerated] = useState<{ listing: ProductListing; source: "grok" | "draft" } | null>(null);
   const [editListing, setEditListing] = useState<ProductListing | null>(null);
   const [saving, setSaving] = useState(false);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const [draggingImages, setDraggingImages] = useState(false);
+  const [editingWithAi, setEditingWithAi] = useState(false);
 
   async function savePrice(sku: string) {
     const dollars = Number(priceDraft[sku]);
@@ -102,6 +105,54 @@ function Catalog() {
       await qc.invalidateQueries({ queryKey: ["overrides"] });
     } catch {
       toast.error("Could not save price");
+    }
+  }
+
+  async function addImageFiles(files: File[]) {
+    const imageFiles = files.filter((file) => file.type.startsWith("image/")).slice(0, 8);
+    const urls: string[] = [];
+    for (const file of imageFiles) {
+      const data = await compressImage(file);
+      if (data) urls.push(data);
+    }
+    if (!urls.length) {
+      if (imageFiles.length === 0 && files.length > 0) toast.error("Please choose image files");
+      return;
+    }
+    setEditListing((listing) => {
+      if (!listing) return listing;
+      const next = [...(listing.images ?? []), ...urls].slice(0, 8);
+      return { ...listing, images: next, imageUrl: listing.imageUrl || next[0] };
+    });
+  }
+
+  async function handleAiEditListing() {
+    if (!editListing) return;
+    setEditingWithAi(true);
+    try {
+      const result = await generateProductListing({
+        brand: editListing.brand,
+        productName: editListing.name,
+        category: editListing.category,
+        price: String(editListing.price / 100),
+        details: `${editListing.description}\n${editListing.notes}`,
+        url: editListing.manufacturerUrl,
+      });
+      setEditListing((listing) =>
+        listing
+          ? {
+              ...listing,
+              ...result.listing,
+              imageUrl: listing.imageUrl,
+              images: listing.images,
+            }
+          : listing,
+      );
+      toast.success("Listing copy refreshed with AI");
+    } catch {
+      toast.error("Could not edit listing with AI");
+    } finally {
+      setEditingWithAi(false);
     }
   }
 
@@ -367,29 +418,51 @@ function Catalog() {
                   onChange={(e) => setEditListing((l) => ({ ...l!, notes: e.target.value }))}
                 />
               </label>
-              <label className="space-y-1 sm:col-span-2">
-                <span className="text-xs text-muted">Upload photos</span>
+              <div className="space-y-2 sm:col-span-2">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-xs text-muted">Product photos</span>
+                  <Button size="sm" variant="outline" onClick={handleAiEditListing} disabled={editingWithAi}>
+                    <WandSparkles className="size-4" />
+                    {editingWithAi ? "Editing…" : "AI edit listing"}
+                  </Button>
+                </div>
                 <input
-                  className="es-input"
+                  ref={imageInputRef}
+                  className="hidden"
                   type="file"
                   accept="image/*"
                   multiple
                   onChange={async (e) => {
-                    const files = Array.from(e.target.files ?? []).slice(0, 8);
-                    const urls: string[] = [];
-                    for (const file of files) {
-                      const data = await compressImage(file);
-                      if (data) urls.push(data);
-                    }
-                    if (!urls.length) return;
-                    setEditListing((l) => {
-                      const next = [...(l?.images ?? []), ...urls].slice(0, 8);
-                      return { ...l!, images: next, imageUrl: l?.imageUrl || next[0] };
-                    });
+                    await addImageFiles(Array.from(e.target.files ?? []));
                     e.target.value = "";
                   }}
                 />
-              </label>
+                <button
+                  type="button"
+                  className={`flex min-h-32 w-full flex-col items-center justify-center rounded-lg border border-dashed p-5 text-center transition-colors ${
+                    draggingImages ? "border-esred bg-esred/10" : "border-line bg-raised/40 hover:border-muted hover:bg-raised"
+                  }`}
+                  onClick={() => imageInputRef.current?.click()}
+                  onDragEnter={(e) => {
+                    e.preventDefault();
+                    setDraggingImages(true);
+                  }}
+                  onDragOver={(e) => e.preventDefault()}
+                  onDragLeave={(e) => {
+                    e.preventDefault();
+                    setDraggingImages(false);
+                  }}
+                  onDrop={async (e) => {
+                    e.preventDefault();
+                    setDraggingImages(false);
+                    await addImageFiles(Array.from(e.dataTransfer.files));
+                  }}
+                >
+                  <ImagePlus className="size-6 text-muted" />
+                  <span className="mt-2 text-sm font-medium">Drop product images here</span>
+                  <span className="mt-1 text-xs text-muted">or click to browse · up to 8 images</span>
+                </button>
+              </div>
               <label className="space-y-1 sm:col-span-2">
                 <span className="text-xs text-muted">Primary image URL</span>
                 <Input
