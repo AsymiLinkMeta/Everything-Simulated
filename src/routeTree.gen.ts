@@ -29,6 +29,7 @@ import { Route as StaffBookingsRouteImport } from './routes/staff/bookings'
 import { Route as StaffCatalogRouteImport } from './routes/staff/catalog'
 import { Route as StaffJobsRouteImport } from './routes/staff/jobs'
 import { Route as StaffQuotesRouteImport } from './routes/staff/quotes'
+import { Route as StaffBrandsRouteImport } from './routes/staff/brands'
 import { Route as StaffTeamRouteImport } from './routes/staff/team'
 import { Route as SiteAuIndexRouteImport } from './routes/_site/au/index'
 import { Route as SiteAuCityRouteImport } from './routes/_site/au/$city'
@@ -143,6 +144,11 @@ const StaffTeamRoute = StaffTeamRouteImport.update({
   path: '/team',
   getParentRoute: () => StaffRouteRoute,
 } as any)
+const StaffBrandsRoute = StaffBrandsRouteImport.update({
+  id: '/brands',
+  path: '/brands',
+  getParentRoute: () => StaffRouteRoute,
+} as any)
 const SiteAuIndexRoute = SiteAuIndexRouteImport.update({
   id: '/au/',
   path: '/au/',
@@ -203,6 +209,7 @@ export interface FileRoutesByFullPath {
   '/staff/jobs': typeof StaffJobsRoute
   '/staff/quotes': typeof StaffQuotesRoute
   '/staff/team': typeof StaffTeamRoute
+  '/staff/brands': typeof StaffBrandsRoute
   '/app/': typeof AppIndexRoute
   '/staff/': typeof StaffIndexRoute
   '/au/$city': typeof SiteAuCityRoute
@@ -231,6 +238,7 @@ export interface FileRoutesByTo {
   '/staff/jobs': typeof StaffJobsRoute
   '/staff/quotes': typeof StaffQuotesRoute
   '/staff/team': typeof StaffTeamRoute
+  '/staff/brands': typeof StaffBrandsRoute
   '/app': typeof AppIndexRoute
   '/staff': typeof StaffIndexRoute
   '/au/$city': typeof SiteAuCityRoute
@@ -263,6 +271,7 @@ export interface FileRoutesById {
   '/staff/jobs': typeof StaffJobsRoute
   '/staff/quotes': typeof StaffQuotesRoute
   '/staff/team': typeof StaffTeamRoute
+  '/staff/brands': typeof StaffBrandsRoute
   '/app/': typeof AppIndexRoute
   '/staff/': typeof StaffIndexRoute
   '/_site/au/$city': typeof SiteAuCityRoute
@@ -295,6 +304,7 @@ export interface FileRouteTypes {
     | '/staff/jobs'
     | '/staff/quotes'
     | '/staff/team'
+    | '/staff/brands'
     | '/app/'
     | '/staff/'
     | '/au/$city'
@@ -323,6 +333,7 @@ export interface FileRouteTypes {
     | '/staff/jobs'
     | '/staff/quotes'
     | '/staff/team'
+    | '/staff/brands'
     | '/app'
     | '/staff'
     | '/au/$city'
@@ -354,6 +365,7 @@ export interface FileRouteTypes {
     | '/staff/jobs'
     | '/staff/quotes'
     | '/staff/team'
+    | '/staff/brands'
     | '/app/'
     | '/staff/'
     | '/_site/au/$city'
@@ -523,6 +535,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StaffTeamRouteImport
       parentRoute: typeof StaffRouteRoute
     }
+    '/staff/brands': {
+      id: '/staff/brands'
+      path: '/brands'
+      fullPath: '/staff/brands'
+      preLoaderRoute: typeof StaffBrandsRouteImport
+      parentRoute: typeof StaffRouteRoute
+    }
     '/_site/au/': {
       id: '/_site/au/'
       path: '/au'
@@ -608,6 +627,7 @@ interface StaffRouteRouteChildren {
   StaffJobsRoute: typeof StaffJobsRoute
   StaffQuotesRoute: typeof StaffQuotesRoute
   StaffTeamRoute: typeof StaffTeamRoute
+  StaffBrandsRoute: typeof StaffBrandsRoute
   StaffIndexRoute: typeof StaffIndexRoute
 }
 
@@ -617,6 +637,7 @@ const StaffRouteRouteChildren: StaffRouteRouteChildren = {
   StaffJobsRoute: StaffJobsRoute,
   StaffQuotesRoute: StaffQuotesRoute,
   StaffTeamRoute: StaffTeamRoute,
+  StaffBrandsRoute: StaffBrandsRoute,
   StaffIndexRoute: StaffIndexRoute,
 }
 
