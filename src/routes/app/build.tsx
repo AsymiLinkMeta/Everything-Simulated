@@ -77,7 +77,7 @@ function AppBuild() {
       </div>
 
       <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
-        <div className="grid gap-4 sm:grid-cols-2">
+        <div className="grid grid-cols-2 gap-4">
           {(products.data ?? []).map((item) => (
             <ProductTile key={item.sku} item={item} />
           ))}
