@@ -19,6 +19,11 @@ type DbRow = {
   qr: string | null;
   image: string | null;
   image_url: string | null;
+  whats_included: string[] | null;
+  mount_compatibility: string | null;
+  assembly_manual_url: string | null;
+  specs: Record<string, string> | null;
+  compare: string | null;
 };
 
 function toProduct(row: DbRow): Product {
@@ -37,6 +42,11 @@ function toProduct(row: DbRow): Product {
     qr: row.qr ?? undefined,
     notes: row.notes || undefined,
     image: row.image || row.image_url || undefined,
+    whatsIncluded: row.whats_included ?? undefined,
+    mountCompatibility: row.mount_compatibility || undefined,
+    assemblyManualUrl: row.assembly_manual_url ?? undefined,
+    specs: row.specs ?? undefined,
+    compare: row.compare || undefined,
   };
 }
 
@@ -51,7 +61,7 @@ export async function fetchProducts(): Promise<Product[]> {
     const { data, error } = await supabase
       .from("catalog_products")
       .select(
-        "sku, brand, name, category, sell_ex_gst, stock_status, lead_weeks_min, lead_weeks_max, description, notes, max_nm, payload_kg, weight_kg, mounts, qr, image, image_url",
+        "sku, brand, name, category, sell_ex_gst, stock_status, lead_weeks_min, lead_weeks_max, description, notes, max_nm, payload_kg, weight_kg, mounts, qr, image, image_url, whats_included, mount_compatibility, assembly_manual_url, specs, compare",
       )
       .order("sku");
 

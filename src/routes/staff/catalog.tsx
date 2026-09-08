@@ -212,6 +212,11 @@ function Catalog() {
         image_url: editListing.imageUrl || editListing.images?.[0] || null,
         images: editListing.images ?? (editListing.imageUrl ? [editListing.imageUrl] : []),
         manufacturer_url: editListing.manufacturerUrl || null,
+        whats_included: editListing.whatsIncluded ?? [],
+        mount_compatibility: editListing.mountCompatibility ?? "",
+        assembly_manual_url: editListing.assemblyManualUrl ?? null,
+        specs: editListing.specs ?? {},
+        compare: editListing.compare ?? "",
       });
       toast.success(`${editListing.sku} saved to catalogue`);
       invalidateProductCache();
@@ -491,6 +496,62 @@ function Catalog() {
                   disabled={saving}
                 />
               </div>
+              <label className="space-y-1 sm:col-span-2">
+                <span className="text-xs text-muted">What's included (one item per line)</span>
+                <textarea
+                  className="es-input min-h-20 resize-y"
+                  value={(editListing.whatsIncluded ?? []).join("\n")}
+                  onChange={(e) =>
+                    setEditListing((l) => ({
+                      ...l!,
+                      whatsIncluded: e.target.value.split("\n").map((s) => s.trim()).filter(Boolean),
+                    }))
+                  }
+                  placeholder="1x TR120S V2 chassis\n1x Wheel deck\n1x Seat Slider"
+                />
+              </label>
+              <label className="space-y-1 sm:col-span-2">
+                <span className="text-xs text-muted">Mount compatibility</span>
+                <textarea
+                  className="es-input min-h-16 resize-y"
+                  value={editListing.mountCompatibility ?? ""}
+                  onChange={(e) => setEditListing((l) => ({ ...l!, mountCompatibility: e.target.value }))}
+                  placeholder="Compatible with Simagic Alpha, VRS DirectForce Pro, Fanatec DD1…"
+                />
+              </label>
+              <label className="space-y-1">
+                <span className="text-xs text-muted">Assembly manual URL</span>
+                <Input
+                  value={editListing.assemblyManualUrl ?? ""}
+                  onChange={(e) => setEditListing((l) => ({ ...l!, assemblyManualUrl: e.target.value || undefined }))}
+                  placeholder="https://…"
+                />
+              </label>
+              <label className="space-y-1">
+                <span className="text-xs text-muted">Specs (JSON key-value)</span>
+                <textarea
+                  className="es-input min-h-16 resize-y font-mono text-xs"
+                  value={Object.entries(editListing.specs ?? {}).map(([k, v]) => `${k}: ${v}`).join("\n")}
+                  onChange={(e) => {
+                    const specs: Record<string, string> = {};
+                    for (const line of e.target.value.split("\n")) {
+                      const idx = line.indexOf(":");
+                      if (idx > 0) specs[line.slice(0, idx).trim()] = line.slice(idx + 1).trim();
+                    }
+                    setEditListing((l) => ({ ...l!, specs }));
+                  }}
+                  placeholder="Material: Extruded aluminium\nProfile: 40x120mm\nWeight: 28kg"
+                />
+              </label>
+              <label className="space-y-1 sm:col-span-2">
+                <span className="text-xs text-muted">Compare (how this product differs from alternatives)</span>
+                <textarea
+                  className="es-input min-h-16 resize-y"
+                  value={editListing.compare ?? ""}
+                  onChange={(e) => setEditListing((l) => ({ ...l!, compare: e.target.value }))}
+                  placeholder="The TR120S V2 uses thicker aluminium profile walls than the TR80…"
+                />
+              </label>
             </div>
             <div className="flex gap-2">
               <Button onClick={handleSaveListing} disabled={saving}>

@@ -242,6 +242,11 @@ export type CatalogProduct = {
   image_url: string | null;
   images: string[];
   manufacturer_url: string | null;
+  whats_included: string[] | null;
+  mount_compatibility: string | null;
+  assembly_manual_url: string | null;
+  specs: Record<string, string> | null;
+  compare: string | null;
   created_by: string;
   created_at: string;
 };
@@ -252,7 +257,7 @@ export async function staffListCatalogProducts(): Promise<CatalogProduct[]> {
   const { data, error } = await supabase
     .from("catalog_products")
     .select(
-      "id, sku, brand, name, category, sell_ex_gst, stock_status, lead_weeks_min, lead_weeks_max, description, notes, image_url, images, manufacturer_url, created_by, created_at",
+      "id, sku, brand, name, category, sell_ex_gst, stock_status, lead_weeks_min, lead_weeks_max, description, notes, image_url, images, manufacturer_url, whats_included, mount_compatibility, assembly_manual_url, specs, compare, created_by, created_at",
     )
     .order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
@@ -276,6 +281,11 @@ export async function staffSaveCatalogProduct(input: {
   image_url?: string | null;
   images?: string[];
   manufacturer_url?: string | null;
+  whats_included?: string[];
+  mount_compatibility?: string;
+  assembly_manual_url?: string | null;
+  specs?: Record<string, string>;
+  compare?: string;
 }) {
   const user = await getCurrentUser();
   await requireStaff(user.id);
@@ -296,6 +306,11 @@ export async function staffSaveCatalogProduct(input: {
       image_url: input.image_url || images[0] || null,
       images,
       manufacturer_url: input.manufacturer_url || null,
+      whats_included: input.whats_included ?? [],
+      mount_compatibility: input.mount_compatibility ?? "",
+      assembly_manual_url: input.assembly_manual_url ?? null,
+      specs: input.specs ?? {},
+      compare: input.compare ?? "",
     })
     .select("id, sku")
     .maybeSingle();

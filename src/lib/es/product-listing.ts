@@ -14,6 +14,11 @@ export type ProductListing = {
   imageUrl?: string;
   images?: string[];
   manufacturerUrl?: string;
+  whatsIncluded?: string[];
+  mountCompatibility?: string;
+  assemblyManualUrl?: string;
+  specs?: Record<string, string>;
+  compare?: string;
 };
 
 export async function generateProductListing(input: {

@@ -38,6 +38,11 @@ export type Product = {
   qr?: string;
   notes?: string;
   image?: string;
+  whatsIncluded?: string[];
+  mountCompatibility?: string;
+  assemblyManualUrl?: string;
+  specs?: Record<string, string>;
+  compare?: string;
 };
 
 export type CartLine = { sku: string; qty: number };

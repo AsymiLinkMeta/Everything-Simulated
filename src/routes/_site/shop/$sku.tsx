@@ -1,5 +1,6 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { BookOpen, Boxes, Check, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CartPanel } from "@/components/es/cart-panel";
 import { BackButton, JsonLd, Money, IncGst } from "@/components/es/bits";
@@ -89,6 +90,75 @@ function ProductPage() {
         </div>
         <CartPanel compact />
       </div>
+
+      {(item.whatsIncluded?.length || item.mountCompatibility || item.specs || item.compare || item.assemblyManualUrl) ? (
+        <div className="mt-12 grid gap-6 lg:grid-cols-2">
+          {item.whatsIncluded?.length ? (
+            <div className="es-card p-5">
+              <div className="flex items-center gap-2">
+                <Package className="size-4 text-esred" />
+                <h2 className="text-base font-medium">What's included</h2>
+              </div>
+              <ul className="mt-3 space-y-1.5">
+                {item.whatsIncluded.map((inc, i) => (
+                  <li key={i} className="flex items-start gap-2 text-sm">
+                    <Check className="mt-0.5 size-3.5 shrink-0 text-muted" />
+                    <span>{inc}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+
+          {item.mountCompatibility ? (
+            <div className="es-card p-5">
+              <div className="flex items-center gap-2">
+                <Boxes className="size-4 text-esred" />
+                <h2 className="text-base font-medium">Mount compatibility</h2>
+              </div>
+              <p className="mt-3 text-sm text-muted whitespace-pre-line">{item.mountCompatibility}</p>
+            </div>
+          ) : null}
+
+          {item.specs && Object.keys(item.specs).length ? (
+            <div className="es-card p-5">
+              <h2 className="text-base font-medium">Specifications</h2>
+              <dl className="mt-3 divide-y divide-line">
+                {Object.entries(item.specs).map(([key, value]) => (
+                  <div key={key} className="flex justify-between gap-4 py-2 text-sm">
+                    <dt className="text-muted">{key}</dt>
+                    <dd className="text-right font-medium">{value}</dd>
+                  </div>
+                ))}
+              </dl>
+            </div>
+          ) : null}
+
+          {item.compare ? (
+            <div className="es-card p-5">
+              <h2 className="text-base font-medium">Compare</h2>
+              <p className="mt-3 text-sm text-muted whitespace-pre-line">{item.compare}</p>
+            </div>
+          ) : null}
+
+          {item.assemblyManualUrl ? (
+            <div className="es-card p-5">
+              <div className="flex items-center gap-2">
+                <BookOpen className="size-4 text-esred" />
+                <h2 className="text-base font-medium">Assembly manual</h2>
+              </div>
+              <a
+                href={item.assemblyManualUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 inline-block text-sm text-paper underline underline-offset-4 hover:text-esred"
+              >
+                View assembly guide
+              </a>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
       {related.length ? (
         <div className="mt-16">
           <h2 className="text-xl font-medium">Same category</h2>

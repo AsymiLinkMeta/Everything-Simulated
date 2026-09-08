@@ -29,6 +29,11 @@ type Listing = {
   imageUrl?: string;
   images?: string[];
   manufacturerUrl?: string;
+  whatsIncluded?: string[];
+  mountCompatibility?: string;
+  assemblyManualUrl?: string;
+  specs?: Record<string, string>;
+  compare?: string;
 };
 
 function fallbackListing(input: RequestBody): Listing {
@@ -55,6 +60,11 @@ function fallbackListing(input: RequestBody): Listing {
     description: `${name} from ${brand}. ${details}`,
     notes: "Review price, stock status, compatibility, and lead time before publishing.",
     manufacturerUrl: input.url?.trim() || undefined,
+    whatsIncluded: [],
+    mountCompatibility: "",
+    assemblyManualUrl: undefined,
+    specs: {},
+    compare: "",
   };
 }
 
@@ -74,7 +84,7 @@ function isPublicHttpUrl(value: string) {
 async function readProductPage(url: string) {
   const res = await fetch(url, { redirect: "follow", headers: { "User-Agent": "EverythingSimulatedBot/1.0" } });
   if (!res.ok) throw new Error("Could not read that URL");
-  const html = (await res.text()).slice(0, 120_000);
+  const html = (await res.text()).slice(0, 200_000);
   const title = html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)/i)?.[1]
     || html.match(/<title[^>]*>([^<]+)/i)?.[1]
     || "";
@@ -83,10 +93,14 @@ async function readProductPage(url: string) {
     || "";
   const images = [...html.matchAll(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)/gi)].map((m) => m[1]);
   const more = [...html.matchAll(/<img[^>]+src=["'](https?:\/\/[^"']+)/gi)].map((m) => m[1]);
+  const manualLinks = [...html.matchAll(/<a[^>]+href=["']([^"']+(?:manual|guide|assembly|instruction)[^"']*)["'][^>]*>([^<]*)/gi)].map((m) => m[1]);
+  const text = html.replace(/<script[\s\S]*?<\/script>/gi, " ").replace(/<style[\s\S]*?<\/style>/gi, " ").replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
   return {
     title: title.trim(),
     description: description.trim(),
     images: [...new Set([...images, ...more])].slice(0, 8),
+    manualLinks: [...new Set(manualLinks)].slice(0, 4),
+    bodyText: text.slice(0, 60_000),
   };
 }
 
@@ -149,7 +163,7 @@ Deno.serve(async (req: Request) => {
     }
 
     const input = (await req.json()) as RequestBody;
-    let page: { title: string; description: string; images: string[] } | null = null;
+    let page: { title: string; description: string; images: string[]; manualLinks: string[]; bodyText: string } | null = null;
     if (input.url && isPublicHttpUrl(input.url.trim())) {
       try {
         page = await readProductPage(input.url.trim());
@@ -182,7 +196,7 @@ Deno.serve(async (req: Request) => {
           {
             role: "system",
             content:
-              "You create concise, accurate sim-racing retail catalogue listings for Everything Simulated in Australia. Return only JSON with sku, brand, name, category, price (integer cents), stockStatus (stock|indent|discontinued), leadWeeksMin, leadWeeksMax, description, notes, imageUrl, images (array of https URLs), manufacturerUrl. Never invent technical compatibility claims. Keep SKU lowercase kebab-case and under 48 characters.",
+              "You are a sim-racing retail catalogue specialist for Everything Simulated in Australia. From the manufacturer page content provided, generate a complete product listing. Return ONLY JSON with these fields: sku (lowercase kebab-case, under 48 chars), brand, name, category, price (integer AUD cents), stockStatus (stock|indent|discontinued), leadWeeksMin, leadWeeksMax, description (rich marketing copy based on the manufacturer page — write the compelling product story), notes (staff-only review notes), imageUrl, images (array of https URLs found on the page), manufacturerUrl, whatsIncluded (array of items included in the box from the page), mountCompatibility (which wheel bases, pedal sets, seats, monitors this product mounts or is compatible with — only from page data, never invented), assemblyManualUrl (link found on the page if any), specs (object of key-value spec pairs extracted from the page like {\"Material\": \"Extruded aluminium\", \"Profile\": \"40x120mm\"}), compare (a short paragraph comparing this product to alternatives in its category). If the page content is missing a field, leave it empty or empty array — never fabricate specs or compatibility.",
           },
           { role: "user", content: JSON.stringify({ ...input, page }) },
         ],
