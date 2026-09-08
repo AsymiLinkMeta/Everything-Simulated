@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, MapPin } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { SiteShell } from "@/components/es/site-shell";
 import { JsonLd, PackageCard } from "@/components/es/bits";
 import { BRAND, CITIES, PACKAGES } from "@/lib/es/catalog";
@@ -24,28 +25,7 @@ export function Home() {
       <JsonLd data={localBusinessLd()} />
       <section className="es-hero">
         <img src="/rigs/Everything_Simulated_Hero copy.jpg" alt="Driver using a triple-screen racing simulator" className="es-hero-img" />
-        <video
-          className="es-hero-video es-hero-video-desktop"
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-          poster="/rigs/Everything_Simulated_Hero copy.jpg"
-        >
-          <source src="/videos/hero-uw.mp4" type="video/mp4" />
-        </video>
-        <video
-          className="es-hero-video es-hero-video-mobile"
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-          poster="/rigs/Everything_Simulated_Hero copy.jpg"
-        >
-          <source src="/videos/hero-mobile.mp4" type="video/mp4" />
-        </video>
+        <HeroVideo />
         <div className="es-hero-mask" />
         <div className="es-hero-copy">
           <p className="es-kicker">Gold Coast · Australia-wide</p>
@@ -187,6 +167,49 @@ export function Home() {
       </section>
 
     </SiteShell>
+  );
+}
+
+function HeroVideo() {
+  const desktopRef = useRef<HTMLVideoElement>(null);
+  const mobileRef = useRef<HTMLVideoElement>(null);
+  const [finished, setFinished] = useState(false);
+
+  useEffect(() => {
+    const desktop = desktopRef.current;
+    const mobile = mobileRef.current;
+    if (!desktop && !mobile) return;
+    const video = desktop ?? mobile;
+    if (!video) return;
+    const onEnded = () => setFinished(true);
+    video.addEventListener("ended", onEnded);
+    video.play().catch(() => setFinished(true));
+    return () => video.removeEventListener("ended", onEnded);
+  }, []);
+
+  return (
+    <div className={`es-hero-video-wrap${finished ? " is-finished" : ""}`}>
+      <video
+        ref={desktopRef}
+        className="es-hero-video es-hero-video-desktop"
+        muted
+        playsInline
+        preload="auto"
+        poster="/rigs/Everything_Simulated_Hero copy.jpg"
+      >
+        <source src="/videos/hero-uw.mp4" type="video/mp4" />
+      </video>
+      <video
+        ref={mobileRef}
+        className="es-hero-video es-hero-video-mobile"
+        muted
+        playsInline
+        preload="auto"
+        poster="/rigs/Everything_Simulated_Hero copy.jpg"
+      >
+        <source src="/videos/hero-mobile.mp4" type="video/mp4" />
+      </video>
+    </div>
   );
 }
 
