@@ -30,6 +30,7 @@ export function Logo({ compact = false }: { compact?: boolean }) {
           src="/Everything_Simulated_LOGO_W+R.png"
           alt="Everything Simulated"
           className={compact ? "es-logo-image es-logo-image-compact" : "es-logo-image"}
+          style={compact ? undefined : { height: "3.25rem" }}
         />
       </picture>
     </Link>
