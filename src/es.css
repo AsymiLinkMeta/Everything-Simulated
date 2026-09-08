@@ -794,6 +794,34 @@ img {
 }
 
 /* ---- select / textarea fallback ---- */
+.es-brand-marquee {
+  position: relative;
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 6%, #000 94%, transparent);
+}
+
+.es-brand-track {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: max-content;
+  animation: es-brand-scroll 32s linear infinite;
+}
+
+.es-brand-track:hover {
+  animation-play-state: paused;
+}
+
+@keyframes es-brand-scroll {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .es-brand-track { animation: none; }
+}
+
 .bg-checker {
   background-image:
     linear-gradient(45deg, #1a1a1e 25%, transparent 25%),

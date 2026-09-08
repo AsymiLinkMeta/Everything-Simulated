@@ -168,6 +168,27 @@ export function Home() {
   );
 }
 
+function BrandLogo({
+  brand,
+  ariaHidden = false,
+}: {
+  brand: { id: string; name: string; icon_url: string | null; link_url: string | null };
+  ariaHidden?: boolean;
+}) {
+  const content = brand.icon_url ? (
+    <img src={brand.icon_url} alt={ariaHidden ? "" : brand.name} className="h-8 w-auto max-w-[132px] object-contain" />
+  ) : (
+    <span className="text-base font-medium text-paper">{brand.name}</span>
+  );
+  const className = "group flex min-h-14 shrink-0 items-center justify-center rounded-xl border border-line bg-black px-6 transition-all duration-300 hover:border-muted hover:bg-raised";
+  if (!brand.link_url) return <div className={className}>{content}</div>;
+  return (
+    <a href={brand.link_url} target="_blank" rel="noopener noreferrer" className={className} aria-hidden={ariaHidden} tabIndex={ariaHidden ? -1 : 0}>
+      {content}
+    </a>
+  );
+}
+
 function BrandBanner() {
   const brands = useQuery({ queryKey: ["brands"], queryFn: () => fetchBrands() });
   const items = brands.data ?? [];
@@ -180,43 +201,16 @@ function BrandBanner() {
           We build with the best sim racing hardware brands. Every rig is compatibility-checked,
           assembled and QA'd in our Gold Coast workshop.
         </p>
-        {items.length > 0 ? (
-          <div className="mt-8 flex flex-wrap items-center gap-4">
-            {items.map((b) =>
-              b.link_url ? (
-                <a
-                  key={b.id}
-                  href={b.link_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="group flex items-center gap-3 rounded-xl border border-line bg-black px-5 py-3 transition-all duration-300 hover:-translate-y-0.5 hover:border-muted"
-                >
-                  {b.icon_url ? (
-                    <img src={b.icon_url} alt={b.name} className="h-8 w-auto max-w-[120px] object-contain" />
-                  ) : (
-                    <span className="text-base font-medium text-paper">{b.name}</span>
-                  )}
-                </a>
-              ) : (
-                <div key={b.id} className="flex items-center gap-3 rounded-xl border border-line bg-black px-5 py-3">
-                  {b.icon_url ? (
-                    <img src={b.icon_url} alt={b.name} className="h-8 w-auto max-w-[120px] object-contain" />
-                  ) : (
-                    <span className="text-base font-medium text-paper">{b.name}</span>
-                  )}
-                </div>
-              ),
-            )}
-          </div>
-        ) : (
-          <div className="mt-8 flex flex-wrap items-center gap-4">
-            {["Simagic", "Trak Racer", "Exodus", "SIMRIG", "AOC", "Logitech", "iRacing"].map((name) => (
-              <div key={name} className="rounded-xl border border-line bg-black px-5 py-3">
-                <span className="text-base font-medium text-paper">{name}</span>
-              </div>
+        <div className="es-brand-marquee mt-8" aria-label="Brands we spec">
+          <div className="es-brand-track">
+            {(items.length > 0 ? items : ["Simagic", "Trak Racer", "Exodus", "SIMRIG", "AOC", "Logitech", "iRacing"].map((name) => ({ id: name, name, icon_url: null, link_url: null }))).map((brand, index) => (
+              <BrandLogo key={`${brand.id}-${index}`} brand={brand} />
+            ))}
+            {(items.length > 0 ? items : ["Simagic", "Trak Racer", "Exodus", "SIMRIG", "AOC", "Logitech", "iRacing"].map((name) => ({ id: name, name, icon_url: null, link_url: null }))).map((brand, index) => (
+              <BrandLogo key={`${brand.id}-duplicate-${index}`} brand={brand} ariaHidden />
             ))}
           </div>
-        )}
+        </div>
       </div>
     </section>
   );
