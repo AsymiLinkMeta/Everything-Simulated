@@ -39,6 +39,30 @@ export function Home() {
               Book a studio demo
             </Link>
           </div>
+          <section className="mt-8 max-w-xl rounded-2xl border border-white/20 bg-black/35 p-5 backdrop-blur-sm">
+            <p className="es-kicker">Your rig, your roadmap</p>
+            <h2 className="mt-2 text-xl font-medium text-white sm:text-2xl">
+              Create an account to design, upgrade or maintain your rig.
+            </h2>
+            <p className="mt-2 max-w-lg text-sm leading-6 text-white/75">
+              Save your build, check every part for compatibility, request quotes, and keep your
+              service history in one place.
+            </p>
+            <div className="mt-4 grid gap-2 text-sm text-white/90 sm:grid-cols-2">
+              <span>Design a compatible build</span>
+              <span>Upgrade parts with confidence</span>
+              <span>Save and compare quotes</span>
+              <span>Maintain your rig over time</span>
+            </div>
+            <div className="mt-5 flex flex-wrap items-center gap-3">
+              <Link to="/login" className="es-btn">
+                Create your account <ArrowRight className="size-4" />
+              </Link>
+              <Link to="/login" className="text-sm text-white/75 underline-offset-4 hover:text-white hover:underline">
+                Sign in
+              </Link>
+            </div>
+          </section>
         </div>
       </section>
 
