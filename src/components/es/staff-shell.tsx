@@ -1,4 +1,5 @@
 import "./es-chrome";
+import { useState } from "react";
 import { Link, Outlet } from "@tanstack/react-router";
 import { Navigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -8,6 +9,7 @@ import {
   ClipboardList,
   FileText,
   Handshake,
+  Menu,
   Shield,
   Tags,
   Truck,
@@ -39,6 +41,8 @@ export function StaffShell() {
     queryFn: () => getProfile(),
     enabled: Boolean(user),
   });
+
+  const [menuOpen, setMenuOpen] = useState(false);
 
   if (isPending || (user && profile.isPending)) {
     return (
@@ -116,24 +120,37 @@ export function StaffShell() {
               </Link>
             ))}
           </div>
+          <div className="es-staff-hamburger-wrap">
+            <button
+              type="button"
+              className="es-staff-hamburger-btn"
+              aria-label="Navigation menu"
+              aria-expanded={menuOpen}
+              onClick={() => setMenuOpen((v) => !v)}
+            >
+              <Menu className="size-5" />
+            </button>
+            {menuOpen ? (
+              <nav className="es-staff-hamburger-menu" onClick={() => setMenuOpen(false)}>
+                {TABS.map((t) => (
+                  <Link
+                    key={t.to}
+                    to={t.to}
+                    activeOptions={{ exact: t.to === "/staff" }}
+                    activeProps={{ className: "is-active" }}
+                  >
+                    <t.icon className="size-4" />
+                    {t.label}
+                  </Link>
+                ))}
+              </nav>
+            ) : null}
+          </div>
           <AuthSlot />
         </header>
         <div className="es-wrap" style={{ paddingTop: 24, paddingBottom: 96 }}>
           <Outlet />
         </div>
-        <nav className="es-tabbar es-tabbar-scroll">
-          {TABS.map((t) => (
-            <Link
-              key={t.to}
-              to={t.to}
-              activeOptions={{ exact: t.to === "/staff" }}
-              activeProps={{ className: "is-active" }}
-            >
-              <t.icon className="size-4" />
-              {t.label}
-            </Link>
-          ))}
-        </nav>
       </div>
     </div>
   );
