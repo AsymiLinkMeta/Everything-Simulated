@@ -27,6 +27,7 @@ import { Route as StaffCatalogRoute } from "@/routes/staff/catalog";
 import { Route as StaffQuotesRoute } from "@/routes/staff/quotes";
 import { Route as StaffJobsRoute } from "@/routes/staff/jobs";
 import { Route as StaffBookingsRoute } from "@/routes/staff/bookings";
+import { Route as StaffBrandsRoute } from "@/routes/staff/brands";
 import { Route as StaffTeamRoute } from "@/routes/staff/team";
 import { Route as StaffCrmRoute } from "@/routes/staff/crm";
 import { Route as StaffCrmIdRoute } from "@/routes/staff/crm-id";
@@ -66,6 +67,7 @@ export default function App() {
   const StaffQuotes = StaffQuotesRoute.component!;
   const StaffJobs = StaffJobsRoute.component!;
   const StaffBookings = StaffBookingsRoute.component!;
+  const StaffBrands = StaffBrandsRoute.component!;
   const StaffTeam = StaffTeamRoute.component!;
   const StaffCrm = StaffCrmRoute.component!;
   const StaffCrmId = StaffCrmIdRoute.component!;
@@ -106,6 +108,7 @@ export default function App() {
         <Route path="quotes" element={<StaffQuotes />} />
         <Route path="jobs" element={<StaffJobs />} />
         <Route path="bookings" element={<StaffBookings />} />
+        <Route path="brands" element={<StaffBrands />} />
         <Route path="team" element={<StaffTeam />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
