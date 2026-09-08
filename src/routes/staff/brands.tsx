@@ -122,7 +122,7 @@ function removeBackground(dataUrl: string): Promise<string> {
   });
 }
 
-function addWhiteOutlineToBlack(dataUrl: string, radius = 2): Promise<string> {
+function addWhiteOutlineToBlack(dataUrl: string, radius = 6): Promise<string> {
   return new Promise((resolve) => {
     const img = new Image();
     img.onload = () => {
@@ -143,13 +143,13 @@ function addWhiteOutlineToBlack(dataUrl: string, radius = 2): Promise<string> {
         const brightness = (d[idx] * 299 + d[idx + 1] * 587 + d[idx + 2] * 114) / 1000;
         if (brightness < 70) isBlack[i] = 1;
       }
-      let changed = false;
+      const fillMask = new Uint8Array(w * h);
       for (let y = 0; y < h; y++) {
         for (let x = 0; x < w; x++) {
           const i = y * w + x;
           if (isBlack[i]) continue;
           const idx = i * 4;
-          if (d[idx + 3] > 40) continue;
+          if (d[idx + 3] >= 180) continue;
           let nearBlack = false;
           for (let dy = -radius; dy <= radius && !nearBlack; dy++) {
             for (let dx = -radius; dx <= radius; dx++) {
@@ -159,14 +159,19 @@ function addWhiteOutlineToBlack(dataUrl: string, radius = 2): Promise<string> {
               if (isBlack[ny * w + nx]) { nearBlack = true; break; }
             }
           }
-          if (nearBlack) {
-            d[idx] = 255;
-            d[idx + 1] = 255;
-            d[idx + 2] = 255;
-            d[idx + 3] = 255;
-            changed = true;
-          }
+          if (nearBlack) fillMask[i] = 1;
         }
+      }
+      let changed = false;
+      for (let i = 0; i < w * h; i++) {
+        if (!fillMask[i]) continue;
+        const idx = i * 4;
+        const distFromBlack = 1 - Math.min(d[idx + 3], 175) / 175;
+        d[idx] = 255;
+        d[idx + 1] = 255;
+        d[idx + 2] = 255;
+        d[idx + 3] = Math.round(255 * (0.35 + 0.65 * distFromBlack));
+        changed = true;
       }
       if (!changed) { resolve(dataUrl); return; }
       ctx.putImageData(imageData, 0, 0);
