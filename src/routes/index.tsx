@@ -176,7 +176,7 @@ function BrandLogo({
   ariaHidden?: boolean;
 }) {
   const content = brand.icon_url ? (
-    <img src={brand.icon_url} alt={ariaHidden ? "" : brand.name} className="h-16 w-16 object-contain" />
+    <img src={brand.icon_url} alt={ariaHidden ? "" : brand.name} className="h-full w-full object-contain" />
   ) : (
     <span className="text-base font-medium text-paper">{brand.name}</span>
   );
