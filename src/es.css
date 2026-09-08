@@ -772,17 +772,21 @@ img {
 
 .es-gallery {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(5.5rem, 1fr));
-  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(7.5rem, 1fr));
+  gap: 0.75rem;
 }
 
 .es-gallery-item {
   position: relative;
   aspect-ratio: 1;
-  border: 1px solid var(--es-line);
-  border-radius: var(--es-radius-sm);
+  border-radius: var(--es-radius-md);
   overflow: hidden;
+  border: 1px solid var(--es-line);
   background: var(--es-raised);
+}
+
+.es-gallery-item.is-primary {
+  border-color: var(--es-red);
 }
 
 .es-gallery-item img {
@@ -792,23 +796,69 @@ img {
   display: block;
 }
 
-.es-dropzone {
+.es-gallery-badge {
+  position: absolute;
+  left: 0.4rem;
+  top: 0.4rem;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: var(--es-red);
+  color: var(--es-paper);
+  border-radius: 4px;
+  padding: 0.12rem 0.35rem;
+}
+
+.es-gallery-remove,
+.es-gallery-star {
+  position: absolute;
   display: grid;
   place-items: center;
-  min-height: 7rem;
+  min-height: 32px;
+  min-width: 32px;
+  border: 0;
+  border-radius: 8px;
+  background: rgba(7, 7, 8, 0.82);
+  color: var(--es-paper);
+  cursor: pointer;
+}
+
+.es-gallery-remove {
+  right: 0.3rem;
+  top: 0.3rem;
+}
+
+.es-gallery-star {
+  right: 0.3rem;
+  bottom: 0.3rem;
+}
+
+.es-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 7.5rem;
   border: 1px dashed var(--es-line);
-  border-radius: var(--es-radius);
+  border-radius: var(--es-radius-md);
+  background: var(--es-raised);
   color: var(--es-muted);
   cursor: pointer;
-  padding: 1rem;
+  font-size: 0.8rem;
   text-align: center;
-  font-size: 0.875rem;
+  padding: 0.75rem;
 }
 
 .es-dropzone:hover,
-.es-dropzone:focus-within {
-  border-color: var(--es-muted);
+.es-dropzone:focus-within,
+.es-dropzone.is-over {
+  border-color: var(--es-red);
   color: var(--es-paper);
+}
+
+.es-dropzone.is-over {
+  background: color-mix(in srgb, var(--es-red) 14%, var(--es-raised));
 }
 
 /* ---- select / textarea fallback ---- */

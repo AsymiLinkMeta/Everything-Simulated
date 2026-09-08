@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { toast } from "sonner";
-import { Boxes, ImagePlus, Sparkles, Trash2, Upload, WandSparkles, X } from "lucide-react";
+import { Boxes, Sparkles, Trash2, WandSparkles, X } from "lucide-react";
+import { ListingImages } from "@/components/es/listing-images";
 import { fetchProducts, invalidateProductCache } from "@/lib/es/product-cache";
+import { sanitizeListingImages, uniqueImages } from "@/lib/es/listing-images";
 import {
   staffDeleteCatalogProduct,
   staffListCatalogProducts,
@@ -58,23 +60,6 @@ const EMPTY_DRAFT: Draft = {
   url: "",
 };
 
-async function compressImage(file: File): Promise<string | null> {
-  try {
-    const bitmap = await createImageBitmap(file);
-    const max = 1280;
-    const scale = Math.min(1, max / Math.max(bitmap.width, bitmap.height));
-    const canvas = document.createElement("canvas");
-    canvas.width = Math.max(1, Math.round(bitmap.width * scale));
-    canvas.height = Math.max(1, Math.round(bitmap.height * scale));
-    const ctx = canvas.getContext("2d");
-    if (!ctx) return null;
-    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-    return canvas.toDataURL("image/jpeg", 0.72);
-  } catch {
-    return null;
-  }
-}
-
 function Catalog() {
   const qc = useQueryClient();
   const overrides = useQuery({ queryKey: ["overrides"], queryFn: () => staffListOverrides() });
@@ -92,8 +77,7 @@ function Catalog() {
   const [generated, setGenerated] = useState<{ listing: ProductListing; source: "grok" | "draft" } | null>(null);
   const [editListing, setEditListing] = useState<ProductListing | null>(null);
   const [saving, setSaving] = useState(false);
-  const imageInputRef = useRef<HTMLInputElement>(null);
-  const [draggingImages, setDraggingImages] = useState(false);
+  const [draftImages, setDraftImages] = useState<string[]>([]);
   const [editingWithAi, setEditingWithAi] = useState(false);
 
   async function savePrice(sku: string) {
@@ -106,24 +90,6 @@ function Catalog() {
     } catch {
       toast.error("Could not save price");
     }
-  }
-
-  async function addImageFiles(files: File[]) {
-    const imageFiles = files.filter((file) => file.type.startsWith("image/")).slice(0, 8);
-    const urls: string[] = [];
-    for (const file of imageFiles) {
-      const data = await compressImage(file);
-      if (data) urls.push(data);
-    }
-    if (!urls.length) {
-      if (imageFiles.length === 0 && files.length > 0) toast.error("Please choose image files");
-      return;
-    }
-    setEditListing((listing) => {
-      if (!listing) return listing;
-      const next = [...(listing.images ?? []), ...urls].slice(0, 8);
-      return { ...listing, images: next, imageUrl: listing.imageUrl || next[0] };
-    });
   }
 
   async function handleAiEditListing() {
@@ -148,7 +114,7 @@ function Catalog() {
             }
           : listing,
       );
-      toast.success("Listing copy refreshed with AI");
+      toast.success("Listing copy rewritten — photos left as-is");
     } catch {
       toast.error("Could not edit listing with AI");
     } finally {
@@ -157,15 +123,24 @@ function Catalog() {
   }
 
   async function handleGenerate() {
-    if (!draft.brand.trim() || !draft.productName.trim()) {
-      toast.error("Brand and product name are required");
+    if (!draft.url.trim() && (!draft.brand.trim() || !draft.productName.trim())) {
+      toast.error("Add brand and product name, or paste a manufacturer URL");
       return;
     }
     setGenerating(true);
     try {
       const result = await generateProductListing(draft);
+      const photos = uniqueImages([
+        ...draftImages,
+        ...(result.listing.images ?? []),
+        result.listing.imageUrl ?? "",
+      ]);
       setGenerated(result);
-      setEditListing(result.listing);
+      setEditListing({
+        ...result.listing,
+        images: photos,
+        imageUrl: photos[0] || result.listing.imageUrl,
+      });
     } catch {
       toast.error("Could not generate a listing");
     } finally {
@@ -221,6 +196,7 @@ function Catalog() {
     setGenerated(null);
     setEditListing(null);
     setShowGenerator(false);
+    setDraftImages([]);
   }
 
   return (
@@ -303,6 +279,10 @@ function Catalog() {
                 placeholder="Load cell, USB-C, included mounts, etc."
               />
             </label>
+            <div className="space-y-2 sm:col-span-2">
+              <span className="text-xs text-muted">Product photos</span>
+              <ListingImages images={draftImages} onChange={setDraftImages} disabled={generating} />
+            </div>
             <div className="sm:col-span-2">
               <Button onClick={handleGenerate} disabled={generating}>
                 <Sparkles className="size-4" />
@@ -403,7 +383,13 @@ function Catalog() {
                 />
               </label>
               <label className="space-y-1 sm:col-span-2">
-                <span className="text-xs text-muted">Customer-facing description</span>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-xs text-muted">Customer-facing description</span>
+                  <Button size="sm" variant="outline" onClick={handleAiEditListing} disabled={editingWithAi}>
+                    <WandSparkles className="size-4" />
+                    {editingWithAi ? "Rewriting…" : "Rewrite copy with AI"}
+                  </Button>
+                </div>
                 <textarea
                   className="es-input min-h-20 resize-y"
                   value={editListing.description}
@@ -419,84 +405,19 @@ function Catalog() {
                 />
               </label>
               <div className="space-y-2 sm:col-span-2">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="text-xs text-muted">Product photos</span>
-                  <Button size="sm" variant="outline" onClick={handleAiEditListing} disabled={editingWithAi}>
-                    <WandSparkles className="size-4" />
-                    {editingWithAi ? "Editing…" : "AI edit listing"}
-                  </Button>
-                </div>
-                <input
-                  ref={imageInputRef}
-                  className="hidden"
-                  type="file"
-                  accept="image/*"
-                  multiple
-                  onChange={async (e) => {
-                    await addImageFiles(Array.from(e.target.files ?? []));
-                    e.target.value = "";
-                  }}
-                />
-                <button
-                  type="button"
-                  className={`flex min-h-32 w-full flex-col items-center justify-center rounded-lg border border-dashed p-5 text-center transition-colors ${
-                    draggingImages ? "border-esred bg-esred/10" : "border-line bg-raised/40 hover:border-muted hover:bg-raised"
-                  }`}
-                  onClick={() => imageInputRef.current?.click()}
-                  onDragEnter={(e) => {
-                    e.preventDefault();
-                    setDraggingImages(true);
-                  }}
-                  onDragOver={(e) => e.preventDefault()}
-                  onDragLeave={(e) => {
-                    e.preventDefault();
-                    setDraggingImages(false);
-                  }}
-                  onDrop={async (e) => {
-                    e.preventDefault();
-                    setDraggingImages(false);
-                    await addImageFiles(Array.from(e.dataTransfer.files));
-                  }}
-                >
-                  <ImagePlus className="size-6 text-muted" />
-                  <span className="mt-2 text-sm font-medium">Drop product images here</span>
-                  <span className="mt-1 text-xs text-muted">or click to browse · up to 8 images</span>
-                </button>
-              </div>
-              <label className="space-y-1 sm:col-span-2">
-                <span className="text-xs text-muted">Primary image URL</span>
-                <Input
-                  value={editListing.imageUrl ?? ""}
-                  onChange={(e) => setEditListing((l) => ({ ...l!, imageUrl: e.target.value }))}
-                  placeholder="https://…"
-                />
-              </label>
-              <label className="space-y-1 sm:col-span-2">
-                <span className="text-xs text-muted">Gallery URLs (one per line)</span>
-                <textarea
-                  className="es-input min-h-16 resize-y"
-                  value={(editListing.images ?? []).join("\n")}
-                  onChange={(e) =>
+                <span className="text-xs text-muted">Product photos</span>
+                <ListingImages
+                  images={sanitizeListingImages(editListing.images, editListing.imageUrl ? [editListing.imageUrl] : [])}
+                  onChange={(next) =>
                     setEditListing((l) => ({
                       ...l!,
-                      images: e.target.value
-                        .split("\n")
-                        .map((s) => s.trim())
-                        .filter(Boolean)
-                        .slice(0, 8),
+                      images: next,
+                      imageUrl: next[0] || "",
                     }))
                   }
+                  disabled={saving}
                 />
-              </label>
-              {(editListing.images ?? []).length || editListing.imageUrl ? (
-                <div className="es-gallery sm:col-span-2">
-                  {(editListing.images?.length ? editListing.images : editListing.imageUrl ? [editListing.imageUrl] : []).map((src) => (
-                    <div key={src} className="es-gallery-item">
-                      <img src={src} alt="" />
-                    </div>
-                  ))}
-                </div>
-              ) : null}
+              </div>
             </div>
             <div className="flex gap-2">
               <Button onClick={handleSaveListing} disabled={saving}>
