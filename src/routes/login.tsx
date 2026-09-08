@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { GROK_PROVIDERS, authClient, authEnabled, signIn } from "@/lib/auth/client";
 import { useAuthState } from "@/lib/auth/provider";
@@ -31,9 +31,9 @@ function Login() {
   const navigate = useNavigate();
   const { user } = useAuthState();
 
-  if (user) {
-    navigate(next, { replace: true });
-  }
+  useEffect(() => {
+    if (user) navigate(next, { replace: true });
+  }, [user, next, navigate]);
 
   async function onEmail(e: React.FormEvent) {
     e.preventDefault();
