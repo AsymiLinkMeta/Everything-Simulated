@@ -679,6 +679,96 @@ img {
   }
 }
 
+/* ---- app header: logo left, nav center, hamburger right on mobile ---- */
+.es-app-header {
+  justify-content: flex-start;
+}
+
+.es-app-header .es-nav {
+  flex: 1;
+  justify-content: center;
+}
+
+.es-app-hamburger-wrap {
+  position: relative;
+  display: none;
+  flex-shrink: 0;
+}
+
+.es-app-hamburger-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--es-line);
+  border-radius: var(--es-radius);
+  background: transparent;
+  color: var(--es-paper);
+  cursor: pointer;
+  transition: border-color 160ms ease, color 160ms ease;
+}
+
+.es-app-hamburger-btn:hover {
+  border-color: var(--es-red);
+  color: var(--es-red);
+}
+
+.es-app-hamburger-menu {
+  position: fixed;
+  top: 64px;
+  right: 16px;
+  left: auto;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  width: min(240px, calc(100vw - 32px));
+  min-width: 0;
+  box-sizing: border-box;
+  padding: 0.5rem;
+  background: rgba(7, 7, 8, 0.96);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--es-line);
+  border-radius: var(--es-radius-md);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+}
+
+.es-app-hamburger-menu a {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  padding: 0 0.9rem;
+  color: var(--es-muted);
+  text-decoration: none;
+  font-size: 0.875rem;
+  border: 1px solid transparent;
+  border-radius: var(--es-radius);
+  transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease;
+}
+
+.es-app-hamburger-menu a:hover,
+.es-app-hamburger-menu a.is-active {
+  color: var(--es-paper);
+  background: rgba(21, 21, 25, 0.9);
+  border-color: var(--es-red);
+}
+
+@media (max-width: 767px) {
+  .es-app-hamburger-wrap {
+    display: block;
+  }
+  .es-app-header .es-nav,
+  .es-app-title {
+    display: none;
+  }
+  .es-app-tabbar {
+    display: none;
+  }
+}
+
 /* ---- staff top nav (mobile + tablet) ---- */
 .es-staff-topnav {
   display: flex;
