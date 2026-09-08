@@ -17,9 +17,8 @@ export type ProductCategory =
   | "accessory";
 
 export type StockStatus = "stock" | "indent" | "discontinued";
-
+export type ListingStatus = "draft" | "published" | "archived";
 export type Severity = "allow" | "adapter" | "warn" | "block";
-
 export type StaffRole = "customer" | "sales" | "workshop" | "content" | "support" | "admin";
 
 export type Product = {
@@ -30,6 +29,8 @@ export type Product = {
   sellExGst: number;
   costExGst?: number;
   stock: StockStatus;
+  listingStatus?: ListingStatus;
+  qtyOnHand?: number;
   leadWeeks: [number, number];
   maxNm?: number;
   payloadKg?: number;
@@ -38,6 +39,8 @@ export type Product = {
   qr?: string;
   notes?: string;
   image?: string;
+  images?: string[];
+  description?: string;
   whatsIncluded?: string[];
   mountCompatibility?: string;
   assemblyManualUrl?: string;
@@ -69,6 +72,7 @@ export type CheckResult = {
   issues: CheckIssue[];
   totalExGst: number;
   totalIncGst: number;
+  freightExGst: number;
   leadWeeks: [number, number];
 };
 

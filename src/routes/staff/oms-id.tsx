@@ -78,8 +78,23 @@ function OmsOrder() {
         ))}
       </div>
 
+      <section className="es-card space-y-3 p-5" id="invoice">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="text-lg font-medium">GST invoice</h2>
+          <Button size="sm" variant="outline" onClick={() => window.print()}>
+            Print
+          </Button>
+        </div>
+        <p className="text-sm">
+          {o.invoice_number ?? "Issue by marking paid."} · Everything Simulated · {o.shipping_name ?? "Customer"}
+        </p>
+        <p className="text-sm tabular-nums">
+          {aud(o.total_ex_gst)} ex GST · {aud(o.total_inc_gst)} inc GST (10%)
+        </p>
+        <p className="text-xs text-muted">Australian tax invoice. Crate freight from the Gold Coast. Deposit orders stay pending until staff mark paid.</p>
+      </section>
+
       <section className="es-card space-y-3 p-5">
-        <h2 className="text-lg font-medium">Pick list</h2>
         <table className="es-pick">
           <thead>
             <tr>

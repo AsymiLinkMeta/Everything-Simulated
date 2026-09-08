@@ -12,9 +12,12 @@ import {
   staffListOverrides,
   staffOverridePrice,
   staffSaveCatalogProduct,
+  staffSetListingStatus,
+  type CatalogProduct,
 } from "@/lib/es/server";
 import type { ProductListing } from "@/lib/es/product-listing";
 import { generateProductListing } from "@/lib/es/product-listing";
+import { discoverProducts, type DiscoveredProduct } from "@/lib/es/discover";
 import { aud } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -81,6 +84,9 @@ function Catalog() {
   const [editingWithAi, setEditingWithAi] = useState(false);
   const [skuSearch, setSkuSearch] = useState("");
   const [searchingSku, setSearchingSku] = useState(false);
+  const [hits, setHits] = useState<DiscoveredProduct[]>([]);
+  const [picked, setPicked] = useState<string[]>([]);
+  const [batchBusy, setBatchBusy] = useState(false);
 
   async function savePrice(sku: string) {
     const dollars = Number(priceDraft[sku]);
@@ -102,39 +108,141 @@ function Catalog() {
     }
     setSearchingSku(true);
     try {
+      const found = await discoverProducts({ query });
+      if (!found.products.length) {
+        toast.error("No official manufacturer hit. Paste the product URL instead.");
+        return;
+      }
+      if (found.products.length === 1) {
+        setDraft((d) => ({
+          ...d,
+          brand: found.products[0].brand || d.brand,
+          productName: found.products[0].title,
+          url: found.products[0].url,
+        }));
+        await ingestUrl(found.products[0].url, found.products[0]);
+        return;
+      }
+      setHits(found.products);
+      setPicked(found.products.slice(0, 8).map((p) => p.key));
+      toast.success(`${found.products.length} manufacturer hits`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not search that SKU");
+    } finally {
+      setSearchingSku(false);
+    }
+  }
+
+  async function ingestUrl(url: string, hit?: DiscoveredProduct) {
+    setGenerating(true);
+    try {
       const result = await generateProductListing({
-        brand: draft.brand,
-        productName: query,
+        brand: hit?.brand || draft.brand,
+        productName: hit?.title || draft.productName,
         category: draft.category,
         price: draft.price,
-        details: `Use AI to identify the exact retail product for this SKU or model query: ${query}. Return accurate catalogue data and do not invent specifications. ${draft.details}`,
-        url: draft.url,
+        details: draft.details,
+        url,
       });
       const photos = uniqueImages([
         ...draftImages,
+        hit?.image ?? "",
         ...(result.listing.images ?? []),
         result.listing.imageUrl ?? "",
       ]);
-      setDraft((current) => ({
-        ...current,
-        brand: result.listing.brand,
-        productName: result.listing.name,
-        category: result.listing.category,
-        price: String(result.listing.price / 100 || ""),
-        details: result.listing.description,
-        url: result.listing.manufacturerUrl ?? current.url,
-      }));
-      setGenerated(result);
+      setGenerated({ listing: result.listing, source: result.source === "grok" ? "grok" : "draft" });
       setEditListing({
         ...result.listing,
         images: photos,
         imageUrl: photos[0] || result.listing.imageUrl,
+        listingStatus: "draft",
       });
-      toast.success(`AI found ${result.listing.sku}`);
+      setShowGenerator(true);
     } catch {
-      toast.error("Could not search for that SKU");
+      toast.error("Could not generate a listing from that page");
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  async function handleDiscoverPage() {
+    const url = draft.url.trim();
+    if (!url) {
+      toast.error("Paste a manufacturer product or collection URL");
+      return;
+    }
+    setSearchingSku(true);
+    try {
+      const found = await discoverProducts({ url });
+      if (!found.products.length) {
+        await ingestUrl(url);
+        return;
+      }
+      if (found.kind === "product" || found.products.length === 1) {
+        setDraft((d) => ({ ...d, url: found.products[0].url, productName: found.products[0].title, brand: found.products[0].brand || d.brand }));
+        await ingestUrl(found.products[0].url, found.products[0]);
+        return;
+      }
+      setHits(found.products);
+      setPicked(found.products.slice(0, 8).map((p) => p.key));
+      toast.success(`${found.products.length} products on that page`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not read that page");
     } finally {
       setSearchingSku(false);
+    }
+  }
+
+  async function handleBatchDrafts() {
+    const selected = hits.filter((h) => picked.includes(h.key)).slice(0, 8);
+    if (!selected.length) {
+      toast.error("Pick at least one product");
+      return;
+    }
+    setBatchBusy(true);
+    let saved = 0;
+    try {
+      for (const hit of selected) {
+        const result = await generateProductListing({
+          brand: hit.brand || draft.brand,
+          productName: hit.title,
+          category: draft.category,
+          price: draft.price,
+          details: draft.details,
+          url: hit.url,
+        });
+        const photos = uniqueImages([hit.image ?? "", ...(result.listing.images ?? []), result.listing.imageUrl ?? ""]);
+        await staffSaveCatalogProduct({
+          sku: result.listing.sku,
+          brand: result.listing.brand,
+          name: result.listing.name,
+          category: result.listing.category,
+          sell_ex_gst: result.listing.price,
+          stock_status: result.listing.stockStatus,
+          listing_status: "draft",
+          lead_weeks_min: result.listing.leadWeeksMin,
+          lead_weeks_max: result.listing.leadWeeksMax,
+          description: result.listing.description,
+          notes: result.listing.notes,
+          image_url: photos[0] || null,
+          images: photos,
+          manufacturer_url: hit.url,
+          whats_included: result.listing.whatsIncluded ?? [],
+          mount_compatibility: result.listing.mountCompatibility ?? "",
+          assembly_manual_url: result.listing.assemblyManualUrl ?? null,
+          specs: result.listing.specs ?? {},
+          compare: result.listing.compare ?? "",
+        });
+        saved += 1;
+      }
+      toast.success(`${saved} draft${saved === 1 ? "" : "s"} saved — not on the shop`);
+      setHits([]);
+      invalidateProductCache();
+      await qc.invalidateQueries({ queryKey: ["catalog-products"] });
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Batch stopped");
+    } finally {
+      setBatchBusy(false);
     }
   }
 
@@ -181,7 +289,7 @@ function Catalog() {
         ...(result.listing.images ?? []),
         result.listing.imageUrl ?? "",
       ]);
-      setGenerated(result);
+      setGenerated({ listing: result.listing, source: result.source === "grok" ? "grok" : "draft" });
       setEditListing({
         ...result.listing,
         images: photos,
@@ -194,7 +302,7 @@ function Catalog() {
     }
   }
 
-  async function handleSaveListing() {
+  async function handleSaveListing(listing_status: "draft" | "published") {
     if (!editListing) return;
     setSaving(true);
     try {
@@ -205,6 +313,8 @@ function Catalog() {
         category: editListing.category,
         sell_ex_gst: editListing.price,
         stock_status: editListing.stockStatus,
+        listing_status,
+        qty_on_hand: editListing.qtyOnHand ?? 0,
         lead_weeks_min: editListing.leadWeeksMin,
         lead_weeks_max: editListing.leadWeeksMax,
         description: editListing.description,
@@ -218,7 +328,7 @@ function Catalog() {
         specs: editListing.specs ?? {},
         compare: editListing.compare ?? "",
       });
-      toast.success(`${editListing.sku} saved to catalogue`);
+      toast.success(listing_status === "published" ? `${editListing.sku} is live on the shop` : `${editListing.sku} saved as draft`);
       invalidateProductCache();
       await qc.invalidateQueries({ queryKey: ["catalog-products"] });
       await qc.invalidateQueries({ queryKey: ["products"] });
@@ -248,6 +358,35 @@ function Catalog() {
     setEditListing(null);
     setShowGenerator(false);
     setDraftImages([]);
+    setHits([]);
+    setPicked([]);
+  }
+
+  function loadExisting(p: CatalogProduct) {
+    setShowGenerator(true);
+    setHits([]);
+    setEditListing({
+      sku: p.sku,
+      brand: p.brand,
+      name: p.name,
+      category: p.category,
+      price: p.sell_ex_gst,
+      stockStatus: p.stock_status as ProductListing["stockStatus"],
+      leadWeeksMin: p.lead_weeks_min,
+      leadWeeksMax: p.lead_weeks_max,
+      description: p.description,
+      notes: p.notes,
+      imageUrl: p.image_url ?? p.images[0],
+      images: p.images,
+      manufacturerUrl: p.manufacturer_url ?? undefined,
+      whatsIncluded: p.whats_included ?? [],
+      mountCompatibility: p.mount_compatibility ?? "",
+      assemblyManualUrl: p.assembly_manual_url ?? undefined,
+      specs: p.specs ?? {},
+      compare: p.compare ?? "",
+      listingStatus: p.listing_status,
+      qtyOnHand: p.qty_on_hand,
+    });
   }
 
   return (
@@ -279,7 +418,7 @@ function Catalog() {
                 <Search className="size-4 text-esred" />
                 <div>
                   <p className="text-sm font-medium">AI SKU search</p>
-                  <p className="text-xs text-muted">Enter a SKU or model number and let AI find the matching product listing.</p>
+                  <p className="text-xs text-muted">Searches official Simagic, Trak Racer AU and SIMRIG/Exodus catalogues. Does not invent a product.</p>
                 </div>
               </div>
               <div className="mt-3 flex flex-col gap-2 sm:flex-row">
@@ -341,12 +480,17 @@ function Catalog() {
               />
             </label>
             <label className="space-y-1 sm:col-span-2">
-              <span className="text-xs text-muted">Manufacturer URL (optional — AI reads the page)</span>
-              <Input
-                value={draft.url}
-                onChange={(e) => setDraft((d) => ({ ...d, url: e.target.value }))}
-                placeholder="https://…"
-              />
+              <span className="text-xs text-muted">Manufacturer URL (product or collection — AI reads the page)</span>
+              <div className="flex flex-col gap-2 sm:flex-row">
+                <Input
+                  value={draft.url}
+                  onChange={(e) => setDraft((d) => ({ ...d, url: e.target.value }))}
+                  placeholder="https://simagic.com/collections/pedals"
+                />
+                <Button type="button" variant="outline" onClick={() => void handleDiscoverPage()} disabled={searchingSku || generating || !draft.url.trim()}>
+                  {searchingSku ? "Reading…" : "Read page"}
+                </Button>
+              </div>
             </label>
             <label className="space-y-1 sm:col-span-2">
               <span className="text-xs text-muted">Extra details for the listing</span>
@@ -369,6 +513,48 @@ function Catalog() {
             </div>
           </div>
         )}
+
+        {hits.length && !editListing ? (
+          <div className="mt-4 space-y-3 border-t border-line pt-4">
+            <p className="text-sm">
+              {hits.length} manufacturer products. Tick up to 8 and generate drafts — they stay off the shop until you publish.
+            </p>
+            <ul className="grid gap-2 sm:grid-cols-2">
+              {hits.map((h) => (
+                <li key={h.key}>
+                  <label className="flex min-h-11 items-center gap-3 rounded-md bg-raised px-3 py-2 text-sm">
+                    <input
+                      type="checkbox"
+                      checked={picked.includes(h.key)}
+                      onChange={() =>
+                        setPicked((cur) => (cur.includes(h.key) ? cur.filter((k) => k !== h.key) : [...cur, h.key].slice(0, 8)))
+                      }
+                    />
+                    {h.image ? <img src={h.image} alt="" className="size-10 rounded-md object-cover" /> : null}
+                    <span className="min-w-0 flex-1 truncate">
+                      {h.title}
+                      <span className="block truncate text-xs text-muted">{h.brand} {h.sku ? `· ${h.sku}` : ""}</span>
+                    </span>
+                  </label>
+                </li>
+              ))}
+            </ul>
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={() => void handleBatchDrafts()} disabled={batchBusy || !picked.length}>
+                {batchBusy ? "Writing drafts…" : `Generate ${Math.min(picked.length, 8)} drafts`}
+              </Button>
+              <Button
+                variant="ghost"
+                onClick={() => {
+                  const first = hits.find((h) => picked.includes(h.key)) ?? hits[0];
+                  if (first) void ingestUrl(first.url, first);
+                }}
+              >
+                Edit one
+              </Button>
+            </div>
+          </div>
+        ) : null}
 
         {editListing && (
           <div className="mt-4 space-y-4">
@@ -553,9 +739,12 @@ function Catalog() {
                 />
               </label>
             </div>
-            <div className="flex gap-2">
-              <Button onClick={handleSaveListing} disabled={saving}>
-                {saving ? "Saving…" : "Save to catalogue"}
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={() => void handleSaveListing("draft")} disabled={saving} variant="outline">
+                {saving ? "Saving…" : "Save draft"}
+              </Button>
+              <Button onClick={() => void handleSaveListing("published")} disabled={saving}>
+                Publish to shop
               </Button>
               <Button variant="ghost" onClick={resetGenerator}>
                 <X className="size-4" />
@@ -586,7 +775,7 @@ function Catalog() {
                 <tr>
                   <th className="py-2">SKU</th>
                   <th>Name</th>
-                  <th>Category</th>
+                  <th>Status</th>
                   <th>Price</th>
                   <th>Stock</th>
                   <th />
@@ -599,18 +788,58 @@ function Catalog() {
                     <td>
                       {p.brand} {p.name}
                     </td>
-                    <td className="capitalize">{p.category}</td>
+                    <td className="capitalize">{p.listing_status}</td>
                     <td className="tabular-nums">{aud(p.sell_ex_gst)}</td>
-                    <td className="capitalize">{p.stock_status}</td>
+                    <td className="capitalize">{p.stock_status}{p.qty_on_hand ? ` · ${p.qty_on_hand}` : ""}</td>
                     <td>
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => handleDelete(p.id, p.sku)}
-                        className="text-muted hover:text-esred"
-                      >
-                        <Trash2 className="size-4" />
-                      </Button>
+                      <div className="flex justify-end gap-1">
+                        <Button size="sm" variant="outline" onClick={() => loadExisting(p)}>
+                          Edit
+                        </Button>
+                        {p.listing_status !== "published" ? (
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={async () => {
+                              try {
+                                await staffSetListingStatus(p.sku, "published");
+                                invalidateProductCache();
+                                await qc.invalidateQueries({ queryKey: ["catalog-products"] });
+                                await qc.invalidateQueries({ queryKey: ["products"] });
+                              } catch {
+                                toast.error("Could not publish");
+                              }
+                            }}
+                          >
+                            Publish
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={async () => {
+                              try {
+                                await staffSetListingStatus(p.sku, "draft");
+                                invalidateProductCache();
+                                await qc.invalidateQueries({ queryKey: ["catalog-products"] });
+                                await qc.invalidateQueries({ queryKey: ["products"] });
+                              } catch {
+                                toast.error("Could not unpublish");
+                              }
+                            }}
+                          >
+                            Unpublish
+                          </Button>
+                        )}
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => handleDelete(p.id, p.sku)}
+                          className="text-muted hover:text-esred"
+                        >
+                          <Trash2 className="size-4" />
+                        </Button>
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -622,8 +851,8 @@ function Catalog() {
 
       {/* ---- Static catalogue price overrides ---- */}
       <section>
-        <h2 className="text-lg font-medium">Price overrides</h2>
-        <p className="mt-1 text-sm text-muted">Adjust prices for existing catalogue SKUs. Compatibility rules stay in code.</p>
+        <h2 className="text-lg font-medium">Shop prices</h2>
+        <p className="mt-1 text-sm text-muted">Writes the live sell price on the catalogue SKU. Compatibility lives under Rules.</p>
         <div className="mt-3 overflow-x-auto">
           <table className="w-full text-left text-sm">
             <thead className="text-muted">

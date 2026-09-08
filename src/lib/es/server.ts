@@ -1,8 +1,10 @@
 import { supabase, supabaseAnonKey, supabaseUrl } from "@/lib/db";
-import { BRAND, GUIDES, PACKAGES, RULES } from "./catalog";
-import { getCachedProducts, getCachedProductMap } from "./product-cache";
+import { BRAND, GUIDES, PACKAGES, PRODUCTS, RULES } from "./catalog";
+import { getCachedProducts, getCachedProductMap, getLiveRules } from "./product-cache";
 import { checkCart } from "./checkCart";
-import type { CartLine, StaffRole } from "./types";
+import { unwrap } from "./unwrap";
+import { freightExGst } from "./freight";
+import type { CartLine, ListingStatus, StaffRole } from "./types";
 
 const STAFF: StaffRole[] = ["sales", "workshop", "content", "support", "admin"];
 
@@ -22,10 +24,7 @@ async function ensureProfile(userId: string, email?: string | null, name?: strin
     .maybeSingle();
   if (existing) return existing as Profile;
 
-  const { data: allProfiles } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("role", "admin");
+  const { data: allProfiles } = await supabase.from("profiles").select("role").eq("role", "admin");
   const role = (allProfiles?.length ?? 0) === 0 ? "admin" : "customer";
 
   const { data: created } = await supabase
@@ -50,17 +49,22 @@ export async function getProfile() {
   return getProfileData();
 }
 
-export async function saveQuote(data: { lines: CartLine[]; postcode?: string; title?: string; driverWeightKg?: number }) {
+export async function saveQuote(
+  input:
+    | { lines: CartLine[]; postcode?: string; title?: string; driverWeightKg?: number }
+    | { data: { lines: CartLine[]; postcode?: string; title?: string; driverWeightKg?: number } },
+) {
+  const data = unwrap(input);
   const user = await getCurrentUser();
   await ensureProfile(user.id, user.email);
-  const result = checkCart({ lines: data.lines, driverWeightKg: data.driverWeightKg });
+  const result = checkCart({ lines: data.lines, driverWeightKg: data.driverWeightKg, postcode: data.postcode });
   const id = `ES-${Date.now().toString(36).toUpperCase()}`;
   const { error } = await supabase.from("quotes").insert({
     id,
     user_id: user.id,
     title: data.title ?? "Custom build",
     status: result.ok ? "quoted" : "draft",
-    lines: JSON.stringify(data.lines),
+    lines: data.lines,
     check_ok: result.ok,
     total_ex_gst: result.totalExGst,
     postcode: data.postcode ?? null,
@@ -169,11 +173,7 @@ export async function staffCreateJob(data: { quoteId?: string; notes?: string })
   await requireStaff(user.id);
   let owner = user.id;
   if (data.quoteId) {
-    const { data: q } = await supabase
-      .from("quotes")
-      .select("user_id")
-      .eq("id", data.quoteId)
-      .maybeSingle();
+    const { data: q } = await supabase.from("quotes").select("user_id").eq("id", data.quoteId).maybeSingle();
     if (q?.user_id) owner = q.user_id;
   }
   const { data: row, error } = await supabase
@@ -189,6 +189,10 @@ export async function staffSetRole(data: { userId: string; role: StaffRole }) {
   const user = await getCurrentUser();
   const role = await requireStaff(user.id);
   if (role !== "admin") throw new Error("Admin only");
+  if (data.userId === user.id && data.role !== "admin") {
+    const { data: admins } = await supabase.from("profiles").select("user_id").eq("role", "admin");
+    if ((admins?.length ?? 0) <= 1) throw new Error("Cannot demote the last admin");
+  }
   const { error } = await supabase.from("profiles").update({ role: data.role }).eq("user_id", data.userId);
   if (error) throw new Error(error.message);
   return { ok: true };
@@ -196,8 +200,7 @@ export async function staffSetRole(data: { userId: string; role: StaffRole }) {
 
 export async function staffListProfiles() {
   const user = await getCurrentUser();
-  const role = await requireStaff(user.id);
-  if (role !== "admin") throw new Error("Admin only");
+  await requireStaff(user.id);
   const { data, error } = await supabase
     .from("profiles")
     .select("user_id, email, display_name, role")
@@ -210,9 +213,11 @@ export async function staffOverridePrice(data: { sku: string; sellExGst: number 
   const user = await getCurrentUser();
   const role = await requireStaff(user.id);
   if (role !== "admin" && role !== "sales") throw new Error("Not allowed");
+  const now = new Date().toISOString();
+  await supabase.from("catalog_products").update({ sell_ex_gst: data.sellExGst, updated_at: now }).eq("sku", data.sku);
   const { error } = await supabase
     .from("product_overrides")
-    .upsert({ sku: data.sku, sell_ex_gst: data.sellExGst, updated_at: new Date().toISOString() });
+    .upsert({ sku: data.sku, sell_ex_gst: data.sellExGst, updated_at: now });
   if (error) throw new Error(error.message);
   return { ok: true };
 }
@@ -220,9 +225,7 @@ export async function staffOverridePrice(data: { sku: string; sellExGst: number 
 export async function staffListOverrides() {
   const user = await getCurrentUser();
   await requireStaff(user.id);
-  const { data, error } = await supabase
-    .from("product_overrides")
-    .select("sku, sell_ex_gst, stock_status");
+  const { data, error } = await supabase.from("product_overrides").select("sku, sell_ex_gst, stock_status");
   if (error) throw new Error(error.message);
   return data ?? [];
 }
@@ -234,7 +237,10 @@ export type CatalogProduct = {
   name: string;
   category: string;
   sell_ex_gst: number;
+  cost_ex_gst?: number;
   stock_status: string;
+  listing_status: ListingStatus;
+  qty_on_hand: number;
   lead_weeks_min: number;
   lead_weeks_max: number;
   description: string;
@@ -257,12 +263,14 @@ export async function staffListCatalogProducts(): Promise<CatalogProduct[]> {
   const { data, error } = await supabase
     .from("catalog_products")
     .select(
-      "id, sku, brand, name, category, sell_ex_gst, stock_status, lead_weeks_min, lead_weeks_max, description, notes, image_url, images, manufacturer_url, whats_included, mount_compatibility, assembly_manual_url, specs, compare, created_by, created_at",
+      "id, sku, brand, name, category, sell_ex_gst, cost_ex_gst, stock_status, listing_status, qty_on_hand, lead_weeks_min, lead_weeks_max, description, notes, image_url, images, manufacturer_url, whats_included, mount_compatibility, assembly_manual_url, specs, compare, created_by, created_at",
     )
     .order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
   return (data ?? []).map((row) => ({
     ...(row as CatalogProduct),
+    listing_status: (((row as CatalogProduct).listing_status || "published") as ListingStatus),
+    qty_on_hand: Number((row as CatalogProduct).qty_on_hand) || 0,
     images: Array.isArray((row as CatalogProduct).images) ? (row as CatalogProduct).images : [],
   }));
 }
@@ -273,7 +281,10 @@ export async function staffSaveCatalogProduct(input: {
   name: string;
   category: string;
   sell_ex_gst: number;
+  cost_ex_gst?: number;
   stock_status: string;
+  listing_status?: ListingStatus;
+  qty_on_hand?: number;
   lead_weeks_min: number;
   lead_weeks_max: number;
   description: string;
@@ -290,32 +301,48 @@ export async function staffSaveCatalogProduct(input: {
   const user = await getCurrentUser();
   await requireStaff(user.id);
   const images = (input.images ?? []).filter(Boolean).slice(0, 8);
+  const listing_status = input.listing_status ?? "draft";
+  const row = {
+    sku: input.sku.trim(),
+    brand: input.brand,
+    name: input.name,
+    category: input.category,
+    sell_ex_gst: input.sell_ex_gst,
+    cost_ex_gst: input.cost_ex_gst ?? 0,
+    stock_status: input.stock_status,
+    listing_status,
+    qty_on_hand: input.qty_on_hand ?? 0,
+    lead_weeks_min: input.lead_weeks_min,
+    lead_weeks_max: input.lead_weeks_max,
+    description: input.description,
+    notes: input.notes,
+    image_url: input.image_url || images[0] || null,
+    image: input.image_url || images[0] || null,
+    images,
+    manufacturer_url: input.manufacturer_url || null,
+    whats_included: input.whats_included ?? [],
+    mount_compatibility: input.mount_compatibility ?? "",
+    assembly_manual_url: input.assembly_manual_url ?? null,
+    specs: input.specs ?? {},
+    compare: input.compare ?? "",
+    updated_at: new Date().toISOString(),
+    created_by: user.id,
+  };
   const { data, error } = await supabase
     .from("catalog_products")
-    .insert({
-      sku: input.sku,
-      brand: input.brand,
-      name: input.name,
-      category: input.category,
-      sell_ex_gst: input.sell_ex_gst,
-      stock_status: input.stock_status,
-      lead_weeks_min: input.lead_weeks_min,
-      lead_weeks_max: input.lead_weeks_max,
-      description: input.description,
-      notes: input.notes,
-      image_url: input.image_url || images[0] || null,
-      images,
-      manufacturer_url: input.manufacturer_url || null,
-      whats_included: input.whats_included ?? [],
-      mount_compatibility: input.mount_compatibility ?? "",
-      assembly_manual_url: input.assembly_manual_url ?? null,
-      specs: input.specs ?? {},
-      compare: input.compare ?? "",
-    })
+    .upsert(row, { onConflict: "sku" })
     .select("id, sku")
     .maybeSingle();
   if (error) throw new Error(error.message);
-  return { id: data?.id, sku: data?.sku };
+  if (listing_status === "published") {
+    await supabase.from("product_overrides").upsert({
+      sku: row.sku,
+      sell_ex_gst: row.sell_ex_gst,
+      stock_status: row.stock_status,
+      updated_at: row.updated_at,
+    });
+  }
+  return { id: data?.id, sku: data?.sku, listing_status };
 }
 
 export async function staffDeleteCatalogProduct(id: string) {
@@ -325,6 +352,81 @@ export async function staffDeleteCatalogProduct(id: string) {
   const { error } = await supabase.from("catalog_products").delete().eq("id", id);
   if (error) throw new Error(error.message);
   return { ok: true };
+}
+
+export async function staffSetListingStatus(sku: string, listing_status: ListingStatus) {
+  const user = await getCurrentUser();
+  await requireStaff(user.id);
+  const { error } = await supabase
+    .from("catalog_products")
+    .update({ listing_status, updated_at: new Date().toISOString() })
+    .eq("sku", sku);
+  if (error) throw new Error(error.message);
+  return { ok: true };
+}
+
+export async function listMyOrders() {
+  const user = await getCurrentUser();
+  const { data, error } = await supabase
+    .from("shop_orders")
+    .select("id, status, total_ex_gst, total_inc_gst, tracking_number, carrier, invoice_number, created_at, lines")
+    .eq("user_id", user.id)
+    .order("created_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
+
+export async function placeOrder(
+  input:
+    | { lines: CartLine[]; postcode?: string; notes?: string; driverWeightKg?: number; quoteId?: string }
+    | { data: { lines: CartLine[]; postcode?: string; notes?: string; driverWeightKg?: number; quoteId?: string } },
+) {
+  const data = unwrap(input);
+  const user = await getCurrentUser();
+  const profile = await ensureProfile(user.id, user.email, user.user_metadata?.display_name);
+  const lines = (data.lines ?? []).filter((l) => l.sku && l.qty > 0);
+  if (!lines.length) throw new Error("Cart is empty");
+  const result = checkCart({ lines, driverWeightKg: data.driverWeightKg, postcode: data.postcode });
+  const id = `ESO-${Date.now().toString(36).toUpperCase()}`;
+
+  let contactId: string | null = null;
+  const { data: existing } = await supabase.from("crm_contacts").select("id").eq("user_id", user.id).maybeSingle();
+  if (existing?.id) contactId = existing.id;
+  else {
+    const { data: created } = await supabase
+      .from("crm_contacts")
+      .insert({
+        user_id: user.id,
+        display_name: profile.display_name || user.email || "Customer",
+        email: user.email,
+        postcode: data.postcode ?? null,
+        crm_stage: result.ok ? "quoted" : "lead",
+        crm_source: "website",
+        notes: data.notes ?? "",
+      })
+      .select("id")
+      .maybeSingle();
+    contactId = created?.id ?? null;
+  }
+
+  const { error } = await supabase.from("shop_orders").insert({
+    id,
+    contact_id: contactId,
+    user_id: user.id,
+    quote_id: data.quoteId ?? null,
+    status: "pending",
+    lines,
+    total_ex_gst: result.totalExGst,
+    total_inc_gst: result.totalIncGst,
+    shipping_name: profile.display_name,
+    postcode: data.postcode ?? null,
+    notes: data.notes ?? "",
+  });
+  if (error) throw new Error(error.message);
+  if (data.quoteId) {
+    await supabase.from("quotes").update({ status: "won", updated_at: new Date().toISOString() }).eq("id", data.quoteId);
+  }
+  return { id, result };
 }
 
 export async function askBuilder(data: {
@@ -396,5 +498,15 @@ function fallbackReply(message: string, result: ReturnType<typeof checkCart>) {
 }
 
 export async function publicCatalog() {
-  return { products: getCachedProducts(), productMap: getCachedProductMap(), packages: PACKAGES, guides: GUIDES, rules: RULES, brand: BRAND };
+  return {
+    products: getCachedProducts(),
+    productMap: getCachedProductMap(),
+    packages: PACKAGES,
+    guides: GUIDES,
+    rules: getLiveRules().length ? getLiveRules() : RULES,
+    brand: BRAND,
+    seed: PRODUCTS,
+  };
 }
+
+export { freightExGst };

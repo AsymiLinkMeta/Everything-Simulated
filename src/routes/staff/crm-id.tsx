@@ -14,6 +14,7 @@ import {
   type CrmNoteKind,
   type CrmStage,
 } from "@/lib/es/crm-oms";
+import { createCustomerAccount } from "@/lib/es/staff-accounts";
 import { aud } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
@@ -38,6 +39,8 @@ function CrmRecord() {
   const [tags, setTags] = useState("");
   const [kind, setKind] = useState<CrmNoteKind>("note");
   const [note, setNote] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [creatingLogin, setCreatingLogin] = useState(false);
 
   useEffect(() => {
     if (!p) return;
@@ -66,6 +69,7 @@ function CrmRecord() {
         <h1 className="mt-2 text-3xl font-medium">{p.display_name}</h1>
         <p className="mt-1 text-sm text-muted">
           {p.email ?? "no email"} · {aud(spend)} order book
+          {p.user_id ? " · has login" : " · no login"}
         </p>
       </div>
       <div className="flex flex-wrap gap-2">
@@ -159,6 +163,44 @@ function CrmRecord() {
           <Button type="submit">Save record</Button>
         </div>
       </form>
+
+      {!p.user_id ? (
+        <section className="es-card space-y-3 p-5">
+          <h2 className="text-lg font-medium">Customer login</h2>
+          <p className="text-sm text-muted">Creates a Sign In account for quotes, orders and bookings. Staff can add customers; only admin can create staff.</p>
+          <div className="grid gap-3 sm:grid-cols-[1fr_auto]">
+            <Input
+              type="password"
+              value={loginPassword}
+              onChange={(e) => setLoginPassword(e.target.value)}
+              placeholder="Temporary password (8+ characters)"
+            />
+            <Button
+              disabled={creatingLogin || !email || loginPassword.length < 8}
+              onClick={async () => {
+                setCreatingLogin(true);
+                try {
+                  await createCustomerAccount({
+                    email,
+                    password: loginPassword,
+                    displayName: displayName || p.display_name,
+                    contactId: id,
+                  });
+                  toast.success("Customer can now sign in");
+                  setLoginPassword("");
+                  await qc.invalidateQueries({ queryKey: ["crm-contact", id] });
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "Could not create login");
+                } finally {
+                  setCreatingLogin(false);
+                }
+              }}
+            >
+              {creatingLogin ? "Creating…" : "Create login"}
+            </Button>
+          </div>
+        </section>
+      ) : null}
 
       <section className="es-card space-y-3 p-5">
         <h2 className="text-lg font-medium">Activity</h2>

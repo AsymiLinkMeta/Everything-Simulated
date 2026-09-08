@@ -4,16 +4,13 @@ This repo is a **Vite + React + TypeScript + Tailwind v3** app. Open it in Bolt 
 
 ## Header / footer must stay dark
 
-Do **not** restyle header or footer with Tailwind-only utilities. Chrome lives in [`src/es.css`](src/es.css) and is imported from the shells:
+Do **not** restyle header or footer with Tailwind-only utilities. Chrome lives in [`src/es.css`](src/es.css):
 
 - `es-header` / `es-nav` / `es-nav-link` / `es-menu`
 - `es-footer` / `es-footer-grid` / `es-footer-col`
-- `es-logo` / `es-logo-mark` / `es-logo-word`
-- `es-hero` / `es-card` / `es-btn`
+- `es-logo` / `es-hero` / `es-card` / `es-btn`
 
-Those classes are plain CSS. They render even if Tailwind tokens (`bg-ink`, `text-paper`) are missing.
-
-`src/components/es/es-chrome.ts` imports `src/es.css` so Bolt always bundles the chrome stylesheet with the header.
+`src/components/es/es-chrome.ts` imports `src/es.css` so Bolt always bundles the chrome stylesheet.
 
 ## Theme
 
@@ -34,10 +31,22 @@ src/lib/es/catalog.ts
 src/lib/es/checkCart.ts
 src/lib/es/types.ts
 src/lib/es/cart-store.ts
+src/lib/es/product-cache.ts
 ```
 
 `checkCart` is the source of truth. Chat may only explain its JSON.
 
-## Auth / data in Bolt
+## Supabase (required)
 
-Wire Supabase Auth in place of the stubs under `src/lib/auth/*`. Apply `migrations/0002_es.sql`. Replace `src/lib/es/server.ts` `createServerFn` calls with Edge Functions using `auth.uid()`.
+1. Apply every file in `supabase/migrations/` (including `20260908190000_ops_hardening.sql`).
+2. Deploy Edge Functions:
+   - `generate-product-listing` (needs `XAI_API_KEY` for Grok copy; falls back to a local draft)
+   - `discover-products` (reads official Shopify/HTML catalogues)
+   - `ask-builder`
+   - `create-staff-account` (needs `SUPABASE_SERVICE_ROLE_KEY`)
+3. Auth: email/password. Optional Google/X later — keep `GROK_PROVIDERS` empty until configured.
+4. Do **not** use TanStack Start `createServerFn`. All staff/customer writes go through the Supabase client or these functions.
+
+## Photos
+
+Use `ListingImages` (drag-and-drop). Do not restyle manufacturer photos (no black background, no ES logo overlay).

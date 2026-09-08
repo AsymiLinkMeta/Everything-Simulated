@@ -1,11 +1,13 @@
 import { Link } from "@tanstack/react-router";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { PACKAGES } from "@/lib/es/catalog";
-import { getCachedProductMap } from "@/lib/es/product-cache";
+import { fetchProducts } from "@/lib/es/product-cache";
 import { useCart } from "@/lib/es/cart-store";
-import { saveQuote } from "@/lib/es/server";
+import { placeOrder, saveQuote } from "@/lib/es/server";
+import { freightLabel } from "@/lib/es/freight";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { aud, gstInclusive } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -16,6 +18,7 @@ export function CartPanel({ compact = false }: { compact?: boolean }) {
   const [ready, setReady] = useState(false);
   useEffect(() => setReady(true), []);
   const { user } = useCurrentUserState();
+  const catalog = useQuery({ queryKey: ["products"], queryFn: () => fetchProducts() });
   const lines = useCart((s) => s.lines);
   const driverWeightKg = useCart((s) => s.driverWeightKg);
   const postcode = useCart((s) => s.postcode);
@@ -27,16 +30,38 @@ export function CartPanel({ compact = false }: { compact?: boolean }) {
   const setPostcode = useCart((s) => s.setPostcode);
   const result = useCart((s) => s.result)();
 
+  const [placing, setPlacing] = useState(false);
+
   async function onSave() {
     if (!user) {
       toast.message("Sign In to save this quote to your account.");
       return;
     }
     try {
-      const saved = await saveQuote({ data: { lines, postcode, title: "Custom build", driverWeightKg } });
+      const saved = await saveQuote({ lines, postcode, title: "Custom build", driverWeightKg });
       toast.success(`Quote ${saved.id} saved`);
     } catch {
       toast.error("Could not save quote. Sign In and try again.");
+    }
+  }
+
+  async function onPlace() {
+    if (!user) {
+      toast.message("Sign In to place a deposit order.");
+      return;
+    }
+    if (!result.ok) {
+      toast.error("Fix checker blocks before placing an order.");
+      return;
+    }
+    setPlacing(true);
+    try {
+      const saved = await placeOrder({ lines, postcode, driverWeightKg });
+      toast.success(`Order ${saved.id} is pending — staff will invoice a deposit`);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not place order");
+    } finally {
+      setPlacing(false);
     }
   }
 
@@ -67,7 +92,7 @@ export function CartPanel({ compact = false }: { compact?: boolean }) {
           <li className="text-sm text-muted">Cart is empty. Load a package or add parts from the shop.</li>
         ) : (
           lines.map((line) => {
-            const item = getCachedProductMap()[line.sku];
+            const item = catalog.data?.find((p) => p.sku === line.sku);
             return (
               <li key={line.sku} className="flex items-center gap-3 border-b border-line pb-3">
                 <div className="min-w-0 flex-1">
@@ -134,10 +159,16 @@ export function CartPanel({ compact = false }: { compact?: boolean }) {
       </div>
       <div>
         <p className="text-xl font-medium tabular-nums">{aud(result.totalExGst)} + GST</p>
-        <p className="text-sm text-muted">{aud(gstInclusive(result.totalExGst))} inc GST</p>
+        <p className="text-sm text-muted">{aud(gstInclusive(result.totalExGst + result.freightExGst))} inc GST with freight</p>
+        <p className="mt-1 text-xs text-muted">
+          Crate {aud(result.freightExGst)} — {freightLabel(postcode)}
+        </p>
       </div>
       <div className="flex flex-col gap-2">
         <Button onClick={onSave}>{user ? "Save quote" : "Sign In to save quote"}</Button>
+        <Button variant="outline" onClick={() => void onPlace()} disabled={placing}>
+          {placing ? "Placing…" : user ? "Place deposit order" : "Sign In to order"}
+        </Button>
         <Button variant="outline" asChild>
           <Link to="/app/chat">Ask the build expert</Link>
         </Button>

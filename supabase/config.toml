@@ -6,3 +6,6 @@ verify_jwt = true
 
 [functions.ask-builder]
 verify_jwt = true
+
+[functions.discover-products]
+verify_jwt = true

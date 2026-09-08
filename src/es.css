@@ -861,6 +861,21 @@ img {
   background: color-mix(in srgb, var(--es-red) 14%, var(--es-raised));
 }
 
+.es-shop-thumbs {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.es-shop-thumbs img {
+  width: 4rem;
+  height: 4rem;
+  object-fit: cover;
+  border-radius: var(--es-radius-md);
+  border: 1px solid var(--es-line);
+}
+
 /* ---- select / textarea fallback ---- */
 .es-brand-marquee {
   position: relative;

@@ -101,6 +101,7 @@ export const allIndexPaths = [
   "/compatibility",
   "/studio",
   "/guides",
+  "/faqs",
   ...GUIDES.map((g) => `/guides/${g.slug}`),
   "/au",
   ...CITIES.map((c) => `/au/${c.slug}`),

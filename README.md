@@ -11,40 +11,44 @@ Premium Gold Coast sim-racing workshop: marketing site, parts shop, compatibilit
 | Customer app | `/app` | Signed-in customers |
 | Staff / admin | `/staff` | sales, workshop, content, support, admin |
 
-The first signed-in account becomes **admin**.
+The first signed-in account becomes **admin**. Admins create staff and customers. Staff can add **customer** logins only. The last admin cannot be demoted.
 
-## Packages
+## Stack (this repo / Bolt.new)
 
-- Starter — $11,260 + GST
-- Haptic — $18,999 + GST (default cart)
-- Motion — $28,999 + GST (SIMRIG SR2 on Exodus XR1 only)
+Vite + React 18 + React Router + Tailwind v3 + Supabase Auth + Postgres.
 
-Brands specced: Simagic, Trak Racer, Exodus, SIMRIG, AOC, Logitech, iRacing.
+Domain logic lives in `src/lib/es/` (no UI framework):
 
-## Stack (this repo)
-
-TanStack Start + React 19 + Tailwind v4 + Better Auth (Google / X / email) + Postgres.
-
-Portable domain logic lives in `src/lib/es/` (no UI framework):
-
-- `catalog.ts` — products, packages, guides, city SEO pages, rules
+- `catalog.ts` — packages, guides, city SEO, fallback products, default rules
 - `checkCart.ts` — deterministic compatibility engine
-- `types.ts` — shared types
+- `product-cache.ts` — live `catalog_products` (published only) with seed fallback
+- `rules.ts` — staff-editable compatibility graph
+- `crm-oms.ts` — CRM pipeline + OMS fulfilment
 
-**Bolt.new:** see [BOLT.md](./BOLT.md). Copy `src/lib/es/*` into a Vite + React + Tailwind + Supabase project; do not rewrite the checker.
+**Bolt.new:** see [BOLT.md](./BOLT.md). Apply `supabase/migrations/*`. Deploy the Edge Functions. Do not rewrite the checker.
+
+## Catalogue workflow
+
+1. SKU search or paste a manufacturer URL (product or collection).
+2. AI writes a **draft** listing from official page data (photos stay as-is).
+3. Staff set the AU price, then **Publish to shop**.
+4. Compatibility rules are linked separately under Staff → Rules.
+
+## Checkout (honest)
+
+There is no Stripe key in this repo. Customers **save a quote** and **place a deposit order** (status `pending`). Staff mark paid / pack / ship in OMS, which decrements `qty_on_hand` and issues an invoice number.
 
 ## SEO
 
 - Unique title/description per city, guide, package and SKU
 - JSON-LD LocalBusiness, FAQ, Product, Breadcrumb
-- `/au/{city}` landing pages for every capital + Gold Coast / Sunshine Coast
+- `/au/{city}` landing pages
 - `public/sitemap.xml` + `public/robots.txt`
 
 ## Scripts
 
 ```bash
 npm install
-npm run dev      # 0.0.0.0:8080
+npm run dev
 npm run build
-npm run typecheck
 ```

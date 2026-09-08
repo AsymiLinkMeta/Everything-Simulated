@@ -28,7 +28,7 @@ function Chat() {
     setPending(true);
     try {
       if (task === "quote") {
-        const saved = await saveQuote({ data: { lines, postcode, title: "AI build quote", driverWeightKg } });
+        const saved = await saveQuote({ lines, postcode, title: "AI build quote", driverWeightKg });
         const status = saved.result.ok ? "ready to review" : "saved as a draft because the checker found an issue";
         setLocal((m) => [
           ...m,

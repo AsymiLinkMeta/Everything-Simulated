@@ -1,7 +1,7 @@
 import "./es-chrome";
 import { Link, Outlet } from "@tanstack/react-router";
 import { Navigate } from "react-router-dom";
-import { Calendar, Gauge, LayoutDashboard, MessageSquare, Wrench } from "lucide-react";
+import { Calendar, Gauge, LayoutDashboard, MessageSquare, Package, Wrench } from "lucide-react";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { useQuery } from "@tanstack/react-query";
 import { getProfile } from "@/lib/es/server";
@@ -11,6 +11,7 @@ const TABS = [
   { to: "/app", label: "Home", icon: LayoutDashboard },
   { to: "/app/build", label: "Build", icon: Gauge },
   { to: "/app/quotes", label: "Quotes", icon: Wrench },
+  { to: "/app/orders", label: "Orders", icon: Package },
   { to: "/app/chat", label: "Expert", icon: MessageSquare },
   { to: "/app/book", label: "Book", icon: Calendar },
 ] as const;

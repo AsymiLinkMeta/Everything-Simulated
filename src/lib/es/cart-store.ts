@@ -45,7 +45,7 @@ export const useCart = create<CartState>()(
       },
       remove: (sku) => set({ lines: get().lines.filter((l) => l.sku !== sku) }),
       clear: () => set({ lines: [] }),
-      result: () => checkCart({ lines: get().lines, driverWeightKg: get().driverWeightKg }),
+      result: () => checkCart({ lines: get().lines, driverWeightKg: get().driverWeightKg, postcode: get().postcode }),
     }),
     { name: "es-cart-v2" }
   ),

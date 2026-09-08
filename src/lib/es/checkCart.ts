@@ -1,5 +1,6 @@
 import { RULES } from "./catalog";
-import { getCachedProductMap } from "./product-cache";
+import { freightExGst } from "./freight";
+import { getCachedProductMap, getLiveRules } from "./product-cache";
 import type { CartLine, CheckIssue, CheckResult, CompatibilityRule, Product } from "./types";
 
 const UNIQUE = new Set(["chassis", "wheelbase", "motion", "pc", "seat"]);
@@ -13,9 +14,10 @@ export function checkCart(input: {
   products?: Record<string, Product>;
   rules?: CompatibilityRule[];
   driverWeightKg?: number;
+  postcode?: string;
 }): CheckResult {
   const products = input.products ?? getCachedProductMap();
-  const rules = input.rules ?? RULES;
+  const rules = input.rules ?? getLiveRules() ?? RULES;
   const issues: CheckIssue[] = [];
   const expanded: { sku: string; qty: number; product: Product }[] = [];
 
@@ -120,12 +122,14 @@ export function checkCart(input: {
     lead = [Math.max(lead[0], row.product.leadWeeks[0]), Math.max(lead[1], row.product.leadWeeks[1])];
   }
 
+  const freight = freightExGst(input.postcode);
   const blocks = issues.some((i) => i.severity === "block");
   return {
     ok: !blocks,
     issues,
     totalExGst,
-    totalIncGst: Math.round(totalExGst * 1.1),
+    totalIncGst: Math.round((totalExGst + freight) * 1.1),
+    freightExGst: freight,
     leadWeeks: lead,
   };
 }

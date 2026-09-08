@@ -19,6 +19,8 @@ export type ProductListing = {
   assemblyManualUrl?: string;
   specs?: Record<string, string>;
   compare?: string;
+  listingStatus?: "draft" | "published" | "archived";
+  qtyOnHand?: number;
 };
 
 export async function generateProductListing(input: {

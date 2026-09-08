@@ -13,6 +13,7 @@ import {
   Truck,
   Users,
   Wrench,
+  Link2,
 } from "lucide-react";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { getProfile } from "@/lib/es/server";
@@ -23,6 +24,7 @@ const TABS = [
   { to: "/staff/crm", label: "CRM", icon: Handshake },
   { to: "/staff/oms", label: "OMS", icon: Truck },
   { to: "/staff/catalog", label: "Catalog", icon: Boxes },
+  { to: "/staff/rules", label: "Rules", icon: Link2 },
   { to: "/staff/brands", label: "Brands", icon: Tags },
   { to: "/staff/quotes", label: "Quotes", icon: FileText },
   { to: "/staff/jobs", label: "Jobs", icon: Wrench },

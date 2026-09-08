@@ -102,6 +102,9 @@ export function JsonLd({ data }: { data: unknown }) {
 }
 
 export function Money({ cents, gst = false }: { cents: number; gst?: boolean }) {
+  if (!cents) {
+    return <span className="text-muted">Quote</span>;
+  }
   if (gst) {
     return (
       <span className="tabular-nums">

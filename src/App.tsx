@@ -17,6 +17,9 @@ import { Route as ContactRoute } from "@/routes/_site/contact";
 import { Route as PrivacyRoute } from "@/routes/_site/privacy";
 import { Route as TermsRoute } from "@/routes/_site/terms";
 import { Route as LoginRoute } from "@/routes/login";
+import { Route as FaqsRoute } from "@/routes/_site/faqs";
+import { Route as AppOrdersRoute } from "@/routes/app/orders";
+import { Route as StaffRulesRoute } from "@/routes/staff/rules";
 import { Route as AppIndexRoute } from "@/routes/app/index";
 import { Route as AppBuildRoute } from "@/routes/app/build";
 import { Route as AppChatRoute } from "@/routes/app/chat";
@@ -57,11 +60,13 @@ export default function App() {
   const Privacy = PrivacyRoute.component!;
   const Terms = TermsRoute.component!;
   const Login = LoginRoute.component!;
+  const Faqs = FaqsRoute.component!;
   const AppIndex = AppIndexRoute.component!;
   const AppBuild = AppBuildRoute.component!;
   const AppChat = AppChatRoute.component!;
   const AppQuotes = AppQuotesRoute.component!;
   const AppBook = AppBookRoute.component!;
+  const AppOrders = AppOrdersRoute.component!;
   const StaffIndex = StaffIndexRoute.component!;
   const StaffCatalog = StaffCatalogRoute.component!;
   const StaffQuotes = StaffQuotesRoute.component!;
@@ -73,6 +78,7 @@ export default function App() {
   const StaffCrmId = StaffCrmIdRoute.component!;
   const StaffOms = StaffOmsRoute.component!;
   const StaffOmsId = StaffOmsIdRoute.component!;
+  const StaffRules = StaffRulesRoute.component!;
 
   return (
     <Routes>
@@ -90,17 +96,20 @@ export default function App() {
       <Route path="/contact" element={<Page C={Contact} />} />
       <Route path="/privacy" element={<Page C={Privacy} />} />
       <Route path="/terms" element={<Page C={Terms} />} />
+      <Route path="/faqs" element={<Page C={Faqs} />} />
       <Route path="/login" element={<Login />} />
       <Route path="/app" element={<AppShell />}>
         <Route index element={<AppIndex />} />
         <Route path="build" element={<AppBuild />} />
         <Route path="chat" element={<AppChat />} />
         <Route path="quotes" element={<AppQuotes />} />
+        <Route path="orders" element={<AppOrders />} />
         <Route path="book" element={<AppBook />} />
       </Route>
       <Route path="/staff" element={<StaffShell />}>
         <Route index element={<StaffIndex />} />
         <Route path="catalog" element={<StaffCatalog />} />
+        <Route path="rules" element={<StaffRules />} />
         <Route path="crm" element={<StaffCrm />} />
         <Route path="crm/:id" element={<StaffCrmId />} />
         <Route path="oms" element={<StaffOms />} />

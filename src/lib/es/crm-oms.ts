@@ -88,6 +88,20 @@ function asLines(raw: unknown): CartLine[] {
     .filter((l) => l.sku && l.qty > 0);
 }
 
+async function adjustStock(lines: CartLine[], sign: 1 | -1) {
+  for (const line of lines) {
+    const { data } = await supabase
+      .from("catalog_products")
+      .select("qty_on_hand, stock_status")
+      .eq("sku", line.sku)
+      .maybeSingle();
+    if (!data) continue;
+    const next = Math.max(0, Number(data.qty_on_hand ?? 0) + sign * line.qty);
+    const stock_status = next <= 0 && data.stock_status === "stock" ? "indent" : data.stock_status;
+    await supabase.from("catalog_products").update({ qty_on_hand: next, stock_status }).eq("sku", line.sku);
+  }
+}
+
 function shapeContact(row: Record<string, unknown>): CrmContact {
   return {
     id: String(row.id),
@@ -324,7 +338,13 @@ export async function staffCreateOrder(input: {
 }
 
 export async function staffSetOrderStatus(id: string, status: OrderStatus) {
-  await requireStaffId();
+  const actor = await requireStaffId();
+  const { data: current } = await supabase
+    .from("shop_orders")
+    .select("status, packed_at, lines, contact_id")
+    .eq("id", id)
+    .maybeSingle();
+  if (!current) throw new Error("Order not found");
   const patch: Record<string, unknown> = { status, updated_at: new Date().toISOString() };
   if (status === "packing") patch.packed_at = new Date().toISOString();
   if (status === "shipped") patch.shipped_at = new Date().toISOString();
@@ -332,12 +352,17 @@ export async function staffSetOrderStatus(id: string, status: OrderStatus) {
   if (status === "paid") patch.invoice_number = `ESI-${Date.now().toString(36).toUpperCase()}`;
   const { error } = await supabase.from("shop_orders").update(patch).eq("id", id);
   if (error) throw new Error(error.message);
-  if (status === "delivered") {
-    const { data } = await supabase.from("shop_orders").select("contact_id").eq("id", id).maybeSingle();
-    if (data?.contact_id) {
-      await supabase.from("crm_contacts").update({ crm_stage: "active" }).eq("id", data.contact_id);
-    }
+
+  const lines = asLines(current.lines);
+  const wasPicked = Boolean(current.packed_at) || current.status === "packing" || current.status === "shipped";
+  const willPick = status === "packing" || status === "shipped" || status === "delivered";
+  if (!wasPicked && willPick) await adjustStock(lines, -1);
+  if (wasPicked && (status === "cancelled" || status === "pending")) await adjustStock(lines, 1);
+
+  if (status === "delivered" && current.contact_id) {
+    await supabase.from("crm_contacts").update({ crm_stage: "active" }).eq("id", current.contact_id);
   }
+  void actor;
   return { ok: true };
 }
 
@@ -388,6 +413,7 @@ export async function staffUpdateOrderShipping(
 export async function staffReturnOrder(id: string, reason: string) {
   await requireStaffId();
   if (!reason.trim()) throw new Error("Return reason required");
+  const { data: current } = await supabase.from("shop_orders").select("status, packed_at, lines").eq("id", id).maybeSingle();
   const { error } = await supabase
     .from("shop_orders")
     .update({
@@ -397,6 +423,8 @@ export async function staffReturnOrder(id: string, reason: string) {
     })
     .eq("id", id);
   if (error) throw new Error(error.message);
+  const wasPicked = Boolean(current?.packed_at) || current?.status === "packing" || current?.status === "shipped";
+  if (wasPicked) await adjustStock(asLines(current?.lines), 1);
   return { ok: true };
 }
 

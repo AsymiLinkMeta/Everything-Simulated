@@ -63,7 +63,16 @@ function ProductPage() {
         }}
       />
       <div className="grid gap-8 lg:grid-cols-[1fr_1fr_320px]">
-        <img src={productImage(item)} alt={item.name} className="es-card h-80 w-full object-cover" />
+        <div>
+          <img src={productImage(item)} alt={item.name} className="es-card h-80 w-full object-cover" />
+          {item.images && item.images.length > 1 ? (
+            <div className="es-shop-thumbs">
+              {item.images.slice(0, 8).map((src) => (
+                <img key={src} src={src} alt="" />
+              ))}
+            </div>
+          ) : null}
+        </div>
         <div>
           <p className="es-kicker">{item.brand}</p>
           <h1 className="mt-2 text-3xl font-medium">{item.name}</h1>

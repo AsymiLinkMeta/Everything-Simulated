@@ -4,7 +4,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { Eye, EyeOff, UserPlus } from "lucide-react";
 import { getProfile, staffListProfiles, staffSetRole } from "@/lib/es/server";
-import { createStaffAccount, type CreatableStaffRole } from "@/lib/es/staff-accounts";
+import { createStaffAccount, type CreatableRole } from "@/lib/es/staff-accounts";
 import type { StaffRole } from "@/lib/es/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,12 +14,11 @@ export const Route = createFileRoute("/staff/team")({
 });
 
 const ROLES: StaffRole[] = ["customer", "sales", "workshop", "content", "support", "admin"];
-const STAFF_ROLES: CreatableStaffRole[] = ["sales", "workshop", "content", "support", "admin"];
 
 type NewStaff = {
   displayName: string;
   email: string;
-  role: CreatableStaffRole;
+  role: CreatableRole;
   password: string;
   confirmPassword: string;
 };
@@ -27,7 +26,7 @@ type NewStaff = {
 const EMPTY_FORM: NewStaff = {
   displayName: "",
   email: "",
-  role: "workshop",
+  role: "customer",
   password: "",
   confirmPassword: "",
 };
@@ -38,14 +37,16 @@ function Team() {
   const people = useQuery({
     queryKey: ["profiles"],
     queryFn: () => staffListProfiles(),
-    enabled: me.data?.role === "admin",
+    enabled: Boolean(me.data?.isStaff),
   });
   const [form, setForm] = useState<NewStaff>(EMPTY_FORM);
   const [showPassword, setShowPassword] = useState(false);
   const [creating, setCreating] = useState(false);
 
-  if (me.data && me.data.role !== "admin") {
-    return <p className="text-sm text-muted">Admin only.</p>;
+  const isAdmin = me.data?.role === "admin";
+
+  if (me.data && !me.data.isStaff) {
+    return <p className="text-sm text-muted">Staff only.</p>;
   }
 
   async function setRole(userId: string, role: StaffRole) {
@@ -95,9 +96,11 @@ function Team() {
   return (
     <div className="space-y-6">
       <div>
-        <p className="es-kicker">Admin</p>
+        <p className="es-kicker">{isAdmin ? "Admin" : "Staff"}</p>
         <h1 className="mt-2 text-3xl font-medium">Team</h1>
-        <p className="mt-2 text-sm text-muted">Create staff logins, assign access, and manage the team.</p>
+        <p className="mt-2 text-sm text-muted">
+          {isAdmin ? "Create staff, admin and customer logins. Last admin cannot be demoted." : "Staff can add customer accounts only."}
+        </p>
       </div>
 
       <section className="es-card p-5">
@@ -106,8 +109,10 @@ function Team() {
             <UserPlus className="size-4" />
           </div>
           <div>
-            <h2 className="font-medium">Add staff member</h2>
-            <p className="mt-1 text-sm text-muted">Create a login and assign their staff access in one step.</p>
+            <h2 className="font-medium">{isAdmin ? "Add staff or customer" : "Add customer"}</h2>
+            <p className="mt-1 text-sm text-muted">
+              {isAdmin ? "Create a login and assign access in one step." : "Customers can sign in to quotes, orders and bookings."}
+            </p>
           </div>
         </div>
 
@@ -136,9 +141,10 @@ function Team() {
             <select
               className="es-input"
               value={form.role}
-              onChange={(e) => setForm((current) => ({ ...current, role: e.target.value as CreatableStaffRole }))}
+              onChange={(e) => setForm((current) => ({ ...current, role: e.target.value as CreatableRole }))}
+              disabled={!isAdmin}
             >
-              {STAFF_ROLES.map((role) => (
+              {(isAdmin ? ROLES : (["customer"] as const)).map((role) => (
                 <option key={role} value={role}>
                   {role}
                 </option>
@@ -180,7 +186,7 @@ function Team() {
         <div className="mt-4 flex flex-wrap items-center gap-3">
           <Button onClick={createAccount} disabled={creating}>
             <UserPlus className="size-4" />
-            {creating ? "Creating account…" : "Create staff account"}
+            {creating ? "Creating account…" : isAdmin ? "Create account" : "Create customer account"}
           </Button>
           <p className="text-xs text-muted">The account is confirmed immediately and can sign in with these details.</p>
         </div>
@@ -208,16 +214,18 @@ function Team() {
                   <span className="rounded-md bg-raised px-2 py-1 text-xs capitalize text-muted">{p.role}</span>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
-                  {ROLES.map((role) => (
-                    <Button
-                      key={role}
-                      size="sm"
-                      variant={p.role === role ? "primary" : "outline"}
-                      onClick={() => setRole(p.user_id, role)}
-                    >
-                      {role}
-                    </Button>
-                  ))}
+                  {isAdmin
+                    ? ROLES.map((role) => (
+                        <Button
+                          key={role}
+                          size="sm"
+                          variant={p.role === role ? "primary" : "outline"}
+                          onClick={() => setRole(p.user_id, role)}
+                        >
+                          {role}
+                        </Button>
+                      ))
+                    : null}
                 </div>
               </li>
             ))}
