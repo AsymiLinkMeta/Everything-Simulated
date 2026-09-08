@@ -1,6 +1,6 @@
 import "./es-chrome";
 import { Link, Outlet, useLocation } from "@tanstack/react-router";
-import { Phone } from "lucide-react";
+import { Facebook, Instagram, Phone } from "lucide-react";
 import { useEffect, useState } from "react";
 import { BRAND, CITIES, GUIDES, PACKAGES } from "@/lib/es/catalog";
 import { CookieDisclaimer, CustomerSignInLink, Logo, StaffLoginLink } from "./bits";
@@ -67,6 +67,26 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
             <p>Gold Coast built racing simulators. Crate freight Australia-wide.</p>
             <p>{BRAND.phone}</p>
             <p>{BRAND.email}</p>
+            <div className="flex items-center gap-3" style={{ marginTop: 16 }}>
+              <a
+                href="https://www.facebook.com/EverythingSimulated/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Everything Simulated on Facebook"
+                className="es-social-link"
+              >
+                <Facebook className="size-5" />
+              </a>
+              <a
+                href="https://www.instagram.com/everything_simulated/"
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Everything Simulated on Instagram"
+                className="es-social-link"
+              >
+                <Instagram className="size-5" />
+              </a>
+            </div>
             <p className="es-kicker" style={{ marginTop: 16 }}>Staff</p>
             <p>
               <StaffLoginLink />

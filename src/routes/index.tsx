@@ -180,7 +180,7 @@ function BrandLogo({
   ) : (
     <span className="text-base font-medium text-paper">{brand.name}</span>
   );
-  const className = "group flex h-24 w-24 shrink-0 items-center justify-center rounded-xl border border-line bg-black p-4 transition-all duration-300 hover:border-muted hover:bg-raised sm:h-28 sm:w-28";
+  const className = "group flex h-44 w-44 shrink-0 items-center justify-center rounded-xl border border-line bg-black p-6 transition-all duration-300 hover:border-muted hover:bg-raised sm:h-52 sm:w-52";
   if (!brand.link_url) return <div className={className}>{content}</div>;
   return (
     <a href={brand.link_url} target="_blank" rel="noopener noreferrer" className={className} aria-hidden={ariaHidden} tabIndex={ariaHidden ? -1 : 0}>
@@ -203,12 +203,11 @@ function BrandBanner() {
         </p>
         <div className="es-brand-marquee mt-8" aria-label="Brands we spec">
           <div className="es-brand-track">
-            {(items.length > 0 ? items : ["Simagic", "Trak Racer", "Exodus", "SIMRIG", "AOC", "Logitech", "iRacing"].map((name) => ({ id: name, name, icon_url: null, link_url: null }))).map((brand, index) => (
-              <BrandLogo key={`${brand.id}-${index}`} brand={brand} />
-            ))}
-            {(items.length > 0 ? items : ["Simagic", "Trak Racer", "Exodus", "SIMRIG", "AOC", "Logitech", "iRacing"].map((name) => ({ id: name, name, icon_url: null, link_url: null }))).map((brand, index) => (
-              <BrandLogo key={`${brand.id}-duplicate-${index}`} brand={brand} ariaHidden />
-            ))}
+            {Array.from({ length: 3 }, (_, setIndex) =>
+              (items.length > 0 ? items : ["Simagic", "Trak Racer", "Exodus", "SIMRIG", "AOC", "Logitech", "iRacing"].map((name) => ({ id: name, name, icon_url: null, link_url: null }))).map((brand, index) => (
+                <BrandLogo key={`${brand.id}-${setIndex}-${index}`} brand={brand} ariaHidden={setIndex > 0} />
+              )),
+            )}
           </div>
         </div>
       </div>

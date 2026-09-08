@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
-import { Eraser, Link2, Plus, Trash2, Upload, X } from "lucide-react";
+import { Aperture, Eraser, Link2, Plus, Trash2, Upload, X } from "lucide-react";
 import { fetchBrands, staffCreateBrand, staffDeleteBrand, staffUpdateBrand } from "@/lib/es/brands";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,10 +13,10 @@ export const Route = createFileRoute("/staff/brands")({
 
 type IconState =
   | { kind: "empty" }
-  | { kind: "preview"; dataUrl: string; hasBg: boolean }
-  | { kind: "removed"; dataUrl: string };
+  | { kind: "preview"; dataUrl: string; hasBg: boolean; outlined: boolean }
+  | { kind: "removed"; dataUrl: string; outlined: boolean };
 
-const LOGO_CANVAS = 220;
+const LOGO_CANVAS = 440;
 
 async function fileToCroppedLogo(file: File): Promise<string | null> {
   try {
@@ -122,6 +122,61 @@ function removeBackground(dataUrl: string): Promise<string> {
   });
 }
 
+function addWhiteOutlineToBlack(dataUrl: string, radius = 2): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = img.naturalWidth;
+      canvas.height = img.naturalHeight;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return resolve(dataUrl);
+      ctx.drawImage(img, 0, 0);
+      const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+      const d = imageData.data;
+      const w = canvas.width;
+      const h = canvas.height;
+      const isBlack = new Uint8Array(w * h);
+      for (let i = 0; i < w * h; i++) {
+        const idx = i * 4;
+        if (d[idx + 3] < 20) continue;
+        const brightness = (d[idx] * 299 + d[idx + 1] * 587 + d[idx + 2] * 114) / 1000;
+        if (brightness < 70) isBlack[i] = 1;
+      }
+      let changed = false;
+      for (let y = 0; y < h; y++) {
+        for (let x = 0; x < w; x++) {
+          const i = y * w + x;
+          if (isBlack[i]) continue;
+          const idx = i * 4;
+          if (d[idx + 3] > 40) continue;
+          let nearBlack = false;
+          for (let dy = -radius; dy <= radius && !nearBlack; dy++) {
+            for (let dx = -radius; dx <= radius; dx++) {
+              const nx = x + dx;
+              const ny = y + dy;
+              if (nx < 0 || nx >= w || ny < 0 || ny >= h) continue;
+              if (isBlack[ny * w + nx]) { nearBlack = true; break; }
+            }
+          }
+          if (nearBlack) {
+            d[idx] = 255;
+            d[idx + 1] = 255;
+            d[idx + 2] = 255;
+            d[idx + 3] = 255;
+            changed = true;
+          }
+        }
+      }
+      if (!changed) { resolve(dataUrl); return; }
+      ctx.putImageData(imageData, 0, 0);
+      resolve(canvas.toDataURL("image/png"));
+    };
+    img.onerror = () => resolve(dataUrl);
+    img.src = dataUrl;
+  });
+}
+
 function BrandsAdmin() {
   const qc = useQueryClient();
   const brands = useQuery({ queryKey: ["brands"], queryFn: () => fetchBrands() });
@@ -132,6 +187,7 @@ function BrandsAdmin() {
   const [linkUrl, setLinkUrl] = useState("");
   const [icon, setIcon] = useState<IconState>({ kind: "empty" });
   const [removing, setRemoving] = useState(false);
+  const [outlining, setOutlining] = useState(false);
   const [importing, setImporting] = useState(false);
   const [saving, setSaving] = useState(false);
   const [urlInput, setUrlInput] = useState("");
@@ -143,7 +199,7 @@ function BrandsAdmin() {
       return;
     }
     const lightBg = await hasLightBackground(png);
-    setIcon({ kind: "preview", dataUrl: png, hasBg: lightBg });
+    setIcon({ kind: "preview", dataUrl: png, hasBg: lightBg, outlined: false });
   }
 
   async function handleUrlImport() {
@@ -172,13 +228,34 @@ function BrandsAdmin() {
     if (icon.kind !== "preview" && icon.kind !== "removed") return;
     setRemoving(true);
     try {
-      const result = await removeBackground(icon.dataUrl);
-      setIcon({ kind: "removed", dataUrl: result });
-      toast.success("Background removed");
+      const bgRemoved = await removeBackground(icon.dataUrl);
+      const outlined = await addWhiteOutlineToBlack(bgRemoved);
+      const didOutline = outlined !== bgRemoved;
+      setIcon({ kind: "removed", dataUrl: outlined, outlined: didOutline });
+      toast.success(didOutline ? "Background removed & white outline added to black areas" : "Background removed");
     } catch {
       toast.error("Background removal failed");
     } finally {
       setRemoving(false);
+    }
+  }
+
+  async function handleAddOutline() {
+    if (icon.kind !== "preview" && icon.kind !== "removed") return;
+    setOutlining(true);
+    try {
+      const outlined = await addWhiteOutlineToBlack(icon.dataUrl);
+      const didOutline = outlined !== icon.dataUrl;
+      if (icon.kind === "preview") {
+        setIcon({ kind: "preview", dataUrl: outlined, hasBg: icon.hasBg, outlined: didOutline });
+      } else {
+        setIcon({ kind: "removed", dataUrl: outlined, outlined: didOutline });
+      }
+      toast.success(didOutline ? "White outline added to black areas" : "No black areas detected — no outline needed");
+    } catch {
+      toast.error("Could not add outline");
+    } finally {
+      setOutlining(false);
     }
   }
 
@@ -304,16 +381,24 @@ function BrandsAdmin() {
                       Light background detected — removing it will produce a clean transparent logo.
                     </p>
                   )}
-                  {icon.kind === "preview" && !icon.hasBg && (
+                  {icon.kind === "preview" && !icon.hasBg && !icon.outlined && (
                     <p className="text-xs text-muted">No light background detected — looks ready.</p>
                   )}
-                  {icon.kind === "removed" && (
+                  {icon.outlined && (
+                    <p className="text-xs text-green-400">White outline added to black areas.</p>
+                  )}
+                  {icon.kind === "removed" && !icon.outlined && (
                     <p className="text-xs text-green-400">Background removed. Ready to save.</p>
                   )}
                   <div className="flex gap-2">
                     {icon.kind === "preview" && (
                       <Button variant="outline" size="sm" disabled={removing} onClick={handleRemoveBg}>
                         <Eraser className="size-4" /> {removing ? "Removing…" : "Remove background"}
+                      </Button>
+                    )}
+                    {(icon.kind === "preview" || icon.kind === "removed") && !icon.outlined && (
+                      <Button variant="outline" size="sm" disabled={outlining} onClick={handleAddOutline}>
+                        <Aperture className="size-4" /> {outlining ? "Outlining…" : "Add white outline"}
                       </Button>
                     )}
                     <Button
