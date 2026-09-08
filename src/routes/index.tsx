@@ -1,9 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, Check, MapPin } from "lucide-react";
+import { ArrowRight, MapPin } from "lucide-react";
 import { SiteShell } from "@/components/es/site-shell";
-import { JsonLd, Money, PackageCard } from "@/components/es/bits";
+import { JsonLd, PackageCard } from "@/components/es/bits";
 import { BRAND, CITIES, GUIDES, PACKAGES } from "@/lib/es/catalog";
-import { FAQS, faqLd, localBusinessLd, pageHead } from "@/lib/es/seo";
+import { localBusinessLd, pageHead } from "@/lib/es/seo";
 
 export const Route = createFileRoute("/")({
   head: () =>
@@ -20,7 +20,6 @@ export function Home() {
   return (
     <SiteShell>
       <JsonLd data={localBusinessLd()} />
-      <JsonLd data={faqLd(FAQS)} />
       <section className="es-hero">
         <img src="/rigs/Everything_Simulated_Hero copy.jpg" alt="Driver using a triple-screen racing simulator" className="es-hero-img" />
         <div className="es-hero-mask" />
@@ -155,13 +154,6 @@ export function Home() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-16">
-        <p className="es-kicker">Brands we spec</p>
-        <p className="mt-3 max-w-2xl text-muted">
-          Simagic · Trak Racer · Exodus (SIMRIGS AU) · SIMRIG · AOC · Logitech · iRacing
-        </p>
-      </section>
-
       <section className="mx-auto max-w-6xl px-4 py-8">
         <div className="es-card es-split" style={{ overflow: "hidden" }}>
           <img src="/rigs/hero.jpg" alt="Driver using a racing simulator" className="h-72 w-full object-cover md:h-full" />
@@ -206,23 +198,6 @@ export function Home() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-3xl px-4 py-16">
-        <h2 className="text-2xl font-medium">Questions</h2>
-        <ul className="mt-6 space-y-4">
-          {FAQS.map((f) => (
-            <li key={f.q} className="es-card" style={{ padding: 20 }}>
-              <p className="flex gap-2 font-medium">
-                <Check className="mt-1 size-4 shrink-0 text-esred" />
-                {f.q}
-              </p>
-              <p className="mt-2 text-sm text-muted">{f.a}</p>
-            </li>
-          ))}
-        </ul>
-        <p className="mt-8 text-sm text-muted">
-          From <Money cents={PACKAGES[0].priceExGst} gst /> assembled. Call {BRAND.phone}.
-        </p>
-      </section>
     </SiteShell>
   );
 }

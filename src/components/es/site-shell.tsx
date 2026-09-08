@@ -11,6 +11,7 @@ const NAV = [
   { to: "/compatibility", label: "Checker" },
   { to: "/studio", label: "Studio" },
   { to: "/guides", label: "Guides" },
+  { to: "/faqs", label: "FAQs" },
   { to: "/au", label: "Australia" },
 ] as const;
 
@@ -115,6 +116,8 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
                 <Link to="/privacy">Privacy</Link>
                 {" · "}
                 <Link to="/terms">Terms</Link>
+                {" · "}
+                <Link to="/faqs">FAQs</Link>
               </li>
             </ul>
           </div>
