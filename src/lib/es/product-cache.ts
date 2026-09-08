@@ -18,6 +18,7 @@ type DbRow = {
   mounts: string[] | null;
   qr: string | null;
   image: string | null;
+  image_url: string | null;
 };
 
 function toProduct(row: DbRow): Product {
@@ -35,7 +36,7 @@ function toProduct(row: DbRow): Product {
     mounts: row.mounts ?? undefined,
     qr: row.qr ?? undefined,
     notes: row.notes || undefined,
-    image: row.image || undefined,
+    image: row.image || row.image_url || undefined,
   };
 }
 
@@ -50,7 +51,7 @@ export async function fetchProducts(): Promise<Product[]> {
     const { data, error } = await supabase
       .from("catalog_products")
       .select(
-        "sku, brand, name, category, sell_ex_gst, stock_status, lead_weeks_min, lead_weeks_max, description, notes, max_nm, payload_kg, weight_kg, mounts, qr, image",
+        "sku, brand, name, category, sell_ex_gst, stock_status, lead_weeks_min, lead_weeks_max, description, notes, max_nm, payload_kg, weight_kg, mounts, qr, image, image_url",
       )
       .order("sku");
 

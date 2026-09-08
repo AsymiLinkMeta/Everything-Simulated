@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { staffListBookings, staffListJobs, staffListQuotes } from "@/lib/es/server";
+import { staffListContacts, staffListOrders } from "@/lib/es/crm-oms";
 import { aud } from "@/lib/utils";
 import { Link } from "@tanstack/react-router";
-import { Boxes, Calendar, FileText, Wrench } from "lucide-react";
+import { Boxes, Calendar, FileText, Handshake, Truck, Wrench } from "lucide-react";
 
 export const Route = createFileRoute("/staff/")({
   component: Pipeline,
@@ -13,12 +14,28 @@ function Pipeline() {
   const quotes = useQuery({ queryKey: ["staff-quotes"], queryFn: () => staffListQuotes() });
   const jobs = useQuery({ queryKey: ["staff-jobs"], queryFn: () => staffListJobs() });
   const bookings = useQuery({ queryKey: ["staff-bookings"], queryFn: () => staffListBookings() });
+  const contacts = useQuery({ queryKey: ["crm-contacts"], queryFn: () => staffListContacts() });
+  const orders = useQuery({ queryKey: ["oms-orders"], queryFn: () => staffListOrders() });
 
   const openQuotes = quotes.data?.filter((q) => q.status !== "converted" && q.status !== "archived") ?? [];
   const activeJobs = jobs.data?.filter((j) => j.stage !== "delivered") ?? [];
   const pendingBookings = bookings.data?.filter((b) => b.status === "requested") ?? [];
 
   const cards = [
+    {
+      label: "CRM pipeline",
+      value: contacts.isPending ? "—" : contacts.data?.length ?? 0,
+      icon: Handshake,
+      to: "/staff/crm",
+      hint: `${contacts.data?.filter((c) => c.crm_stage === "lead").length ?? 0} leads`,
+    },
+    {
+      label: "Open orders",
+      value: orders.isPending ? "—" : orders.data?.filter((o) => !["delivered", "cancelled"].includes(o.status)).length ?? 0,
+      icon: Truck,
+      to: "/staff/oms",
+      hint: "OMS fulfillment",
+    },
     {
       label: "Open quotes",
       value: quotes.isPending ? "—" : openQuotes.length,
@@ -48,7 +65,7 @@ function Pipeline() {
         <p className="es-kicker">Workshop</p>
         <h1 className="mt-2 text-3xl font-medium">Pipeline</h1>
       </div>
-      <div className="grid gap-4 sm:grid-cols-3">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {cards.map((c) => (
           <Link key={c.label} to={c.to} className="es-card p-5 group">
             <div className="flex items-center justify-between">

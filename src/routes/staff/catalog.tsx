@@ -46,6 +46,7 @@ type Draft = {
   category: string;
   price: string;
   details: string;
+  url: string;
 };
 
 const EMPTY_DRAFT: Draft = {
@@ -54,7 +55,25 @@ const EMPTY_DRAFT: Draft = {
   category: "accessory",
   price: "",
   details: "",
+  url: "",
 };
+
+async function compressImage(file: File): Promise<string | null> {
+  try {
+    const bitmap = await createImageBitmap(file);
+    const max = 1280;
+    const scale = Math.min(1, max / Math.max(bitmap.width, bitmap.height));
+    const canvas = document.createElement("canvas");
+    canvas.width = Math.max(1, Math.round(bitmap.width * scale));
+    canvas.height = Math.max(1, Math.round(bitmap.height * scale));
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    ctx.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    return canvas.toDataURL("image/jpeg", 0.72);
+  } catch {
+    return null;
+  }
+}
 
 function Catalog() {
   const qc = useQueryClient();
@@ -118,6 +137,9 @@ function Catalog() {
         lead_weeks_max: editListing.leadWeeksMax,
         description: editListing.description,
         notes: editListing.notes,
+        image_url: editListing.imageUrl || editListing.images?.[0] || null,
+        images: editListing.images ?? (editListing.imageUrl ? [editListing.imageUrl] : []),
+        manufacturer_url: editListing.manufacturerUrl || null,
       });
       toast.success(`${editListing.sku} saved to catalogue`);
       invalidateProductCache();
@@ -211,6 +233,14 @@ function Catalog() {
                 value={draft.price}
                 onChange={(e) => setDraft((d) => ({ ...d, price: e.target.value }))}
                 placeholder="e.g. 599"
+              />
+            </label>
+            <label className="space-y-1 sm:col-span-2">
+              <span className="text-xs text-muted">Manufacturer URL (optional — AI reads the page)</span>
+              <Input
+                value={draft.url}
+                onChange={(e) => setDraft((d) => ({ ...d, url: e.target.value }))}
+                placeholder="https://…"
               />
             </label>
             <label className="space-y-1 sm:col-span-2">
@@ -337,6 +367,61 @@ function Catalog() {
                   onChange={(e) => setEditListing((l) => ({ ...l!, notes: e.target.value }))}
                 />
               </label>
+              <label className="space-y-1 sm:col-span-2">
+                <span className="text-xs text-muted">Upload photos</span>
+                <input
+                  className="es-input"
+                  type="file"
+                  accept="image/*"
+                  multiple
+                  onChange={async (e) => {
+                    const files = Array.from(e.target.files ?? []).slice(0, 8);
+                    const urls: string[] = [];
+                    for (const file of files) {
+                      const data = await compressImage(file);
+                      if (data) urls.push(data);
+                    }
+                    if (!urls.length) return;
+                    setEditListing((l) => {
+                      const next = [...(l?.images ?? []), ...urls].slice(0, 8);
+                      return { ...l!, images: next, imageUrl: l?.imageUrl || next[0] };
+                    });
+                    e.target.value = "";
+                  }}
+                />
+              </label>
+                <Input
+                  value={editListing.imageUrl ?? ""}
+                  onChange={(e) => setEditListing((l) => ({ ...l!, imageUrl: e.target.value }))}
+                  placeholder="https://…"
+                />
+              </label>
+              <label className="space-y-1 sm:col-span-2">
+                <span className="text-xs text-muted">Gallery URLs (one per line)</span>
+                <textarea
+                  className="es-input min-h-16 resize-y"
+                  value={(editListing.images ?? []).join("\n")}
+                  onChange={(e) =>
+                    setEditListing((l) => ({
+                      ...l!,
+                      images: e.target.value
+                        .split("\n")
+                        .map((s) => s.trim())
+                        .filter(Boolean)
+                        .slice(0, 8),
+                    }))
+                  }
+                />
+              </label>
+              {(editListing.images ?? []).length || editListing.imageUrl ? (
+                <div className="es-gallery sm:col-span-2">
+                  {(editListing.images?.length ? editListing.images : editListing.imageUrl ? [editListing.imageUrl] : []).map((src) => (
+                    <div key={src} className="es-gallery-item">
+                      <img src={src} alt="" />
+                    </div>
+                  ))}
+                </div>
+              ) : null}
             </div>
             <div className="flex gap-2">
               <Button onClick={handleSaveListing} disabled={saving}>

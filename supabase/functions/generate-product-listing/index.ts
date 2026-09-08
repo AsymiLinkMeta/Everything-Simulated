@@ -12,6 +12,7 @@ type RequestBody = {
   category?: string;
   price?: string;
   details?: string;
+  url?: string;
 };
 
 type Listing = {
@@ -25,6 +26,9 @@ type Listing = {
   leadWeeksMax: number;
   description: string;
   notes: string;
+  imageUrl?: string;
+  images?: string[];
+  manufacturerUrl?: string;
 };
 
 function fallbackListing(input: RequestBody): Listing {
@@ -50,6 +54,39 @@ function fallbackListing(input: RequestBody): Listing {
     leadWeeksMax: 6,
     description: `${name} from ${brand}. ${details}`,
     notes: "Review price, stock status, compatibility, and lead time before publishing.",
+    manufacturerUrl: input.url?.trim() || undefined,
+  };
+}
+
+function isPublicHttpUrl(value: string) {
+  try {
+    const u = new URL(value);
+    if (u.protocol !== "http:" && u.protocol !== "https:") return false;
+    const host = u.hostname.toLowerCase();
+    if (host === "localhost" || host.endsWith(".local") || host === "0.0.0.0") return false;
+    if (/^(10\.|127\.|169\.254\.|192\.168\.|172\.(1[6-9]|2\d|3[0-1])\.)/.test(host)) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function readProductPage(url: string) {
+  const res = await fetch(url, { redirect: "follow", headers: { "User-Agent": "EverythingSimulatedBot/1.0" } });
+  if (!res.ok) throw new Error("Could not read that URL");
+  const html = (await res.text()).slice(0, 120_000);
+  const title = html.match(/<meta[^>]+property=["']og:title["'][^>]+content=["']([^"']+)/i)?.[1]
+    || html.match(/<title[^>]*>([^<]+)/i)?.[1]
+    || "";
+  const description = html.match(/<meta[^>]+property=["']og:description["'][^>]+content=["']([^"']+)/i)?.[1]
+    || html.match(/<meta[^>]+name=["']description["'][^>]+content=["']([^"']+)/i)?.[1]
+    || "";
+  const images = [...html.matchAll(/<meta[^>]+property=["']og:image["'][^>]+content=["']([^"']+)/gi)].map((m) => m[1]);
+  const more = [...html.matchAll(/<img[^>]+src=["'](https?:\/\/[^"']+)/gi)].map((m) => m[1]);
+  return {
+    title: title.trim(),
+    description: description.trim(),
+    images: [...new Set([...images, ...more])].slice(0, 8),
   };
 }
 
@@ -112,7 +149,21 @@ Deno.serve(async (req: Request) => {
     }
 
     const input = (await req.json()) as RequestBody;
+    let page: { title: string; description: string; images: string[] } | null = null;
+    if (input.url && isPublicHttpUrl(input.url.trim())) {
+      try {
+        page = await readProductPage(input.url.trim());
+        if (!input.productName && page.title) input.productName = page.title;
+        if (!input.details && page.description) input.details = page.description;
+      } catch {
+        page = null;
+      }
+    }
     const fallback = fallbackListing(input);
+    if (page?.images.length) {
+      fallback.images = page.images;
+      fallback.imageUrl = page.images[0];
+    }
     const apiKey = Deno.env.get("XAI_API_KEY");
     if (!apiKey) {
       return new Response(JSON.stringify({ listing: fallback, source: "draft" }), {
@@ -131,9 +182,9 @@ Deno.serve(async (req: Request) => {
           {
             role: "system",
             content:
-              "You create concise, accurate sim-racing retail catalogue listings for Everything Simulated in Australia. Return only JSON with sku, brand, name, category, price (integer cents), stockStatus (stock|indent|discontinued), leadWeeksMin, leadWeeksMax, description, and notes. Never invent technical compatibility claims. Keep SKU lowercase kebab-case and under 48 characters.",
+              "You create concise, accurate sim-racing retail catalogue listings for Everything Simulated in Australia. Return only JSON with sku, brand, name, category, price (integer cents), stockStatus (stock|indent|discontinued), leadWeeksMin, leadWeeksMax, description, notes, imageUrl, images (array of https URLs), manufacturerUrl. Never invent technical compatibility claims. Keep SKU lowercase kebab-case and under 48 characters.",
           },
-          { role: "user", content: JSON.stringify(input) },
+          { role: "user", content: JSON.stringify({ ...input, page }) },
         ],
       }),
     });

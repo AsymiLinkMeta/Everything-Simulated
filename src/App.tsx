@@ -28,6 +28,10 @@ import { Route as StaffQuotesRoute } from "@/routes/staff/quotes";
 import { Route as StaffJobsRoute } from "@/routes/staff/jobs";
 import { Route as StaffBookingsRoute } from "@/routes/staff/bookings";
 import { Route as StaffTeamRoute } from "@/routes/staff/team";
+import { Route as StaffCrmRoute } from "@/routes/staff/crm";
+import { Route as StaffCrmIdRoute } from "@/routes/staff/crm-id";
+import { Route as StaffOmsRoute } from "@/routes/staff/oms";
+import { Route as StaffOmsIdRoute } from "@/routes/staff/oms-id";
 
 function Page({ C }: { C: React.ComponentType }) {
   return (
@@ -63,6 +67,10 @@ export default function App() {
   const StaffJobs = StaffJobsRoute.component!;
   const StaffBookings = StaffBookingsRoute.component!;
   const StaffTeam = StaffTeamRoute.component!;
+  const StaffCrm = StaffCrmRoute.component!;
+  const StaffCrmId = StaffCrmIdRoute.component!;
+  const StaffOms = StaffOmsRoute.component!;
+  const StaffOmsId = StaffOmsIdRoute.component!;
 
   return (
     <Routes>
@@ -91,6 +99,10 @@ export default function App() {
       <Route path="/staff" element={<StaffShell />}>
         <Route index element={<StaffIndex />} />
         <Route path="catalog" element={<StaffCatalog />} />
+        <Route path="crm" element={<StaffCrm />} />
+        <Route path="crm/:id" element={<StaffCrmId />} />
+        <Route path="oms" element={<StaffOms />} />
+        <Route path="oms/:id" element={<StaffOmsId />} />
         <Route path="quotes" element={<StaffQuotes />} />
         <Route path="jobs" element={<StaffJobs />} />
         <Route path="bookings" element={<StaffBookings />} />

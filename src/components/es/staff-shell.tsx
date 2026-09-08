@@ -7,7 +7,9 @@ import {
   Calendar,
   ClipboardList,
   FileText,
+  Handshake,
   Shield,
+  Truck,
   Users,
   Wrench,
 } from "lucide-react";
@@ -17,6 +19,8 @@ import { AuthSlot, Logo } from "./bits";
 
 const TABS = [
   { to: "/staff", label: "Pipeline", icon: ClipboardList },
+  { to: "/staff/crm", label: "CRM", icon: Handshake },
+  { to: "/staff/oms", label: "OMS", icon: Truck },
   { to: "/staff/catalog", label: "Catalog", icon: Boxes },
   { to: "/staff/quotes", label: "Quotes", icon: FileText },
   { to: "/staff/jobs", label: "Jobs", icon: Wrench },

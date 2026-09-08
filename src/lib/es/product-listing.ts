@@ -11,6 +11,9 @@ export type ProductListing = {
   leadWeeksMax: number;
   description: string;
   notes: string;
+  imageUrl?: string;
+  images?: string[];
+  manufacturerUrl?: string;
 };
 
 export async function generateProductListing(input: {
@@ -19,6 +22,7 @@ export async function generateProductListing(input: {
   category: string;
   price: string;
   details: string;
+  url?: string;
 }) {
   const { data: sessionData } = await supabase.auth.getSession();
   const accessToken = sessionData.session?.access_token;

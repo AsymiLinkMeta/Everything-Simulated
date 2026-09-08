@@ -239,6 +239,9 @@ export type CatalogProduct = {
   lead_weeks_max: number;
   description: string;
   notes: string;
+  image_url: string | null;
+  images: string[];
+  manufacturer_url: string | null;
   created_by: string;
   created_at: string;
 };
@@ -249,11 +252,14 @@ export async function staffListCatalogProducts(): Promise<CatalogProduct[]> {
   const { data, error } = await supabase
     .from("catalog_products")
     .select(
-      "id, sku, brand, name, category, sell_ex_gst, stock_status, lead_weeks_min, lead_weeks_max, description, notes, created_by, created_at",
+      "id, sku, brand, name, category, sell_ex_gst, stock_status, lead_weeks_min, lead_weeks_max, description, notes, image_url, images, manufacturer_url, created_by, created_at",
     )
     .order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
-  return (data ?? []) as CatalogProduct[];
+  return (data ?? []).map((row) => ({
+    ...(row as CatalogProduct),
+    images: Array.isArray((row as CatalogProduct).images) ? (row as CatalogProduct).images : [],
+  }));
 }
 
 export async function staffSaveCatalogProduct(input: {
@@ -267,9 +273,13 @@ export async function staffSaveCatalogProduct(input: {
   lead_weeks_max: number;
   description: string;
   notes: string;
+  image_url?: string | null;
+  images?: string[];
+  manufacturer_url?: string | null;
 }) {
   const user = await getCurrentUser();
   await requireStaff(user.id);
+  const images = (input.images ?? []).filter(Boolean).slice(0, 8);
   const { data, error } = await supabase
     .from("catalog_products")
     .insert({
@@ -283,6 +293,9 @@ export async function staffSaveCatalogProduct(input: {
       lead_weeks_max: input.lead_weeks_max,
       description: input.description,
       notes: input.notes,
+      image_url: input.image_url || images[0] || null,
+      images,
+      manufacturer_url: input.manufacturer_url || null,
     })
     .select("id, sku")
     .maybeSingle();
