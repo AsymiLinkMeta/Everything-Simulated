@@ -173,43 +173,50 @@ export function Home() {
 function HeroVideo() {
   const desktopRef = useRef<HTMLVideoElement>(null);
   const mobileRef = useRef<HTMLVideoElement>(null);
-  const [finished, setFinished] = useState(false);
+  const [phase, setPhase] = useState<"playing" | "black" | "revealed">("playing");
 
   useEffect(() => {
     const desktop = desktopRef.current;
     const mobile = mobileRef.current;
-    if (!desktop && !mobile) return;
-    const video = desktop ?? mobile;
+    const video = window.matchMedia("(max-width: 767px)").matches ? mobile : desktop;
     if (!video) return;
-    const onEnded = () => setFinished(true);
+    const onEnded = () => {
+      setPhase("black");
+      window.setTimeout(() => setPhase("revealed"), 1100);
+    };
     video.addEventListener("ended", onEnded);
-    video.play().catch(() => setFinished(true));
+    video.play().catch(() => setPhase("revealed"));
     return () => video.removeEventListener("ended", onEnded);
   }, []);
 
   return (
-    <div className={`es-hero-video-wrap${finished ? " is-finished" : ""}`}>
-      <video
-        ref={desktopRef}
-        className="es-hero-video es-hero-video-desktop"
-        muted
-        playsInline
-        preload="auto"
-        poster="/rigs/Everything_Simulated_Hero copy.jpg"
-      >
-        <source src="/videos/hero-uw.mp4" type="video/mp4" />
-      </video>
-      <video
-        ref={mobileRef}
-        className="es-hero-video es-hero-video-mobile"
-        muted
-        playsInline
-        preload="auto"
-        poster="/rigs/Everything_Simulated_Hero copy.jpg"
-      >
-        <source src="/videos/hero-mobile.mp4" type="video/mp4" />
-      </video>
-    </div>
+    <>
+      <div className={`es-hero-video-wrap${phase === "revealed" ? " is-finished" : ""}`}>
+        <video
+          ref={desktopRef}
+          className="es-hero-video es-hero-video-desktop"
+          muted
+          playsInline
+          preload="auto"
+          poster="/rigs/Everything_Simulated_Hero copy.jpg"
+        >
+          <source src="/videos/hero-uw.mp4" type="video/mp4" />
+        </video>
+        <video
+          ref={mobileRef}
+          className="es-hero-video es-hero-video-mobile"
+          muted
+          playsInline
+          preload="auto"
+          poster="/rigs/Everything_Simulated_Hero copy.jpg"
+        >
+          <source src="/videos/hero-mobile.mp4" type="video/mp4" />
+        </video>
+      </div>
+      <div
+        className={`es-hero-blackout${phase !== "playing" ? " is-visible" : ""}${phase === "revealed" ? " is-fading" : ""}`}
+      />
+    </>
   );
 }
 
