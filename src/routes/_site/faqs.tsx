@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Check } from "lucide-react";
-import { BRAND, PACKAGES } from "@/lib/es/catalog";
+import { BRAND, GUIDES, PACKAGES } from "@/lib/es/catalog";
 import { FAQS, faqLd, pageHead } from "@/lib/es/seo";
 import { JsonLd, Money } from "@/components/es/bits";
 import { Button } from "@/components/ui/button";
@@ -48,6 +48,20 @@ function FAQs() {
           <Link to="/contact">Talk to the workshop</Link>
         </Button>
       </div>
+      <section className="mt-16">
+        <p className="es-kicker">Learn more</p>
+        <h2 className="mt-2 text-2xl font-medium">Guides</h2>
+        <div className="es-guide-grid" style={{ marginTop: 24 }}>
+          {GUIDES.map((g) => (
+            <Link key={g.slug} to="/guides/$slug" params={{ slug: g.slug }} className="es-card" style={{ padding: 20 }}>
+              <h3 style={{ margin: 0 }}>{g.title}</h3>
+              <p className="text-muted" style={{ marginTop: 8, fontSize: 14 }}>
+                {g.description}
+              </p>
+            </Link>
+          ))}
+        </div>
+      </section>
     </div>
   );
 }

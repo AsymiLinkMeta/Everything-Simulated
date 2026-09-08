@@ -1,9 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, MapPin } from "lucide-react";
 import { SiteShell } from "@/components/es/site-shell";
 import { JsonLd, PackageCard } from "@/components/es/bits";
-import { BRAND, CITIES, GUIDES, PACKAGES } from "@/lib/es/catalog";
+import { BRAND, CITIES, PACKAGES } from "@/lib/es/catalog";
 import { localBusinessLd, pageHead } from "@/lib/es/seo";
+import { fetchBrands } from "@/lib/es/brands";
 
 export const Route = createFileRoute("/")({
   head: () =>
@@ -130,29 +132,7 @@ export function Home() {
         </div>
       </section>
 
-      <section className="border-y border-line bg-panel">
-        <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 md:grid-cols-3">
-          {[
-            {
-              title: "Workshop, not a warehouse",
-              body: "Every rig is assembled, cable-managed and photographed on the Gold Coast before the crate is sealed.",
-            },
-            {
-              title: "Checker before deposit",
-              body: "Torque, payload, QR and mounts are rules — not opinions. The AI expert explains the JSON. It does not invent SKUs.",
-            },
-            {
-              title: "Australia-wide crate freight",
-              body: "SEQ install is standard. Capital-city white-glove is scheduled. Regional is quoted. Warranty is handled in Australia.",
-            },
-          ].map((b) => (
-            <div key={b.title}>
-              <h3 className="text-lg font-medium">{b.title}</h3>
-              <p className="mt-2 text-sm text-muted">{b.body}</p>
-            </div>
-          ))}
-        </div>
-      </section>
+      <BrandBanner />
 
       <section className="mx-auto max-w-6xl px-4 py-8">
         <div className="es-card es-split" style={{ overflow: "hidden" }}>
@@ -184,20 +164,60 @@ export function Home() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-8">
-        <h2 className="text-2xl font-medium">Guides</h2>
-        <div className="es-guide-grid" style={{ marginTop: 24 }}>
-          {GUIDES.map((g) => (
-            <Link key={g.slug} to="/guides/$slug" params={{ slug: g.slug }} className="es-card" style={{ padding: 20 }}>
-              <h3 style={{ margin: 0 }}>{g.title}</h3>
-              <p className="text-muted" style={{ marginTop: 8, fontSize: 14 }}>
-                {g.description}
-              </p>
-            </Link>
-          ))}
-        </div>
-      </section>
-
     </SiteShell>
+  );
+}
+
+function BrandBanner() {
+  const brands = useQuery({ queryKey: ["brands"], queryFn: () => fetchBrands() });
+  const items = brands.data ?? [];
+  return (
+    <section className="border-y border-line bg-panel">
+      <div className="mx-auto max-w-6xl px-4 py-16">
+        <p className="es-kicker">Brands we spec</p>
+        <h2 className="mt-2 text-2xl font-medium">Trusted hardware, assembled right</h2>
+        <p className="mt-2 max-w-2xl text-sm text-muted">
+          We build with the best sim racing hardware brands. Every rig is compatibility-checked,
+          assembled and QA'd in our Gold Coast workshop.
+        </p>
+        {items.length > 0 ? (
+          <div className="mt-8 flex flex-wrap items-center gap-4">
+            {items.map((b) =>
+              b.link_url ? (
+                <a
+                  key={b.id}
+                  href={b.link_url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group flex items-center gap-3 rounded-xl border border-line bg-black px-5 py-3 transition-all duration-300 hover:-translate-y-0.5 hover:border-muted"
+                >
+                  {b.icon_url ? (
+                    <img src={b.icon_url} alt={b.name} className="h-8 w-auto max-w-[120px] object-contain" />
+                  ) : (
+                    <span className="text-base font-medium text-paper">{b.name}</span>
+                  )}
+                </a>
+              ) : (
+                <div key={b.id} className="flex items-center gap-3 rounded-xl border border-line bg-black px-5 py-3">
+                  {b.icon_url ? (
+                    <img src={b.icon_url} alt={b.name} className="h-8 w-auto max-w-[120px] object-contain" />
+                  ) : (
+                    <span className="text-base font-medium text-paper">{b.name}</span>
+                  )}
+                </div>
+              ),
+            )}
+          </div>
+        ) : (
+          <div className="mt-8 flex flex-wrap items-center gap-4">
+            {["Simagic", "Trak Racer", "Exodus", "SIMRIG", "AOC", "Logitech", "iRacing"].map((name) => (
+              <div key={name} className="rounded-xl border border-line bg-black px-5 py-3">
+                <span className="text-base font-medium text-paper">{name}</span>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </section>
   );
 }
