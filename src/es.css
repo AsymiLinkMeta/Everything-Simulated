@@ -395,6 +395,24 @@ img {
   gap: 1.25rem;
 }
 
+.es-pack-grid {
+  justify-items: center;
+}
+
+.es-pack-grid > * {
+  width: 100%;
+  max-width: 24rem;
+}
+
+.es-roadmap-section > .grid {
+  justify-items: center;
+}
+
+.es-roadmap-section > .grid > * {
+  width: 100%;
+  max-width: 18rem;
+}
+
 @media (min-width: 768px) {
   .es-city-grid {
     grid-template-columns: repeat(5, minmax(0, 1fr));

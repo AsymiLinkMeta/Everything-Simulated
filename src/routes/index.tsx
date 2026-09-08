@@ -63,7 +63,7 @@ export function Home() {
       </section>
 
       <section className="border-y border-line bg-panel">
-        <div className="mx-auto max-w-6xl px-4 py-20">
+        <div className="mx-auto max-w-6xl px-4 py-20 es-roadmap-section">
           <div className="max-w-2xl">
             <p className="es-kicker">Your rig, your roadmap</p>
             <h2 className="mt-3 text-3xl font-medium sm:text-4xl">
