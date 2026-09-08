@@ -136,7 +136,7 @@ export function Home() {
 
       <section className="mx-auto max-w-6xl px-4 py-8">
         <div className="es-card es-split" style={{ overflow: "hidden" }}>
-          <img src="/rigs/hero.jpg" alt="Driver using a racing simulator" className="h-72 w-full object-cover md:h-full" />
+          <img src="/rigs/Everything_Simulated_Hero.jpg" alt="Driver using a racing simulator" className="h-72 w-full object-cover md:h-full" />
           <div className="flex flex-col justify-center gap-4 p-8">
             <p className="es-kicker">Studio</p>
             <h2 className="text-2xl font-medium">Try before the crate leaves</h2>
