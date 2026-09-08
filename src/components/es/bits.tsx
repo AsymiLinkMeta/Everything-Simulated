@@ -24,13 +24,12 @@ export function BackButton({ label = "Back" }: { label?: string }) {
 
 export function Logo({ compact = false }: { compact?: boolean }) {
   return (
-    <Link to="/" className="es-logo" aria-label="Everything Simulated">
+    <Link to="/" className={`es-logo${compact ? " es-logo-compact" : ""}`} aria-label="Everything Simulated">
       <picture>
         <img
           src="/Everything_Simulated_LOGO_W+R.png"
           alt="Everything Simulated"
-          className={compact ? "es-logo-image es-logo-image-compact" : "es-logo-image"}
-          style={compact ? undefined : { height: "3.25rem" }}
+          className="es-logo-image"
         />
       </picture>
     </Link>

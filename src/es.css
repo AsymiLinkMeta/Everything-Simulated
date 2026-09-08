@@ -65,25 +65,33 @@ img {
 .es-logo {
   display: flex;
   align-items: center;
-  min-height: 44px;
+  justify-content: center;
+  width: 3.5rem;
+  height: 3.5rem;
   flex-shrink: 0;
+  padding: 0.4rem;
+  background: #070708;
+  border: 1px solid var(--es-line);
+  border-radius: var(--es-radius);
+  overflow: hidden;
+}
+
+.es-logo-compact {
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0.3rem;
 }
 
 .es-logo picture,
 .es-logo-image {
   display: block;
+  width: 100%;
+  height: 100%;
 }
 
 .es-logo-image {
-  width: 9.5rem;
-  height: 2.6rem;
   object-fit: contain;
-  object-position: left center;
-}
-
-.es-logo-image-compact {
-  width: 2.6rem;
-  object-position: left center;
+  object-position: center;
 }
 
 /* ---- header / nav ---- */
