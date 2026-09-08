@@ -145,6 +145,12 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
         <p className="es-footer-copy">
           © {new Date().getFullYear()} Everything Simulated · Gold Coast, Queensland · Prices AUD ex GST
         </p>
+        <p style={{ margin: 0, padding: "0.75rem 1rem 1.25rem", textAlign: "center", fontSize: "0.75rem", color: "var(--es-subtle)" }}>
+          Powered by{" "}
+          <a href="https://asymilinkmeta.com" target="_blank" rel="noopener noreferrer" style={{ color: "var(--es-muted)" }}>
+            AsymiLink Meta
+          </a>
+        </p>
       </footer>
       <CookieDisclaimer />
     </div>
