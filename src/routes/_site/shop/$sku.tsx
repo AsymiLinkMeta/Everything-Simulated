@@ -171,7 +171,7 @@ function ProductPage() {
       {related.length ? (
         <div className="mt-16">
           <h2 className="text-xl font-medium">Same category</h2>
-          <div className="mt-4 flex flex-col gap-2">
+          <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
             {related.map((p) => (
               <Link key={p.sku} to="/shop/$sku" params={{ sku: p.sku }} className="es-card px-4 py-3 text-sm">
                 {p.brand} {p.name}

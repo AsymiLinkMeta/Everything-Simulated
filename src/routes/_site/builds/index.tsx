@@ -23,7 +23,7 @@ function Builds() {
         Every package is assembled, checked and photographed on the Gold Coast. Load a package into
         the checker, swap parts, then save a quote.
       </p>
-      <div className="mt-10 grid gap-6 md:grid-cols-3">
+      <div className="mt-10 grid grid-cols-2 gap-6 md:grid-cols-3">
         {PACKAGES.map((pack) => (
           <PackageCard key={pack.slug} pack={pack} />
         ))}

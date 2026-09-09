@@ -43,7 +43,7 @@ function CityPage() {
         Every system is still assembled and QA’d on the Gold Coast. You get workshop photos before
         the crate is sealed. Compatibility is checked in the build app before deposit.
       </p>
-      <div className="mt-10 grid gap-6 md:grid-cols-3">
+      <div className="mt-10 grid grid-cols-2 gap-6 md:grid-cols-3">
         {PACKAGES.map((pack) => (
           <PackageCard key={pack.slug} pack={pack} />
         ))}
