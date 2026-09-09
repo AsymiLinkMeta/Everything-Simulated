@@ -22,7 +22,7 @@ function Australia() {
         One workshop. Capital-city crates. Optional white-glove install. Choose your city for local
         delivery notes and the same three packages.
       </p>
-      <div className="mt-10 grid grid-cols-2 gap-4 lg:grid-cols-6">
+      <div className="mt-10 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-6">
         {CITIES.map((c) => (
           <Link key={c.slug} to="/au/$city" params={{ city: c.slug }} className="es-card p-5 hover:bg-raised">
             <p className="text-xs uppercase tracking-widest text-muted">{c.state}</p>

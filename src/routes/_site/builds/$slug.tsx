@@ -55,7 +55,7 @@ function BuildPage() {
           },
         }}
       />
-      <div className="grid gap-10 md:grid-cols-2">
+      <div className="grid grid-cols-1 gap-10 md:grid-cols-2">
         <img src={pack.image} alt={pack.name} className="es-card h-80 w-full object-cover md:h-full" />
         <div>
           <p className="es-kicker">{pack.kicker}</p>
@@ -106,7 +106,7 @@ function BuildPage() {
           );
         })}
       </ul>
-      <div className="mt-10 grid gap-4 md:grid-cols-2">
+      <div className="mt-10 grid grid-cols-1 gap-4 md:grid-cols-2">
         {PACKAGES.filter((p) => p.slug !== pack.slug).map((p) => (
           <Link key={p.slug} to="/builds/$slug" params={{ slug: p.slug }} className="es-card p-5">
             <p className="es-kicker">{p.kicker}</p>

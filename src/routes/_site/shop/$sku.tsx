@@ -62,7 +62,7 @@ function ProductPage() {
           },
         }}
       />
-      <div className="grid min-w-0 gap-8 lg:grid-cols-[1fr_1fr_320px]">
+      <div className="grid min-w-0 grid-cols-1 gap-8 lg:grid-cols-[1fr_1fr_320px]">
         <div>
           <img src={productImage(item)} alt={item.name} className="es-card h-80 w-full object-cover" />
           {item.images && item.images.length > 1 ? (
@@ -101,7 +101,7 @@ function ProductPage() {
       </div>
 
       {(item.whatsIncluded?.length || item.mountCompatibility || item.specs || item.compare || item.assemblyManualUrl) ? (
-        <div className="mt-12 grid gap-6 lg:grid-cols-2">
+        <div className="mt-12 grid grid-cols-1 gap-6 lg:grid-cols-2">
           {item.whatsIncluded?.length ? (
             <div className="es-card p-5">
               <div className="flex items-center gap-2">
