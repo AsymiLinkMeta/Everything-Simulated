@@ -188,12 +188,7 @@ function FeaturedPrebuilds() {
                   <img
                     src={p.image}
                     alt={p.name}
-                    className="absolute inset-0 size-full object-cover transition-transform duration-500 group-hover:scale-105"
-                    style={{
-                      backgroundImage: "url('/dark-abstract-background_1048-1920.avif')",
-                      backgroundPosition: "center",
-                      backgroundSize: "cover",
-                    }}
+                    className="absolute inset-0 size-full bg-black object-cover transition-transform duration-500 group-hover:scale-105"
                   />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center bg-raised text-muted">No image</div>
