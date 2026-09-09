@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { toast } from "sonner";
 import { ArrowLeft, Plus } from "lucide-react";
 import "../../es.css";
 import { Link } from "@tanstack/react-router";
@@ -198,8 +199,15 @@ export function ProductTile({ item }: { item: Product }) {
         <button
           type="button"
           aria-label={`Add ${item.name} to cart`}
-          onClick={(e) => { e.preventDefault(); e.stopPropagation(); add(item.sku); }}
-          className="absolute bottom-2 right-2 grid size-9 place-items-center rounded-full bg-paper text-ink opacity-0 shadow-lg transition-all duration-200 hover:scale-110 group-hover:opacity-100"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            add(item.sku);
+            toast.success("Added to cart", {
+              description: "Scroll down to view your cart.",
+            });
+          }}
+          className="absolute bottom-2 right-2 z-10 grid size-9 place-items-center rounded-full bg-paper text-ink shadow-lg transition-all duration-200 hover:scale-110"
         >
           <Plus className="size-4" />
         </button>
