@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Plus } from "lucide-react";
 import "../../es.css";
 import { Link } from "@tanstack/react-router";
 import { UserButton } from "@/lib/auth/gates";
@@ -7,6 +7,7 @@ import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { aud, gstInclusive } from "@/lib/utils";
 import type { CheckIssue, CheckResult, PackageSpec, Product } from "@/lib/es/types";
 import { product, productImage } from "@/lib/es/product-cache";
+import { useCart } from "@/lib/es/cart-store";
 import { cn } from "@/lib/utils";
 
 export function BackButton({ label = "Back" }: { label?: string }) {
@@ -189,10 +190,19 @@ export function PackageCard({ pack }: { pack: PackageSpec }) {
 }
 
 export function ProductTile({ item }: { item: Product }) {
+  const add = useCart((s) => s.add);
   return (
-    <Link to="/shop/$sku" params={{ sku: item.sku }} className="es-card overflow-hidden">
-      <div className="aspect-video bg-raised">
+    <Link to="/shop/$sku" params={{ sku: item.sku }} className="es-card group overflow-hidden">
+      <div className="relative aspect-video bg-raised">
         <img src={productImage(item)} alt={item.name} className="size-full object-cover opacity-90" />
+        <button
+          type="button"
+          aria-label={`Add ${item.name} to cart`}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); add(item.sku); }}
+          className="absolute bottom-2 right-2 grid size-9 place-items-center rounded-full bg-paper text-ink opacity-0 shadow-lg transition-all duration-200 hover:scale-110 group-hover:opacity-100"
+        >
+          <Plus className="size-4" />
+        </button>
       </div>
       <div className="space-y-1 p-4">
         <p className="es-kicker">{item.brand}</p>
