@@ -14,6 +14,7 @@ import { Route as SiteRouteImport } from './routes/_site'
 import { Route as AppRouteRouteImport } from './routes/app/route'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as StaffRouteRouteImport } from './routes/staff/route'
+import { Route as SiteCheckoutRouteImport } from './routes/_site/checkout'
 import { Route as SiteCompatibilityRouteImport } from './routes/_site/compatibility'
 import { Route as SiteContactRouteImport } from './routes/_site/contact'
 import { Route as SitePrivacyRouteImport } from './routes/_site/privacy'
@@ -196,6 +197,11 @@ const StaffPrebuildsRoute = StaffPrebuildsRouteImport.update({
   id: '/prebuilds',
   path: '/prebuilds',
   getParentRoute: () => StaffRouteRoute,
+} as any)
+const SiteCheckoutRoute = SiteCheckoutRouteImport.update({
+  id: '/checkout',
+  path: '/checkout',
+  getParentRoute: () => SiteRoute,
 } as any)
 const SitePrebuildsIndexRoute = SitePrebuildsIndexRouteImport.update({
   id: '/prebuilds/',
@@ -705,6 +711,7 @@ const StaffRouteRouteWithChildren = StaffRouteRoute._addFileChildren(
 )
 
 interface SiteRouteChildren {
+  SiteCheckoutRoute: typeof SiteCheckoutRoute
   SiteCompatibilityRoute: typeof SiteCompatibilityRoute
   SiteContactRoute: typeof SiteContactRoute
   SitePrivacyRoute: typeof SitePrivacyRoute
@@ -723,6 +730,7 @@ interface SiteRouteChildren {
 }
 
 const SiteRouteChildren: SiteRouteChildren = {
+  SiteCheckoutRoute: SiteCheckoutRoute,
   SiteCompatibilityRoute: SiteCompatibilityRoute,
   SiteContactRoute: SiteContactRoute,
   SitePrivacyRoute: SitePrivacyRoute,

@@ -18,6 +18,7 @@ import { Route as PrivacyRoute } from "@/routes/_site/privacy";
 import { Route as TermsRoute } from "@/routes/_site/terms";
 import { Route as LoginRoute } from "@/routes/login";
 import { Route as FaqsRoute } from "@/routes/_site/faqs";
+import { Route as CheckoutRoute } from "@/routes/_site/checkout";
 import { Route as AppOrdersRoute } from "@/routes/app/orders";
 import { Route as StaffRulesRoute } from "@/routes/staff/rules";
 import { Route as AppIndexRoute } from "@/routes/app/index";
@@ -36,6 +37,9 @@ import { Route as StaffCrmRoute } from "@/routes/staff/crm";
 import { Route as StaffCrmIdRoute } from "@/routes/staff/crm-id";
 import { Route as StaffOmsRoute } from "@/routes/staff/oms";
 import { Route as StaffOmsIdRoute } from "@/routes/staff/oms-id";
+import { Route as StaffPrebuildsRoute } from "@/routes/staff/prebuilds";
+import { Route as PrebuildsRoute } from "@/routes/_site/prebuilds/index";
+import { Route as PrebuildSlugRoute } from "@/routes/_site/prebuilds/$slug";
 
 function Page({ C }: { C: React.ComponentType }) {
   return (
@@ -61,6 +65,7 @@ export default function App() {
   const Terms = TermsRoute.component!;
   const Login = LoginRoute.component!;
   const Faqs = FaqsRoute.component!;
+  const Checkout = CheckoutRoute.component!;
   const AppIndex = AppIndexRoute.component!;
   const AppBuild = AppBuildRoute.component!;
   const AppChat = AppChatRoute.component!;
@@ -79,6 +84,9 @@ export default function App() {
   const StaffOms = StaffOmsRoute.component!;
   const StaffOmsId = StaffOmsIdRoute.component!;
   const StaffRules = StaffRulesRoute.component!;
+  const StaffPrebuilds = StaffPrebuildsRoute.component!;
+  const Prebuilds = PrebuildsRoute.component!;
+  const PrebuildSlug = PrebuildSlugRoute.component!;
 
   return (
     <Routes>
@@ -97,6 +105,9 @@ export default function App() {
       <Route path="/privacy" element={<Page C={Privacy} />} />
       <Route path="/terms" element={<Page C={Terms} />} />
       <Route path="/faqs" element={<Page C={Faqs} />} />
+      <Route path="/checkout" element={<Page C={Checkout} />} />
+      <Route path="/prebuilds" element={<Page C={Prebuilds} />} />
+      <Route path="/prebuilds/:slug" element={<Page C={PrebuildSlug} />} />
       <Route path="/login" element={<Login />} />
       <Route path="/app" element={<AppShell />}>
         <Route index element={<AppIndex />} />
@@ -119,6 +130,7 @@ export default function App() {
         <Route path="bookings" element={<StaffBookings />} />
         <Route path="brands" element={<StaffBrands />} />
         <Route path="team" element={<StaffTeam />} />
+        <Route path="prebuilds" element={<StaffPrebuilds />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

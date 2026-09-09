@@ -509,4 +509,49 @@ export async function publicCatalog() {
   };
 }
 
+export async function placeGuestOrder(input: {
+  lines: CartLine[];
+  postcode?: string;
+  notes?: string;
+  driverWeightKg?: number;
+  name: string;
+  email: string;
+  phone?: string;
+}) {
+  const lines = (input.lines ?? []).filter((l) => l.sku && l.qty > 0);
+  if (!lines.length) throw new Error("Cart is empty");
+  if (!input.name.trim()) throw new Error("Name is required");
+  if (!input.email.trim()) throw new Error("Email is required");
+  const result = checkCart({ lines, driverWeightKg: input.driverWeightKg, postcode: input.postcode });
+  const id = `ESO-${Date.now().toString(36).toUpperCase()}`;
+
+  const { data: contact } = await supabase
+    .from("crm_contacts")
+    .insert({
+      display_name: input.name.trim(),
+      email: input.email.trim().toLowerCase(),
+      phone: input.phone?.trim() || null,
+      postcode: input.postcode ?? null,
+      crm_stage: "lead",
+      crm_source: "website",
+      notes: input.notes ?? "",
+    })
+    .select("id")
+    .maybeSingle();
+
+  const { error } = await supabase.from("shop_orders").insert({
+    id,
+    contact_id: contact?.id ?? null,
+    status: "pending",
+    lines,
+    total_ex_gst: result.totalExGst,
+    total_inc_gst: result.totalIncGst,
+    shipping_name: input.name.trim(),
+    postcode: input.postcode ?? null,
+    notes: input.notes ?? "",
+  });
+  if (error) throw new Error(error.message);
+  return { id, result };
+}
+
 export { freightExGst };

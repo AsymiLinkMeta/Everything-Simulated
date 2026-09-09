@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { PACKAGES } from "@/lib/es/catalog";
 import { fetchProducts } from "@/lib/es/product-cache";
 import { useCart } from "@/lib/es/cart-store";
-import { placeOrder, saveQuote } from "@/lib/es/server";
+import { saveQuote } from "@/lib/es/server";
 import { freightLabel } from "@/lib/es/freight";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { aud, gstInclusive } from "@/lib/utils";
@@ -30,8 +30,6 @@ export function CartPanel({ compact = false }: { compact?: boolean }) {
   const setPostcode = useCart((s) => s.setPostcode);
   const result = useCart((s) => s.result)();
 
-  const [placing, setPlacing] = useState(false);
-
   async function onSave() {
     if (!user) {
       toast.message("Sign In to save this quote to your account.");
@@ -42,26 +40,6 @@ export function CartPanel({ compact = false }: { compact?: boolean }) {
       toast.success(`Quote ${saved.id} saved`);
     } catch {
       toast.error("Could not save quote. Sign In and try again.");
-    }
-  }
-
-  async function onPlace() {
-    if (!user) {
-      toast.message("Sign In to place a deposit order.");
-      return;
-    }
-    if (!result.ok) {
-      toast.error("Fix checker blocks before placing an order.");
-      return;
-    }
-    setPlacing(true);
-    try {
-      const saved = await placeOrder({ lines, postcode, driverWeightKg });
-      toast.success(`Order ${saved.id} is pending — staff will invoice a deposit`);
-    } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not place order");
-    } finally {
-      setPlacing(false);
     }
   }
 
@@ -165,9 +143,11 @@ export function CartPanel({ compact = false }: { compact?: boolean }) {
         </p>
       </div>
       <div className="flex flex-col gap-2">
-        <Button onClick={onSave}>{user ? "Save quote" : "Sign In to save quote"}</Button>
-        <Button variant="outline" onClick={() => void onPlace()} disabled={placing}>
-          {placing ? "Placing…" : user ? "Place deposit order" : "Sign In to order"}
+        <Button asChild>
+          <Link to="/checkout">Checkout</Link>
+        </Button>
+        <Button variant="outline" onClick={onSave}>
+          {user ? "Save quote" : "Sign In to save quote"}
         </Button>
         <Button variant="outline" asChild>
           <Link to="/app/chat">Ask the build expert</Link>
