@@ -3,10 +3,12 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, MapPin } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { SiteShell } from "@/components/es/site-shell";
-import { JsonLd, PackageCard } from "@/components/es/bits";
+import { JsonLd, Money, PackageCard } from "@/components/es/bits";
 import { BRAND, CITIES, PACKAGES } from "@/lib/es/catalog";
 import { localBusinessLd, pageHead } from "@/lib/es/seo";
 import { fetchBrands } from "@/lib/es/brands";
+import { fetchFeaturedPrebuilds } from "@/lib/es/prebuilds";
+import type { PrebuildWithComponents } from "@/lib/es/prebuilds";
 
 export const Route = createFileRoute("/")({
   head: () =>
@@ -35,8 +37,8 @@ export function Home() {
             Crate freight to every capital city.
           </p>
           <div className="es-hero-actions">
-            <Link to="/builds" className="es-btn">
-              Configure a build <ArrowRight className="size-4" />
+            <Link to="/prebuilds" className="es-btn">
+              View prebuilds <ArrowRight className="size-4" />
             </Link>
             <Link to="/studio" className="es-btn es-btn-paper">
               Book a studio demo
@@ -45,22 +47,7 @@ export function Home() {
         </div>
       </section>
 
-      <section className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-20">
-        <div className="mb-10 flex items-end justify-between gap-4">
-          <div>
-            <p className="es-kicker">Packages</p>
-            <h2 className="mt-2 text-3xl font-medium">Three serious starting points</h2>
-          </div>
-          <Link to="/shop" className="hidden text-sm text-muted hover:text-paper md:inline">
-            Or spec from parts
-          </Link>
-        </div>
-        <div className="es-pack-grid">
-          {PACKAGES.map((pack) => (
-            <PackageCard key={pack.slug} pack={pack} />
-          ))}
-        </div>
-      </section>
+      <FeaturedPrebuilds />
 
       <section className="border-y border-line bg-panel">
         <div className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-20 es-roadmap-section">
@@ -167,6 +154,66 @@ export function Home() {
       </section>
 
     </SiteShell>
+  );
+}
+
+function FeaturedPrebuilds() {
+  const featured = useQuery({ queryKey: ["featured-prebuilds"], queryFn: fetchFeaturedPrebuilds });
+  const items = featured.data ?? [];
+  const hasDynamic = items.length > 0;
+
+  return (
+    <section className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-20">
+      <div className="mb-10 flex items-end justify-between gap-4">
+        <div>
+          <p className="es-kicker">Packages</p>
+          <h2 className="mt-2 text-3xl font-medium">
+            {hasDynamic ? "Prebuilt simulators" : "Three serious starting points"}
+          </h2>
+        </div>
+        <Link to="/shop" className="hidden text-sm text-muted hover:text-paper md:inline">
+          Or spec from parts
+        </Link>
+      </div>
+      {hasDynamic ? (
+        <div className="es-pack-grid">
+          {items.map((p) => (
+            <Link
+              key={p.id}
+              to="/prebuilds/$slug"
+              params={{ slug: p.slug }}
+              className="es-card group flex flex-col overflow-hidden"
+            >
+              <div className="relative aspect-video overflow-hidden">
+                {p.image ? (
+                  <img src={p.image} alt={p.name} className="size-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                ) : (
+                  <div className="flex size-full items-center justify-center bg-raised text-muted">No image</div>
+                )}
+                {p.kicker && (
+                  <span className="es-kicker" style={{ position: "absolute", left: 16, top: 16, background: "rgba(7,7,8,0.8)", padding: "4px 8px", borderRadius: 8 }}>
+                    {p.kicker}
+                  </span>
+                )}
+              </div>
+              <div className="flex flex-1 flex-col gap-3 p-5">
+                <h3 className="text-xl font-medium">{p.name}</h3>
+                <p className="text-sm text-muted">{p.blurb}</p>
+                <p className="mt-auto text-lg font-medium">
+                  <Money cents={p.price_ex_gst} gst />
+                </p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      ) : (
+        <div className="es-pack-grid">
+          {PACKAGES.map((pack) => (
+            <PackageCard key={pack.slug} pack={pack} />
+          ))}
+        </div>
+      )}
+    </section>
   );
 }
 

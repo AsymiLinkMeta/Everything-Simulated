@@ -6,7 +6,7 @@ import { BRAND, CITIES, GUIDES, PACKAGES } from "@/lib/es/catalog";
 import { CookieDisclaimer, CustomerSignInLink, Logo, StaffLoginLink } from "./bits";
 
 const NAV = [
-  { to: "/builds", label: "Builds" },
+  { to: "/prebuilds", label: "Prebuilds" },
   { to: "/shop", label: "Shop" },
   { to: "/compatibility", label: "Checker" },
   { to: "/studio", label: "Studio" },

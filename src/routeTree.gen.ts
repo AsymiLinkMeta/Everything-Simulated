@@ -39,6 +39,9 @@ import { Route as SiteGuidesIndexRouteImport } from './routes/_site/guides/index
 import { Route as SiteGuidesSlugRouteImport } from './routes/_site/guides/$slug'
 import { Route as SiteShopIndexRouteImport } from './routes/_site/shop/index'
 import { Route as SiteShopSkuRouteImport } from './routes/_site/shop/$sku'
+import { Route as StaffPrebuildsRouteImport } from './routes/staff/prebuilds'
+import { Route as SitePrebuildsIndexRouteImport } from './routes/_site/prebuilds/index'
+import { Route as SitePrebuildsSlugRouteImport } from './routes/_site/prebuilds/$slug'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -189,6 +192,21 @@ const SiteShopSkuRoute = SiteShopSkuRouteImport.update({
   path: '/shop/$sku',
   getParentRoute: () => SiteRoute,
 } as any)
+const StaffPrebuildsRoute = StaffPrebuildsRouteImport.update({
+  id: '/prebuilds',
+  path: '/prebuilds',
+  getParentRoute: () => StaffRouteRoute,
+} as any)
+const SitePrebuildsIndexRoute = SitePrebuildsIndexRouteImport.update({
+  id: '/prebuilds/',
+  path: '/prebuilds/',
+  getParentRoute: () => SiteRoute,
+} as any)
+const SitePrebuildsSlugRoute = SitePrebuildsSlugRouteImport.update({
+  id: '/prebuilds/$slug',
+  path: '/prebuilds/$slug',
+  getParentRoute: () => SiteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -220,6 +238,9 @@ export interface FileRoutesByFullPath {
   '/builds/': typeof SiteBuildsIndexRoute
   '/guides/': typeof SiteGuidesIndexRoute
   '/shop/': typeof SiteShopIndexRoute
+  '/staff/prebuilds': typeof StaffPrebuildsRoute
+  '/prebuilds/$slug': typeof SitePrebuildsSlugRoute
+  '/prebuilds/': typeof SitePrebuildsIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -249,6 +270,9 @@ export interface FileRoutesByTo {
   '/builds': typeof SiteBuildsIndexRoute
   '/guides': typeof SiteGuidesIndexRoute
   '/shop': typeof SiteShopIndexRoute
+  '/staff/prebuilds': typeof StaffPrebuildsRoute
+  '/prebuilds/$slug': typeof SitePrebuildsSlugRoute
+  '/prebuilds': typeof SitePrebuildsIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -282,6 +306,9 @@ export interface FileRoutesById {
   '/_site/builds/': typeof SiteBuildsIndexRoute
   '/_site/guides/': typeof SiteGuidesIndexRoute
   '/_site/shop/': typeof SiteShopIndexRoute
+  '/staff/prebuilds': typeof StaffPrebuildsRoute
+  '/_site/prebuilds/': typeof SitePrebuildsIndexRoute
+  '/_site/prebuilds/$slug': typeof SitePrebuildsSlugRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -315,6 +342,9 @@ export interface FileRouteTypes {
     | '/builds/'
     | '/guides/'
     | '/shop/'
+    | '/staff/prebuilds'
+    | '/prebuilds/$slug'
+    | '/prebuilds/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -344,6 +374,9 @@ export interface FileRouteTypes {
     | '/builds'
     | '/guides'
     | '/shop'
+    | '/staff/prebuilds'
+    | '/prebuilds/$slug'
+    | '/prebuilds'
   id:
     | '__root__'
     | '/'
@@ -376,6 +409,9 @@ export interface FileRouteTypes {
     | '/_site/builds/'
     | '/_site/guides/'
     | '/_site/shop/'
+    | '/staff/prebuilds'
+    | '/_site/prebuilds/'
+    | '/_site/prebuilds/$slug'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -598,6 +634,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof SiteShopSkuRouteImport
       parentRoute: typeof SiteRoute
     }
+    '/staff/prebuilds': {
+      id: '/staff/prebuilds'
+      path: '/prebuilds'
+      fullPath: '/staff/prebuilds'
+      preLoaderRoute: typeof StaffPrebuildsRouteImport
+      parentRoute: typeof StaffRouteRoute
+    }
+    '/_site/prebuilds/': {
+      id: '/_site/prebuilds/'
+      path: '/prebuilds'
+      fullPath: '/prebuilds/'
+      preLoaderRoute: typeof SitePrebuildsIndexRouteImport
+      parentRoute: typeof SiteRoute
+    }
+    '/_site/prebuilds/$slug': {
+      id: '/_site/prebuilds/$slug'
+      path: '/prebuilds/$slug'
+      fullPath: '/prebuilds/$slug'
+      preLoaderRoute: typeof SitePrebuildsSlugRouteImport
+      parentRoute: typeof SiteRoute
+    }
   }
 }
 
@@ -628,6 +685,7 @@ interface StaffRouteRouteChildren {
   StaffQuotesRoute: typeof StaffQuotesRoute
   StaffTeamRoute: typeof StaffTeamRoute
   StaffBrandsRoute: typeof StaffBrandsRoute
+  StaffPrebuildsRoute: typeof StaffPrebuildsRoute
   StaffIndexRoute: typeof StaffIndexRoute
 }
 
@@ -638,6 +696,7 @@ const StaffRouteRouteChildren: StaffRouteRouteChildren = {
   StaffQuotesRoute: StaffQuotesRoute,
   StaffTeamRoute: StaffTeamRoute,
   StaffBrandsRoute: StaffBrandsRoute,
+  StaffPrebuildsRoute: StaffPrebuildsRoute,
   StaffIndexRoute: StaffIndexRoute,
 }
 
@@ -659,6 +718,8 @@ interface SiteRouteChildren {
   SiteBuildsIndexRoute: typeof SiteBuildsIndexRoute
   SiteGuidesIndexRoute: typeof SiteGuidesIndexRoute
   SiteShopIndexRoute: typeof SiteShopIndexRoute
+  SitePrebuildsIndexRoute: typeof SitePrebuildsIndexRoute
+  SitePrebuildsSlugRoute: typeof SitePrebuildsSlugRoute
 }
 
 const SiteRouteChildren: SiteRouteChildren = {
@@ -675,6 +736,8 @@ const SiteRouteChildren: SiteRouteChildren = {
   SiteBuildsIndexRoute: SiteBuildsIndexRoute,
   SiteGuidesIndexRoute: SiteGuidesIndexRoute,
   SiteShopIndexRoute: SiteShopIndexRoute,
+  SitePrebuildsIndexRoute: SitePrebuildsIndexRoute,
+  SitePrebuildsSlugRoute: SitePrebuildsSlugRoute,
 }
 
 const SiteRouteWithChildren = SiteRoute._addFileChildren(SiteRouteChildren)

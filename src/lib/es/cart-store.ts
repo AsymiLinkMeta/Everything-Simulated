@@ -14,6 +14,7 @@ type CartState = {
   setQty: (sku: string, qty: number) => void;
   add: (sku: string) => void;
   remove: (sku: string) => void;
+  setLines: (lines: CartLine[]) => void;
   clear: () => void;
   result: () => CheckResult;
 };
@@ -44,6 +45,7 @@ export const useCart = create<CartState>()(
         set({ lines });
       },
       remove: (sku) => set({ lines: get().lines.filter((l) => l.sku !== sku) }),
+      setLines: (lines) => set({ lines: lines.map((l) => ({ ...l })) }),
       clear: () => set({ lines: [] }),
       result: () => checkCart({ lines: get().lines, driverWeightKg: get().driverWeightKg, postcode: get().postcode }),
     }),
