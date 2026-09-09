@@ -23,12 +23,12 @@ function Studio() {
           className="absolute inset-0 bg-cover bg-center"
           style={{ backgroundImage: "url('/rigs/WNI7y.jpg')" }}
         />
-        <div className="relative mx-auto flex min-h-[70dvh] max-w-6xl flex-col justify-end px-4 pb-16">
+        <div className="relative mx-auto flex min-h-[70dvh] w-full min-w-0 max-w-6xl flex-col justify-end overflow-x-hidden px-4 pb-16">
           <p className="es-kicker">Showroom</p>
           <h1 className="mt-3 max-w-2xl text-4xl font-medium md:text-5xl">Sit in the rig before it ships.</h1>
         </div>
       </section>
-      <div className="mx-auto grid max-w-6xl gap-10 px-4 py-16 md:grid-cols-2">
+      <div className="mx-auto grid w-full min-w-0 max-w-6xl gap-10 overflow-x-hidden px-4 py-16 md:grid-cols-2">
         <div className="space-y-4">
           <p className="text-muted">
             The workshop is on the Gold Coast. Book a demo for Starter, Haptic or Motion. We set

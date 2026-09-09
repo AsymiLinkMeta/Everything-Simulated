@@ -42,7 +42,7 @@ function AppBuild() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="min-w-0 space-y-6">
       <div>
         <p className="es-kicker">Builder</p>
         <h1 className="mt-2 text-3xl font-medium">Spec a crate</h1>
@@ -76,8 +76,8 @@ function AppBuild() {
         {aiError ? <p className="mt-4 text-sm text-red-400">{aiError}</p> : null}
       </div>
 
-      <div className="grid gap-8 lg:grid-cols-[1fr_340px]">
-        <div className="grid grid-cols-2 gap-4">
+      <div className="grid min-w-0 gap-8 lg:grid-cols-[1fr_340px]">
+        <div className="grid min-w-0 grid-cols-2 gap-4">
           {(products.data ?? []).map((item) => (
             <ProductTile key={item.sku} item={item} />
           ))}

@@ -30,13 +30,13 @@ function ProductPage() {
     : [];
 
   if (products.isPending) {
-    return <div className="mx-auto max-w-6xl px-4 py-16"><BackButton /><p className="text-sm text-muted">Loading…</p></div>;
+    return <div className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-16"><BackButton /><p className="text-sm text-muted">Loading…</p></div>;
   }
 
   if (!item) throw notFound();
 
   return (
-    <div className="mx-auto max-w-6xl px-4 py-16">
+    <div className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-16">
       <BackButton />
       <JsonLd
         data={breadcrumbLd([
@@ -62,7 +62,7 @@ function ProductPage() {
           },
         }}
       />
-      <div className="grid gap-8 lg:grid-cols-[1fr_1fr_320px]">
+      <div className="grid min-w-0 gap-8 lg:grid-cols-[1fr_1fr_320px]">
         <div>
           <img src={productImage(item)} alt={item.name} className="es-card h-80 w-full object-cover" />
           {item.images && item.images.length > 1 ? (

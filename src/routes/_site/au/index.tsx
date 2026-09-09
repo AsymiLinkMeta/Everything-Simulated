@@ -15,7 +15,7 @@ export const Route = createFileRoute("/_site/au/")({
 
 function Australia() {
   return (
-    <div className="mx-auto max-w-6xl px-4 py-16">
+    <div className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-16">
       <p className="es-kicker">Coverage</p>
       <h1 className="mt-3 text-4xl font-medium">Australia-wide from the Gold Coast</h1>
       <p className="mt-4 max-w-2xl text-muted">

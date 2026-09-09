@@ -59,7 +59,7 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
           </div>
         </div>
       </header>
-      <main>{children ?? <Outlet />}</main>
+      <main className="min-w-0">{children ?? <Outlet />}</main>
       <footer className="es-footer">
         <div className="es-footer-grid">
           <div className="es-footer-col">

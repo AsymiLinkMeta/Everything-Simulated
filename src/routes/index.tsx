@@ -45,7 +45,7 @@ export function Home() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-20">
+      <section className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-20">
         <div className="mb-10 flex items-end justify-between gap-4">
           <div>
             <p className="es-kicker">Packages</p>
@@ -63,7 +63,7 @@ export function Home() {
       </section>
 
       <section className="border-y border-line bg-panel">
-        <div className="mx-auto max-w-6xl px-4 py-20 es-roadmap-section">
+        <div className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-20 es-roadmap-section">
           <div className="max-w-2xl">
             <p className="es-kicker">Your rig, your roadmap</p>
             <h2 className="mt-3 text-3xl font-medium sm:text-4xl">
@@ -136,7 +136,7 @@ export function Home() {
 
       <BrandBanner />
 
-      <section className="mx-auto max-w-6xl px-4 py-8">
+      <section className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-8">
         <div className="es-card es-split" style={{ overflow: "hidden" }}>
           <img src="/rigs/Everything_Simulated_Hero.jpg" alt="Driver using a racing simulator" className="h-72 w-full object-cover md:h-full" />
           <div className="flex flex-col justify-center gap-4 p-8">
@@ -152,7 +152,7 @@ export function Home() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-4 py-16">
+      <section className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-16">
         <div className="mb-8 flex items-center gap-2">
           <MapPin className="size-4 text-esred" />
           <h2 className="text-2xl font-medium">Delivered Australia-wide</h2>
@@ -246,7 +246,7 @@ function BrandBanner() {
   const items = brands.data ?? [];
   return (
     <section className="border-y border-line bg-panel">
-      <div className="mx-auto max-w-6xl px-4 py-16">
+      <div className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-16">
         <p className="es-kicker">Brands we spec</p>
         <h2 className="mt-2 text-2xl font-medium">Trusted hardware, assembled right</h2>
         <p className="mt-2 max-w-2xl text-sm text-muted">

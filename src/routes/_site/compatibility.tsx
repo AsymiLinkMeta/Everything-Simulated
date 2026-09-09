@@ -19,15 +19,15 @@ export const Route = createFileRoute("/_site/compatibility")({
 function Compatibility() {
   const products = useQuery({ queryKey: ["products"], queryFn: () => fetchProducts() });
   return (
-    <div className="mx-auto max-w-6xl px-4 py-16">
+    <div className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-16">
       <p className="es-kicker">Build engine</p>
       <h1 className="mt-3 text-4xl font-medium">Compatibility checker</h1>
       <p className="mt-4 max-w-2xl text-muted">
         Rules first. The expert chatbot can explain a result — it cannot override a block. Load a
         package, swap a chassis, and watch payload and torque update.
       </p>
-      <div className="mt-10 grid gap-8 lg:grid-cols-[1fr_360px]">
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-2">
+      <div className="mt-10 grid min-w-0 gap-8 lg:grid-cols-[1fr_360px]">
+        <div className="grid min-w-0 grid-cols-2 gap-4 sm:grid-cols-2">
           {(products.data ?? []).map((item) => (
             <ProductTile key={item.sku} item={item} />
           ))}

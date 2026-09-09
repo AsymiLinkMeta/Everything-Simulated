@@ -23,7 +23,7 @@ export const Route = createFileRoute("/_site/au/$city")({
 function CityPage() {
   const city = Route.useLoaderData();
   return (
-    <div className="mx-auto max-w-6xl px-4 py-16">
+    <div className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-16">
       <BackButton />
       <JsonLd data={localBusinessLd()} />
       <JsonLd data={faqLd(FAQS)} />

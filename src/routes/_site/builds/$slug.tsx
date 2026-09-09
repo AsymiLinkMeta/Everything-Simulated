@@ -29,7 +29,7 @@ function BuildPage() {
   const loadPackage = useCart((s) => s.loadPackage);
   const result = checkCart({ lines: pack.lines });
   return (
-    <div className="mx-auto max-w-6xl px-4 py-16">
+    <div className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-16">
       <BackButton />
       <JsonLd
         data={breadcrumbLd([
