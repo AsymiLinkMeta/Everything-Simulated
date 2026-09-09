@@ -182,7 +182,7 @@ function FeaturedPrebuilds() {
               key={p.id}
               to="/prebuilds/$slug"
               params={{ slug: p.slug }}
-              className="es-card group flex flex-col overflow-hidden"
+              className="group overflow-hidden rounded-2xl border border-line bg-black transition-transform duration-300 hover:-translate-y-1"
             >
               <div className="relative aspect-video overflow-hidden">
                 {p.image ? (
