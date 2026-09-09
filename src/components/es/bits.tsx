@@ -204,7 +204,7 @@ export function ProductTile({ item }: { item: Product }) {
             e.stopPropagation();
             add(item.sku);
             toast.success("Added to cart", {
-              description: "Scroll down to view your cart.",
+              description: <span className="text-emerald-400">Scroll down to view your cart.</span>,
             });
           }}
           className="absolute bottom-2 right-2 z-10 grid size-9 place-items-center rounded-full bg-paper text-ink shadow-lg transition-all duration-200 hover:scale-110"
