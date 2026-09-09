@@ -9,3 +9,6 @@ verify_jwt = true
 
 [functions.discover-products]
 verify_jwt = true
+
+[functions.generate-prebuild]
+verify_jwt = true

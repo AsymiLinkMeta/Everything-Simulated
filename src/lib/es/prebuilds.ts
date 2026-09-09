@@ -1,5 +1,42 @@
-import { supabase } from "@/lib/db";
+import { supabase, supabaseUrl, supabaseAnonKey } from "@/lib/db";
 import type { StaffRole } from "./types";
+
+export type AIPrebuildDraft = {
+  name: string;
+  slug: string;
+  kicker: string;
+  blurb: string;
+  description: string;
+  price_ex_gst: number;
+  highlights: string[];
+  specs: Record<string, string>;
+  capabilities: string[];
+  components: { sku: string; qty: number }[];
+};
+
+export async function generatePrebuildDraft(
+  prompt: string,
+  catalogSkus: string[],
+): Promise<AIPrebuildDraft> {
+  const { data: sessionData } = await supabase.auth.getSession();
+  const accessToken = sessionData.session?.access_token;
+  if (!accessToken) throw new Error("Sign in required");
+
+  const response = await fetch(`${supabaseUrl}/functions/v1/generate-prebuild`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      Apikey: supabaseAnonKey,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ prompt, catalogSkus }),
+  });
+  if (!response.ok) throw new Error("AI request failed");
+  const body = (await response.json()) as { draft?: AIPrebuildDraft; error?: string };
+  if (body.error) throw new Error(body.error);
+  if (!body.draft) throw new Error("No draft returned");
+  return body.draft;
+}
 
 const STAFF: StaffRole[] = ["sales", "workshop", "content", "support", "admin"];
 

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -7,16 +7,21 @@ import {
   ArrowUp,
   ChevronDown,
   ChevronUp,
+  Eraser,
   GripVertical,
+  ImagePlus,
   Package,
   Plus,
+  Send,
+  Sparkles,
   Star,
   StarOff,
   Trash2,
+  Upload,
   X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Input, Textarea } from "@/components/ui/input";
 import { Money } from "@/components/es/bits";
 import { aud } from "@/lib/utils";
 import { staffListCatalogProducts } from "@/lib/es/server";
@@ -27,9 +32,16 @@ import {
   staffSetPrebuildComponents,
   staffReorderPrebuilds,
   staffToggleFeatured,
+  generatePrebuildDraft,
 } from "@/lib/es/prebuilds";
 import type { PrebuildWithComponents } from "@/lib/es/prebuilds";
 import type { CatalogProduct } from "@/lib/es/server";
+import {
+  compressImage,
+  hasLightBackground,
+  removeBackground,
+  compositeOnCharcoal,
+} from "@/lib/es/image-utils";
 
 export const Route = createFileRoute("/staff/prebuilds")({ component: PrebuildsEditor });
 
@@ -316,6 +328,19 @@ function PrebuildForm({
   const [newSpecVal, setNewSpecVal] = useState("");
   const [skuSearch, setSkuSearch] = useState("");
 
+  // AI chat state
+  const [aiInput, setAiInput] = useState("");
+  const [aiBusy, setAiBusy] = useState(false);
+  const [aiMessages, setAiMessages] = useState<{ role: string; content: string }[]>([]);
+
+  // Image uploader state
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [imgBusy, setImgBusy] = useState(false);
+  const [imgPreview, setImgPreview] = useState<string | null>(draft.image || null);
+  const [imgHasBg, setImgHasBg] = useState(false);
+  const [imgRemovedBg, setImgRemovedBg] = useState(false);
+  const [imgBgRemoving, setImgBgRemoving] = useState(false);
+
   const set = <K extends keyof DraftPrebuild>(key: K, val: DraftPrebuild[K]) =>
     setDraft({ ...draft, [key]: val });
 
@@ -348,6 +373,114 @@ function PrebuildForm({
   };
 
   const catalogMap = new Map(catalog.map((c) => [c.sku, c]));
+  const allSkus = catalog.map((c) => c.sku);
+
+  // ---- AI chat helpers ----
+
+  async function runAI(prompt: string) {
+    if (aiBusy || !prompt.trim()) return;
+    setAiBusy(true);
+    setAiMessages((m) => [...m, { role: "user", content: prompt }]);
+    try {
+      const draft_result = await generatePrebuildDraft(prompt, allSkus);
+      setAiMessages((m) => [
+        ...m,
+        {
+          role: "assistant",
+          content: `Filled in: ${draft_result.name || "draft"}${draft_result.components.length ? ` with ${draft_result.components.length} components` : ""}. Review and edit below.`,
+        },
+      ]);
+      // Merge AI draft into the form
+      setDraft({
+        ...draft,
+        name: draft_result.name || draft.name,
+        slug: draft_result.slug || draft.slug,
+        kicker: draft_result.kicker || draft.kicker,
+        blurb: draft_result.blurb || draft.blurb,
+        description: draft_result.description || draft.description,
+        price_ex_gst: draft_result.price_ex_gst || draft.price_ex_gst,
+        highlights: draft_result.highlights?.length ? draft_result.highlights : draft.highlights,
+        specs: draft_result.specs && Object.keys(draft_result.specs).length ? draft_result.specs : draft.specs,
+        capabilities: draft_result.capabilities?.length ? draft_result.capabilities : draft.capabilities,
+        components: draft_result.components?.length ? draft_result.components : draft.components,
+      });
+      toast.success("AI filled the form — review and edit below");
+    } catch {
+      setAiMessages((m) => [
+        ...m,
+        { role: "assistant", content: "Could not generate a draft. Try a more specific prompt or fill the form manually." },
+      ]);
+    } finally {
+      setAiBusy(false);
+    }
+  }
+
+  function sendAI(e: React.FormEvent) {
+    e.preventDefault();
+    if (!aiInput.trim() || aiBusy) return;
+    const text = aiInput.trim();
+    setAiInput("");
+    void runAI(text);
+  }
+
+  // ---- Image uploader helpers ----
+
+  async function handleImageFile(file: File) {
+    setImgBusy(true);
+    try {
+      const compressed = await compressImage(file);
+      const lightBg = await hasLightBackground(compressed);
+      setImgPreview(compressed);
+      setImgHasBg(lightBg);
+      setImgRemovedBg(false);
+      set("image", compressed);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not process that image");
+    } finally {
+      setImgBusy(false);
+      if (fileRef.current) fileRef.current.value = "";
+    }
+  }
+
+  async function handleRemoveBg() {
+    if (!imgPreview) return;
+    setImgBgRemoving(true);
+    try {
+      const bgRemoved = await removeBackground(imgPreview);
+      const onCharcoal = await compositeOnCharcoal(bgRemoved);
+      setImgPreview(onCharcoal);
+      setImgRemovedBg(true);
+      set("image", onCharcoal);
+      toast.success("Background removed and composited on charcoal card background");
+    } catch {
+      toast.error("Background removal failed");
+    } finally {
+      setImgBgRemoving(false);
+    }
+  }
+
+  async function handleCompositeOnly() {
+    if (!imgPreview) return;
+    setImgBgRemoving(true);
+    try {
+      const onCharcoal = await compositeOnCharcoal(imgPreview);
+      setImgPreview(onCharcoal);
+      setImgRemovedBg(true);
+      set("image", onCharcoal);
+      toast.success("Composited on charcoal card background");
+    } catch {
+      toast.error("Could not composite image");
+    } finally {
+      setImgBgRemoving(false);
+    }
+  }
+
+  function clearImage() {
+    setImgPreview(null);
+    setImgHasBg(false);
+    setImgRemovedBg(false);
+    set("image", "");
+  }
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6 p-6">
@@ -358,6 +491,59 @@ function PrebuildForm({
           <Button onClick={onSave} disabled={saving}>{saving ? "Saving..." : "Save"}</Button>
         </div>
       </div>
+
+      {/* AI chat panel */}
+      <section className="es-card space-y-4 p-5">
+        <div className="flex items-center gap-2">
+          <Sparkles className="size-5 text-esred" />
+          <h2 className="text-lg font-medium">AI Prebuild Generator</h2>
+        </div>
+        <p className="text-sm text-muted">
+          Describe a rig and the AI will fill the entire form — name, description, specs, components and more.
+        </p>
+        {aiMessages.length > 0 && (
+          <div className="space-y-2 max-h-48 overflow-y-auto">
+            {aiMessages.map((m, i) => (
+              <div
+                key={i}
+                className={`max-w-prose rounded-card px-4 py-3 text-sm ${m.role === "user" ? "ml-auto bg-raised" : "es-card"}`}
+              >
+                {m.content}
+              </div>
+            ))}
+            {aiBusy && <p className="text-sm text-muted">Generating draft...</p>}
+          </div>
+        )}
+        <form className="flex items-end gap-2" onSubmit={sendAI}>
+          <Textarea
+            value={aiInput}
+            onChange={(e) => setAiInput(e.target.value)}
+            placeholder="e.g. Entry-level rig for juniors with Simagic Alpha Mini, Trak Racer TR80, single monitor, under $15k"
+            rows={2}
+            className="flex-1"
+          />
+          <Button type="submit" disabled={aiBusy} className="shrink-0">
+            <Send className="size-4" /> {aiBusy ? "..." : "Generate"}
+          </Button>
+        </form>
+        <div className="flex flex-wrap gap-2">
+          {[
+            "Starter rig with Simagic Alpha Mini and TR80",
+            "Haptic rig with VNPX Active Pedals and haptic seat",
+            "Motion rig with Exodus XR1 and SIMRIG SR2",
+          ].map((suggestion) => (
+            <button
+              key={suggestion}
+              type="button"
+              className="rounded-full border border-line px-3 py-1 text-xs text-muted transition-colors hover:bg-raised hover:text-paper disabled:opacity-50"
+              disabled={aiBusy}
+              onClick={() => void runAI(suggestion)}
+            >
+              {suggestion}
+            </button>
+          ))}
+        </div>
+      </section>
 
       {/* Basic info */}
       <section className="es-card space-y-4 p-5">
@@ -387,10 +573,6 @@ function PrebuildForm({
               onChange={(e) => set("price_ex_gst", Number(e.target.value) || 0)}
             />
             <span className="text-xs">{aud(draft.price_ex_gst)} + GST</span>
-          </label>
-          <label className="space-y-1 text-sm text-muted">
-            Image URL
-            <Input value={draft.image} onChange={(e) => set("image", e.target.value)} placeholder="https://..." />
           </label>
           <label className="space-y-1 text-sm text-muted">
             Status
@@ -431,6 +613,65 @@ function PrebuildForm({
             className="size-4 rounded border-line"
           />
           Featured on homepage
+        </label>
+      </section>
+
+      {/* Image uploader */}
+      <section className="es-card space-y-4 p-5">
+        <h2 className="text-lg font-medium">Prebuild Image</h2>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="outline" size="sm" onClick={() => fileRef.current?.click()} disabled={imgBusy}>
+            <Upload className="size-4" /> {imgBusy ? "Processing..." : "Upload image"}
+          </Button>
+          <input
+            ref={fileRef}
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            className="hidden"
+            onChange={async (e) => {
+              const file = e.target.files?.[0];
+              if (file) await handleImageFile(file);
+            }}
+          />
+        </div>
+        {imgPreview && (
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex size-32 items-center justify-center rounded-lg border border-line bg-raised p-2">
+              <img src={imgPreview} alt="Prebuild preview" className="size-28 rounded object-cover" />
+            </div>
+            <div className="space-y-2">
+              {imgHasBg && !imgRemovedBg && (
+                <p className="text-xs text-yellow-400">
+                  Light background detected — remove it to match the charcoal card style.
+                </p>
+              )}
+              {imgRemovedBg && (
+                <p className="text-xs text-green-400">Background composited on charcoal — matches the card style.</p>
+              )}
+              {!imgHasBg && !imgRemovedBg && (
+                <p className="text-xs text-muted">Image looks ready. Optionally composite on charcoal.</p>
+              )}
+              <div className="flex flex-wrap gap-2">
+                {!imgRemovedBg && (
+                  <Button variant="outline" size="sm" disabled={imgBgRemoving} onClick={handleRemoveBg}>
+                    <Eraser className="size-4" /> {imgBgRemoving ? "Removing..." : "Remove background"}
+                  </Button>
+                )}
+                {!imgRemovedBg && (
+                  <Button variant="outline" size="sm" disabled={imgBgRemoving} onClick={handleCompositeOnly}>
+                    <ImagePlus className="size-4" /> Composite on charcoal
+                  </Button>
+                )}
+                <Button variant="ghost" size="sm" onClick={clearImage} className="text-muted hover:text-esred">
+                  <X className="size-4" /> Clear
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+        <label className="block space-y-1 text-sm text-muted">
+          Or paste an image URL
+          <Input value={draft.image.startsWith("data:") ? "" : draft.image} onChange={(e) => { set("image", e.target.value); setImgPreview(e.target.value || null); setImgRemovedBg(false); setImgHasBg(false); }} placeholder="https://..." />
         </label>
       </section>
 
