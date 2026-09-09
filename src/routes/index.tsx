@@ -189,7 +189,7 @@ function FeaturedPrebuilds() {
                   <img
                     src={p.image}
                     alt={p.name}
-                    className="size-full object-contain transition-transform duration-300 group-hover:scale-105"
+                    className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
                     style={{
                       backgroundImage: "url('/dark-abstract-background_1048-1920.avif')",
                       backgroundPosition: "center",
