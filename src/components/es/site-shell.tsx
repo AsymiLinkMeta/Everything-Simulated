@@ -1,9 +1,10 @@
 import "./es-chrome";
 import { Link, Outlet, useLocation } from "@tanstack/react-router";
-import { Facebook, Instagram, Phone } from "lucide-react";
+import { Facebook, Instagram, Phone, ShoppingCart } from "lucide-react";
 import { useEffect, useState } from "react";
 import { BRAND, CITIES, GUIDES, PACKAGES } from "@/lib/es/catalog";
 import { CookieDisclaimer, CustomerSignInLink, Logo, StaffLoginLink } from "./bits";
+import { useCart } from "@/lib/es/cart-store";
 
 const NAV = [
   { to: "/prebuilds", label: "Prebuilds" },
@@ -18,6 +19,7 @@ const NAV = [
 export function SiteShell({ children }: { children?: React.ReactNode }) {
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const cartCount = useCart((s) => s.lines.reduce((n, l) => n + l.qty, 0));
 
   useEffect(() => {
     setMenuOpen(false);
@@ -39,6 +41,15 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
             <Phone className="size-4" />
             {BRAND.phone}
           </a>
+          <Link to="/checkout" className="relative inline-flex items-center gap-1.5 rounded-md border border-line px-3 py-2 text-sm transition-colors hover:border-paper hover:text-paper">
+            <ShoppingCart className="size-4" />
+            <span className="hidden sm:inline">Cart</span>
+            {cartCount > 0 && (
+              <span className="absolute -right-1.5 -top-1.5 grid min-w-4 place-items-center rounded-full bg-accent px-1 text-[0.625rem] font-semibold leading-4 text-ink">
+                {cartCount}
+              </span>
+            )}
+          </Link>
           <CustomerSignInLink />
           <div className={`es-menu ${menuOpen ? "is-open" : ""}`}>
             <button type="button" className="es-menu-toggle" onClick={() => setMenuOpen((v) => !v)} aria-expanded={menuOpen}>
@@ -52,6 +63,7 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
                   </Link>
                 ))}
                 <CustomerSignInLink className="" />
+                <Link to="/checkout">Cart ({cartCount})</Link>
                 <Link to="/contact">Contact</Link>
                 <a href={`tel:${BRAND.phone.replace(/\s/g, "")}`}>{BRAND.phone}</a>
               </div>
