@@ -182,33 +182,32 @@ function FeaturedPrebuilds() {
               key={p.id}
               to="/prebuilds/$slug"
               params={{ slug: p.slug }}
-              className="group overflow-hidden rounded-2xl border border-line bg-black transition-transform duration-300 hover:-translate-y-1"
+              className="group relative aspect-square overflow-hidden rounded-2xl border border-line bg-black transition-transform duration-300 hover:-translate-y-1"
             >
-              <div className="relative aspect-video overflow-hidden">
-                {p.image ? (
-                  <img
-                    src={p.image}
-                    alt={p.name}
-                    className="size-full object-cover transition-transform duration-300 group-hover:scale-105"
-                    style={{
-                      backgroundImage: "url('/dark-abstract-background_1048-1920.avif')",
-                      backgroundPosition: "center",
-                      backgroundSize: "cover",
-                    }}
-                  />
-                ) : (
-                  <div className="flex size-full items-center justify-center bg-raised text-muted">No image</div>
-                )}
-                {p.kicker && (
-                  <span className="es-kicker" style={{ position: "absolute", left: 16, top: 16, background: "rgba(7,7,8,0.8)", padding: "4px 8px", borderRadius: 8 }}>
-                    {p.kicker}
-                  </span>
-                )}
-              </div>
-              <div className="flex flex-1 flex-col gap-3 p-5">
-                <h3 className="text-xl font-medium">{p.name}</h3>
-                <p className="text-sm text-muted">{p.blurb}</p>
-                <p className="mt-auto text-lg font-medium">
+              {p.image ? (
+                <img
+                  src={p.image}
+                  alt={p.name}
+                  className="absolute inset-0 size-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  style={{
+                    backgroundImage: "url('/dark-abstract-background_1048-1920.avif')",
+                    backgroundPosition: "center",
+                    backgroundSize: "cover",
+                  }}
+                />
+              ) : (
+                <div className="absolute inset-0 flex items-center justify-center bg-raised text-muted">No image</div>
+              )}
+              <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
+              {p.kicker && (
+                <span className="es-kicker absolute left-4 top-4 rounded-lg bg-black/70 px-2 py-1.5">
+                  {p.kicker}
+                </span>
+              )}
+              <div className="absolute inset-x-0 bottom-0 p-5 pt-24">
+                <h3 className="text-xl font-medium text-paper">{p.name}</h3>
+                <p className="mt-2 text-sm leading-6 text-paper/75">{p.blurb}</p>
+                <p className="mt-4 text-lg font-medium text-paper">
                   <Money cents={p.price_ex_gst} gst />
                 </p>
               </div>
