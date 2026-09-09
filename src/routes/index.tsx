@@ -3,8 +3,8 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, MapPin } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { SiteShell } from "@/components/es/site-shell";
-import { JsonLd, Money, PackageCard } from "@/components/es/bits";
-import { BRAND, CITIES, PACKAGES } from "@/lib/es/catalog";
+import { JsonLd, Money } from "@/components/es/bits";
+import { BRAND, CITIES } from "@/lib/es/catalog";
 import { localBusinessLd, pageHead } from "@/lib/es/seo";
 import { fetchBrands } from "@/lib/es/brands";
 import { fetchFeaturedPrebuilds } from "@/lib/es/prebuilds";
@@ -168,7 +168,7 @@ function FeaturedPrebuilds() {
         <div>
           <p className="es-kicker">Packages</p>
           <h2 className="mt-2 text-3xl font-medium">
-            {hasDynamic ? "Prebuilt simulators" : "Three serious starting points"}
+            "Prebuilt simulators"
           </h2>
         </div>
         <Link to="/shop" className="hidden text-sm text-muted hover:text-paper md:inline">
@@ -207,10 +207,11 @@ function FeaturedPrebuilds() {
           ))}
         </div>
       ) : (
-        <div className="es-pack-grid">
-          {PACKAGES.map((pack) => (
-            <PackageCard key={pack.slug} pack={pack} />
-          ))}
+        <div className="es-card px-5 py-10 text-center">
+          <p className="text-muted">Prebuilt simulators are being prepared.</p>
+          <Link to="/prebuilds" className="mt-3 inline-block text-sm text-paper underline-offset-4 hover:underline">
+            View the prebuilds catalogue
+          </Link>
         </div>
       )}
     </section>
