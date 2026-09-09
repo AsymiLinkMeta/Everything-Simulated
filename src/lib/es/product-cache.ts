@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/db";
-import { PRODUCTS, RULES } from "./catalog";
+import { RULES } from "./catalog";
 import type { CompatibilityRule, ListingStatus, Product, ProductCategory, Severity, StockStatus } from "./types";
 
 type DbRow = {
@@ -114,9 +114,9 @@ export async function fetchProducts(opts?: { includeDrafts?: boolean }): Promise
 
     const overrides = Object.fromEntries((overridesRes.data ?? []).map((o) => [o.sku, o.sell_ex_gst]));
 
-    let rows = (data as DbRow[] | null) ?? [];
+    const rows = (data as DbRow[] | null) ?? [];
     if (error || !rows.length) {
-      cache = PRODUCTS.map((p) => ({ ...p, sellExGst: overrides[p.sku] ?? p.sellExGst }));
+      cache = [];
       return cache;
     }
 
@@ -136,7 +136,7 @@ export async function fetchProducts(opts?: { includeDrafts?: boolean }): Promise
 }
 
 export function getCachedProducts(): Product[] {
-  return cache ?? PRODUCTS;
+  return cache ?? [];
 }
 
 export function getCachedProduct(sku: string): Product | undefined {

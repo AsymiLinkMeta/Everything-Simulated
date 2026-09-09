@@ -1,5 +1,5 @@
 import { supabase, supabaseAnonKey, supabaseUrl } from "@/lib/db";
-import { BRAND, GUIDES, PACKAGES, PRODUCTS, RULES } from "./catalog";
+import { BRAND, GUIDES, PACKAGES, RULES } from "./catalog";
 import { getCachedProducts, getCachedProductMap, getLiveRules } from "./product-cache";
 import { checkCart } from "./checkCart";
 import { unwrap } from "./unwrap";
@@ -505,7 +505,7 @@ export async function publicCatalog() {
     guides: GUIDES,
     rules: getLiveRules().length ? getLiveRules() : RULES,
     brand: BRAND,
-    seed: PRODUCTS,
+    seed: getCachedProducts(),
   };
 }
 
