@@ -722,25 +722,47 @@ function PrebuildForm({
             value={skuSearch}
             onChange={(e) => setSkuSearch(e.target.value)}
           />
-          {skuSearch.trim() && (
-            <ul className="mt-2 max-h-48 space-y-1 overflow-y-auto rounded-lg border border-line p-2">
-              {filteredCatalog.slice(0, 20).map((c) => {
-                const already = draft.components.some((comp) => comp.sku === c.sku);
-                return (
-                  <li key={c.sku} className="flex items-center justify-between rounded px-2 py-1.5 text-sm hover:bg-raised">
-                    <span>
-                      <span className="font-medium">{c.brand} {c.name}</span>
-                      <span className="ml-2 text-xs text-muted">{c.sku} · {aud(c.sell_ex_gst)}</span>
-                    </span>
-                    <Button size="sm" variant="outline" disabled={already} onClick={() => addComponent(c.sku)}>
-                      {already ? "Added" : "Add"}
-                    </Button>
-                  </li>
-                );
-              })}
-              {filteredCatalog.length === 0 && <li className="px-2 py-1.5 text-sm text-muted">No products match</li>}
-            </ul>
-          )}
+          <div className="mt-2 max-h-[28rem] overflow-y-auto rounded-lg border border-line p-2">
+            {filteredCatalog.length === 0 ? (
+              <p className="px-2 py-1.5 text-sm text-muted">No products match</p>
+            ) : (
+              Array.from(
+                filteredCatalog.reduce<Map<string, CatalogProduct[]>>((groups, product) => {
+                  const category = product.category.trim() || "Uncategorised";
+                  const group = groups.get(category) ?? [];
+                  group.push(product);
+                  groups.set(category, group);
+                  return groups;
+                }, new Map()),
+              )
+                .sort(([categoryA], [categoryB]) => categoryA.localeCompare(categoryB))
+                .map(([category, products]) => (
+                  <div key={category} className="not-first:mt-4">
+                    <h3 className="border-b border-line px-2 pb-1.5 text-xs font-medium uppercase tracking-[0.16em] text-muted">
+                      {category} <span className="normal-case tracking-normal">({products.length})</span>
+                    </h3>
+                    <ul className="divide-y divide-line">
+                      {products
+                        .sort((a, b) => `${a.brand} ${a.name}`.localeCompare(`${b.brand} ${b.name}`))
+                        .map((c) => {
+                          const already = draft.components.some((comp) => comp.sku === c.sku);
+                          return (
+                            <li key={c.sku} className="flex items-center justify-between gap-3 rounded px-2 py-2 text-sm hover:bg-raised">
+                              <span className="min-w-0">
+                                <span className="block truncate font-medium">{c.brand} {c.name}</span>
+                                <span className="block text-xs text-muted">{c.sku} · {aud(c.sell_ex_gst)}</span>
+                              </span>
+                              <Button size="sm" variant="outline" disabled={already} onClick={() => addComponent(c.sku)}>
+                                {already ? "Added" : "Add"}
+                              </Button>
+                            </li>
+                          );
+                        })}
+                    </ul>
+                  </div>
+                ))
+            )}
+          </div>
         </div>
       </section>
 
