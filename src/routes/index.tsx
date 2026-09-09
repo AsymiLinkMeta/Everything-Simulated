@@ -186,7 +186,16 @@ function FeaturedPrebuilds() {
             >
               <div className="relative aspect-video overflow-hidden">
                 {p.image ? (
-                  <img src={p.image} alt={p.name} className="size-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                  <img
+                    src={p.image}
+                    alt={p.name}
+                    className="size-full object-contain transition-transform duration-300 group-hover:scale-105"
+                    style={{
+                      backgroundImage: "url('/dark-abstract-background_1048-1920.avif')",
+                      backgroundPosition: "center",
+                      backgroundSize: "cover",
+                    }}
+                  />
                 ) : (
                   <div className="flex size-full items-center justify-center bg-raised text-muted">No image</div>
                 )}
