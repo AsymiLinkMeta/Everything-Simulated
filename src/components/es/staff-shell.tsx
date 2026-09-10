@@ -9,7 +9,7 @@ import {
   ClipboardList,
   FileText,
   Handshake,
-  Headset,
+  Inbox,
   Menu,
   Package,
   Shield,
@@ -21,10 +21,12 @@ import {
 } from "lucide-react";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { getProfile } from "@/lib/es/server";
+import { unreadInboxCount } from "@/lib/es/inbox";
 import { AuthSlot, Logo } from "./bits";
 
 const TABS = [
   { to: "/staff", label: "Pipeline", icon: ClipboardList },
+  { to: "/staff/service", label: "Inbox", icon: Inbox },
   { to: "/staff/crm", label: "CRM", icon: Handshake },
   { to: "/staff/oms", label: "OMS", icon: Truck },
   { to: "/staff/catalog", label: "Catalog", icon: Boxes },
@@ -35,7 +37,6 @@ const TABS = [
   { to: "/staff/jobs", label: "Jobs", icon: Wrench },
   { to: "/staff/bookings", label: "Bookings", icon: Calendar },
   { to: "/staff/team", label: "Team", icon: Users },
-  { to: "/staff/service", label: "Service", icon: Headset },
 ] as const;
 
 export function StaffShell() {
@@ -44,6 +45,12 @@ export function StaffShell() {
     queryKey: ["profile"],
     queryFn: () => getProfile(),
     enabled: Boolean(user),
+  });
+  const unread = useQuery({
+    queryKey: ["inbox-unread"],
+    queryFn: unreadInboxCount,
+    enabled: Boolean(user),
+    refetchInterval: 15000,
   });
 
   const [menuOpen, setMenuOpen] = useState(false);
@@ -73,6 +80,10 @@ export function StaffShell() {
     );
   }
 
+  const unreadN = unread.data ?? 0;
+  const labelFor = (tab: (typeof TABS)[number]) =>
+    tab.to === "/staff/service" && unreadN > 0 ? `${tab.label} (${unreadN})` : tab.label;
+
   return (
     <div className="es-staff">
       <div className="es-staff-bg" aria-hidden="true">
@@ -97,7 +108,7 @@ export function StaffShell() {
               activeProps={{ className: "is-active" }}
             >
               <t.icon className="size-4" />
-              {t.label}
+              {labelFor(t)}
             </Link>
           ))}
         </nav>
@@ -123,7 +134,7 @@ export function StaffShell() {
                 className="es-staff-topnav-link"
               >
                 <t.icon className="size-4" />
-                <span>{t.label}</span>
+                <span>{labelFor(t)}</span>
               </Link>
             ))}
           </div>
@@ -150,7 +161,7 @@ export function StaffShell() {
                     activeProps={{ className: "is-active" }}
                   >
                     <t.icon className="size-4" />
-                    {t.label}
+                    {labelFor(t)}
                   </Link>
                 ))}
               </nav>

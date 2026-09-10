@@ -103,13 +103,13 @@ function OmsOrder() {
             onClick={async () => {
               try {
                 await staffEmailOrder(o.id, o.invoice_number ? "paid" : "placed");
-                toast.success("Email queued");
+                toast.success("Sent to customer app");
               } catch (err) {
-                toast.error(err instanceof Error ? err.message : "Could not email");
+                toast.error(err instanceof Error ? err.message : "Could not send");
               }
             }}
           >
-            Email invoice
+            Send to customer app
           </Button>
           {o.stripe_payment_intent && (o.paid_cents ?? 0) > (o.refunded_cents ?? 0) ? (
             <Button
@@ -194,13 +194,13 @@ function OmsOrder() {
             onClick={async () => {
               try {
                 await staffEmailOrder(o.id, "tracking");
-                toast.success("Tracking email queued");
+                toast.success("Tracking posted to customer app");
               } catch (err) {
-                toast.error(err instanceof Error ? err.message : "Could not email");
+                toast.error(err instanceof Error ? err.message : "Could not send");
               }
             }}
           >
-            Email tracking
+            Send tracking
           </Button>
         ) : null}
         </div>

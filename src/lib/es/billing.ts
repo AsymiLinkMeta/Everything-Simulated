@@ -1,4 +1,5 @@
 import { supabase, supabaseAnonKey, supabaseUrl } from "@/lib/db";
+import { postNotice } from "./inbox";
 
 export type BillingConfig = {
   stripe: boolean;
@@ -55,8 +56,13 @@ export async function notifyOrder(input: {
   extra?: Record<string, string>;
 }) {
   try {
-    await fn("send-mail", input);
+    await postNotice({
+      kind: input.kind,
+      orderId: input.orderId,
+      email: input.email,
+      extra: input.extra,
+    });
   } catch {
-    // Mail is best-effort — never block checkout or OMS.
+    // Inbox is best-effort — never block checkout or OMS.
   }
 }

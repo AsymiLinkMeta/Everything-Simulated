@@ -476,10 +476,10 @@ export async function listChat() {
   const user = await getCurrentUser();
   const { data, error } = await supabase
     .from("chat_messages")
-    .select("role, content")
+    .select("role, content, created_at")
     .eq("user_id", user.id)
     .order("id", { ascending: false })
-    .limit(20);
+    .limit(80);
   if (error) throw new Error(error.message);
   return data ?? [];
 }

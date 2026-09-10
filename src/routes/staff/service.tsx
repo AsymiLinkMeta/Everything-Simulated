@@ -1,190 +1,241 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { supabase } from "@/lib/db";
+import { Inbox } from "lucide-react";
+import {
+  listInbox,
+  listMyTickets,
+  listTicketMessages,
+  markInboxRead,
+  replyToTicket,
+  setTicketStatus,
+  staffGetChat,
+  staffListChats,
+  type InboxItem,
+} from "@/lib/es/inbox";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Headset } from "lucide-react";
 
 export const Route = createFileRoute("/staff/service")({
-  component: StaffService,
+  component: StaffInbox,
 });
 
-type Ticket = {
-  id: string;
-  contact_email: string;
-  contact_name: string | null;
-  order_id: string | null;
-  subject: string;
-  body: string;
-  status: string;
-  staff_reply: string | null;
-  created_at: string;
-};
-
-function StaffService() {
+function StaffInbox() {
   const qc = useQueryClient();
-  const [replyMap, setReplyMap] = useState<Record<string, string>>({});
+  const [tab, setTab] = useState<"inbox" | "tickets" | "expert">("inbox");
+  const [activeTicket, setActiveTicket] = useState<string | null>(null);
+  const [chatUser, setChatUser] = useState<string | null>(null);
+  const [reply, setReply] = useState("");
 
-  const tickets = useQuery({
-    queryKey: ["staff-tickets"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("support_tickets")
-        .select("*")
-        .order("created_at", { ascending: false })
-        .limit(50);
-      if (error) throw new Error(error.message);
-      return (data ?? []) as Ticket[];
-    },
+  const inbox = useQuery({ queryKey: ["staff-inbox"], queryFn: listInbox, refetchInterval: 15000 });
+  const tickets = useQuery({ queryKey: ["staff-tickets"], queryFn: listMyTickets });
+  const chats = useQuery({ queryKey: ["staff-chats"], queryFn: staffListChats, enabled: tab === "expert" });
+  const thread = useQuery({
+    queryKey: ["ticket-messages", activeTicket],
+    queryFn: () => listTicketMessages(activeTicket!),
+    enabled: Boolean(activeTicket),
+  });
+  const chat = useQuery({
+    queryKey: ["staff-chat", chatUser],
+    queryFn: () => staffGetChat(chatUser!),
+    enabled: Boolean(chatUser),
   });
 
-  async function reply(id: string) {
-    const replyText = (replyMap[id] ?? "").trim();
-    if (!replyText) {
-      toast.error("Write a reply first.");
-      return;
+  async function openInbox(item: InboxItem) {
+    if (!item.read_at) {
+      await markInboxRead(item.id);
+      await qc.invalidateQueries({ queryKey: ["staff-inbox"] });
+      await qc.invalidateQueries({ queryKey: ["inbox-unread"] });
     }
+    if (item.ticket_id) {
+      setActiveTicket(item.ticket_id);
+      setTab("tickets");
+    }
+  }
+
+  async function sendReply(e: React.FormEvent) {
+    e.preventDefault();
+    if (!activeTicket) return;
     try {
-      const { error } = await supabase
-        .from("support_tickets")
-        .update({
-          staff_reply: replyText,
-          status: "resolved",
-          replied_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .eq("id", id);
-      if (error) throw new Error(error.message);
-      toast.success("Reply sent");
-      setReplyMap((prev) => ({ ...prev, [id]: "" }));
+      await replyToTicket(activeTicket, reply);
+      setReply("");
+      await qc.invalidateQueries({ queryKey: ["ticket-messages", activeTicket] });
       await qc.invalidateQueries({ queryKey: ["staff-tickets"] });
+      toast.success("Reply saved in the customer app");
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not send reply.");
+      toast.error(err instanceof Error ? err.message : "Could not reply");
     }
   }
 
-  async function setStatus(id: string, status: string) {
-    try {
-      const { error } = await supabase
-        .from("support_tickets")
-        .update({ status, updated_at: new Date().toISOString() })
-        .eq("id", id);
-      if (error) throw new Error(error.message);
-      await qc.invalidateQueries({ queryKey: ["staff-tickets"] });
-    } catch {
-      toast.error("Could not update status");
-    }
-  }
-
-  const open = tickets.data?.filter((t) => t.status === "open") ?? [];
-  const pending = tickets.data?.filter((t) => t.status === "pending") ?? [];
-  const resolved = tickets.data?.filter((t) => t.status === "resolved" || t.status === "closed") ?? [];
+  const unread = inbox.data?.filter((i) => !i.read_at).length ?? 0;
+  const active = tickets.data?.find((t) => t.id === activeTicket);
 
   return (
     <div className="space-y-6">
       <div>
-        <p className="es-kicker">Customer Service</p>
-        <h1 className="mt-2 text-3xl font-medium">Service Desk</h1>
+        <p className="es-kicker">Admin</p>
+        <h1 className="mt-2 text-3xl font-medium">Inbox</h1>
+        <p className="mt-1 text-sm text-muted">
+          All mail, tickets and workshop messages land here. Customers keep the same thread in their app.
+        </p>
       </div>
 
-      {tickets.isPending ? (
-        <div className="es-card p-5 text-sm text-muted">Loading…</div>
-      ) : !tickets.data?.length ? (
-        <div className="es-card p-6 text-center">
-          <Headset className="mx-auto size-5 text-muted" />
-          <p className="mt-2 text-sm text-muted">No support tickets yet.</p>
-        </div>
-      ) : (
-        <div className="space-y-6">
-          {open.length > 0 && (
-            <section>
-              <h2 className="mb-3 text-sm font-medium">Open ({open.length})</h2>
-              <ul className="space-y-3">
-                {open.map((t) => (
-                  <TicketCard key={t.id} ticket={t} replyMap={replyMap} setReplyMap={setReplyMap} onReply={reply} onSetStatus={setStatus} />
-                ))}
-              </ul>
-            </section>
-          )}
-          {pending.length > 0 && (
-            <section>
-              <h2 className="mb-3 text-sm font-medium">Pending ({pending.length})</h2>
-              <ul className="space-y-3">
-                {pending.map((t) => (
-                  <TicketCard key={t.id} ticket={t} replyMap={replyMap} setReplyMap={setReplyMap} onReply={reply} onSetStatus={setStatus} />
-                ))}
-              </ul>
-            </section>
-          )}
-          {resolved.length > 0 && (
-            <section>
-              <h2 className="mb-3 text-sm font-medium">Resolved ({resolved.length})</h2>
-              <ul className="space-y-3">
-                {resolved.map((t) => (
-                  <TicketCard key={t.id} ticket={t} replyMap={replyMap} setReplyMap={setReplyMap} onReply={reply} onSetStatus={setStatus} />
-                ))}
-              </ul>
-            </section>
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
-
-function TicketCard({
-  ticket,
-  replyMap,
-  setReplyMap,
-  onReply,
-  onSetStatus,
-}: {
-  ticket: Ticket;
-  replyMap: Record<string, string>;
-  setReplyMap: (fn: (prev: Record<string, string>) => Record<string, string>) => void;
-  onReply: (id: string) => void;
-  onSetStatus: (id: string, status: string) => void;
-}) {
-  return (
-    <li className="es-card p-5">
-      <div className="flex flex-wrap items-start justify-between gap-2">
-        <div>
-          <p className="font-medium">{ticket.subject}</p>
-          <p className="text-xs text-muted">
-            {ticket.contact_name || ticket.contact_email}
-            {ticket.order_id && ` · ${ticket.order_id}`}
-            {" · "}
-            {new Date(ticket.created_at).toLocaleDateString("en-AU", { day: "numeric", month: "short" })}
-          </p>
-        </div>
-        <span className="text-xs capitalize text-muted">{ticket.status}</span>
+      <div className="flex flex-wrap gap-2">
+        <Button size="sm" variant={tab === "inbox" ? "primary" : "outline"} onClick={() => setTab("inbox")}>
+          Inbox{unread ? ` (${unread})` : ""}
+        </Button>
+        <Button size="sm" variant={tab === "tickets" ? "primary" : "outline"} onClick={() => setTab("tickets")}>
+          Tickets
+        </Button>
+        <Button size="sm" variant={tab === "expert" ? "primary" : "outline"} onClick={() => setTab("expert")}>
+          Expert chats
+        </Button>
       </div>
-      <p className="mt-3 text-sm text-paper">{ticket.body}</p>
-      {ticket.staff_reply && (
-        <div className="mt-3 rounded-md bg-raised p-3 text-sm">
-          <p className="text-xs text-muted">Staff reply</p>
-          <p className="mt-1 text-paper">{ticket.staff_reply}</p>
-        </div>
-      )}
-      {ticket.status !== "resolved" && ticket.status !== "closed" && (
-        <div className="mt-4 space-y-2">
-          <Input
-            value={replyMap[ticket.id] ?? ""}
-            onChange={(e) => setReplyMap((prev) => ({ ...prev, [ticket.id]: e.target.value }))}
-            placeholder="Type a reply…"
-          />
-          <div className="flex gap-2">
-            <Button size="sm" onClick={() => onReply(ticket.id)}>
-              Send reply
-            </Button>
-            <Button size="sm" variant="ghost" onClick={() => onSetStatus(ticket.id, "pending")}>
-              Mark pending
-            </Button>
+
+      {tab === "inbox" ? (
+        inbox.isPending ? (
+          <p className="text-sm text-muted">Loading inbox…</p>
+        ) : !inbox.data?.length ? (
+          <div className="es-card p-6 text-center">
+            <Inbox className="mx-auto size-5 text-muted" />
+            <p className="mt-2 text-sm text-muted">Nothing yet. New orders, contact forms and tickets appear here.</p>
           </div>
+        ) : (
+          <ul className="space-y-2">
+            {inbox.data.map((item) => (
+              <li key={item.id}>
+                <button
+                  type="button"
+                  className={`es-card w-full p-4 text-left ${item.read_at ? "" : "ring-1 ring-accent"}`}
+                  onClick={() => void openInbox(item)}
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <p className="font-medium">{item.subject}</p>
+                    <span className="text-xs capitalize text-muted">{item.kind}</span>
+                  </div>
+                  <p className="mt-1 line-clamp-2 text-sm text-muted">{item.body}</p>
+                  <p className="mt-1 text-xs text-muted">
+                    {item.from_name || item.from_email || "System"} ·{" "}
+                    {new Date(item.created_at).toLocaleString("en-AU")}
+                  </p>
+                </button>
+              </li>
+            ))}
+          </ul>
+        )
+      ) : null}
+
+      {tab === "tickets" ? (
+        <div className="grid gap-6 lg:grid-cols-2">
+          <ul className="space-y-2">
+            {(tickets.data ?? []).map((t) => (
+              <li key={t.id}>
+                <button
+                  type="button"
+                  className={`es-card w-full p-4 text-left ${activeTicket === t.id ? "ring-1 ring-accent" : ""}`}
+                  onClick={() => setActiveTicket(t.id)}
+                >
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-medium">{t.subject}</p>
+                    <span className="text-xs capitalize text-muted">{t.status}</span>
+                  </div>
+                  <p className="text-xs text-muted">
+                    {t.contact_name || t.contact_email}
+                    {t.order_id ? ` · ${t.order_id}` : ""}
+                  </p>
+                </button>
+              </li>
+            ))}
+          </ul>
+          {active ? (
+            <section className="es-card space-y-4 p-5">
+              <div>
+                <h2 className="font-medium">{active.subject}</h2>
+                <p className="text-xs text-muted">
+                  {active.contact_name} · {active.contact_email}
+                  {active.order_id ? (
+                    <>
+                      {" · "}
+                      <Link to="/staff/oms/$id" params={{ id: active.order_id }}>
+                        {active.order_id}
+                      </Link>
+                    </>
+                  ) : null}
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {(["open", "pending", "resolved", "closed"] as const).map((s) => (
+                  <Button
+                    key={s}
+                    size="sm"
+                    variant={active.status === s ? "primary" : "outline"}
+                    onClick={async () => {
+                      await setTicketStatus(active.id, s);
+                      await qc.invalidateQueries({ queryKey: ["staff-tickets"] });
+                    }}
+                  >
+                    {s}
+                  </Button>
+                ))}
+              </div>
+              <div className="space-y-3">
+                {(thread.data ?? []).map((m) => (
+                  <div
+                    key={m.id}
+                    className={`rounded-lg px-4 py-3 text-sm ${m.author_role === "staff" ? "bg-raised" : "bg-surface"}`}
+                  >
+                    <p className="text-xs capitalize text-muted">{m.author_role}</p>
+                    <p className="mt-1 whitespace-pre-wrap">{m.body}</p>
+                  </div>
+                ))}
+              </div>
+              <form className="space-y-2" onSubmit={sendReply}>
+                <Input value={reply} onChange={(e) => setReply(e.target.value)} placeholder="Reply in the customer app…" />
+                <Button type="submit" disabled={!reply.trim()}>
+                  Send to customer app
+                </Button>
+              </form>
+            </section>
+          ) : (
+            <p className="text-sm text-muted">Select a ticket.</p>
+          )}
         </div>
-      )}
-    </li>
+      ) : null}
+
+      {tab === "expert" ? (
+        <div className="grid gap-6 lg:grid-cols-2">
+          <ul className="space-y-2">
+            {(chats.data ?? []).map((c) => (
+              <li key={c.user_id}>
+                <button
+                  type="button"
+                  className={`es-card w-full p-4 text-left ${chatUser === c.user_id ? "ring-1 ring-accent" : ""}`}
+                  onClick={() => setChatUser(c.user_id)}
+                >
+                  <p className="font-medium font-mono text-sm">{c.user_id.slice(0, 8)}</p>
+                  <p className="mt-1 line-clamp-2 text-sm text-muted">{c.preview}</p>
+                  <p className="mt-1 text-xs text-muted">
+                    {c.count} messages · {new Date(c.updated_at).toLocaleString("en-AU")}
+                  </p>
+                </button>
+              </li>
+            ))}
+          </ul>
+          <section className="es-card space-y-3 p-5">
+            {!chatUser ? (
+              <p className="text-sm text-muted">AI expert chats stay on the customer app. Open one to read the transcript.</p>
+            ) : (
+              (chat.data ?? []).map((m, i) => (
+                <div key={i} className={`rounded-lg px-4 py-3 text-sm ${m.role === "user" ? "bg-raised" : "bg-surface"}`}>
+                  <p className="text-xs capitalize text-muted">{m.role}</p>
+                  <p className="mt-1 whitespace-pre-wrap">{m.content}</p>
+                </div>
+              ))
+            )}
+          </section>
+        </div>
+      ) : null}
+    </div>
   );
 }
