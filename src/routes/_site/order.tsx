@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
-import { Search, Package, Truck, Check } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Search, Package, Truck } from "lucide-react";
 import { supabase } from "@/lib/db";
 import { aud } from "@/lib/utils";
 import { pageHead } from "@/lib/es/seo";
+import { fetchBillingConfig, startDepositCheckout } from "@/lib/es/billing";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -26,6 +27,9 @@ type OrderRow = {
   carrier: string | null;
   notes: string | null;
   created_at: string;
+  invoice_number?: string | null;
+  paid_cents?: number | null;
+  refunded_cents?: number | null;
 };
 
 function statusTone(s: string) {
@@ -35,11 +39,32 @@ function statusTone(s: string) {
 }
 
 function TrackOrder() {
-  const [orderId, setOrderId] = useState("");
+  const params = typeof window === "undefined" ? new URLSearchParams() : new URLSearchParams(window.location.search);
+  const [orderId, setOrderId] = useState(params.get("id") ?? "");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
+  const [paying, setPaying] = useState(false);
   const [order, setOrder] = useState<OrderRow | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [stripeOn, setStripeOn] = useState(false);
+  const paidFlag = params.get("paid") === "1";
+
+  useEffect(() => {
+    fetchBillingConfig().then((c) => setStripeOn(c.stripe)).catch(() => {});
+  }, []);
+
+  async function lookup(id: string, mail: string) {
+    const { data, error: rpcError } = await supabase.rpc("lookup_guest_order", {
+      p_order_id: id,
+      p_email: mail,
+    });
+    if (rpcError) throw new Error(rpcError.message);
+    if (!data || (Array.isArray(data) && data.length === 0)) {
+      throw new Error("No order found with that ID and email.");
+    }
+    const row = Array.isArray(data) ? data[0] : data;
+    setOrder(row as OrderRow);
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -53,21 +78,32 @@ function TrackOrder() {
     setError(null);
     setOrder(null);
     try {
-      const { data, error: rpcError } = await supabase.rpc("lookup_guest_order", {
-        p_order_id: id,
-        p_email: mail,
-      });
-      if (rpcError) throw new Error(rpcError.message);
-      if (!data || (Array.isArray(data) && data.length === 0)) {
-        setError("No order found with that ID and email.");
-        return;
-      }
-      const row = Array.isArray(data) ? data[0] : data;
-      setOrder(row as OrderRow);
-    } catch {
-      setError("Could not look up the order. Try again.");
+      await lookup(id, mail);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not look up the order. Try again.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function payDeposit() {
+    if (!order) return;
+    const mail = email.trim().toLowerCase();
+    if (!mail) {
+      setError("Enter the checkout email so we can match the payment.");
+      return;
+    }
+    setPaying(true);
+    try {
+      const session = await startDepositCheckout({
+        orderId: order.id,
+        email: mail,
+        origin: window.location.origin,
+      });
+      window.location.href = session.url;
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Could not start payment.");
+      setPaying(false);
     }
   }
 
@@ -80,6 +116,11 @@ function TrackOrder() {
         <Link to="/order" className="mb-6 inline-flex items-center gap-1 text-sm text-muted transition-colors hover:text-paper">
           <Search className="size-3.5" /> Track another order
         </Link>
+        {paidFlag ? (
+          <p className="mb-4 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 py-3 text-sm text-emerald-300">
+            Stripe reported the deposit. It can take a few seconds to show as paid.
+          </p>
+        ) : null}
         <div className="es-card space-y-5 p-6">
           <div className="flex items-center justify-between">
             <h1 className="text-xl font-medium">Order {order.id}</h1>
@@ -94,6 +135,24 @@ function TrackOrder() {
               <dt className="text-muted">Total (inc GST)</dt>
               <dd className="tabular-nums">{aud(order.total_inc_gst)}</dd>
             </div>
+            {order.paid_cents ? (
+              <div className="flex justify-between">
+                <dt className="text-muted">Paid</dt>
+                <dd className="tabular-nums">{aud(order.paid_cents)}</dd>
+              </div>
+            ) : null}
+            {order.refunded_cents ? (
+              <div className="flex justify-between">
+                <dt className="text-muted">Refunded</dt>
+                <dd className="tabular-nums">{aud(order.refunded_cents)}</dd>
+              </div>
+            ) : null}
+            {order.invoice_number ? (
+              <div className="flex justify-between">
+                <dt className="text-muted">Invoice</dt>
+                <dd className="font-mono">{order.invoice_number}</dd>
+              </div>
+            ) : null}
             {order.tracking_number && (
               <div className="flex justify-between">
                 <dt className="text-muted flex items-center gap-1.5"><Truck className="size-3.5" /> Tracking</dt>
@@ -115,13 +174,18 @@ function TrackOrder() {
           </dl>
           <div className="rounded-lg bg-raised p-4 text-sm text-muted">
             <Package className="mb-2 size-4 text-muted" />
-            {order.status === "pending" && "Your build request is received. Our team will follow up to arrange a deposit."}
+            {order.status === "pending" && "Build request received. Pay the deposit below or wait for the workshop invoice."}
             {order.status === "paid" && "Deposit received. Your build is queued for the workshop."}
             {order.status === "packing" && "Your rig is being assembled and QA tested."}
-            {order.status === "shipped" && "Your crate is in transit. Tracking will appear above once available."}
-            {order.status === "delivered" && "Delivered. Enjoy the rig!"}
-            {order.status === "cancelled" && "This order was cancelled. Contact us if you have questions."}
+            {order.status === "shipped" && "Your crate is in transit."}
+            {order.status === "delivered" && "Delivered. Enjoy the rig."}
+            {order.status === "cancelled" && "This order was cancelled."}
           </div>
+          {stripeOn && order.status === "pending" && !(order.paid_cents ?? 0) ? (
+            <Button className="w-full" disabled={paying} onClick={() => void payDeposit()}>
+              {paying ? "Redirecting to Stripe…" : "Pay deposit"}
+            </Button>
+          ) : null}
           <Button asChild variant="outline" className="w-full">
             <Link to="/contact">Contact us about this order</Link>
           </Button>

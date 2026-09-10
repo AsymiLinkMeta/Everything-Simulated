@@ -6,7 +6,9 @@ import { fetchProducts } from "@/lib/es/product-cache";
 import {
   ORDER_STATUSES,
   staffAssignTracking,
+  staffEmailOrder,
   staffGetOrder,
+  staffRefundPayment,
   staffReturnOrder,
   staffSetOrderStatus,
   staffUpdateOrderShipping,
@@ -90,8 +92,43 @@ function OmsOrder() {
         </p>
         <p className="text-sm tabular-nums">
           {aud(o.total_ex_gst)} ex GST · {aud(o.total_inc_gst)} inc GST (10%)
+          {o.paid_cents ? ` · paid ${aud(o.paid_cents)}` : ""}
+          {o.refunded_cents ? ` · refunded ${aud(o.refunded_cents)}` : ""}
         </p>
-        <p className="text-xs text-muted">Australian tax invoice. Crate freight from the Gold Coast. Deposit orders stay pending until staff mark paid.</p>
+        <p className="text-xs text-muted">Australian tax invoice. Crate freight from the Gold Coast.</p>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={async () => {
+              try {
+                await staffEmailOrder(o.id, o.invoice_number ? "paid" : "placed");
+                toast.success("Email queued");
+              } catch (err) {
+                toast.error(err instanceof Error ? err.message : "Could not email");
+              }
+            }}
+          >
+            Email invoice
+          </Button>
+          {o.stripe_payment_intent && (o.paid_cents ?? 0) > (o.refunded_cents ?? 0) ? (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={async () => {
+                try {
+                  const res = await staffRefundPayment(o.id);
+                  toast.success(`Refunded ${aud(res.refunded)}`);
+                  await qc.invalidateQueries({ queryKey: ["oms-order", id] });
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : "Refund failed");
+                }
+              }}
+            >
+              Refund Stripe
+            </Button>
+          ) : null}
+        </div>
       </section>
 
       <section className="es-card space-y-3 p-5">
@@ -134,6 +171,7 @@ function OmsOrder() {
             <Input value={carrier} onChange={(e) => setCarrier(e.target.value)} />
           </label>
         </div>
+        <div className="flex flex-wrap gap-2">
         <Button
           type="button"
           onClick={async () => {
@@ -149,6 +187,23 @@ function OmsOrder() {
         >
           {o.tracking_number ? "Update tracking" : "Issue tracking"}
         </Button>
+        {o.tracking_number ? (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={async () => {
+              try {
+                await staffEmailOrder(o.id, "tracking");
+                toast.success("Tracking email queued");
+              } catch (err) {
+                toast.error(err instanceof Error ? err.message : "Could not email");
+              }
+            }}
+          >
+            Email tracking
+          </Button>
+        ) : null}
+        </div>
       </section>
 
       <section className="es-card space-y-3 p-5">

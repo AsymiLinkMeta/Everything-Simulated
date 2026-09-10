@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/db";
 import { getCachedProducts } from "./product-cache";
 import { checkCart } from "./checkCart";
+import { notifyOrder, refundOrder } from "./billing";
 import type { CartLine } from "./types";
 
 export const CRM_STAGES = ["lead", "qualified", "quoted", "won", "active", "dormant"] as const;
@@ -67,6 +68,10 @@ export type ShopOrder = {
   delivered_at: string | null;
   created_at: string;
   contact_name?: string | null;
+  paid_cents?: number;
+  refunded_cents?: number;
+  stripe_payment_intent?: string | null;
+  deposit_ex_gst?: number;
 };
 
 function asTags(raw: unknown): string[] {
@@ -144,6 +149,10 @@ function shapeOrder(row: Record<string, unknown>, contactName?: string | null): 
     delivered_at: (row.delivered_at as string) ?? null,
     created_at: String(row.created_at ?? ""),
     contact_name: contactName ?? null,
+    paid_cents: Number(row.paid_cents) || 0,
+    refunded_cents: Number(row.refunded_cents) || 0,
+    stripe_payment_intent: (row.stripe_payment_intent as string) ?? null,
+    deposit_ex_gst: Number(row.deposit_ex_gst) || 0,
   };
 }
 
@@ -442,6 +451,7 @@ export async function staffSetOrderStatus(id: string, status: OrderStatus) {
   if (status === "delivered" && current.contact_id) {
     await supabase.from("crm_contacts").update({ crm_stage: "active" }).eq("id", current.contact_id);
   }
+  if (status === "paid") void notifyOrder({ orderId: id, kind: "paid" });
   void actor;
   return { ok: true };
 }
@@ -464,7 +474,21 @@ export async function staffAssignTracking(id: string, tracking?: string, carrier
     })
     .eq("id", id);
   if (error) throw new Error(error.message);
+  void notifyOrder({ orderId: id, kind: "tracking", extra: { tracking: number } });
   return { tracking: number };
+}
+
+export async function staffRefundPayment(id: string, amountCents?: number) {
+  await requireStaffId();
+  const res = await refundOrder(id, amountCents);
+  void notifyOrder({ orderId: id, kind: "refund" });
+  return res;
+}
+
+export async function staffEmailOrder(id: string, kind: "placed" | "paid" | "tracking") {
+  await requireStaffId();
+  await notifyOrder({ orderId: id, kind });
+  return { ok: true };
 }
 
 export async function staffUpdateOrderShipping(

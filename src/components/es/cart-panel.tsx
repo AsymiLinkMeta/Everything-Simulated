@@ -140,7 +140,7 @@ export function CartPanel({ compact = false }: { compact?: boolean }) {
         <p className="text-xl font-medium tabular-nums">{aud(result.totalExGst)} + GST</p>
         <p className="text-sm text-muted">{aud(gstInclusive(result.totalExGst + result.freightExGst))} inc GST with freight</p>
         <p className="mt-1 text-xs text-muted">
-          Crate {aud(result.freightExGst)} — {freightLabel(postcode)}
+          Crate {aud(result.freightExGst)} — {freightLabel(postcode, lines)}
         </p>
       </div>
       <div className="flex flex-col gap-2">

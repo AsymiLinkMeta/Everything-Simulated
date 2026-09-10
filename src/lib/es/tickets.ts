@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/db";
+import { notifyOrder } from "./billing";
 
 export type TicketStatus = "open" | "waiting" | "closed";
 
@@ -94,6 +95,20 @@ export async function replyToTicket(id: string, body: string) {
     .from("service_tickets")
     .update({ status: staff ? "waiting" : "open", updated_at: new Date().toISOString() })
     .eq("id", id);
+  if (staff) {
+    const { data: ticket } = await supabase.from("service_tickets").select("user_id, order_id, subject").eq("id", id).maybeSingle();
+    if (ticket?.user_id) {
+      const { data: profile } = await supabase.from("profiles").select("email").eq("user_id", ticket.user_id).maybeSingle();
+      if (profile?.email) {
+        void notifyOrder({
+          orderId: ticket.order_id || id,
+          kind: "ticket",
+          email: profile.email,
+          extra: { subject: ticket.subject, body: text },
+        });
+      }
+    }
+  }
   return { ok: true };
 }
 

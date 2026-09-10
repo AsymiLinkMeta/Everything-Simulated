@@ -2,7 +2,10 @@ import { supabase } from "@/lib/db";
 
 export const authEnabled = true;
 
-export const GROK_PROVIDERS: { providerId: string; label: string }[] = [];
+export const GROK_PROVIDERS: { providerId: "google" | "twitter"; label: string }[] = [
+  { providerId: "google", label: "Google" },
+  { providerId: "twitter", label: "X" },
+];
 
 export const authClient = {
   signIn: {
@@ -26,7 +29,16 @@ export const authClient = {
   },
 };
 
-export async function signIn() {}
+export async function signIn(providerId?: string, opts?: { callbackURL?: string }) {
+  if (!providerId) return;
+  const redirectTo = `${window.location.origin}${opts?.callbackURL || "/app"}`;
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: providerId as "google" | "twitter",
+    options: { redirectTo },
+  });
+  if (error) throw error;
+}
+
 export async function signOut() {
   await supabase.auth.signOut();
 }

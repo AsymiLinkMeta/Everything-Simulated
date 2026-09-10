@@ -6,7 +6,8 @@ import { toast } from "sonner";
 import { useCart } from "@/lib/es/cart-store";
 import { fetchProducts } from "@/lib/es/product-cache";
 import { placeGuestOrder, placeOrder } from "@/lib/es/server";
-import { freightLabel } from "@/lib/es/freight";
+import { quoteFreight } from "@/lib/es/freight";
+import { fetchBillingConfig, notifyOrder, startDepositCheckout } from "@/lib/es/billing";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { aud, gstInclusive } from "@/lib/utils";
 import { pageHead } from "@/lib/es/seo";
@@ -30,12 +31,14 @@ function Checkout() {
 
   const { user } = useCurrentUserState();
   const catalog = useQuery({ queryKey: ["products"], queryFn: () => fetchProducts() });
+  const billing = useQuery({ queryKey: ["billing-config"], queryFn: fetchBillingConfig });
   const lines = useCart((s) => s.lines);
   const driverWeightKg = useCart((s) => s.driverWeightKg);
   const postcode = useCart((s) => s.postcode);
   const setPostcode = useCart((s) => s.setPostcode);
   const clear = useCart((s) => s.clear);
   const result = useCart((s) => s.result)();
+  const freight = quoteFreight({ postcode, lines });
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -43,11 +46,17 @@ function Checkout() {
   const [notes, setNotes] = useState("");
   const [placing, setPlacing] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
+  const [payNow, setPayNow] = useState(true);
 
   useEffect(() => {
     if (user?.email) setEmail(user.email);
-    if (user?.user_metadata?.display_name) setName(user.user_metadata.display_name as string);
+    if (user?.displayName) setName(user.displayName);
   }, [user]);
+
+  const stripeOn = Boolean(billing.data?.stripe);
+  const depositPercent = billing.data?.depositPercent ?? 30;
+  const totalInc = gstInclusive(result.totalExGst + result.freightExGst);
+  const depositInc = Math.max(50000, Math.round((totalInc * depositPercent) / 100));
 
   if (!ready) {
     return <div className="mx-auto max-w-3xl animate-pulse py-20" />;
@@ -59,17 +68,16 @@ function Checkout() {
         <div className="mx-auto mb-6 grid size-16 place-items-center rounded-full bg-emerald-500/10">
           <Check className="size-8 text-emerald-400" />
         </div>
-        <h1 className="text-2xl font-medium">Order confirmed</h1>
+        <h1 className="text-2xl font-medium">Build request received</h1>
         <p className="mt-2 text-muted">
-          Your order <span className="font-mono text-paper">{orderId}</span> has been received.
-          Our team will be in touch to arrange a deposit and confirm your build.
+          Reference <span className="font-mono text-paper">{orderId}</span>. Keep this ID and the email you used.
         </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-          <Button variant="outline" asChild>
-            <Link to="/order">Track this order</Link>
-          </Button>
           <Button asChild>
-            <Link to="/">Back to home</Link>
+            <Link to={`/order?id=${encodeURIComponent(orderId)}`}>Track this order</Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link to="/shop">Continue browsing</Link>
           </Button>
         </div>
       </div>
@@ -97,6 +105,12 @@ function Checkout() {
       toast.error("Please fix the compatibility issues in your build before checking out.");
       return;
     }
+    const mail = email.trim();
+    const fullName = name.trim();
+    if (!fullName || !mail) {
+      toast.error("Name and email are required.");
+      return;
+    }
     setPlacing(true);
     try {
       let id: string;
@@ -104,8 +118,19 @@ function Checkout() {
         const res = await placeOrder({ lines, postcode, driverWeightKg, notes });
         id = res.id;
       } else {
-        const res = await placeGuestOrder({ lines, postcode, driverWeightKg, name, email, phone, notes });
+        const res = await placeGuestOrder({ lines, postcode, driverWeightKg, name: fullName, email: mail, phone, notes });
         id = res.id;
+      }
+      void notifyOrder({ orderId: id, kind: "placed", email: mail });
+      if (stripeOn && payNow) {
+        const session = await startDepositCheckout({
+          orderId: id,
+          email: mail,
+          origin: window.location.origin,
+        });
+        clear();
+        window.location.href = session.url;
+        return;
       }
       setOrderId(id);
       clear();
@@ -125,11 +150,12 @@ function Checkout() {
 
       <h1 className="text-2xl font-medium">Checkout</h1>
       <p className="mt-1 text-sm text-muted">
-        Review your build, enter your details, and submit. We'll follow up to arrange a deposit.
+        {stripeOn
+          ? `Pay a ${depositPercent}% deposit on the next screen, or request the crate and we will invoice you.`
+          : "Submit the build. The workshop will send a deposit invoice."}
       </p>
 
       <form onSubmit={handleSubmit} className="mt-8 grid gap-8 lg:grid-cols-5">
-        {/* Order summary — right on desktop, top on mobile */}
         <section className="order-first lg:order-last lg:col-span-2">
           <div className="es-card space-y-4 p-5">
             <div className="flex items-center justify-between">
@@ -160,13 +186,29 @@ function Checkout() {
                 <span className="tabular-nums">{aud(result.totalExGst)}</span>
               </div>
               <div className="flex justify-between text-sm">
-                <span className="text-muted">Freight — {freightLabel(postcode)}</span>
+                <span className="text-muted">Freight — {freight.zone}</span>
                 <span className="tabular-nums">{aud(result.freightExGst)}</span>
               </div>
+              <ul className="space-y-0.5 text-xs text-muted">
+                {freight.breakdown.map((row) => (
+                  <li key={row.label} className="flex justify-between gap-3">
+                    <span>{row.label}</span>
+                    <span className="tabular-nums">{aud(row.cents)}</span>
+                  </li>
+                ))}
+                <li>
+                  {freight.kg} kg · {freight.crates} crate{freight.crates === 1 ? "" : "s"} from 4215
+                </li>
+              </ul>
               <div className="flex justify-between pt-2 text-lg font-medium">
                 <span>Total inc GST</span>
-                <span className="tabular-nums">{aud(gstInclusive(result.totalExGst + result.freightExGst))}</span>
+                <span className="tabular-nums">{aud(totalInc)}</span>
               </div>
+              {stripeOn ? (
+                <p className="text-xs text-muted">
+                  Deposit due today {aud(depositInc)} inc GST ({depositPercent}%, minimum $500).
+                </p>
+              ) : null}
               {result.leadWeeks[1] > 0 && (
                 <p className="text-xs text-muted">
                   Estimated lead time {result.leadWeeks[0]}–{result.leadWeeks[1]} weeks
@@ -180,7 +222,6 @@ function Checkout() {
           </div>
         </section>
 
-        {/* Contact form — left on desktop */}
         <section className="lg:col-span-3 space-y-6">
           <div className="es-card space-y-4 p-5">
             <h2 className="font-medium">Your details</h2>
@@ -196,35 +237,17 @@ function Checkout() {
 
             <label className="block">
               <span className="text-sm text-muted">Full name *</span>
-              <Input
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Jane Smith"
-                autoComplete="name"
-              />
+              <Input required value={name} onChange={(e) => setName(e.target.value)} placeholder="Jane Smith" autoComplete="name" />
             </label>
 
             <label className="block">
               <span className="text-sm text-muted">Email *</span>
-              <Input
-                required
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="jane@example.com"
-                autoComplete="email"
-              />
+              <Input required type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="jane@example.com" autoComplete="email" />
             </label>
 
             <label className="block">
               <span className="text-sm text-muted">Phone</span>
-              <Input
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="04xx xxx xxx"
-                autoComplete="tel"
-              />
+              <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="04xx xxx xxx" autoComplete="tel" />
             </label>
 
             <label className="block">
@@ -260,12 +283,23 @@ function Checkout() {
             </div>
           )}
 
+          {stripeOn ? (
+            <label className="flex items-start gap-3 rounded-lg border border-line px-4 py-3 text-sm">
+              <input type="checkbox" className="mt-1" checked={payNow} onChange={(e) => setPayNow(e.target.checked)} />
+              <span>
+                Pay {depositPercent}% deposit now ({aud(depositInc)} inc GST). Uncheck to request the crate and invoice later.
+              </span>
+            </label>
+          ) : null}
+
           <Button type="submit" disabled={placing || !result.ok} className="w-full text-base py-3">
-            {placing ? "Placing order..." : "Place order"}
+            {placing ? "Working…" : stripeOn && payNow ? `Pay ${aud(depositInc)} deposit` : "Request this build"}
           </Button>
 
           <p className="text-center text-xs text-muted">
-            No payment is taken now. Our team will follow up to confirm your build and arrange a deposit invoice.
+            {stripeOn
+              ? "Card payments are processed by Stripe. The remaining balance is invoiced before the crate leaves."
+              : "No payment is taken on this page until Stripe is connected. The workshop will send a deposit invoice."}
           </p>
         </section>
       </form>

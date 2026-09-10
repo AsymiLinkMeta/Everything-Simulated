@@ -122,7 +122,7 @@ export function checkCart(input: {
     lead = [Math.max(lead[0], row.product.leadWeeks[0]), Math.max(lead[1], row.product.leadWeeks[1])];
   }
 
-  const freight = freightExGst(input.postcode);
+  const freight = freightExGst(input.postcode, input.lines);
   const blocks = issues.some((i) => i.severity === "block");
   return {
     ok: !blocks,

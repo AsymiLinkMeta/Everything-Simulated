@@ -80,12 +80,28 @@ function Login() {
                       type="button"
                       variant="outline"
                       className="w-full"
-                      onClick={() => signIn(p.providerId, { callbackURL: next })}
+                      onClick={async () => {
+                        setPending(true);
+                        setError(null);
+                        try {
+                          await signIn(p.providerId, { callbackURL: next });
+                        } catch (err) {
+                          setPending(false);
+                          setError(
+                            err instanceof Error
+                              ? err.message
+                              : `Could not continue with ${p.label}. Enable it in Supabase Auth providers.`,
+                          );
+                        }
+                      }}
                     >
                       Continue with {p.label}
                     </Button>
                   ))}
                 </div>
+                <p className="text-center text-xs text-subtle">
+                  Google and X use your Supabase Auth providers. Email still works if those are off.
+                </p>
                 <p className="text-center text-xs text-subtle">or email</p>
               </>
             )}

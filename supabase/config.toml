@@ -12,3 +12,18 @@ verify_jwt = true
 
 [functions.generate-prebuild]
 verify_jwt = true
+
+[functions.billing-config]
+verify_jwt = false
+
+[functions.create-checkout-session]
+verify_jwt = false
+
+[functions.stripe-webhook]
+verify_jwt = false
+
+[functions.refund-payment]
+verify_jwt = true
+
+[functions.send-mail]
+verify_jwt = false
