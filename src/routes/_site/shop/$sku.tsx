@@ -1,9 +1,10 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BookOpen, Boxes, Check, Package } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { CartPanel } from "@/components/es/cart-panel";
-import { BackButton, JsonLd, Money, IncGst } from "@/components/es/bits";
+import { BackButton, CheckPills, JsonLd, Money, IncGst, ProductTile } from "@/components/es/bits";
 import { fetchProducts, productImage } from "@/lib/es/product-cache";
 import { useCart } from "@/lib/es/cart-store";
 import { abs, breadcrumbLd, pageHead } from "@/lib/es/seo";
@@ -23,14 +24,28 @@ function ProductPage() {
   const { sku } = Route.useParams();
   const products = useQuery({ queryKey: ["products"], queryFn: () => fetchProducts() });
   const item = products.data?.find((p) => p.sku === sku);
-
   const add = useCart((s) => s.add);
+  const result = useCart((s) => s.result)();
+  const inCart = useCart((s) => s.lines.some((l) => l.sku === sku));
   const related = item
     ? (products.data ?? []).filter((p) => p.category === item.category && p.sku !== item.sku).slice(0, 3)
     : [];
+  const gallery = item ? [item.image || productImage(item), ...(item.images ?? [])].filter(Boolean) : [];
+  const uniqueGallery = [...new Set(gallery)];
+  const [hero, setHero] = useState<string>("");
+
+  useEffect(() => {
+    if (uniqueGallery[0]) setHero(uniqueGallery[0]);
+    if (item) document.title = `${item.brand} ${item.name} | Everything Simulated`;
+  }, [item?.sku, uniqueGallery[0]]);
 
   if (products.isPending) {
-    return <div className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-16"><BackButton /><p className="text-sm text-muted">Loading…</p></div>;
+    return (
+      <div className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-16">
+        <BackButton />
+        <p className="text-sm text-muted">Loading…</p>
+      </div>
+    );
   }
 
   if (!item) throw notFound();
@@ -52,23 +67,36 @@ function ProductPage() {
           name: `${item.brand} ${item.name}`,
           sku: item.sku,
           brand: item.brand,
-          image: abs(productImage(item)),
+          description: item.description || item.notes,
+          image: abs(hero || productImage(item)),
           offers: {
             "@type": "Offer",
             priceCurrency: "AUD",
             price: (item.sellExGst / 100).toFixed(0),
-            availability:
-              item.stock === "stock" ? "https://schema.org/InStock" : "https://schema.org/PreOrder",
+            availability: item.stock === "stock" ? "https://schema.org/InStock" : "https://schema.org/PreOrder",
           },
         }}
       />
       <div className="grid min-w-0 grid-cols-1 gap-8 lg:grid-cols-[1fr_1fr_320px]">
         <div>
-          <img src={productImage(item)} alt={item.name} className="es-card h-80 w-full object-cover" />
-          {item.images && item.images.length > 1 ? (
-            <div className="es-shop-thumbs">
-              {item.images.slice(0, 8).map((src) => (
-                <img key={src} src={src} alt="" />
+          <img
+            src={hero || productImage(item)}
+            alt={item.name}
+            className="es-card h-80 w-full object-cover md:h-[28rem]"
+          />
+          {uniqueGallery.length > 1 ? (
+            <div className="mt-3 flex gap-2 overflow-x-auto">
+              {uniqueGallery.slice(0, 8).map((src) => (
+                <button
+                  key={src}
+                  type="button"
+                  onClick={() => setHero(src)}
+                  className={`size-16 shrink-0 overflow-hidden rounded-md border ${
+                    hero === src ? "border-paper" : "border-line"
+                  }`}
+                >
+                  <img src={src} alt="" className="size-full object-cover" />
+                </button>
               ))}
             </div>
           ) : null}
@@ -83,18 +111,19 @@ function ProductPage() {
             <IncGst cents={item.sellExGst} />
           </p>
           <p className="mt-4 text-sm text-muted capitalize">
-            {item.stock} · lead {item.leadWeeks[0]}–{item.leadWeeks[1]} weeks
+            {item.stock === "stock" ? "In stock on the Gold Coast" : item.stock} · lead {item.leadWeeks[0]}–{item.leadWeeks[1]} weeks
           </p>
+          {item.description ? <p className="mt-4 text-sm leading-6 text-muted">{item.description}</p> : null}
           {item.notes ? <p className="mt-3 text-sm text-muted">{item.notes}</p> : null}
           {item.maxNm ? <p className="mt-2 text-sm text-muted">{item.maxNm}Nm rating</p> : null}
+          <div className="mt-6">
+            <CheckPills result={result} />
+          </div>
           <Button className="mt-8" onClick={() => add(item.sku)}>
-            Add to build
+            {inCart ? "In the build — add another / replace" : "Add to build"}
           </Button>
           <p className="mt-4 text-sm text-muted">
-            <Link to="/compatibility" className="text-paper">
-              Run compatibility
-            </Link>{" "}
-            after adding.
+            The live checker sits in the cart. A block means we will not take a deposit on that mix.
           </p>
         </div>
         <CartPanel compact />
@@ -173,9 +202,7 @@ function ProductPage() {
           <h2 className="text-xl font-medium">Same category</h2>
           <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
             {related.map((p) => (
-              <Link key={p.sku} to="/shop/$sku" params={{ sku: p.sku }} className="es-card px-4 py-3 text-sm">
-                {p.brand} {p.name}
-              </Link>
+              <ProductTile key={p.sku} item={p} />
             ))}
           </div>
         </div>

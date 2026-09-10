@@ -1,8 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
 import { CartPanel } from "@/components/es/cart-panel";
-import { ProductTile } from "@/components/es/bits";
-import { fetchProducts } from "@/lib/es/product-cache";
+import { BuildStudio } from "@/components/es/build-studio";
 import { pageHead } from "@/lib/es/seo";
 
 export const Route = createFileRoute("/_site/compatibility")({
@@ -17,21 +15,16 @@ export const Route = createFileRoute("/_site/compatibility")({
 });
 
 function Compatibility() {
-  const products = useQuery({ queryKey: ["products"], queryFn: () => fetchProducts() });
   return (
     <div className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-16">
       <p className="es-kicker">Build engine</p>
-      <h1 className="mt-3 text-4xl font-medium">Compatibility checker</h1>
+      <h1 className="mt-3 text-4xl font-medium">Spec a compatible crate</h1>
       <p className="mt-4 max-w-2xl text-muted">
-        Rules first. The expert chatbot can explain a result — it cannot override a block. Load a
-        package, swap a chassis, and watch payload and torque update.
+        One category at a time. Chassis, then torque, then the rest. The checker blocks a bad mix
+        before deposit — the chatbot can explain a result, it cannot override it.
       </p>
       <div className="mt-10 grid min-w-0 gap-8 lg:grid-cols-[1fr_360px]">
-        <div className="grid min-w-0 grid-cols-2 gap-4">
-          {(products.data ?? []).map((item) => (
-            <ProductTile key={item.sku} item={item} />
-          ))}
-        </div>
+        <BuildStudio />
         <div className="lg:sticky lg:top-24 lg:self-start">
           <CartPanel />
         </div>

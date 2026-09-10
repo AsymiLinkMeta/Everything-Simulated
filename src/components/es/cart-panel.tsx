@@ -29,6 +29,7 @@ export function CartPanel({ compact = false }: { compact?: boolean }) {
   const loadPackage = useCart((s) => s.loadPackage);
   const setWeight = useCart((s) => s.setWeight);
   const setPostcode = useCart((s) => s.setPostcode);
+  const clear = useCart((s) => s.clear);
   const result = useCart((s) => s.result)();
 
   async function onSave() {
@@ -83,7 +84,7 @@ export function CartPanel({ compact = false }: { compact?: boolean }) {
                 <div className="flex items-center gap-1">
                   <button
                     type="button"
-                    className="grid size-9 place-items-center rounded-md border border-line"
+                    className="grid size-11 place-items-center rounded-md border border-line"
                     onClick={() => setQty(line.sku, line.qty - 1)}
                     aria-label="Decrease"
                   >
@@ -92,7 +93,7 @@ export function CartPanel({ compact = false }: { compact?: boolean }) {
                   <span className="w-6 text-center text-sm tabular-nums">{line.qty}</span>
                   <button
                     type="button"
-                    className="grid size-9 place-items-center rounded-md border border-line"
+                    className="grid size-11 place-items-center rounded-md border border-line"
                     onClick={() => setQty(line.sku, line.qty + 1)}
                     aria-label="Increase"
                   >
@@ -100,7 +101,7 @@ export function CartPanel({ compact = false }: { compact?: boolean }) {
                   </button>
                   <button
                     type="button"
-                    className="grid size-9 place-items-center rounded-md text-muted"
+                    className="grid size-11 place-items-center rounded-md text-muted"
                     onClick={() => remove(line.sku)}
                     aria-label="Remove"
                   >
@@ -153,6 +154,11 @@ export function CartPanel({ compact = false }: { compact?: boolean }) {
         <Button variant="outline" asChild>
           <Link to="/app/chat">Ask the build expert</Link>
         </Button>
+        {lines.length ? (
+          <button type="button" className="text-xs text-muted underline-offset-4 hover:underline" onClick={() => clear()}>
+            Start over
+          </button>
+        ) : null}
       </div>
     </aside>
   );

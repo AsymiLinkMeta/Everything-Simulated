@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Plus, X, Wrench, Loader2 } from "lucide-react";
+import { ArrowLeft, Plus, X, Wrench, Loader2, Check } from "lucide-react";
 import "../../es.css";
 import { Link } from "@tanstack/react-router";
 import { UserButton } from "@/lib/auth/gates";
@@ -43,7 +43,7 @@ export function Logo({ compact = false }: { compact?: boolean }) {
 export function CustomerSignInLink({ className }: { className?: string }) {
   return (
     <Link to="/login" className={className ?? "es-nav-link es-header-signin"}>
-      Customer Sign In
+      Sign In
     </Link>
   );
 }
@@ -319,10 +319,16 @@ export function PackageCard({ pack }: { pack: PackageSpec }) {
 
 export function ProductTile({ item }: { item: Product }) {
   const add = useCart((s) => s.add);
+  const inCart = useCart((s) => s.lines.some((l) => l.sku === item.sku));
   return (
     <Link to="/shop/$sku" params={{ sku: item.sku }} className="es-card group overflow-hidden">
       <div className="relative aspect-video bg-raised">
         <img src={productImage(item)} alt={item.name} className="size-full object-cover opacity-90" />
+        {item.stock === "indent" ? (
+          <span className="absolute left-3 top-3 rounded-md bg-ink/80 px-2 py-1 text-[11px] uppercase tracking-wide text-muted">
+            Indent
+          </span>
+        ) : null}
         <button
           type="button"
           aria-label={`Add ${item.name} to cart`}
@@ -330,13 +336,11 @@ export function ProductTile({ item }: { item: Product }) {
             e.preventDefault();
             e.stopPropagation();
             add(item.sku);
-            toast.success("Added to cart", {
-              description: <span className="text-emerald-400">Scroll down to view your cart.</span>,
-            });
+            toast.success(inCart && !["chassis", "wheelbase", "motion", "pc", "seat"].includes(item.category) ? "Quantity updated" : "Added to build");
           }}
-          className="absolute bottom-2 right-2 z-10 grid size-9 place-items-center rounded-full bg-paper text-ink shadow-lg transition-all duration-200 hover:scale-110"
+          className="absolute bottom-2 right-2 z-10 grid size-11 place-items-center rounded-full bg-paper text-ink shadow-lg transition-all duration-200 hover:scale-105"
         >
-          <Plus className="size-4" />
+          {inCart ? <Check className="size-4" /> : <Plus className="size-4" />}
         </button>
       </div>
       <div className="space-y-1 p-4">

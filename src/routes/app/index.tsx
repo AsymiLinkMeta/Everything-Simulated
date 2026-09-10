@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { getProfile, listMyBookings, listMyJobs, listMyQuotes } from "@/lib/es/server";
+import { getProfile, listMyBookings, listMyJobs, listMyOrders, listMyQuotes } from "@/lib/es/server";
+import { listMyTickets } from "@/lib/es/inbox";
 import { useCurrentUser } from "@/lib/auth/use-current-user";
 import { aud } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,12 @@ function AppHome() {
   const quotes = useQuery({ queryKey: ["my-quotes"], queryFn: () => listMyQuotes() });
   const jobs = useQuery({ queryKey: ["my-jobs"], queryFn: () => listMyJobs() });
   const bookings = useQuery({ queryKey: ["my-bookings"], queryFn: () => listMyBookings() });
+  const orders = useQuery({ queryKey: ["my-orders"], queryFn: () => listMyOrders() });
+  const tickets = useQuery({ queryKey: ["my-tickets"], queryFn: listMyTickets });
   const profile = useQuery({ queryKey: ["profile"], queryFn: () => getProfile() });
+
+  const openTickets = tickets.data?.filter((t) => t.status !== "closed" && t.status !== "resolved") ?? [];
+  const liveOrders = orders.data?.filter((o) => !["delivered", "cancelled"].includes(o.status)) ?? [];
 
   return (
     <div className="space-y-8">
@@ -24,21 +30,26 @@ function AppHome() {
           {user?.displayName ? `Hello, ${user.displayName}` : "Your build"}
         </h1>
         <p className="mt-2 text-sm text-muted">
-          Quotes, workshop jobs and studio bookings in one place.
+          Quotes, crates, workshop jobs and messages — saved to this account.
         </p>
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
-        <Link to="/app/build" className="es-card p-5">
+        <Link to="/app/build" className="es-card p-5 transition-transform hover:-translate-y-0.5">
           <p className="es-kicker">Configure</p>
           <p className="mt-2 font-medium">Open the builder</p>
+          <p className="mt-1 text-sm text-muted">Step through chassis to screens.</p>
         </Link>
-        <Link to="/app/chat" className="es-card p-5">
-          <p className="es-kicker">Expert</p>
-          <p className="mt-2 font-medium">Ask the workshop</p>
+        <Link to="/app/service" className="es-card p-5 transition-transform hover:-translate-y-0.5">
+          <p className="es-kicker">Messages</p>
+          <p className="mt-2 font-medium">
+            {openTickets.length ? `${openTickets.length} open thread${openTickets.length === 1 ? "" : "s"}` : "Talk to the workshop"}
+          </p>
+          <p className="mt-1 text-sm text-muted">Replies stay here after you sign out.</p>
         </Link>
-        <Link to="/app/book" className="es-card p-5">
+        <Link to="/app/book" className="es-card p-5 transition-transform hover:-translate-y-0.5">
           <p className="es-kicker">Studio</p>
           <p className="mt-2 font-medium">Book a demo</p>
+          <p className="mt-1 text-sm text-muted">Gold Coast, on the real chassis.</p>
         </Link>
       </div>
       {profile.data?.isStaff ? (
@@ -46,6 +57,33 @@ function AppHome() {
           <Link to="/staff">Open staff portal</Link>
         </Button>
       ) : null}
+
+      <section>
+        <div className="flex items-center justify-between">
+          <h2 className="text-lg font-medium">Orders</h2>
+          <Link to="/app/orders" className="text-sm text-muted hover:text-paper">
+            All
+          </Link>
+        </div>
+        <ul className="mt-3 space-y-2">
+          {liveOrders.length ? (
+            liveOrders.slice(0, 4).map((o) => (
+              <li key={o.id}>
+                <Link to="/app/orders" className="es-card flex items-center justify-between px-4 py-3 text-sm">
+                  <span>
+                    {o.id}
+                    <span className="ml-2 capitalize text-muted">{o.status}</span>
+                  </span>
+                  <span className="tabular-nums text-muted">{aud(o.total_ex_gst)}</span>
+                </Link>
+              </li>
+            ))
+          ) : (
+            <li className="text-sm text-muted">No crates yet. Spec a build and request a deposit.</li>
+          )}
+        </ul>
+      </section>
+
       <section>
         <h2 className="text-lg font-medium">Quotes</h2>
         <ul className="mt-3 space-y-2">

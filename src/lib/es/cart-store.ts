@@ -1,7 +1,8 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import { livePackages } from "./prebuilds";
-import { checkCart } from "./checkCart";
+import { checkCart, UNIQUE_CATEGORIES } from "./checkCart";
+import { getCachedProductMap } from "./product-cache";
 import type { CartLine, CheckResult } from "./types";
 
 type CartState = {
@@ -38,10 +39,17 @@ export const useCart = create<CartState>()(
             .filter((l) => l.qty > 0),
         }),
       add: (sku) => {
-        const lines = [...get().lines];
-        const i = lines.findIndex((l) => l.sku === sku);
-        if (i >= 0) lines[i] = { ...lines[i], qty: lines[i].qty + 1 };
-        else lines.push({ sku, qty: 1 });
+        const map = getCachedProductMap();
+        const item = map[sku];
+        let lines = [...get().lines];
+        if (item && UNIQUE_CATEGORIES.has(item.category)) {
+          lines = lines.filter((l) => map[l.sku]?.category !== item.category);
+          lines.push({ sku, qty: 1 });
+        } else {
+          const i = lines.findIndex((l) => l.sku === sku);
+          if (i >= 0) lines[i] = { ...lines[i], qty: lines[i].qty + 1 };
+          else lines.push({ sku, qty: 1 });
+        }
         set({ lines });
       },
       remove: (sku) => set({ lines: get().lines.filter((l) => l.sku !== sku) }),
@@ -49,6 +57,6 @@ export const useCart = create<CartState>()(
       clear: () => set({ lines: [] }),
       result: () => checkCart({ lines: get().lines, driverWeightKg: get().driverWeightKg, postcode: get().postcode }),
     }),
-    { name: "es-cart-v2" }
+    { name: "es-cart-v2" },
   ),
 );

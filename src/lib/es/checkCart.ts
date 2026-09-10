@@ -3,7 +3,7 @@ import { freightExGst } from "./freight";
 import { getCachedProductMap, getLiveRules } from "./product-cache";
 import type { CartLine, CheckIssue, CheckResult, CompatibilityRule, Product } from "./types";
 
-const UNIQUE = new Set(["chassis", "wheelbase", "motion", "pc", "seat"]);
+export const UNIQUE_CATEGORIES = new Set(["chassis", "wheelbase", "motion", "pc", "seat"]);
 
 function pairKey(a: string, b: string) {
   return a < b ? `${a}::${b}` : `${b}::${a}`;
@@ -42,7 +42,7 @@ export function checkCart(input: {
     byCat.set(row.product.category, list);
   }
 
-  for (const cat of UNIQUE) {
+  for (const cat of UNIQUE_CATEGORIES) {
     const list = byCat.get(cat) ?? [];
     const kinds = new Set(list.map((r) => r.sku));
     if (kinds.size > 1) {

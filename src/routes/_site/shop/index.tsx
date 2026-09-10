@@ -32,11 +32,20 @@ const CATS: { id: ProductCategory | "all"; label: string }[] = [
 
 function Shop() {
   const [cat, setCat] = useState<(typeof CATS)[number]["id"]>("all");
+  const [q, setQ] = useState("");
   const products = useQuery({ queryKey: ["products"], queryFn: () => fetchProducts() });
-  const items = useMemo(
-    () => (products.data ?? []).filter((p) => cat === "all" || p.category === cat),
-    [cat, products.data],
-  );
+  const items = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    return (products.data ?? []).filter((p) => {
+      if (cat !== "all" && p.category !== cat) return false;
+      if (!query) return true;
+      return (
+        p.name.toLowerCase().includes(query) ||
+        p.brand.toLowerCase().includes(query) ||
+        p.sku.toLowerCase().includes(query)
+      );
+    });
+  }, [cat, q, products.data]);
   return (
     <div className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-16">
       <p className="es-kicker">Catalogue</p>
@@ -45,7 +54,8 @@ function Shop() {
         Not a parts warehouse. Every SKU is something we mount, cable and crate. The checker will
         block a bad mix before you pay a deposit.
       </p>
-      <div className="mt-8 flex gap-2 overflow-x-auto pb-2">
+      <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="flex gap-2 overflow-x-auto pb-2">
         {CATS.map((c) => (
           <button
             key={c.id}
@@ -56,12 +66,21 @@ function Shop() {
             {c.label}
           </button>
         ))}
+        </div>
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          placeholder="Search SKU, brand, name"
+          className="min-h-11 rounded-md border border-line bg-transparent px-3 text-sm text-paper placeholder:text-muted sm:ml-auto sm:w-64"
+        />
       </div>
       <div className="mt-8 grid min-w-0 gap-8 lg:grid-cols-[1fr_320px]">
         <div className="grid min-w-0 grid-cols-2 gap-4 xl:grid-cols-3">
-          {items.map((item) => (
-            <ProductTile key={item.sku} item={item} />
-          ))}
+          {items.length ? (
+            items.map((item) => <ProductTile key={item.sku} item={item} />)
+          ) : (
+            <p className="col-span-full text-sm text-muted">No parts match that filter. Try another category or search.</p>
+          )}
         </div>
         <div className="lg:sticky lg:top-24 lg:self-start">
           <CartPanel compact />
