@@ -107,11 +107,18 @@ function PrebuildDetailPage() {
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Button
               onClick={() => {
-                const lines = p.components.map((c) => ({ sku: c.sku, qty: c.qty }));
-                loadLines(lines);
+                loadLines(p.components.map((c) => ({ sku: c.sku, qty: c.qty })));
               }}
             >
-              Load into checker
+              Add to cart
+            </Button>
+            <Button variant="outline" asChild>
+              <Link
+                to="/checkout"
+                onClick={() => loadLines(p.components.map((c) => ({ sku: c.sku, qty: c.qty })))}
+              >
+                Checkout this crate
+              </Link>
             </Button>
             <Button variant="outline" asChild>
               <Link to="/compatibility">Open checker</Link>

@@ -9,7 +9,6 @@ import {
   ChevronUp,
   Eraser,
   GripVertical,
-  ImagePlus,
   Package,
   Plus,
   Send,
@@ -40,7 +39,6 @@ import {
   compressImage,
   hasLightBackground,
   removeBackground,
-  compositeOnCharcoal,
 } from "@/lib/es/image-utils";
 
 export const Route = createFileRoute("/staff/prebuilds")({ component: PrebuildsEditor });
@@ -447,29 +445,12 @@ function PrebuildForm({
     setImgBgRemoving(true);
     try {
       const bgRemoved = await removeBackground(imgPreview);
-      const onCharcoal = await compositeOnCharcoal(bgRemoved);
-      setImgPreview(onCharcoal);
+      setImgPreview(bgRemoved);
       setImgRemovedBg(true);
-      set("image", onCharcoal);
-      toast.success("Background removed and composited on charcoal card background");
+      set("image", bgRemoved);
+      toast.success("Background removed");
     } catch {
       toast.error("Background removal failed");
-    } finally {
-      setImgBgRemoving(false);
-    }
-  }
-
-  async function handleCompositeOnly() {
-    if (!imgPreview) return;
-    setImgBgRemoving(true);
-    try {
-      const onCharcoal = await compositeOnCharcoal(imgPreview);
-      setImgPreview(onCharcoal);
-      setImgRemovedBg(true);
-      set("image", onCharcoal);
-      toast.success("Composited on charcoal card background");
-    } catch {
-      toast.error("Could not composite image");
     } finally {
       setImgBgRemoving(false);
     }
@@ -642,24 +623,19 @@ function PrebuildForm({
             <div className="space-y-2">
               {imgHasBg && !imgRemovedBg && (
                 <p className="text-xs text-yellow-400">
-                  Light background detected — remove it to match the charcoal card style.
+                  Light background detected — optional remove if you want a transparent PNG.
                 </p>
               )}
               {imgRemovedBg && (
-                <p className="text-xs text-green-400">Background composited on charcoal — matches the card style.</p>
+                <p className="text-xs text-green-400">Background removed. Original lighting is kept.</p>
               )}
               {!imgHasBg && !imgRemovedBg && (
-                <p className="text-xs text-muted">Image looks ready. Optionally composite on charcoal.</p>
+                <p className="text-xs text-muted">Image looks ready. No charcoal fill or logo stamp is applied.</p>
               )}
               <div className="flex flex-wrap gap-2">
                 {!imgRemovedBg && (
                   <Button variant="outline" size="sm" disabled={imgBgRemoving} onClick={handleRemoveBg}>
                     <Eraser className="size-4" /> {imgBgRemoving ? "Removing..." : "Remove background"}
-                  </Button>
-                )}
-                {!imgRemovedBg && (
-                  <Button variant="outline" size="sm" disabled={imgBgRemoving} onClick={handleCompositeOnly}>
-                    <ImagePlus className="size-4" /> Composite on charcoal
                   </Button>
                 )}
                 <Button variant="ghost" size="sm" onClick={clearImage} className="text-muted hover:text-esred">

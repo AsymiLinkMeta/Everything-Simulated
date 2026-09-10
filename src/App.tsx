@@ -1,10 +1,8 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Navigate, Route, Routes, useParams } from "react-router-dom";
 import { SiteShell } from "@/components/es/site-shell";
 import { AppShell } from "@/components/es/app-shell";
 import { StaffShell } from "@/components/es/staff-shell";
 import { Home } from "@/routes/index";
-import { Route as BuildsRoute } from "@/routes/_site/builds/index";
-import { Route as BuildSlugRoute } from "@/routes/_site/builds/$slug";
 import { Route as ShopRoute } from "@/routes/_site/shop/index";
 import { Route as ShopSkuRoute } from "@/routes/_site/shop/$sku";
 import { Route as CompatRoute } from "@/routes/_site/compatibility";
@@ -40,6 +38,9 @@ import { Route as StaffOmsIdRoute } from "@/routes/staff/oms-id";
 import { Route as StaffPrebuildsRoute } from "@/routes/staff/prebuilds";
 import { Route as PrebuildsRoute } from "@/routes/_site/prebuilds/index";
 import { Route as PrebuildSlugRoute } from "@/routes/_site/prebuilds/$slug";
+import { Route as OrderRoute } from "@/routes/_site/order";
+import { Route as AppServiceRoute } from "@/routes/app/service";
+import { Route as StaffServiceRoute } from "@/routes/staff/service";
 
 function Page({ C }: { C: React.ComponentType }) {
   return (
@@ -49,9 +50,12 @@ function Page({ C }: { C: React.ComponentType }) {
   );
 }
 
+function BuildsToPrebuilds() {
+  const { slug } = useParams();
+  return <Navigate to={`/prebuilds/${slug ?? ""}`} replace />;
+}
+
 export default function App() {
-  const Builds = BuildsRoute.component!;
-  const BuildSlug = BuildSlugRoute.component!;
   const Shop = ShopRoute.component!;
   const ShopSku = ShopSkuRoute.component!;
   const Compat = CompatRoute.component!;
@@ -87,12 +91,15 @@ export default function App() {
   const StaffPrebuilds = StaffPrebuildsRoute.component!;
   const Prebuilds = PrebuildsRoute.component!;
   const PrebuildSlug = PrebuildSlugRoute.component!;
+  const OrderLookup = OrderRoute.component!;
+  const AppService = AppServiceRoute.component!;
+  const StaffService = StaffServiceRoute.component!;
 
   return (
     <Routes>
       <Route path="/" element={<Home />} />
-      <Route path="/builds" element={<Page C={Builds} />} />
-      <Route path="/builds/:slug" element={<Page C={BuildSlug} />} />
+      <Route path="/builds" element={<Navigate to="/prebuilds" replace />} />
+      <Route path="/builds/:slug" element={<BuildsToPrebuilds />} />
       <Route path="/shop" element={<Page C={Shop} />} />
       <Route path="/shop/:sku" element={<Page C={ShopSku} />} />
       <Route path="/compatibility" element={<Page C={Compat} />} />
@@ -106,6 +113,7 @@ export default function App() {
       <Route path="/terms" element={<Page C={Terms} />} />
       <Route path="/faqs" element={<Page C={Faqs} />} />
       <Route path="/checkout" element={<Page C={Checkout} />} />
+      <Route path="/order" element={<Page C={OrderLookup} />} />
       <Route path="/prebuilds" element={<Page C={Prebuilds} />} />
       <Route path="/prebuilds/:slug" element={<Page C={PrebuildSlug} />} />
       <Route path="/login" element={<Login />} />
@@ -115,6 +123,7 @@ export default function App() {
         <Route path="chat" element={<AppChat />} />
         <Route path="quotes" element={<AppQuotes />} />
         <Route path="orders" element={<AppOrders />} />
+        <Route path="service" element={<AppService />} />
         <Route path="book" element={<AppBook />} />
       </Route>
       <Route path="/staff" element={<StaffShell />}>
@@ -131,6 +140,7 @@ export default function App() {
         <Route path="brands" element={<StaffBrands />} />
         <Route path="team" element={<StaffTeam />} />
         <Route path="prebuilds" element={<StaffPrebuilds />} />
+        <Route path="service" element={<StaffService />} />
       </Route>
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

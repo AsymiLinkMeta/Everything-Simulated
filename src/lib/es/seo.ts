@@ -1,4 +1,5 @@
 import { BRAND, CITIES, GUIDES, PACKAGES } from "./catalog";
+import { livePackages } from "./prebuilds";
 import { getCachedProducts } from "./product-cache";
 
 export const ORIGIN = "https://everythingsimulated.com.au";
@@ -38,12 +39,12 @@ export function localBusinessLd() {
       addressCountry: "AU",
     },
     areaServed: CITIES.map((c) => ({ "@type": "City", name: c.name })),
-    makesOffer: PACKAGES.map((p) => ({
+    makesOffer: livePackages().map((p) => ({
       "@type": "Offer",
       name: p.name,
       priceCurrency: "AUD",
       price: (p.priceExGst / 100).toFixed(0),
-      url: abs(`/builds/${p.slug}`),
+      url: abs(`/prebuilds/${p.slug}`),
     })),
   };
 }
@@ -94,6 +95,8 @@ export const FAQS = [
 
 export const allIndexPaths = [
   "/",
+  "/prebuilds",
+  ...livePackages().map((p) => `/prebuilds/${p.slug}`),
   "/builds",
   ...PACKAGES.map((p) => `/builds/${p.slug}`),
   "/shop",
@@ -108,4 +111,5 @@ export const allIndexPaths = [
   "/contact",
   "/privacy",
   "/terms",
+  "/order",
 ];

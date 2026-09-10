@@ -1,5 +1,6 @@
 import { supabase, supabaseAnonKey, supabaseUrl } from "@/lib/db";
-import { BRAND, GUIDES, PACKAGES, RULES } from "./catalog";
+import { BRAND, GUIDES, RULES } from "./catalog";
+import { livePackages } from "./prebuilds";
 import { getCachedProducts, getCachedProductMap, getLiveRules } from "./product-cache";
 import { checkCart } from "./checkCart";
 import { unwrap } from "./unwrap";
@@ -141,7 +142,7 @@ export async function staffListJobs() {
   await requireStaff(user.id);
   const { data, error } = await supabase
     .from("jobs")
-    .select("id, user_id, stage, notes, quote_id")
+    .select("id, user_id, stage, notes, quote_id, order_id")
     .order("created_at", { ascending: false })
     .limit(50);
   if (error) throw new Error(error.message);
@@ -168,7 +169,7 @@ export async function staffSetJobStage(data: { id: number; stage: string }) {
   return { ok: true };
 }
 
-export async function staffCreateJob(data: { quoteId?: string; notes?: string }) {
+export async function staffCreateJob(data: { quoteId?: string; notes?: string; orderId?: string }) {
   const user = await getCurrentUser();
   await requireStaff(user.id);
   let owner = user.id;
@@ -178,7 +179,12 @@ export async function staffCreateJob(data: { quoteId?: string; notes?: string })
   }
   const { data: row, error } = await supabase
     .from("jobs")
-    .insert({ user_id: owner, quote_id: data.quoteId ?? null, notes: data.notes ?? "" })
+    .insert({
+      user_id: owner,
+      quote_id: data.quoteId ?? null,
+      order_id: data.orderId ?? null,
+      notes: data.notes ?? "",
+    })
     .select("id")
     .maybeSingle();
   if (error) throw new Error(error.message);
@@ -439,7 +445,7 @@ export async function askBuilder(data: {
   await ensureProfile(user.id, user.email);
   await supabase.from("chat_messages").insert({ user_id: user.id, role: "user", content: data.message.slice(0, 4000) });
   const result = checkCart({ lines: data.lines, driverWeightKg: data.driverWeightKg });
-  const systemPrompt = `You are the Everything Simulated build agent on the Gold Coast. Phone ${BRAND.phone}. You help customers choose parts, understand compatibility, and prepare accurate quotes. Never invent SKUs, products, prices, stock or lead times. Only recommend these packages: ${PACKAGES.map((p) => p.slug).join(", ")} and catalogue SKUs: ${getCachedProducts().map((p) => p.sku).join(", ")}. Compatibility is decided by the checker JSON — never override a block. Prices are AUD ex GST. If the cart is blocked, explain the exact issue and suggest only fixes supported by the checker. Be concise, practical and premium. Current agent task: ${data.task ?? "chat"}.`;
+  const systemPrompt = `You are the Everything Simulated build agent on the Gold Coast. Phone ${BRAND.phone}. You help customers choose parts, understand compatibility, and prepare accurate quotes. Never invent SKUs, products, prices, stock or lead times. Only recommend these packages: ${livePackages().map((p) => p.slug).join(", ")} and catalogue SKUs: ${getCachedProducts().map((p) => p.sku).join(", ")}. Compatibility is decided by the checker JSON — never override a block. Prices are AUD ex GST. If the cart is blocked, explain the exact issue and suggest only fixes supported by the checker. Be concise, practical and premium. Current agent task: ${data.task ?? "chat"}.`;
   const userContent = `Checker JSON: ${JSON.stringify(result)}\nCart: ${JSON.stringify(data.lines)}\nDriver weight kg: ${data.driverWeightKg ?? 80}\nQuestion: ${data.message}`;
 
   let reply: string;
@@ -501,7 +507,7 @@ export async function publicCatalog() {
   return {
     products: getCachedProducts(),
     productMap: getCachedProductMap(),
-    packages: PACKAGES,
+    packages: livePackages(),
     guides: GUIDES,
     rules: getLiveRules().length ? getLiveRules() : RULES,
     brand: BRAND,
@@ -525,23 +531,45 @@ export async function placeGuestOrder(input: {
   const result = checkCart({ lines, driverWeightKg: input.driverWeightKg, postcode: input.postcode });
   const id = `ESO-${Date.now().toString(36).toUpperCase()}`;
 
-  const { data: contact } = await supabase
+  const email = input.email.trim().toLowerCase();
+  let contactId: string | null = null;
+  const { data: existingRows } = await supabase
     .from("crm_contacts")
-    .insert({
-      display_name: input.name.trim(),
-      email: input.email.trim().toLowerCase(),
-      phone: input.phone?.trim() || null,
-      postcode: input.postcode ?? null,
-      crm_stage: "lead",
-      crm_source: "website",
-      notes: input.notes ?? "",
-    })
     .select("id")
-    .maybeSingle();
+    .eq("email", email)
+    .limit(1);
+  if (existingRows?.[0]?.id) {
+    contactId = existingRows[0].id as string;
+    await supabase
+      .from("crm_contacts")
+      .update({
+        display_name: input.name.trim(),
+        phone: input.phone?.trim() || null,
+        postcode: input.postcode ?? null,
+        crm_stage: "lead",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", contactId);
+  } else {
+    const { data: contact } = await supabase
+      .from("crm_contacts")
+      .insert({
+        display_name: input.name.trim(),
+        email,
+        phone: input.phone?.trim() || null,
+        postcode: input.postcode ?? null,
+        crm_stage: "lead",
+        crm_source: "website",
+        notes: input.notes ?? "",
+      })
+      .select("id")
+      .maybeSingle();
+    contactId = contact?.id ?? null;
+  }
 
   const { error } = await supabase.from("shop_orders").insert({
     id,
-    contact_id: contact?.id ?? null,
+    contact_id: contactId,
     status: "pending",
     lines,
     total_ex_gst: result.totalExGst,
@@ -552,6 +580,32 @@ export async function placeGuestOrder(input: {
   });
   if (error) throw new Error(error.message);
   return { id, result };
+}
+
+export type GuestOrderLookup = {
+  id: string;
+  status: string;
+  lines: CartLine[];
+  total_ex_gst: number;
+  total_inc_gst: number;
+  tracking_number: string | null;
+  carrier: string | null;
+  invoice_number: string | null;
+  created_at: string;
+  shipping_name: string | null;
+  postcode: string | null;
+};
+
+export async function lookupOrder(id: string, email: string): Promise<GuestOrderLookup> {
+  const { data, error } = await supabase.rpc("lookup_guest_order", {
+    p_id: id.trim(),
+    p_email: email.trim().toLowerCase(),
+  });
+  if (error) throw new Error(error.message);
+  if (!data) throw new Error("No order matches that ID and email");
+  const row = data as GuestOrderLookup;
+  if (!row.id) throw new Error("No order matches that ID and email");
+  return row;
 }
 
 export { freightExGst };

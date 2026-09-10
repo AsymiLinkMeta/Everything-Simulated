@@ -313,7 +313,7 @@ export async function staffCreateOrder(input: {
   const { data: contact } = await supabase.from("crm_contacts").select("*").eq("id", input.contactId).maybeSingle();
   if (!contact) throw new Error("Pick a customer");
   const id = `ESO-${Date.now().toString(36).toUpperCase()}`;
-  const status: OrderStatus = result.ok ? "paid" : "pending";
+  const status: OrderStatus = "pending";
   const { error } = await supabase.from("shop_orders").insert({
     id,
     contact_id: input.contactId,
@@ -327,14 +327,94 @@ export async function staffCreateOrder(input: {
     shipping_address: contact.address,
     postcode: contact.postcode,
     notes: input.notes ?? "",
-    invoice_number: status === "paid" ? `ESI-${Date.now().toString(36).toUpperCase()}` : null,
+    invoice_number: null,
   });
   if (error) throw new Error(error.message);
-  await supabase.from("crm_contacts").update({ crm_stage: status === "paid" ? "won" : "quoted" }).eq("id", input.contactId);
+  await supabase.from("crm_contacts").update({ crm_stage: "quoted" }).eq("id", input.contactId);
   if (input.quoteId) {
-    await supabase.from("quotes").update({ status: "won", updated_at: new Date().toISOString() }).eq("id", input.quoteId);
+    await supabase.from("quotes").update({ status: "converted", updated_at: new Date().toISOString() }).eq("id", input.quoteId);
   }
   return { id, result };
+}
+
+export async function staffConvertQuote(quoteId: string) {
+  const actor = await requireStaffId();
+  const { data: q, error } = await supabase.from("quotes").select("*").eq("id", quoteId).maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!q) throw new Error("Quote not found");
+  const lines = asLines(q.lines);
+  if (!lines.length) throw new Error("Quote has no parts");
+
+  let contactId: string | null = null;
+  const { data: byUser } = await supabase.from("crm_contacts").select("id").eq("user_id", q.user_id).limit(1);
+  if (byUser?.[0]?.id) contactId = byUser[0].id as string;
+  else {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("email, display_name")
+      .eq("user_id", q.user_id)
+      .maybeSingle();
+    const { data: created, error: createErr } = await supabase
+      .from("crm_contacts")
+      .insert({
+        user_id: q.user_id,
+        display_name: profile?.display_name || q.title || "Customer",
+        email: profile?.email ?? null,
+        crm_stage: "quoted",
+        crm_source: "website",
+      })
+      .select("id")
+      .maybeSingle();
+    if (createErr) throw new Error(createErr.message);
+    contactId = created?.id ?? null;
+  }
+  if (!contactId) throw new Error("Could not attach a customer");
+
+  const order = await staffCreateOrder({
+    contactId,
+    quoteId,
+    lines,
+    notes: `Converted from quote ${quoteId}`,
+  });
+
+  await supabase.from("jobs").insert({
+    user_id: q.user_id,
+    quote_id: quoteId,
+    order_id: order.id,
+    stage: "enquiry",
+    notes: `From quote ${quoteId} / order ${order.id}`,
+  });
+
+  void actor;
+  return { orderId: order.id };
+}
+
+export type StaffAlert = {
+  id: string;
+  kind: string;
+  title: string;
+  body: string;
+  href: string | null;
+  read_at: string | null;
+  created_at: string;
+};
+
+export async function staffListAlerts(): Promise<StaffAlert[]> {
+  await requireStaffId();
+  const { data, error } = await supabase
+    .from("staff_alerts")
+    .select("id, kind, title, body, href, read_at, created_at")
+    .order("created_at", { ascending: false })
+    .limit(30);
+  if (error) throw new Error(error.message);
+  return (data ?? []) as StaffAlert[];
+}
+
+export async function staffMarkAlertRead(id: string) {
+  await requireStaffId();
+  const { error } = await supabase.from("staff_alerts").update({ read_at: new Date().toISOString() }).eq("id", id);
+  if (error) throw new Error(error.message);
+  return { ok: true };
 }
 
 export async function staffSetOrderStatus(id: string, status: OrderStatus) {

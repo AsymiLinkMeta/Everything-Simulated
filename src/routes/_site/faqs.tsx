@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Check } from "lucide-react";
-import { BRAND, GUIDES, PACKAGES } from "@/lib/es/catalog";
+import { BRAND, GUIDES } from "@/lib/es/catalog";
+import { livePackages } from "@/lib/es/prebuilds";
 import { FAQS, faqLd, pageHead } from "@/lib/es/seo";
 import { JsonLd, Money } from "@/components/es/bits";
 import { Button } from "@/components/ui/button";
@@ -38,11 +39,11 @@ function FAQs() {
         ))}
       </ul>
       <p className="mt-8 text-sm text-muted">
-        From <Money cents={PACKAGES[0].priceExGst} gst /> assembled. Call {BRAND.phone}.
+        From <Money cents={livePackages()[0]?.priceExGst ?? 0} gst /> assembled. Call {BRAND.phone}.
       </p>
       <div className="mt-8 flex flex-col gap-3 sm:flex-row">
         <Button asChild>
-          <Link to="/builds">Configure a build</Link>
+          <Link to="/prebuilds">Configure a build</Link>
         </Button>
         <Button variant="outline" asChild>
           <Link to="/contact">Talk to the workshop</Link>

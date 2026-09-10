@@ -6,10 +6,12 @@ import { AuthProvider } from "@/lib/auth/provider";
 import { AppProviders } from "@/components/es/providers";
 import { ScrollManager } from "@/components/es/scroll-manager";
 import { fetchProducts } from "@/lib/es/product-cache";
+import { hydratePrebuilds } from "@/lib/es/prebuilds";
 import "./es.css";
 import "./index.css";
 
 fetchProducts().catch(() => {});
+hydratePrebuilds().catch(() => {});
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>

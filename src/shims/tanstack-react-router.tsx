@@ -1,4 +1,4 @@
-import type { CSSProperties, ReactNode } from "react";
+import type { CSSProperties, MouseEventHandler, ReactNode } from "react";
 import {
   Link as RRLink,
   Navigate,
@@ -16,6 +16,7 @@ type LinkProps = {
   className?: string;
   style?: CSSProperties;
   children?: ReactNode;
+  onClick?: MouseEventHandler;
   activeProps?: { className?: string };
   activeOptions?: { exact?: boolean };
 };

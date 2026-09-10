@@ -1,21 +1,25 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { staffListBookings, staffListJobs, staffListQuotes } from "@/lib/es/server";
-import { staffListContacts, staffListOrders } from "@/lib/es/crm-oms";
+import { staffListAlerts, staffListContacts, staffListOrders, staffMarkAlertRead } from "@/lib/es/crm-oms";
+import { staffListTickets } from "@/lib/es/tickets";
 import { aud } from "@/lib/utils";
 import { Link } from "@tanstack/react-router";
-import { Boxes, Calendar, FileText, Handshake, Truck, Wrench } from "lucide-react";
+import { Boxes, Calendar, FileText, Handshake, LifeBuoy, Truck, Wrench } from "lucide-react";
 
 export const Route = createFileRoute("/staff/")({
   component: Pipeline,
 });
 
 function Pipeline() {
+  const qc = useQueryClient();
   const quotes = useQuery({ queryKey: ["staff-quotes"], queryFn: () => staffListQuotes() });
   const jobs = useQuery({ queryKey: ["staff-jobs"], queryFn: () => staffListJobs() });
   const bookings = useQuery({ queryKey: ["staff-bookings"], queryFn: () => staffListBookings() });
   const contacts = useQuery({ queryKey: ["crm-contacts"], queryFn: () => staffListContacts() });
   const orders = useQuery({ queryKey: ["oms-orders"], queryFn: () => staffListOrders() });
+  const alerts = useQuery({ queryKey: ["staff-alerts"], queryFn: () => staffListAlerts() });
+  const tickets = useQuery({ queryKey: ["staff-tickets"], queryFn: () => staffListTickets() });
 
   const openQuotes = quotes.data?.filter((q) => q.status !== "converted" && q.status !== "archived") ?? [];
   const activeJobs = jobs.data?.filter((j) => j.stage !== "delivered") ?? [];
@@ -51,6 +55,13 @@ function Pipeline() {
       hint: "In workshop pipeline",
     },
     {
+      label: "Service",
+      value: tickets.isPending ? "—" : tickets.data?.filter((t) => t.status !== "closed").length ?? 0,
+      icon: LifeBuoy,
+      to: "/staff/service",
+      hint: "Open customer tickets",
+    },
+    {
       label: "Bookings",
       value: bookings.isPending ? "—" : bookings.data?.length ?? 0,
       icon: Calendar,
@@ -77,6 +88,41 @@ function Pipeline() {
           </Link>
         ))}
       </div>
+      {alerts.data?.filter((a) => !a.read_at).length ? (
+        <section className="space-y-2">
+          <h2 className="text-lg font-medium">New</h2>
+          <ul className="space-y-2">
+            {alerts.data
+              .filter((a) => !a.read_at)
+              .slice(0, 8)
+              .map((a) => (
+                <li key={a.id} className="es-card flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm">
+                  <div>
+                    <p className="font-medium">{a.title}</p>
+                    <p className="text-xs text-muted">{a.body}</p>
+                  </div>
+                  <div className="flex gap-2">
+                    {a.href ? (
+                      <Link to={a.href} className="text-sm text-esred hover:underline">
+                        Open
+                      </Link>
+                    ) : null}
+                    <button
+                      type="button"
+                      className="text-xs text-muted hover:text-paper"
+                      onClick={async () => {
+                        await staffMarkAlertRead(a.id);
+                        await qc.invalidateQueries({ queryKey: ["staff-alerts"] });
+                      }}
+                    >
+                      Dismiss
+                    </button>
+                  </div>
+                </li>
+              ))}
+          </ul>
+        </section>
+      ) : null}
       <section>
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-medium">Latest quotes</h2>

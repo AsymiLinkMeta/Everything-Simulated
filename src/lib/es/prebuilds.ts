@@ -1,5 +1,6 @@
 import { supabase, supabaseUrl, supabaseAnonKey } from "@/lib/db";
-import type { StaffRole } from "./types";
+import type { PackageSpec, StaffRole } from "./types";
+import { PACKAGES } from "./catalog";
 
 export type AIPrebuildDraft = {
   name: string;
@@ -86,6 +87,8 @@ export type PrebuildComponent = {
 
 export type PrebuildWithComponents = Prebuild & { components: PrebuildComponent[] };
 
+let prebuildCache: PrebuildWithComponents[] | null = null;
+
 // ---- Public ----
 
 export async function fetchPublishedPrebuilds(): Promise<PrebuildWithComponents[]> {
@@ -96,7 +99,10 @@ export async function fetchPublishedPrebuilds(): Promise<PrebuildWithComponents[
     .order("sort_order", { ascending: true });
   if (error) throw new Error(error.message);
   const prebuilds = (data ?? []) as Prebuild[];
-  if (!prebuilds.length) return [];
+  if (!prebuilds.length) {
+    prebuildCache = [];
+    return [];
+  }
 
   const ids = prebuilds.map((p) => p.id);
   const { data: comps } = await supabase
@@ -112,13 +118,15 @@ export async function fetchPublishedPrebuilds(): Promise<PrebuildWithComponents[
     compMap.set(c.prebuild_id, list);
   }
 
-  return prebuilds.map((p) => ({
+  const result = prebuilds.map((p) => ({
     ...p,
     highlights: Array.isArray(p.highlights) ? p.highlights : [],
     specs: (p.specs && typeof p.specs === "object" && !Array.isArray(p.specs)) ? p.specs : {},
     capabilities: Array.isArray(p.capabilities) ? p.capabilities : [],
     components: compMap.get(p.id) ?? [],
   }));
+  prebuildCache = result;
+  return result;
 }
 
 export async function fetchFeaturedPrebuilds(): Promise<PrebuildWithComponents[]> {
@@ -292,4 +300,38 @@ export async function staffToggleFeatured(id: string, featured: boolean) {
   const { error } = await supabase.from("prebuilds").update({ featured }).eq("id", id);
   if (error) throw new Error(error.message);
   return { ok: true };
+}
+
+export function getCachedPrebuilds(): PrebuildWithComponents[] {
+  return prebuildCache ?? [];
+}
+
+export function prebuildToPackage(p: PrebuildWithComponents): PackageSpec {
+  return {
+    slug: p.slug,
+    name: p.name,
+    kicker: p.kicker,
+    priceExGst: p.price_ex_gst,
+    blurb: p.blurb,
+    image: p.image || "/rigs/starter.jpg",
+    lines: p.components.map((c) => ({ sku: c.sku, qty: c.qty })),
+    highlights: p.highlights,
+    popular: p.featured,
+  };
+}
+
+/** Published prebuilds as package specs, falling back to the three classic crates. */
+export function livePackages(): PackageSpec[] {
+  const live = getCachedPrebuilds();
+  if (live.length) return live.map(prebuildToPackage);
+  return PACKAGES;
+}
+
+export async function hydratePrebuilds(): Promise<PrebuildWithComponents[]> {
+  try {
+    prebuildCache = await fetchPublishedPrebuilds();
+  } catch {
+    prebuildCache = prebuildCache ?? [];
+  }
+  return prebuildCache;
 }

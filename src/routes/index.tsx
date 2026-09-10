@@ -15,7 +15,7 @@ export const Route = createFileRoute("/")({
     pageHead({
       title: "Everything Simulated | Gold Coast racing simulators, Australia-wide",
       description:
-        "Turn-key sim racing rigs built on the Gold Coast. Starter $11,260 + GST, Haptic $18,999 + GST, Motion $28,999 + GST. Simagic, Trak Racer, Exodus, SIMRIG. Delivered Australia-wide.",
+        "Turn-key sim racing rigs built on the Gold Coast. Simagic, Trak Racer, Exodus, SIMRIG. Compatibility checked before deposit. Delivered Australia-wide.",
       path: "/",
     }),
   component: Home,

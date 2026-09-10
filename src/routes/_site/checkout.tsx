@@ -59,14 +59,17 @@ function Checkout() {
         <div className="mx-auto mb-6 grid size-16 place-items-center rounded-full bg-emerald-500/10">
           <Check className="size-8 text-emerald-400" />
         </div>
-        <h1 className="text-2xl font-medium">Order confirmed</h1>
+        <h1 className="text-2xl font-medium">Build request received</h1>
         <p className="mt-2 text-muted">
-          Your order <span className="font-mono text-paper">{orderId}</span> has been received.
-          Our team will be in touch to arrange a deposit and confirm your build.
+          Reference <span className="font-mono text-paper">{orderId}</span>. No payment has been taken.
+          The workshop will send a deposit invoice once the crate is confirmed.
+        </p>
+        <p className="mt-3 text-sm text-muted">
+          Keep this ID and the email you used. You can track packing and freight from the order page.
         </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Button asChild>
-            <Link to="/">Back to home</Link>
+            <Link to={`/order?id=${orderId}`}>Track this order</Link>
           </Button>
           <Button variant="outline" asChild>
             <Link to="/shop">Continue browsing</Link>
@@ -261,7 +264,7 @@ function Checkout() {
           )}
 
           <Button type="submit" disabled={placing || !result.ok} className="w-full text-base py-3">
-            {placing ? "Placing order..." : "Place order"}
+            {placing ? "Sending request…" : "Request this build"}
           </Button>
 
           <p className="text-center text-xs text-muted">

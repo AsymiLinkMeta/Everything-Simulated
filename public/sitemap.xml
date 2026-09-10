@@ -1,20 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://everythingsimulated.com.au/</loc><changefreq>weekly</changefreq><priority>1.0</priority></url>
-  <url><loc>https://everythingsimulated.com.au/builds</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://everythingsimulated.com.au/builds/starter</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://everythingsimulated.com.au/builds/haptic</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
-  <url><loc>https://everythingsimulated.com.au/builds/motion</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://everythingsimulated.com.au/prebuilds</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://everythingsimulated.com.au/prebuilds/starter</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://everythingsimulated.com.au/prebuilds/haptic</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://everythingsimulated.com.au/prebuilds/motion</loc><changefreq>weekly</changefreq><priority>0.9</priority></url>
   <url><loc>https://everythingsimulated.com.au/shop</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://everythingsimulated.com.au/shop/tr120s</loc></url>
-  <url><loc>https://everythingsimulated.com.au/shop/xr1</loc></url>
-  <url><loc>https://everythingsimulated.com.au/shop/alpha-evo-12</loc></url>
-  <url><loc>https://everythingsimulated.com.au/shop/alpha-15</loc></url>
-  <url><loc>https://everythingsimulated.com.au/shop/gt-neo</loc></url>
-  <url><loc>https://everythingsimulated.com.au/shop/p1000</loc></url>
-  <url><loc>https://everythingsimulated.com.au/shop/p1000-haptic</loc></url>
-  <url><loc>https://everythingsimulated.com.au/shop/sr2</loc></url>
-  <url><loc>https://everythingsimulated.com.au/shop/pc-race</loc></url>
   <url><loc>https://everythingsimulated.com.au/compatibility</loc><priority>0.8</priority></url>
   <url><loc>https://everythingsimulated.com.au/studio</loc><priority>0.8</priority></url>
   <url><loc>https://everythingsimulated.com.au/guides</loc><priority>0.8</priority></url>
@@ -24,6 +15,7 @@
   <url><loc>https://everythingsimulated.com.au/guides/sim-racing-for-junior-drivers</loc></url>
   <url><loc>https://everythingsimulated.com.au/guides/triple-screen-vs-ultrawide-iracing</loc></url>
   <url><loc>https://everythingsimulated.com.au/guides/australia-wide-delivery-and-install</loc></url>
+  <url><loc>https://everythingsimulated.com.au/faqs</loc><priority>0.7</priority></url>
   <url><loc>https://everythingsimulated.com.au/au</loc><priority>0.8</priority></url>
   <url><loc>https://everythingsimulated.com.au/au/gold-coast</loc></url>
   <url><loc>https://everythingsimulated.com.au/au/brisbane</loc></url>
@@ -36,4 +28,7 @@
   <url><loc>https://everythingsimulated.com.au/au/darwin</loc></url>
   <url><loc>https://everythingsimulated.com.au/au/sunshine-coast</loc></url>
   <url><loc>https://everythingsimulated.com.au/contact</loc></url>
+  <url><loc>https://everythingsimulated.com.au/privacy</loc></url>
+  <url><loc>https://everythingsimulated.com.au/terms</loc></url>
+  <url><loc>https://everythingsimulated.com.au/order</loc><changefreq>monthly</changefreq><priority>0.3</priority></url>
 </urlset>

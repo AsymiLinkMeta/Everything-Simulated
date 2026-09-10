@@ -4,5 +4,6 @@ Disallow: /app
 Disallow: /staff
 Disallow: /login
 Disallow: /api/
+Disallow: /checkout
 
 Sitemap: https://everythingsimulated.com.au/sitemap.xml

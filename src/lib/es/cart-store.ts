@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { PACKAGES } from "./catalog";
+import { livePackages } from "./prebuilds";
 import { checkCart } from "./checkCart";
 import type { CartLine, CheckResult } from "./types";
 
@@ -28,7 +28,7 @@ export const useCart = create<CartState>()(
       setWeight: (driverWeightKg) => set({ driverWeightKg }),
       setPostcode: (postcode) => set({ postcode }),
       loadPackage: (slug) => {
-        const pack = PACKAGES.find((p) => p.slug === slug);
+        const pack = livePackages().find((p) => p.slug === slug);
         if (pack) set({ lines: pack.lines.map((l) => ({ ...l })) });
       },
       setQty: (sku, qty) =>

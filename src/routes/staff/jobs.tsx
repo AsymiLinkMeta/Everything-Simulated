@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { staffListJobs, staffSetJobStage } from "@/lib/es/server";
@@ -62,6 +62,13 @@ function Jobs() {
                       <li key={j.id} className="rounded-md bg-raised p-3 text-sm">
                         <p className="font-medium">#{j.id}</p>
                         <p className="text-xs text-muted">{j.quote_id ?? "no quote"}</p>
+                        {j.order_id ? (
+                          <p className="text-xs">
+                            <Link to="/staff/oms/$id" params={{ id: j.order_id }} className="text-paper underline-offset-4 hover:underline">
+                              {j.order_id}
+                            </Link>
+                          </p>
+                        ) : null}
                         <div className="mt-2 flex flex-wrap gap-1">
                           {STAGES.filter((s) => s !== stage).map((s) => (
                             <Button key={s} size="sm" variant="ghost" onClick={() => setStage(j.id, s)}>

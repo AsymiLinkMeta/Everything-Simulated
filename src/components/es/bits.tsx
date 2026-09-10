@@ -172,7 +172,7 @@ export function IssueList({ issues }: { issues: CheckIssue[] }) {
 
 export function PackageCard({ pack }: { pack: PackageSpec }) {
   return (
-    <Link to="/builds/$slug" params={{ slug: pack.slug }} className="es-card group flex flex-col overflow-hidden">
+    <Link to="/prebuilds/$slug" params={{ slug: pack.slug }} className="es-card group flex flex-col overflow-hidden">
       <div className="relative aspect-video overflow-hidden">
         <img src={pack.image} alt={pack.name} className="size-full object-cover transition-transform duration-300 group-hover:scale-105" />
         <span className="es-kicker" style={{ position: "absolute", left: 16, top: 16, background: "rgba(7,7,8,0.8)", padding: "4px 8px", borderRadius: 8 }}>

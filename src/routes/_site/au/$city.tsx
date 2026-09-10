@@ -1,6 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { BackButton, JsonLd, PackageCard } from "@/components/es/bits";
-import { CITIES, cityBySlug, PACKAGES } from "@/lib/es/catalog";
+import { CITIES, cityBySlug } from "@/lib/es/catalog";
+import { livePackages } from "@/lib/es/prebuilds";
 import { breadcrumbLd, faqLd, FAQS, localBusinessLd, pageHead } from "@/lib/es/seo";
 
 export const Route = createFileRoute("/_site/au/$city")({
@@ -44,7 +45,7 @@ function CityPage() {
         the crate is sealed. Compatibility is checked in the build app before deposit.
       </p>
       <div className="mt-10 grid grid-cols-2 gap-6 md:grid-cols-3">
-        {PACKAGES.map((pack) => (
+        {livePackages().map((pack) => (
           <PackageCard key={pack.slug} pack={pack} />
         ))}
       </div>
