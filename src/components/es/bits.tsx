@@ -1,14 +1,16 @@
 import { useState } from "react";
 import { toast } from "sonner";
-import { ArrowLeft, Plus } from "lucide-react";
+import { ArrowLeft, Plus, X, Wrench, Loader2 } from "lucide-react";
 import "../../es.css";
 import { Link } from "@tanstack/react-router";
 import { UserButton } from "@/lib/auth/gates";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { aud, gstInclusive } from "@/lib/utils";
-import type { CheckIssue, CheckResult, PackageSpec, Product } from "@/lib/es/types";
-import { product, productImage } from "@/lib/es/product-cache";
+import type { CheckIssue, CheckResult, PackageSpec, Product, CartLine } from "@/lib/es/types";
+import { product, productImage, getCachedProductMap } from "@/lib/es/product-cache";
 import { useCart } from "@/lib/es/cart-store";
+import { checkCart } from "@/lib/es/checkCart";
+import { askBuilder } from "@/lib/es/server";
 import { cn } from "@/lib/utils";
 
 export function BackButton({ label = "Back" }: { label?: string }) {
@@ -151,23 +153,148 @@ export function IssueList({ issues }: { issues: CheckIssue[] }) {
   return (
     <ul className="space-y-2">
       {issues.map((issue) => (
-        <li
-          key={issue.code + issue.message}
-          className={cn(
-            "rounded-md border px-3 py-2 text-sm",
-            issue.severity === "block"
-              ? "border-esred/40 text-paper"
-              : issue.severity === "warn"
-                ? "border-warn/40"
-                : "border-line",
-          )}
-        >
-          <p className="font-medium capitalize">{issue.severity}</p>
-          <p className="text-muted">{issue.message}</p>
-        </li>
+        <IssueRow key={issue.code + issue.message} issue={issue} />
       ))}
     </ul>
   );
+}
+
+type Recommendation = {
+  id: string;
+  reason: string;
+  newLines: CartLine[];
+};
+
+function IssueRow({ issue }: { issue: CheckIssue }) {
+  const lines = useCart((s) => s.lines);
+  const setLines = useCart((s) => s.setLines);
+  const driverWeightKg = useCart((s) => s.driverWeightKg);
+  const [fixing, setFixing] = useState(false);
+  const [rec, setRec] = useState<Recommendation | null>(null);
+
+  const borderClass =
+    issue.severity === "block"
+      ? "border-esred/50"
+      : issue.severity === "warn"
+        ? "border-warn/50"
+        : issue.severity === "adapter"
+          ? "border-blue-500/40"
+          : "border-line";
+
+  async function handleFix() {
+    setFixing(true);
+    try {
+      const res = await askBuilder({
+        message: `Fix this compatibility issue: ${issue.message}. Suggest the minimal cart change needed. Return ONLY a JSON object with "reason" (a few words) and "lines" (the full replacement cart array of {sku,qty}).`,
+        lines,
+        driverWeightKg,
+        task: "compatibility",
+      });
+      const parsed = extractRecommendation(res.reply);
+      if (parsed) {
+        setRec({ id: issue.code, ...parsed });
+      } else {
+        toast.error("Could not generate a fix. Try the build expert chat.");
+      }
+    } catch {
+      toast.error("Could not reach the AI agent. Try again shortly.");
+    } finally {
+      setFixing(false);
+    }
+  }
+
+  function applyRec() {
+    if (!rec) return;
+    const map = getCachedProductMap();
+    const valid = rec.newLines.filter((l) => l.sku && l.qty > 0 && map[l.sku]);
+    if (!valid.length) {
+      toast.error("The suggested parts could not be verified.");
+      return;
+    }
+    setLines(valid);
+    setRec(null);
+    toast.success("Cart updated with the recommended fix");
+  }
+
+  return (
+    <li className={cn("rounded-md border px-3 py-2 text-sm", borderClass)}>
+      <p className="font-medium capitalize">{issue.severity}</p>
+      <p className="text-muted">{issue.message}</p>
+      {issue.fix && issue.fix.length > 0 && (
+        <p className="mt-1 text-xs text-muted">Suggested: {issue.fix.join(". ")}</p>
+      )}
+      {issue.adapterSku && <AddAdapterButton sku={issue.adapterSku} />}
+      {rec ? (
+        <div className="mt-2 flex items-start justify-between gap-2 rounded-md bg-raised p-2">
+          <div className="min-w-0 flex-1">
+            <p className="text-xs text-muted">Recommendation</p>
+            <p className="text-sm text-paper">{rec.reason}</p>
+          </div>
+          <div className="flex shrink-0 items-center gap-1">
+            <button
+              type="button"
+              onClick={applyRec}
+              className="rounded-md bg-esred px-2 py-1 text-xs font-medium text-paper transition-colors hover:bg-esred/80"
+            >
+              Apply
+            </button>
+            <button
+              type="button"
+              onClick={() => setRec(null)}
+              aria-label="Dismiss recommendation"
+              className="grid size-6 place-items-center rounded-md text-muted transition-colors hover:text-paper"
+            >
+              <X className="size-3.5" />
+            </button>
+          </div>
+        </div>
+      ) : (
+        <button
+          type="button"
+          disabled={fixing}
+          onClick={handleFix}
+          className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-line px-2 py-1 text-xs text-muted transition-colors hover:border-esred hover:text-paper disabled:opacity-50"
+        >
+          {fixing ? <Loader2 className="size-3 animate-spin" /> : <Wrench className="size-3" />}
+          {fixing ? "Fixing…" : "Fix"}
+        </button>
+      )}
+    </li>
+  );
+}
+
+function AddAdapterButton({ sku }: { sku: string }) {
+  const add = useCart((s) => s.add);
+  const p = product(sku);
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        add(sku);
+        toast.success(`Added ${p ? p.name : sku}`);
+      }}
+      className="mt-2 inline-flex items-center gap-1.5 rounded-md border border-blue-500/40 px-2 py-1 text-xs text-blue-400 transition-colors hover:bg-blue-500/10"
+    >
+      <Plus className="size-3" />
+      Add {p ? p.name : sku}
+    </button>
+  );
+}
+
+function extractRecommendation(reply: string): { reason: string; newLines: CartLine[] } | null {
+  try {
+    const jsonMatch = reply.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) return null;
+    const obj = JSON.parse(jsonMatch[0]);
+    if (!obj.lines || !Array.isArray(obj.lines)) return null;
+    const newLines = obj.lines
+      .filter((l: unknown) => typeof l === "object" && l !== null && "sku" in l && "qty" in l)
+      .map((l: Record<string, unknown>) => ({ sku: String(l.sku), qty: Number(l.qty) || 1 }));
+    if (!newLines.length) return null;
+    return { reason: String(obj.reason ?? "Better balance for this build"), newLines };
+  } catch {
+    return null;
+  }
 }
 
 export function PackageCard({ pack }: { pack: PackageSpec }) {
