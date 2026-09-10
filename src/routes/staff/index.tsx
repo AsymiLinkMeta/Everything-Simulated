@@ -1,11 +1,11 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useState } from "react";
 import { staffListBookings, staffListJobs, staffListQuotes } from "@/lib/es/server";
-import { staffListAlerts, staffListContacts, staffListOrders, staffMarkAlertRead } from "@/lib/es/crm-oms";
-import { staffListTickets } from "@/lib/es/tickets";
+import { staffListContacts, staffListOrders } from "@/lib/es/crm-oms";
+import { supabase } from "@/lib/db";
 import { aud } from "@/lib/utils";
-import { Link } from "@tanstack/react-router";
-import { Boxes, Calendar, FileText, Handshake, LifeBuoy, Truck, Wrench } from "lucide-react";
+import { Bell, Boxes, Calendar, FileText, Handshake, Truck, Wrench } from "lucide-react";
 
 export const Route = createFileRoute("/staff/")({
   component: Pipeline,
@@ -18,8 +18,34 @@ function Pipeline() {
   const bookings = useQuery({ queryKey: ["staff-bookings"], queryFn: () => staffListBookings() });
   const contacts = useQuery({ queryKey: ["crm-contacts"], queryFn: () => staffListContacts() });
   const orders = useQuery({ queryKey: ["oms-orders"], queryFn: () => staffListOrders() });
-  const alerts = useQuery({ queryKey: ["staff-alerts"], queryFn: () => staffListAlerts() });
-  const tickets = useQuery({ queryKey: ["staff-tickets"], queryFn: () => staffListTickets() });
+
+  const alerts = useQuery({
+    queryKey: ["pipeline-alerts"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("pipeline_alerts")
+        .select("id, order_id, kind, message, acknowledged, created_at")
+        .eq("acknowledged", false)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (error) throw new Error(error.message);
+      return data ?? [];
+    },
+    refetchInterval: 15000,
+  });
+
+  async function dismissAlert(id: string) {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      await supabase
+        .from("pipeline_alerts")
+        .update({ acknowledged: true, acknowledged_by: user?.id ?? null, acknowledged_at: new Date().toISOString() })
+        .eq("id", id);
+      await qc.invalidateQueries({ queryKey: ["pipeline-alerts"] });
+    } catch {
+      // silent
+    }
+  }
 
   const openQuotes = quotes.data?.filter((q) => q.status !== "converted" && q.status !== "archived") ?? [];
   const activeJobs = jobs.data?.filter((j) => j.stage !== "delivered") ?? [];
@@ -55,13 +81,6 @@ function Pipeline() {
       hint: "In workshop pipeline",
     },
     {
-      label: "Service",
-      value: tickets.isPending ? "—" : tickets.data?.filter((t) => t.status !== "closed").length ?? 0,
-      icon: LifeBuoy,
-      to: "/staff/service",
-      hint: "Open customer tickets",
-    },
-    {
       label: "Bookings",
       value: bookings.isPending ? "—" : bookings.data?.length ?? 0,
       icon: Calendar,
@@ -70,12 +89,43 @@ function Pipeline() {
     },
   ];
 
+  const activeAlerts = alerts.data ?? [];
+
   return (
     <div className="space-y-8">
       <div>
         <p className="es-kicker">Workshop</p>
         <h1 className="mt-2 text-3xl font-medium">Pipeline</h1>
       </div>
+
+      {activeAlerts.length > 0 && (
+        <section className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Bell className="size-4 text-amber-400" />
+            <h2 className="text-sm font-medium">New order alerts</h2>
+          </div>
+          <ul className="space-y-2">
+            {activeAlerts.map((a) => (
+              <li key={a.id} className="es-card flex items-center justify-between gap-3 p-4">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate">{a.message}</p>
+                  <p className="text-xs text-muted">
+                    {new Date(a.created_at).toLocaleString("en-AU", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => dismissAlert(a.id)}
+                  className="shrink-0 text-xs text-muted transition-colors hover:text-paper"
+                >
+                  Dismiss
+                </button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {cards.map((c) => (
           <Link key={c.label} to={c.to} className="es-card p-5 group">
@@ -88,41 +138,6 @@ function Pipeline() {
           </Link>
         ))}
       </div>
-      {alerts.data?.filter((a) => !a.read_at).length ? (
-        <section className="space-y-2">
-          <h2 className="text-lg font-medium">New</h2>
-          <ul className="space-y-2">
-            {alerts.data
-              .filter((a) => !a.read_at)
-              .slice(0, 8)
-              .map((a) => (
-                <li key={a.id} className="es-card flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm">
-                  <div>
-                    <p className="font-medium">{a.title}</p>
-                    <p className="text-xs text-muted">{a.body}</p>
-                  </div>
-                  <div className="flex gap-2">
-                    {a.href ? (
-                      <Link to={a.href} className="text-sm text-esred hover:underline">
-                        Open
-                      </Link>
-                    ) : null}
-                    <button
-                      type="button"
-                      className="text-xs text-muted hover:text-paper"
-                      onClick={async () => {
-                        await staffMarkAlertRead(a.id);
-                        await qc.invalidateQueries({ queryKey: ["staff-alerts"] });
-                      }}
-                    >
-                      Dismiss
-                    </button>
-                  </div>
-                </li>
-              ))}
-          </ul>
-        </section>
-      ) : null}
       <section>
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-medium">Latest quotes</h2>

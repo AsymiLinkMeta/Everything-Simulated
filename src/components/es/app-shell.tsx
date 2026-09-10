@@ -13,9 +13,9 @@ const TABS = [
   { to: "/app/build", label: "Build", icon: Gauge },
   { to: "/app/quotes", label: "Quotes", icon: Wrench },
   { to: "/app/orders", label: "Orders", icon: Package },
-  { to: "/app/service", label: "Service", icon: LifeBuoy },
   { to: "/app/chat", label: "Expert", icon: MessageSquare },
   { to: "/app/book", label: "Book", icon: Calendar },
+  { to: "/app/service", label: "Service", icon: LifeBuoy },
 ] as const;
 
 export function AppShell() {

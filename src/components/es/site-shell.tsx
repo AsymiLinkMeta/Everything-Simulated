@@ -2,9 +2,7 @@ import "./es-chrome";
 import { Link, Outlet, useLocation } from "@tanstack/react-router";
 import { Facebook, Instagram, Phone, ShoppingCart } from "lucide-react";
 import { useEffect, useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import { BRAND, CITIES, GUIDES } from "@/lib/es/catalog";
-import { fetchPublishedPrebuilds, livePackages, prebuildToPackage } from "@/lib/es/prebuilds";
+import { BRAND, CITIES, GUIDES, PACKAGES } from "@/lib/es/catalog";
 import { CookieDisclaimer, CustomerSignInLink, Logo, StaffLoginLink } from "./bits";
 import { useCart } from "@/lib/es/cart-store";
 
@@ -22,8 +20,6 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
   const cartCount = useCart((s) => s.lines.reduce((n, l) => n + l.qty, 0));
-  const prebuilds = useQuery({ queryKey: ["prebuilds"], queryFn: fetchPublishedPrebuilds });
-  const footerPacks = prebuilds.data?.length ? prebuilds.data.map(prebuildToPackage) : livePackages();
 
   useEffect(() => {
     setMenuOpen(false);
@@ -109,20 +105,17 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
             </p>
           </div>
           <div className="es-footer-col">
-            <p className="es-kicker">Prebuilds</p>
+            <p className="es-kicker">Builds</p>
             <ul>
-              {footerPacks.map((p) => (
+              {PACKAGES.map((p) => (
                 <li key={p.slug}>
-                  <Link to="/prebuilds/$slug" params={{ slug: p.slug }}>
+                  <Link to="/builds/$slug" params={{ slug: p.slug }}>
                     {p.name}
                   </Link>
                 </li>
               ))}
               <li>
                 <Link to="/compatibility">Compatibility checker</Link>
-              </li>
-              <li>
-                <Link to="/order">Track an order</Link>
               </li>
             </ul>
           </div>
@@ -157,6 +150,8 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
                 <Link to="/terms">Terms</Link>
                 {" · "}
                 <Link to="/faqs">FAQs</Link>
+                {" · "}
+                <Link to="/order">Track an order</Link>
               </li>
             </ul>
           </div>

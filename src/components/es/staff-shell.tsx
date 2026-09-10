@@ -9,7 +9,7 @@ import {
   ClipboardList,
   FileText,
   Handshake,
-  LifeBuoy,
+  Headset,
   Menu,
   Package,
   Shield,
@@ -27,7 +27,6 @@ const TABS = [
   { to: "/staff", label: "Pipeline", icon: ClipboardList },
   { to: "/staff/crm", label: "CRM", icon: Handshake },
   { to: "/staff/oms", label: "OMS", icon: Truck },
-  { to: "/staff/service", label: "Service", icon: LifeBuoy },
   { to: "/staff/catalog", label: "Catalog", icon: Boxes },
   { to: "/staff/prebuilds", label: "Prebuilds", icon: Package },
   { to: "/staff/rules", label: "Rules", icon: Link2 },
@@ -36,6 +35,7 @@ const TABS = [
   { to: "/staff/jobs", label: "Jobs", icon: Wrench },
   { to: "/staff/bookings", label: "Bookings", icon: Calendar },
   { to: "/staff/team", label: "Team", icon: Users },
+  { to: "/staff/service", label: "Service", icon: Headset },
 ] as const;
 
 export function StaffShell() {
