@@ -336,22 +336,40 @@ export const FAQS = [
     a: "The build app runs a deterministic compatibility checker before deposit. Alpha EVO on TR120S needs the Simagic side-mount kit. SR2 motion is Exodus XR1 only.",
   },
   {
+    q: "Is the compatibility checker just a chatbot?",
+    a: "No. Chat may only explain the checker JSON. Unique categories, torque, payload, QR and mounts are enforced by rules. A blocked crate cannot be overridden by AI.",
+  },
+  {
     q: "How long does a Gold Coast build take?",
     a: "Lead time is typically 3–6 weeks from deposit. Hydraulic P1000 haptics and motion platforms can sit at the longer end when parts are indent.",
   },
   {
-    q: "Is the compatibility checker just a chatbot?",
-    a: "No. Chat may only explain the checker JSON. Unique categories, torque, payload, QR and mounts are enforced by rules. A blocked crate cannot be overridden by AI.",
+    q: "Is Everything Simulated only racing simulators?",
+    a: "Racing is the live catalogue — prebuilds, parts shop and the compatibility checker. The same Gold Coast workshop specs aircraft, drone and training simulators as consult-first platforms. Book the studio or enquire.",
+  },
+  {
+    q: "Do you train helicopter or drone pilots?",
+    a: "We assemble the simulator. Licence courses sit with the right training partner. If you need a cockpit or FPV trainer, we spec it. If you need a CASA ticket, we will say so.",
   },
 ];
 
 export const allIndexPaths = [
   "/",
+  "/racing",
   "/prebuilds",
   ...(livePackages().length ? livePackages() : PACKAGES).map((p) => `/prebuilds/${p.slug}`),
   "/shop",
   ...getCachedProducts().map((p) => `/shop/${p.sku}`),
   "/compatibility",
+  "/aircraft",
+  "/aircraft/helicopter",
+  "/aircraft/flight",
+  "/drones",
+  "/training",
+  "/training/driver",
+  "/training/industrial",
+  "/drivers",
+  "/partners",
   "/studio",
   "/guides",
   "/faqs",

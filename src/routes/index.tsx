@@ -9,13 +9,14 @@ import { graphLd, localBusinessLd, organizationLd, pageHead, websiteLd, faqLd, F
 import { fetchBrands } from "@/lib/es/brands";
 import { fetchFeaturedPrebuilds, livePackages } from "@/lib/es/prebuilds";
 import { PACKAGES } from "@/lib/es/catalog";
+import { PLATFORMS } from "@/lib/es/platforms";
 
 export const Route = createFileRoute("/")({
   head: () =>
     pageHead({
-      title: "Everything Simulated | Gold Coast racing simulators, Australia-wide",
+      title: "Everything Simulated | Gold Coast simulator workshop — racing, aircraft, drones, training",
       description:
-        "Turn-key sim racing rigs built on the Gold Coast. Simagic, Trak Racer, Exodus, SIMRIG. Compatibility checked before deposit. Delivered Australia-wide.",
+        "Gold Coast workshop for racing, aircraft, drone and training simulators. Racing crates ship with a compatibility checker. Other platforms are specced in studio. Australia-wide freight.",
       path: "/",
     }),
   component: Home,
@@ -31,19 +32,49 @@ export function Home() {
         <div className="es-hero-mask" />
         <div className="es-hero-copy">
           <p className="es-kicker">Gold Coast · Australia-wide</p>
-          <h1>Turn Your Racing Dreams Into Reality.</h1>
+          <h1>Simulator platforms, built in one workshop.</h1>
           <p className="lead">
-            Assembled and QA’d in our Gold Coast workshop. Compatibility checked before deposit.
-            Crate freight to every capital city.
+            Racing crates already ship. Aircraft, drones and training are specced here too.
+            Assembled and QA’d on the Gold Coast, then crate-freighted.
           </p>
           <div className="es-hero-actions">
-            <Link to="/prebuilds" className="es-btn">
-              View prebuilds <ArrowRight className="size-4" />
+            <Link to="/racing" className="es-btn">
+              Racing tools <ArrowRight className="size-4" />
             </Link>
             <Link to="/studio" className="es-btn es-btn-paper">
               Book a studio demo
             </Link>
           </div>
+        </div>
+      </section>
+
+      <section className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-20">
+        <p className="es-kicker">Platforms</p>
+        <h2 className="mt-3 text-3xl font-medium">What the workshop actually builds</h2>
+        <p className="mt-3 max-w-2xl text-muted">
+          Four platforms. Racing is the live catalogue with shop and checker. The rest are consult-first — same crate, same studio.
+        </p>
+        <div className="mt-10 grid gap-5 sm:grid-cols-2">
+          {PLATFORMS.map((p) => (
+            <Link key={p.slug} to={p.to} className="es-card group overflow-hidden">
+              <div className="aspect-[16/9] overflow-hidden">
+                <img src={p.image} alt="" className="size-full object-cover transition-transform duration-500 group-hover:scale-105" />
+              </div>
+              <div className="p-5">
+                <p className="es-kicker">{p.kicker}</p>
+                <h3 className="mt-2 text-xl font-medium">{p.name}</h3>
+                <p className="mt-2 text-sm text-muted">{p.blurb}</p>
+              </div>
+            </Link>
+          ))}
+        </div>
+        <div className="mt-8 flex flex-wrap gap-4 text-sm">
+          <Link to="/drivers" className="text-paper underline-offset-4 hover:underline">
+            Sponsored drivers
+          </Link>
+          <Link to="/partners" className="text-paper underline-offset-4 hover:underline">
+            Partners
+          </Link>
         </div>
       </section>
 
@@ -182,8 +213,8 @@ function FeaturedPrebuilds() {
     <section className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-20">
       <div className="mb-10 flex items-end justify-between gap-4">
         <div>
-          <p className="es-kicker">Packages</p>
-          <h2 className="mt-2 text-3xl font-medium">Prebuilt simulators</h2>
+          <p className="es-kicker">Racing · live catalogue</p>
+          <h2 className="mt-2 text-3xl font-medium">Prebuilt racing crates</h2>
         </div>
         <Link to="/shop" className="hidden text-sm text-muted hover:text-paper md:inline">
           Or spec from parts

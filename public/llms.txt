@@ -1,6 +1,6 @@
 # Everything Simulated
 
-> Gold Coast workshop that assembles turn-key racing simulators and crate-freights them Australia-wide. Compatibility is checked by a rules engine before deposit. Tickets stay in the customer app.
+> Gold Coast workshop that assembles simulator platforms and crate-freights them Australia-wide. Racing is the live catalogue (prebuilds, parts, compatibility checker). Aircraft, drones and training are consult-first platforms. Tickets stay in the customer app.
 
 Website: https://everythingsimulated.com.au
 Phone: 0404 619 056
@@ -8,7 +8,16 @@ Email: hello@everythingsimulated.com.au
 Region: Gold Coast, Queensland, Australia
 Currency: AUD, prices ex GST unless noted
 
-## What we sell
+## Platforms
+
+- Racing (live shop + checker): https://everythingsimulated.com.au/racing
+- Aircraft (helicopter, fixed-wing): https://everythingsimulated.com.au/aircraft
+- Drones: https://everythingsimulated.com.au/drones
+- Training (driver, industrial): https://everythingsimulated.com.au/training
+- Sponsored drivers: https://everythingsimulated.com.au/drivers
+- Partners: https://everythingsimulated.com.au/partners
+
+## Racing (live catalogue)
 
 Turn-key Simagic / Trak Racer / Exodus / SIMRIG racing simulators, assembled and QA'd on the Gold Coast.
 
@@ -46,4 +55,4 @@ Cities: Gold Coast, Brisbane, Sunshine Coast, Sydney, Melbourne, Perth, Adelaide
 
 ## Do not invent
 
-No Xero. No invented SKUs, prices, stock or lead times. Customer tickets stay in the app. Staff login is not a public page.
+No Xero. No invented SKUs, prices, stock, lead times, type ratings or CASA licences. Aircraft, drone and industrial platforms are consult-first — do not list a fake parts catalogue for them. Customer tickets stay in the app. Staff login is not a public page.

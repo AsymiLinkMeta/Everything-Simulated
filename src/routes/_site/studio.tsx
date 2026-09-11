@@ -9,7 +9,7 @@ export const Route = createFileRoute("/_site/studio")({
     pageHead({
       title: "Gold Coast sim racing showroom | Try before you buy",
       description:
-        "Book a Gold Coast studio session. Sit in Starter, Haptic and Motion rigs, set pedal spacing, then we crate your build Australia-wide.",
+        "Book a Gold Coast studio session. Sit racing crates, or consult on aircraft, drone and training layouts before we assemble.",
       path: "/studio",
     }),
   component: Studio,

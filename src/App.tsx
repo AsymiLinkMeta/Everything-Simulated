@@ -44,6 +44,16 @@ import { Route as OrderRoute } from "@/routes/_site/order";
 import { Route as AppServiceRoute } from "@/routes/app/service";
 import { Route as StaffServiceRoute } from "@/routes/staff/service";
 import { Route as StaffAgentRoute } from "@/routes/staff/agent";
+import { Route as RacingRoute } from "@/routes/_site/racing";
+import { Route as AircraftRoute } from "@/routes/_site/aircraft/index";
+import { Route as HelicopterRoute } from "@/routes/_site/aircraft/helicopter";
+import { Route as FlightRoute } from "@/routes/_site/aircraft/flight";
+import { Route as DronesRoute } from "@/routes/_site/drones";
+import { Route as TrainingRoute } from "@/routes/_site/training/index";
+import { Route as DriverTrainingRoute } from "@/routes/_site/training/driver";
+import { Route as IndustrialTrainingRoute } from "@/routes/_site/training/industrial";
+import { Route as DriversRoute } from "@/routes/_site/drivers";
+import { Route as PartnersRoute } from "@/routes/_site/partners";
 
 function Page({ C }: { C: React.ComponentType }) {
   return (
@@ -99,11 +109,34 @@ export default function App() {
   const AppService = AppServiceRoute.component!;
   const StaffService = StaffServiceRoute.component!;
   const StaffAgent = StaffAgentRoute.component!;
+  const Racing = RacingRoute.component!;
+  const Aircraft = AircraftRoute.component!;
+  const Helicopter = HelicopterRoute.component!;
+  const Flight = FlightRoute.component!;
+  const Drones = DronesRoute.component!;
+  const Training = TrainingRoute.component!;
+  const DriverTraining = DriverTrainingRoute.component!;
+  const IndustrialTraining = IndustrialTrainingRoute.component!;
+  const Drivers = DriversRoute.component!;
+  const Partners = PartnersRoute.component!;
 
   return (
     <RouteError>
     <Routes>
       <Route path="/" element={<Home />} />
+      <Route path="/racing" element={<Page C={Racing} />} />
+      <Route path="/racing/prebuilds" element={<Navigate to="/prebuilds" replace />} />
+      <Route path="/racing/shop" element={<Navigate to="/shop" replace />} />
+      <Route path="/racing/checker" element={<Navigate to="/compatibility" replace />} />
+      <Route path="/aircraft" element={<Page C={Aircraft} />} />
+      <Route path="/aircraft/helicopter" element={<Page C={Helicopter} />} />
+      <Route path="/aircraft/flight" element={<Page C={Flight} />} />
+      <Route path="/drones" element={<Page C={Drones} />} />
+      <Route path="/training" element={<Page C={Training} />} />
+      <Route path="/training/driver" element={<Page C={DriverTraining} />} />
+      <Route path="/training/industrial" element={<Page C={IndustrialTraining} />} />
+      <Route path="/drivers" element={<Page C={Drivers} />} />
+      <Route path="/partners" element={<Page C={Partners} />} />
       <Route path="/builds" element={<Navigate to="/prebuilds" replace />} />
       <Route path="/builds/:slug" element={<BuildsToPrebuilds />} />
       <Route path="/shop" element={<Page C={Shop} />} />

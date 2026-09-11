@@ -8,13 +8,12 @@ import { livePackages } from "@/lib/es/prebuilds";
 import { BRAND, CITIES, GUIDES, PACKAGES } from "@/lib/es/catalog";
 
 const NAV = [
-  { to: "/prebuilds", label: "Prebuilds" },
-  { to: "/shop", label: "Shop" },
-  { to: "/compatibility", label: "Checker" },
+  { to: "/racing", label: "Racing" },
+  { to: "/aircraft", label: "Aircraft" },
+  { to: "/drones", label: "Drones" },
+  { to: "/training", label: "Training" },
+  { to: "/drivers", label: "Drivers" },
   { to: "/studio", label: "Studio" },
-  { to: "/guides", label: "Guides" },
-  { to: "/faqs", label: "FAQs" },
-  { to: "/au", label: "Australia" },
 ] as const;
 
 export function SiteShell({ children }: { children?: React.ReactNode }) {
@@ -63,6 +62,8 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
                     {n.label}
                   </Link>
                 ))}
+                <Link to="/partners">Partners</Link>
+                <Link to="/shop">Racing shop</Link>
                 <AuthSlot />
                 <Link to="/checkout">Cart ({cartCount})</Link>
                 <Link to="/contact">Contact</Link>
@@ -77,7 +78,7 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
         <div className="es-footer-grid">
           <div className="es-footer-col">
             <Logo />
-            <p>Gold Coast built racing simulators. Crate freight Australia-wide.</p>
+            <p>Gold Coast simulator workshop. Racing, aircraft, drones and training. Crate freight Australia-wide.</p>
             <p>Gold Coast, Queensland, Australia</p>
             <p>{BRAND.phone}</p>
             <p>{BRAND.email}</p>
@@ -107,7 +108,30 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
             </p>
           </div>
           <div className="es-footer-col">
-            <p className="es-kicker">Builds</p>
+            <p className="es-kicker">Platforms</p>
+            <ul>
+              <li>
+                <Link to="/racing">Racing</Link>
+              </li>
+              <li>
+                <Link to="/aircraft">Aircraft</Link>
+              </li>
+              <li>
+                <Link to="/drones">Drones</Link>
+              </li>
+              <li>
+                <Link to="/training">Training</Link>
+              </li>
+              <li>
+                <Link to="/drivers">Drivers</Link>
+              </li>
+              <li>
+                <Link to="/partners">Partners</Link>
+              </li>
+            </ul>
+          </div>
+          <div className="es-footer-col">
+            <p className="es-kicker">Racing tools</p>
             <ul>
               {(livePackages().length ? livePackages() : PACKAGES).map((p) => (
                 <li key={p.slug}>
@@ -116,6 +140,9 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
                   </Link>
                 </li>
               ))}
+              <li>
+                <Link to="/shop">Parts shop</Link>
+              </li>
               <li>
                 <Link to="/compatibility">Compatibility checker</Link>
               </li>
