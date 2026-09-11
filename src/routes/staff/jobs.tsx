@@ -4,6 +4,7 @@ import { toast } from "sonner";
 import { staffListJobs, staffSetJobStage } from "@/lib/es/server";
 import { Button } from "@/components/ui/button";
 import { Wrench } from "lucide-react";
+import { StaffAsk } from "@/components/es/staff-ask";
 
 export const Route = createFileRoute("/staff/jobs")({
   component: Jobs,
@@ -30,6 +31,7 @@ function Jobs() {
         <p className="es-kicker">Workshop</p>
         <h1 className="mt-2 text-3xl font-medium">Jobs</h1>
       </div>
+      <StaffAsk tool="job" title="Job brief" placeholder="Workshop notes for the open jobs — BOM, holds, crate freight…" />
       {jobs.isPending ? (
         <div className="grid gap-4 md:grid-cols-3">
           {[1, 2, 3].map((i) => (
@@ -71,6 +73,9 @@ function Jobs() {
                           </p>
                         ) : null}
                         <div className="mt-2 flex flex-wrap gap-1">
+                          <Button size="sm" variant="ghost" asChild>
+                            <Link to={`/staff/agent?tool=job&job=${j.id}${j.quote_id ? `&quote=${j.quote_id}` : ""}`}>Brief</Link>
+                          </Button>
                           {STAGES.filter((s) => s !== stage).map((s) => (
                             <Button key={s} size="sm" variant="ghost" onClick={() => setStage(j.id, s)}>
                               {s}

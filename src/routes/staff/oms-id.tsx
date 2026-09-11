@@ -17,6 +17,7 @@ import {
 import { aud } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
+import { StaffAsk } from "@/components/es/staff-ask";
 
 export const Route = createFileRoute("/staff/oms/$id")({
   component: OmsOrder,
@@ -59,6 +60,15 @@ function OmsOrder() {
           {o.contact_name ?? "Customer"} · {aud(o.total_ex_gst)} ex GST · {aud(o.total_inc_gst)} inc GST
         </p>
       </div>
+      <StaffAsk
+        tool="job"
+        contactId={o.contact_id ?? undefined}
+        quoteId={o.quote_id ?? undefined}
+        lines={o.lines}
+        extra={`Order ${o.id} ${o.status}. Ship ${o.shipping_name ?? ""} ${o.postcode ?? ""}. Notes: ${o.notes}`}
+        title="Crate brief"
+        placeholder="Packing notes, checker holds, freight call-outs for this order…"
+      />
       <div className="flex flex-wrap gap-2">
         {ORDER_STATUSES.map((s) => (
           <Button

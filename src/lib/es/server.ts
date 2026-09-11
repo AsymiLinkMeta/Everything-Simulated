@@ -148,11 +148,14 @@ export async function staffListQuotes() {
   await requireStaff(user.id);
   const { data, error } = await supabase
     .from("quotes")
-    .select("id, user_id, title, status, total_ex_gst, check_ok")
+    .select("id, user_id, title, status, total_ex_gst, check_ok, lines, created_at, postcode")
     .order("created_at", { ascending: false })
     .limit(50);
   if (error) throw new Error(error.message);
-  return data ?? [];
+  return (data ?? []).map((row) => ({
+    ...row,
+    lines: Array.isArray(row.lines) ? (row.lines as CartLine[]) : [],
+  }));
 }
 
 export async function staffListJobs() {
@@ -203,6 +206,71 @@ export async function staffSetJobStage(data: { id: number; stage: string }) {
   const { error } = await supabase.from("jobs").update({ stage: data.stage }).eq("id", data.id);
   if (error) throw new Error(error.message);
   return { ok: true };
+}
+
+export async function staffSetJobNotes(id: number, notes: string) {
+  const user = await getCurrentUser();
+  await requireStaff(user.id);
+  const { error } = await supabase.from("jobs").update({ notes }).eq("id", id);
+  if (error) throw new Error(error.message);
+  return { ok: true };
+}
+
+export async function staffCreateQuote(input: {
+  lines: CartLine[];
+  title?: string;
+  contactId?: string;
+  driverWeightKg?: number;
+  postcode?: string;
+}) {
+  const user = await getCurrentUser();
+  await requireStaff(user.id);
+  const lines = input.lines.filter((l) => l.sku && l.qty > 0);
+  if (!lines.length) throw new Error("Quote needs at least one part");
+  const result = checkCart({ lines, driverWeightKg: input.driverWeightKg, postcode: input.postcode });
+  const id = `ES-${Date.now().toString(36).toUpperCase()}`;
+  let owner = user.id;
+  let postcode = input.postcode ?? null;
+  if (input.contactId) {
+    const { data: c } = await supabase
+      .from("crm_contacts")
+      .select("user_id, postcode, display_name")
+      .eq("id", input.contactId)
+      .maybeSingle();
+    if (c?.user_id) owner = c.user_id;
+    if (!postcode && c?.postcode) postcode = c.postcode;
+  }
+  const row: Record<string, unknown> = {
+    id,
+    user_id: owner,
+    title: input.title?.trim() || "Workshop spec",
+    status: result.ok ? "quoted" : "draft",
+    lines,
+    check_ok: result.ok,
+    total_ex_gst: result.totalExGst,
+    postcode,
+  };
+  if (input.contactId) row.contact_id = input.contactId;
+  let { error } = await supabase.from("quotes").insert(row);
+  if (error && input.contactId) {
+    delete row.contact_id;
+    ({ error } = await supabase.from("quotes").insert(row));
+  }
+  if (error && owner !== user.id) {
+    row.user_id = user.id;
+    ({ error } = await supabase.from("quotes").insert(row));
+  }
+  if (error) throw new Error(error.message);
+  if (input.contactId) {
+    await supabase.from("crm_contacts").update({ crm_stage: "quoted", updated_at: new Date().toISOString() }).eq("id", input.contactId);
+    await supabase.from("crm_notes").insert({
+      contact_id: input.contactId,
+      actor_id: user.id,
+      kind: "note",
+      body: `Quote ${id} · ${row.title} · ${result.ok ? "checker clear" : "checker blocked"}`,
+    });
+  }
+  return { id, result };
 }
 
 export async function staffCreateJob(data: { quoteId?: string; notes?: string }) {

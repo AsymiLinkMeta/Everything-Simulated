@@ -18,6 +18,7 @@ import { createCustomerAccount } from "@/lib/es/staff-accounts";
 import { aud } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
+import { StaffAsk } from "@/components/es/staff-ask";
 
 export const Route = createFileRoute("/staff/crm/$id")({
   component: CrmRecord,
@@ -92,6 +93,13 @@ function CrmRecord() {
           </Button>
         ))}
       </div>
+
+      <StaffAsk
+        tool="crm"
+        contactId={id}
+        title="Customer brief"
+        placeholder="Next action, talking points, or spec a crate for this customer…"
+      />
 
       <form
         className="es-card grid gap-3 p-5 sm:grid-cols-2"

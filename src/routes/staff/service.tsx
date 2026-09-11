@@ -219,6 +219,9 @@ function StaffInbox() {
                   <Button type="button" variant="outline" disabled={drafting} onClick={() => void draftReply()}>
                     {drafting ? "Drafting…" : "Draft reply"}
                   </Button>
+                  <Button type="button" variant="ghost" asChild>
+                    <Link to={`/staff/agent?tool=reply&ticket=${active.id}`}>Open in Agent</Link>
+                  </Button>
                 </div>
               </form>
             </section>

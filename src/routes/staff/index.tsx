@@ -5,7 +5,7 @@ import { staffListBookings, staffListJobs, staffListQuotes } from "@/lib/es/serv
 import { staffListContacts, staffListOrders } from "@/lib/es/crm-oms";
 import { supabase } from "@/lib/db";
 import { aud } from "@/lib/utils";
-import { Bell, Boxes, Calendar, FileText, Handshake, Truck, Wrench } from "lucide-react";
+import { Bell, Boxes, Calendar, FileText, Handshake, Sparkles, Truck, Wrench } from "lucide-react";
 
 export const Route = createFileRoute("/staff/")({
   component: Pipeline,
@@ -93,6 +93,13 @@ function Pipeline() {
       icon: Wrench,
       to: "/staff/jobs",
       hint: "In workshop pipeline",
+    },
+    {
+      label: "Agent desk",
+      value: "Tools",
+      icon: Sparkles,
+      to: "/staff/agent",
+      hint: "Spec, quote, brief, train",
     },
     {
       label: "Bookings",

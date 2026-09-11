@@ -162,6 +162,9 @@ function CrmHome() {
                       <p className="mt-1 text-xs text-muted">
                         {p.crm_source || "no source"} · {p.email || "no email"}
                       </p>
+                      <Link to={`/staff/agent?tool=crm&contact=${p.id}`} className="mt-1 inline-block text-xs text-muted hover:text-paper">
+                        Brief
+                      </Link>
                       <select
                         className="es-input mt-2"
                         value={stage}
