@@ -234,6 +234,11 @@ function Catalog() {
           assembly_manual_url: result.listing.assemblyManualUrl ?? null,
           specs: result.listing.specs ?? {},
           compare: result.listing.compare ?? "",
+          max_nm: result.listing.maxNm ?? null,
+          payload_kg: result.listing.payloadKg ?? null,
+          weight_kg: result.listing.weightKg ?? null,
+          mounts: result.listing.mounts ?? [],
+          qr: result.listing.qr ?? null,
         });
         saved += 1;
       }
@@ -329,6 +334,11 @@ function Catalog() {
         assembly_manual_url: editListing.assemblyManualUrl ?? null,
         specs: editListing.specs ?? {},
         compare: editListing.compare ?? "",
+        max_nm: editListing.maxNm ?? null,
+        payload_kg: editListing.payloadKg ?? null,
+        weight_kg: editListing.weightKg ?? null,
+        mounts: editListing.mounts ?? [],
+        qr: editListing.qr ?? null,
       });
       toast.success(listing_status === "published" ? `${editListing.sku} is live on the shop` : `${editListing.sku} saved as draft`);
       invalidateProductCache();
@@ -388,6 +398,11 @@ function Catalog() {
       compare: p.compare ?? "",
       listingStatus: p.listing_status,
       qtyOnHand: p.qty_on_hand,
+      maxNm: p.max_nm ?? null,
+      payloadKg: p.payload_kg ?? null,
+      weightKg: p.weight_kg ?? null,
+      mounts: p.mounts ?? [],
+      qr: p.qr ?? null,
     });
   }
 
@@ -738,6 +753,63 @@ function Catalog() {
                   value={editListing.compare ?? ""}
                   onChange={(e) => setEditListing((l) => ({ ...l!, compare: e.target.value }))}
                   placeholder="The TR120S V2 uses thicker aluminium profile walls than the TR80…"
+                />
+              </label>
+              <label className="space-y-1">
+                <span className="text-xs text-muted">Max Nm (wheelbase / chassis)</span>
+                <Input
+                  type="number"
+                  value={editListing.maxNm ?? ""}
+                  onChange={(e) =>
+                    setEditListing((l) => ({ ...l!, maxNm: e.target.value === "" ? null : Number(e.target.value) }))
+                  }
+                  placeholder="e.g. 23"
+                />
+              </label>
+              <label className="space-y-1">
+                <span className="text-xs text-muted">Payload kg (chassis / motion)</span>
+                <Input
+                  type="number"
+                  value={editListing.payloadKg ?? ""}
+                  onChange={(e) =>
+                    setEditListing((l) => ({ ...l!, payloadKg: e.target.value === "" ? null : Number(e.target.value) }))
+                  }
+                  placeholder="e.g. 225"
+                />
+              </label>
+              <label className="space-y-1">
+                <span className="text-xs text-muted">Weight kg</span>
+                <Input
+                  type="number"
+                  value={editListing.weightKg ?? ""}
+                  onChange={(e) =>
+                    setEditListing((l) => ({ ...l!, weightKg: e.target.value === "" ? null : Number(e.target.value) }))
+                  }
+                  placeholder="e.g. 28"
+                />
+              </label>
+              <label className="space-y-1">
+                <span className="text-xs text-muted">Quick ref (checker hint)</span>
+                <Input
+                  value={editListing.qr ?? ""}
+                  onChange={(e) => setEditListing((l) => ({ ...l!, qr: e.target.value || null }))}
+                  placeholder="e.g. SR2 / XR1 only"
+                />
+              </label>
+              <label className="space-y-1 sm:col-span-2">
+                <span className="text-xs text-muted">Mount SKUs (comma separated — used by the checker)</span>
+                <Input
+                  value={(editListing.mounts ?? []).join(", ")}
+                  onChange={(e) =>
+                    setEditListing((l) => ({
+                      ...l!,
+                      mounts: e.target.value
+                        .split(",")
+                        .map((s) => s.trim())
+                        .filter(Boolean),
+                    }))
+                  }
+                  placeholder="tr120s, xr1, alpha-evo-side-mount"
                 />
               </label>
             </div>

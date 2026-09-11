@@ -348,7 +348,16 @@ export async function staffCreateOrder(input: {
   });
   await supabase.from("crm_contacts").update({ crm_stage: "quoted" }).eq("id", input.contactId);
   if (input.quoteId) {
-    await supabase.from("quotes").update({ status: "converted", updated_at: new Date().toISOString() }).eq("id", input.quoteId);
+    await supabase.from("quotes").update({ status: "won", updated_at: new Date().toISOString() }).eq("id", input.quoteId);
+  }
+  if (result.ok) {
+    void supabase.rpc("record_agent_memory", {
+      p_kind: "won_bom",
+      p_title: `OMS ${id}`,
+      p_body: lines.map((l) => `${l.qty}× ${l.sku}`).join(", "),
+      p_payload: { orderId: id, lines, totalExGst: result.totalExGst },
+      p_source: "staff",
+    });
   }
   return { id, result };
 }

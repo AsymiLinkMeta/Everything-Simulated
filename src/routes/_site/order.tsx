@@ -41,7 +41,9 @@ function statusTone(s: string) {
 function TrackOrder() {
   const params = typeof window === "undefined" ? new URLSearchParams() : new URLSearchParams(window.location.search);
   const [orderId, setOrderId] = useState(params.get("id") ?? "");
-  const [email, setEmail] = useState(params.get("email") ?? "");
+  const [email, setEmail] = useState(
+    params.get("email") ?? (typeof window === "undefined" ? "" : sessionStorage.getItem("es-track-email") ?? ""),
+  );
   const [loading, setLoading] = useState(Boolean(params.get("id")));
   const [paying, setPaying] = useState(false);
   const [order, setOrder] = useState<OrderRow | null>(null);
@@ -63,6 +65,11 @@ function TrackOrder() {
       throw new Error("No order found with that ID and email.");
     }
     const row = Array.isArray(data) ? data[0] : data;
+    try {
+      sessionStorage.setItem("es-track-email", mail);
+    } catch {
+      /* private mode */
+    }
     setOrder(row as OrderRow);
   }
 

@@ -51,6 +51,11 @@ type Listing = {
   assemblyManualUrl?: string;
   specs?: Record<string, string>;
   compare?: string;
+  maxNm?: number | null;
+  payloadKg?: number | null;
+  weightKg?: number | null;
+  mounts?: string[];
+  qr?: string | null;
 };
 
 function slugify(text: string): string {
@@ -119,6 +124,11 @@ function fallbackListing(input: RequestBody, discovered?: DiscoveredProduct): Li
     assemblyManualUrl: undefined,
     specs: Object.keys(specs).length ? specs : {},
     compare: "",
+    maxNm: null,
+    payloadKg: null,
+    weightKg: null,
+    mounts: [],
+    qr: null,
   };
 }
 
@@ -177,6 +187,11 @@ async function readProductPage(url: string) {
     compatText,
     bodyText: text,
   };
+}
+
+function asInt(value: unknown): number | null {
+  const n = typeof value === "number" ? value : typeof value === "string" ? Number(value.replace(/[^\d.-]/g, "")) : NaN;
+  return Number.isFinite(n) ? Math.round(n) : null;
 }
 
 function isListing(value: unknown): value is Listing {
@@ -365,6 +380,11 @@ REQUIRED JSON fields:
 - assemblyManualUrl: link to a manual/guide/assembly PDF if found on the page
 - specs: object of key-value spec pairs extracted from spec tables, tech specs, or product descriptions, e.g. {"Material": "Extruded aluminium", "Profile": "40x120mm", "Weight": "28kg"}
 - compare: a short paragraph (2-3 sentences) comparing this product to alternatives in its category — based only on factual attributes from the source
+- maxNm: integer peak torque in Nm for wheelbases/chassis if stated, otherwise null
+- payloadKg: integer payload in kg for chassis/motion if stated, otherwise null
+- weightKg: integer product weight in kg if stated, otherwise null
+- mounts: array of compatible chassis/wheelbase SKUs or short slugs from the source (empty if unknown)
+- qr: one-line checker hint, e.g. "SR2 / XR1 only" or "needs side-mount kit" — empty string if none
 
 If the source data is thin, still populate sku, brand, name, category, description (from whatever text is available), and set price to 0. Do not leave fields undefined if you can derive them.`;
 
@@ -408,6 +428,11 @@ If the source data is thin, still populate sku, brand, name, category, descripti
     if (isListing(parsed)) {
       // Force price to 0 regardless of what the AI returned
       parsed.price = 0;
+      parsed.maxNm = asInt(parsed.maxNm);
+      parsed.payloadKg = asInt(parsed.payloadKg);
+      parsed.weightKg = asInt(parsed.weightKg);
+      parsed.mounts = Array.isArray(parsed.mounts) ? parsed.mounts.map((s) => String(s).trim()).filter(Boolean).slice(0, 12) : [];
+      parsed.qr = parsed.qr ? String(parsed.qr).slice(0, 120) : null;
       // Merge images from page/discovered if AI didn't return any
       if ((!parsed.images || parsed.images.length === 0) && fallback.images?.length) {
         parsed.images = fallback.images;

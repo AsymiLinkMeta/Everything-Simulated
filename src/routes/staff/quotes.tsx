@@ -65,10 +65,10 @@ function StaffQuotes() {
               <Button
                 size="sm"
                 variant="outline"
-                disabled={converting === q.id || q.status === "won"}
+                disabled={converting === q.id || q.status === "won" || q.status === "converted"}
                 onClick={() => convert(q.id)}
               >
-                {converting === q.id ? "Converting…" : q.status === "won" ? "Converted" : "Convert to order"}
+                {converting === q.id ? "Converting…" : q.status === "won" || q.status === "converted" ? "Converted" : "Convert to order"}
               </Button>
             </li>
           ))}

@@ -22,6 +22,11 @@ export type ProductListing = {
   compare?: string;
   listingStatus?: "draft" | "published" | "archived";
   qtyOnHand?: number;
+  maxNm?: number | null;
+  payloadKg?: number | null;
+  weightKg?: number | null;
+  mounts?: string[];
+  qr?: string | null;
 };
 
 export async function generateProductListing(input: {

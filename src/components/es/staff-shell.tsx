@@ -13,6 +13,7 @@ import {
   Menu,
   Package,
   Shield,
+  Sparkles,
   Tags,
   Truck,
   Users,
@@ -27,6 +28,7 @@ import { AuthSlot, Logo } from "./bits";
 const TABS = [
   { to: "/staff", label: "Pipeline", icon: ClipboardList },
   { to: "/staff/service", label: "Inbox", icon: Inbox },
+  { to: "/staff/agent", label: "Agent", icon: Sparkles },
   { to: "/staff/crm", label: "CRM", icon: Handshake },
   { to: "/staff/oms", label: "OMS", icon: Truck },
   { to: "/staff/catalog", label: "Catalog", icon: Boxes },

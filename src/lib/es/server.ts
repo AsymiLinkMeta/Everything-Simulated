@@ -5,6 +5,7 @@ import { checkCart } from "./checkCart";
 import { unwrap } from "./unwrap";
 import { freightExGst } from "./freight";
 import { livePackages } from "./prebuilds";
+import { runBuildAgent } from "./agent";
 import type { CartLine, ListingStatus, StaffRole } from "./types";
 
 const STAFF: StaffRole[] = ["sales", "workshop", "content", "support", "admin"];
@@ -18,6 +19,14 @@ async function getCurrentUser() {
 }
 
 async function ensureProfile(userId: string, email?: string | null, name?: string | null): Promise<Profile> {
+  const { data: boot, error: bootErr } = await supabase.rpc("bootstrap_profile", {
+    p_email: email ?? "",
+    p_name: name ?? "",
+  });
+  if (!bootErr && boot && typeof boot === "object" && (boot as Profile).user_id) {
+    return boot as Profile;
+  }
+
   const { data: existing } = await supabase
     .from("profiles")
     .select("user_id, role, email, display_name")
@@ -25,15 +34,12 @@ async function ensureProfile(userId: string, email?: string | null, name?: strin
     .maybeSingle();
   if (existing) return existing as Profile;
 
-  const { data: allProfiles } = await supabase.from("profiles").select("role").eq("role", "admin");
-  const role = (allProfiles?.length ?? 0) === 0 ? "admin" : "customer";
-
   const { data: created } = await supabase
     .from("profiles")
-    .insert({ user_id: userId, email: email ?? null, display_name: name ?? null, role })
+    .insert({ user_id: userId, email: email ?? null, display_name: name ?? null, role: "customer" })
     .select("user_id, role, email, display_name")
     .maybeSingle();
-  return (created ?? { user_id: userId, role, email: email ?? null, display_name: name ?? null }) as Profile;
+  return (created ?? { user_id: userId, role: "customer", email: email ?? null, display_name: name ?? null }) as Profile;
 }
 
 async function getProfileData() {
@@ -158,7 +164,16 @@ export async function staffListJobs() {
     .order("created_at", { ascending: false })
     .limit(50);
   if (error) throw new Error(error.message);
-  return data ?? [];
+  const rows = data ?? [];
+  const ids = [...new Set(rows.map((r) => r.user_id).filter(Boolean))];
+  const names = new Map<string, string>();
+  if (ids.length) {
+    const { data: profiles } = await supabase.from("profiles").select("user_id, display_name, email").in("user_id", ids);
+    for (const p of profiles ?? []) {
+      names.set(p.user_id, p.display_name || p.email || p.user_id.slice(0, 8));
+    }
+  }
+  return rows.map((r) => ({ ...r, customer: names.get(r.user_id) || r.user_id?.slice(0, 8) || "Guest" }));
 }
 
 export async function staffListBookings() {
@@ -275,6 +290,11 @@ export type CatalogProduct = {
   assembly_manual_url: string | null;
   specs: Record<string, string> | null;
   compare: string | null;
+  max_nm?: number | null;
+  payload_kg?: number | null;
+  weight_kg?: number | null;
+  mounts?: string[] | null;
+  qr?: string | null;
   created_by: string;
   created_at: string;
 };
@@ -285,7 +305,7 @@ export async function staffListCatalogProducts(): Promise<CatalogProduct[]> {
   const { data, error } = await supabase
     .from("catalog_products")
     .select(
-      "id, sku, brand, name, category, sell_ex_gst, cost_ex_gst, stock_status, listing_status, qty_on_hand, lead_weeks_min, lead_weeks_max, description, notes, image_url, images, manufacturer_url, whats_included, mount_compatibility, assembly_manual_url, specs, compare, created_by, created_at",
+      "id, sku, brand, name, category, sell_ex_gst, cost_ex_gst, stock_status, listing_status, qty_on_hand, lead_weeks_min, lead_weeks_max, description, notes, image_url, images, manufacturer_url, whats_included, mount_compatibility, assembly_manual_url, specs, compare, max_nm, payload_kg, weight_kg, mounts, qr, created_by, created_at",
     )
     .order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
@@ -319,6 +339,11 @@ export async function staffSaveCatalogProduct(input: {
   assembly_manual_url?: string | null;
   specs?: Record<string, string>;
   compare?: string;
+  max_nm?: number | null;
+  payload_kg?: number | null;
+  weight_kg?: number | null;
+  mounts?: string[];
+  qr?: string | null;
 }) {
   const user = await getCurrentUser();
   await requireStaff(user.id);
@@ -347,6 +372,11 @@ export async function staffSaveCatalogProduct(input: {
     assembly_manual_url: input.assembly_manual_url ?? null,
     specs: input.specs ?? {},
     compare: input.compare ?? "",
+    max_nm: input.max_nm ?? null,
+    payload_kg: input.payload_kg ?? null,
+    weight_kg: input.weight_kg ?? null,
+    mounts: input.mounts ?? [],
+    qr: input.qr ?? null,
     updated_at: new Date().toISOString(),
     created_by: user.id,
   };
@@ -491,6 +521,15 @@ export async function placeOrder(
     notes: `Web order ${id}`,
   });
   await pingOps(id, `New order ${id} from ${shipName}`);
+  if (result.ok) {
+    void supabase.rpc("record_agent_memory", {
+      p_kind: "won_bom",
+      p_title: `Won ${id}`,
+      p_body: lines.map((l) => `${l.qty}× ${l.sku}`).join(", "),
+      p_payload: { orderId: id, lines, totalExGst: result.totalExGst },
+      p_source: "system",
+    });
+  }
   return { id, result };
 }
 
@@ -500,66 +539,31 @@ export async function askBuilder(data: {
   driverWeightKg?: number;
   task?: "chat" | "recommend" | "compatibility";
 }) {
-  const user = await getCurrentUser();
-  await ensureProfile(user.id, user.email);
-  await supabase.from("chat_messages").insert({ user_id: user.id, role: "user", content: data.message.slice(0, 4000) });
-  const result = checkCart({ lines: data.lines, driverWeightKg: data.driverWeightKg });
-  const systemPrompt = `You are the Everything Simulated build agent on the Gold Coast. Phone ${BRAND.phone}. You help customers choose parts, understand compatibility, and prepare accurate quotes. Never invent SKUs, products, prices, stock or lead times. Only recommend these packages: ${livePackages().map((p) => p.slug).join(", ") || "starter, haptic, motion"} and catalogue SKUs: ${getCachedProducts().map((p) => p.sku).join(", ")}. Compatibility is decided by the checker JSON — never override a block. Prices are AUD ex GST. If the cart is blocked, explain the exact issue and suggest only fixes supported by the checker. Be concise, practical and premium. Current agent task: ${data.task ?? "chat"}.`;
-  const userContent = `Checker JSON: ${JSON.stringify(result)}\nCart: ${JSON.stringify(data.lines)}\nDriver weight kg: ${data.driverWeightKg ?? 80}\nQuestion: ${data.message}`;
-
-  let reply: string;
-  try {
-    const { data: sessionData } = await supabase.auth.getSession();
-    const accessToken = sessionData.session?.access_token;
-    if (!accessToken) throw new Error("No session");
-
-    const response = await fetch(`${supabaseUrl}/functions/v1/ask-builder`, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${accessToken}`,
-        Apikey: supabaseAnonKey,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ systemPrompt, userContent }),
-    });
-    if (!response.ok) throw new Error("AI request failed");
-    const body = (await response.json()) as { reply?: string };
-    reply = body.reply ?? fallbackReply(data.message, result);
-  } catch {
-    reply = fallbackReply(data.message, result);
-  }
-  await supabase.from("chat_messages").insert({ user_id: user.id, role: "assistant", content: reply });
-  return { reply, result };
+  await ensureProfile((await getCurrentUser()).id);
+  const turn = await runBuildAgent({
+    message: data.message,
+    lines: data.lines,
+    driverWeightKg: data.driverWeightKg,
+    task: data.task ?? "chat",
+  });
+  return {
+    reply: turn.reply,
+    result: turn.result,
+    proposedLines: turn.proposedLines,
+    proposedCheck: turn.proposedCheck,
+  };
 }
 
 export async function listChat() {
   const user = await getCurrentUser();
   const { data, error } = await supabase
     .from("chat_messages")
-    .select("role, content, created_at")
+    .select("role, content, created_at, id")
     .eq("user_id", user.id)
     .order("id", { ascending: false })
     .limit(80);
   if (error) throw new Error(error.message);
   return data ?? [];
-}
-
-function fallbackReply(message: string, result: ReturnType<typeof checkCart>) {
-  const q = message.toLowerCase();
-  if (q.includes("junior") || q.includes("kid") || q.includes("kart")) {
-    return "For juniors we spec Starter or Haptic on an adjustable seat, 12Nm unless a coach asks otherwise. Book a Gold Coast demo so pedal spacing is set before the crate leaves. The checker must stay green before deposit.";
-  }
-  if (q.includes("motion")) {
-    return "Motion is the SR2 on Exodus XR1 only — TR120S is blocked. Flagship package is $28,999 + GST. Confirm driver weight so payload stays under 225 kg.";
-  }
-  if (!result.ok) {
-    const block = result.issues.find((i) => i.severity === "block");
-    return `This cart is blocked: ${block?.message ?? "conflicting parts"}. Fix that before we quote. ${block?.fix?.join(" ") ?? ""}`;
-  }
-  if (q.includes("cost") || q.includes("price")) {
-    return `This cart is ${Math.round(result.totalExGst / 100)} AUD ex GST (about ${Math.round(result.totalIncGst / 100)} inc GST). Lead time ${result.leadWeeks[0]}–${result.leadWeeks[1]} weeks. Australia-wide crate freight from the Gold Coast.`;
-  }
-  return `Cart is compatible. Total ${Math.round(result.totalExGst / 100)} AUD ex GST. Save a quote in your account or book a showroom session. Guides covering cost, motion vs haptic, and delivery are on the site.`;
 }
 
 export async function publicCatalog() {
@@ -627,6 +631,15 @@ export async function placeGuestOrder(input: {
     notes: `Guest order ${id} — ${shipName}`,
   });
   await pingOps(id, `New guest order ${id} from ${shipName}`);
+  if (result.ok) {
+    void supabase.rpc("record_agent_memory", {
+      p_kind: "won_bom",
+      p_title: `Guest ${id}`,
+      p_body: lines.map((l) => `${l.qty}× ${l.sku}`).join(", "),
+      p_payload: { orderId: id, lines, totalExGst: result.totalExGst },
+      p_source: "system",
+    });
+  }
   return { id, result };
 }
 

@@ -43,6 +43,7 @@ import { Route as PrebuildSlugRoute } from "@/routes/_site/prebuilds/$slug";
 import { Route as OrderRoute } from "@/routes/_site/order";
 import { Route as AppServiceRoute } from "@/routes/app/service";
 import { Route as StaffServiceRoute } from "@/routes/staff/service";
+import { Route as StaffAgentRoute } from "@/routes/staff/agent";
 
 function Page({ C }: { C: React.ComponentType }) {
   return (
@@ -97,6 +98,7 @@ export default function App() {
   const OrderLookup = OrderRoute.component!;
   const AppService = AppServiceRoute.component!;
   const StaffService = StaffServiceRoute.component!;
+  const StaffAgent = StaffAgentRoute.component!;
 
   return (
     <RouteError>
@@ -145,6 +147,7 @@ export default function App() {
         <Route path="team" element={<StaffTeam />} />
         <Route path="prebuilds" element={<StaffPrebuilds />} />
         <Route path="service" element={<StaffService />} />
+        <Route path="agent" element={<StaffAgent />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />
     </Routes>

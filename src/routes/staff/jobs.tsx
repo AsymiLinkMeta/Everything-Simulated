@@ -61,6 +61,7 @@ function Jobs() {
                     stageJobs.map((j) => (
                       <li key={j.id} className="rounded-md bg-raised p-3 text-sm">
                         <p className="font-medium">#{j.id}</p>
+                        <p className="text-xs text-muted">{j.customer ?? "Guest"}</p>
                         <p className="text-xs text-muted">{j.quote_id ?? "no quote"}</p>
                         {j.order_id ? (
                           <p className="text-xs">

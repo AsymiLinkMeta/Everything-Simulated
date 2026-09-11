@@ -76,7 +76,7 @@ function Checkout() {
         </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Button asChild>
-            <Link to={`/order?id=${encodeURIComponent(orderId)}`}>Track this order</Link>
+            <Link to={`/order?id=${encodeURIComponent(orderId)}${email.trim() ? `&email=${encodeURIComponent(email.trim())}` : ""}`}>Track this order</Link>
           </Button>
           <Button variant="outline" asChild>
             <Link to="/shop">Continue browsing</Link>
@@ -124,6 +124,11 @@ function Checkout() {
         id = res.id;
       }
       void notifyOrder({ orderId: id, kind: "placed", email: mail });
+      try {
+        sessionStorage.setItem("es-track-email", mail);
+      } catch {
+        /* private mode */
+      }
       if (stripeOn && payNow) {
         const session = await startDepositCheckout({
           orderId: id,
@@ -230,7 +235,7 @@ function Checkout() {
             {!user && (
               <p className="text-xs text-muted">
                 Already have an account?{" "}
-                <Link to="/login" className="underline hover:text-paper">
+                <Link to="/login?next=/checkout" className="underline hover:text-paper">
                   Sign in
                 </Link>{" "}
                 for a faster checkout.

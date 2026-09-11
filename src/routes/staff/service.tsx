@@ -14,6 +14,7 @@ import {
   staffListTickets,
   type InboxItem,
 } from "@/lib/es/inbox";
+import { draftStaffReply, recordMemory } from "@/lib/es/agent";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -27,6 +28,7 @@ function StaffInbox() {
   const [activeTicket, setActiveTicket] = useState<string | null>(null);
   const [chatUser, setChatUser] = useState<string | null>(null);
   const [reply, setReply] = useState("");
+  const [drafting, setDrafting] = useState(false);
 
   const inbox = useQuery({ queryKey: ["staff-inbox"], queryFn: listInbox, refetchInterval: 15000 });
   const tickets = useQuery({ queryKey: ["staff-tickets"], queryFn: staffListTickets });
@@ -54,6 +56,9 @@ function StaffInbox() {
     }
   }
 
+  const unread = inbox.data?.filter((i) => !i.read_at).length ?? 0;
+  const active = tickets.data?.find((t) => t.id === activeTicket);
+
   async function sendReply(e: React.FormEvent) {
     e.preventDefault();
     if (!activeTicket) return;
@@ -68,8 +73,23 @@ function StaffInbox() {
     }
   }
 
-  const unread = inbox.data?.filter((i) => !i.read_at).length ?? 0;
-  const active = tickets.data?.find((t) => t.id === activeTicket);
+  async function draftReply() {
+    if (!activeTicket || !active) return;
+    setDrafting(true);
+    try {
+      const threadText = (thread.data ?? []).map((m) => `${m.author_role}: ${m.body}`).join("\n");
+      const text = await draftStaffReply({
+        subject: active.subject,
+        thread: threadText || active.subject,
+        extra: [active.contact_name, active.contact_email, active.order_id].filter(Boolean).join(" · "),
+      });
+      setReply(text);
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : "Could not draft a reply");
+    } finally {
+      setDrafting(false);
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -192,9 +212,14 @@ function StaffInbox() {
               </div>
               <form className="space-y-2" onSubmit={sendReply}>
                 <Input value={reply} onChange={(e) => setReply(e.target.value)} placeholder="Reply in the customer app…" />
-                <Button type="submit" disabled={!reply.trim()}>
-                  Send to customer app
-                </Button>
+                <div className="flex flex-wrap gap-2">
+                  <Button type="submit" disabled={!reply.trim()}>
+                    Send to customer app
+                  </Button>
+                  <Button type="button" variant="outline" disabled={drafting} onClick={() => void draftReply()}>
+                    {drafting ? "Drafting…" : "Draft reply"}
+                  </Button>
+                </div>
               </form>
             </section>
           ) : (
@@ -230,6 +255,22 @@ function StaffInbox() {
                 <div key={i} className={`rounded-lg px-4 py-3 text-sm ${m.role === "user" ? "bg-raised" : "bg-surface"}`}>
                   <p className="text-xs capitalize text-muted">{m.role}</p>
                   <p className="mt-1 whitespace-pre-wrap">{m.content}</p>
+                  {m.role === "assistant" ? (
+                    <button
+                      type="button"
+                      className="mt-2 text-xs text-muted hover:text-paper"
+                      onClick={() =>
+                        void recordMemory({
+                          kind: "reply",
+                          title: "Expert keep",
+                          body: m.content.slice(0, 1500),
+                          source: "staff",
+                        }).then(() => toast.success("Kept as training"))
+                      }
+                    >
+                      Keep as training
+                    </button>
+                  ) : null}
                 </div>
               ))
             )}

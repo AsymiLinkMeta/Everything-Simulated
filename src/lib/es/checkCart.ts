@@ -3,7 +3,7 @@ import { freightExGst } from "./freight";
 import { getCachedProductMap, getLiveRules } from "./product-cache";
 import type { CartLine, CheckIssue, CheckResult, CompatibilityRule, Product } from "./types";
 
-export const UNIQUE_CATEGORIES = new Set(["chassis", "wheelbase", "wheel", "pedals", "shifter", "motion", "pc", "seat"]);
+export const UNIQUE_CATEGORIES = new Set(["chassis", "wheelbase", "wheel", "pedals", "shifter", "handbrake", "motion", "pc", "seat"]);
 
 function pairKey(a: string, b: string) {
   return a < b ? `${a}::${b}` : `${b}::${a}`;

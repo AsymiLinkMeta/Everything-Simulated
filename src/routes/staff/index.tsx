@@ -61,7 +61,7 @@ function Pipeline() {
     }
   }
 
-  const openQuotes = quotes.data?.filter((q) => q.status !== "converted" && q.status !== "archived") ?? [];
+  const openQuotes = quotes.data?.filter((q) => q.status !== "converted" && q.status !== "archived" && q.status !== "won") ?? [];
   const activeJobs = jobs.data?.filter((j) => j.stage !== "delivered") ?? [];
   const pendingBookings = bookings.data?.filter((b) => b.status === "requested") ?? [];
 

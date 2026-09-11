@@ -1,11 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { toast } from "sonner";
 import { CartPanel } from "@/components/es/cart-panel";
 import { BuildStudio } from "@/components/es/build-studio";
 import { Button } from "@/components/ui/button";
 import { askBuilder } from "@/lib/es/server";
 import { useCart } from "@/lib/es/cart-store";
+import { CheckPills } from "@/components/es/bits";
 import { Sparkles, Loader2 } from "lucide-react";
+import type { CartLine, CheckResult } from "@/lib/es/types";
 
 export const Route = createFileRoute("/app/build")({
   component: AppBuild,
@@ -13,15 +16,18 @@ export const Route = createFileRoute("/app/build")({
 
 function AppBuild() {
   const lines = useCart((s) => s.lines);
+  const setLines = useCart((s) => s.setLines);
   const driverWeightKg = useCart((s) => s.driverWeightKg);
   const [aiReply, setAiReply] = useState<string | null>(null);
   const [aiPending, setAiPending] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
+  const [proposed, setProposed] = useState<{ lines: CartLine[]; check: CheckResult | null } | null>(null);
 
   async function getRecommendation() {
     setAiPending(true);
     setAiError(null);
     setAiReply(null);
+    setProposed(null);
     try {
       const res = await askBuilder({
         message:
@@ -31,6 +37,9 @@ function AppBuild() {
         task: "recommend",
       });
       setAiReply(res.reply);
+      if (res.proposedLines?.length) {
+        setProposed({ lines: res.proposedLines, check: res.proposedCheck ?? null });
+      }
     } catch {
       setAiError("The AI agent could not generate a recommendation right now. Try again shortly.");
     } finally {
@@ -70,6 +79,27 @@ function AppBuild() {
           </div>
         ) : null}
         {aiReply ? <div className="es-card mt-4 whitespace-pre-wrap p-4 text-sm">{aiReply}</div> : null}
+        {proposed ? (
+          <div className="mt-3 space-y-3">
+            <ul className="text-sm text-muted">
+              {proposed.lines.map((l) => (
+                <li key={l.sku}>
+                  {l.qty} × {l.sku}
+                </li>
+              ))}
+            </ul>
+            {proposed.check ? <CheckPills result={proposed.check} /> : null}
+            <Button
+              size="sm"
+              onClick={() => {
+                setLines(proposed.lines);
+                toast.success(proposed.check?.ok ? "Loaded into your build" : "Loaded — checker still has a hold");
+              }}
+            >
+              Apply to cart
+            </Button>
+          </div>
+        ) : null}
         {aiError ? <p className="mt-4 text-sm text-red-400">{aiError}</p> : null}
       </div>
 

@@ -185,16 +185,24 @@ function IssueRow({ issue }: { issue: CheckIssue }) {
     setFixing(true);
     try {
       const res = await askBuilder({
-        message: `Fix this compatibility issue: ${issue.message}. Suggest the minimal cart change needed. Return ONLY a JSON object with "reason" (a few words) and "lines" (the full replacement cart array of {sku,qty}).`,
+        message: `Fix this compatibility issue: ${issue.message}. Suggest the minimal cart change needed.`,
         lines,
         driverWeightKg,
         task: "compatibility",
       });
-      const parsed = extractRecommendation(res.reply);
-      if (parsed) {
-        setRec({ id: issue.code, ...parsed });
+      if (res.proposedLines?.length) {
+        setRec({
+          id: issue.code,
+          reason: res.reply.slice(0, 180) || "Suggested crate change",
+          newLines: res.proposedLines,
+        });
       } else {
-        toast.error("Could not generate a fix. Try the build expert chat.");
+        const parsed = extractRecommendation(res.reply);
+        if (parsed) {
+          setRec({ id: issue.code, ...parsed });
+        } else {
+          toast.error("Could not generate a fix. Try the build expert chat.");
+        }
       }
     } catch {
       toast.error("Could not reach the AI agent. Try again shortly.");
