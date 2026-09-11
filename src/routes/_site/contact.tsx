@@ -64,8 +64,11 @@ function Contact() {
       {sent ? (
         <div className="es-card mt-8 space-y-3 p-6">
           <p className="font-medium">Received. The workshop will reply in the app.</p>
+          <p className="text-sm text-muted">
+            Sign in with the same email to see the thread. Staff already have it in the inbox.
+          </p>
           <Button asChild>
-            <Link to="/app/service">Open messages</Link>
+            <Link to="/login">Sign in to view messages</Link>
           </Button>
         </div>
       ) : (
@@ -99,7 +102,7 @@ function Contact() {
       </p>
       <div className="mt-8 flex flex-col gap-3 sm:flex-row">
         <Button asChild>
-          <Link to="/app/book">Book a demo</Link>
+          <Link to="/studio">Book a demo</Link>
         </Button>
         <Button variant="outline" asChild>
           <Link to="/compatibility">Start a build</Link>

@@ -4,7 +4,7 @@ import { BackButton, IncGst, JsonLd, LineName, Money } from "@/components/es/bit
 import { Button } from "@/components/ui/button";
 import { abs, breadcrumbLd, pageHead } from "@/lib/es/seo";
 import { fetchPrebuildBySlug, fetchPublishedPrebuilds } from "@/lib/es/prebuilds";
-import { getCachedProductMap } from "@/lib/es/product-cache";
+import { fetchProducts, getCachedProductMap } from "@/lib/es/product-cache";
 import { useCart } from "@/lib/es/cart-store";
 
 import type { PrebuildWithComponents } from "@/lib/es/prebuilds";
@@ -23,6 +23,7 @@ function PrebuildDetailPage() {
   const { slug } = Route.useParams();
   const prebuild = useQuery({ queryKey: ["prebuild", slug], queryFn: () => fetchPrebuildBySlug(slug) });
   const allPrebuilds = useQuery({ queryKey: ["prebuilds"], queryFn: fetchPublishedPrebuilds });
+  const products = useQuery({ queryKey: ["products"], queryFn: () => fetchProducts() });
   const loadLines = useCart((s) => s.setLines);
 
   if (prebuild.isPending) {
@@ -46,7 +47,9 @@ function PrebuildDetailPage() {
     );
   }
 
-  const productMap = getCachedProductMap();
+  const productMap = products.data
+    ? Object.fromEntries(products.data.map((item) => [item.sku, item]))
+    : getCachedProductMap();
   const others = (allPrebuilds.data ?? []).filter((o) => o.id !== p.id).slice(0, 3);
 
   return (

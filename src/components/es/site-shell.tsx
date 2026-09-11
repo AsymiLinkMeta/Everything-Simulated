@@ -2,9 +2,10 @@ import "./es-chrome";
 import { Link, Outlet, useLocation } from "@tanstack/react-router";
 import { Facebook, Instagram, Phone, ShoppingCart } from "lucide-react";
 import { useEffect, useState } from "react";
-import { BRAND, CITIES, GUIDES, PACKAGES } from "@/lib/es/catalog";
-import { CookieDisclaimer, CustomerSignInLink, Logo, StaffLoginLink } from "./bits";
+import { CookieDisclaimer, AuthSlot, Logo, StaffLoginLink } from "./bits";
 import { useCart } from "@/lib/es/cart-store";
+import { livePackages } from "@/lib/es/prebuilds";
+import { BRAND, CITIES, GUIDES, PACKAGES } from "@/lib/es/catalog";
 
 const NAV = [
   { to: "/prebuilds", label: "Prebuilds" },
@@ -50,7 +51,7 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
               </span>
             )}
           </Link>
-          <CustomerSignInLink />
+          <AuthSlot />
           <div className={`es-menu ${menuOpen ? "is-open" : ""}`}>
             <button type="button" className="es-menu-toggle" onClick={() => setMenuOpen((v) => !v)} aria-expanded={menuOpen}>
               Menu
@@ -62,7 +63,7 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
                     {n.label}
                   </Link>
                 ))}
-                <CustomerSignInLink className="" />
+                <AuthSlot />
                 <Link to="/checkout">Cart ({cartCount})</Link>
                 <Link to="/contact">Contact</Link>
                 <a href={`tel:${BRAND.phone.replace(/\s/g, "")}`}>{BRAND.phone}</a>
@@ -107,9 +108,9 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
           <div className="es-footer-col">
             <p className="es-kicker">Builds</p>
             <ul>
-              {PACKAGES.map((p) => (
+              {(livePackages().length ? livePackages() : PACKAGES).map((p) => (
                 <li key={p.slug}>
-                  <Link to="/builds/$slug" params={{ slug: p.slug }}>
+                  <Link to="/prebuilds/$slug" params={{ slug: p.slug }}>
                     {p.name}
                   </Link>
                 </li>

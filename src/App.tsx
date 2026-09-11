@@ -2,7 +2,9 @@ import { Navigate, Route, Routes, useParams } from "react-router-dom";
 import { SiteShell } from "@/components/es/site-shell";
 import { AppShell } from "@/components/es/app-shell";
 import { StaffShell } from "@/components/es/staff-shell";
-import { Home } from "@/routes/index";
+import { RouteError } from "@/components/es/route-error";
+import { NotFoundPage } from "@/routes/not-found";
+import { Route as HomeRoute } from "@/routes/index";
 import { Route as ShopRoute } from "@/routes/_site/shop/index";
 import { Route as ShopSkuRoute } from "@/routes/_site/shop/$sku";
 import { Route as CompatRoute } from "@/routes/_site/compatibility";
@@ -56,6 +58,7 @@ function BuildsToPrebuilds() {
 }
 
 export default function App() {
+  const Home = HomeRoute.component!;
   const Shop = ShopRoute.component!;
   const ShopSku = ShopSkuRoute.component!;
   const Compat = CompatRoute.component!;
@@ -96,6 +99,7 @@ export default function App() {
   const StaffService = StaffServiceRoute.component!;
 
   return (
+    <RouteError>
     <Routes>
       <Route path="/" element={<Home />} />
       <Route path="/builds" element={<Navigate to="/prebuilds" replace />} />
@@ -142,7 +146,8 @@ export default function App() {
         <Route path="prebuilds" element={<StaffPrebuilds />} />
         <Route path="service" element={<StaffService />} />
       </Route>
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
+    </RouteError>
   );
 }

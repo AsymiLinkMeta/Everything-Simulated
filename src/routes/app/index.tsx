@@ -69,7 +69,7 @@ function AppHome() {
           {liveOrders.length ? (
             liveOrders.slice(0, 4).map((o) => (
               <li key={o.id}>
-                <Link to="/app/orders" className="es-card flex items-center justify-between px-4 py-3 text-sm">
+                <Link to={`/order?id=${encodeURIComponent(o.id)}`} className="es-card flex items-center justify-between px-4 py-3 text-sm">
                   <span>
                     {o.id}
                     <span className="ml-2 capitalize text-muted">{o.status}</span>

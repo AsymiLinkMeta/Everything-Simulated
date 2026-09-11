@@ -1,7 +1,7 @@
 import "./es-chrome";
 import { useState } from "react";
 import { Link, Outlet } from "@tanstack/react-router";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { Calendar, Gauge, LayoutDashboard, LifeBuoy, Menu, MessageSquare, Package, Wrench } from "lucide-react";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { useQuery } from "@tanstack/react-query";
@@ -21,6 +21,7 @@ const TABS = [
 export function AppShell() {
   const { user, isPending } = useCurrentUserState();
   const [menuOpen, setMenuOpen] = useState(false);
+  const loc = useLocation();
   const profile = useQuery({
     queryKey: ["profile"],
     queryFn: () => getProfile(),
@@ -30,7 +31,10 @@ export function AppShell() {
   if (isPending) {
     return <div className="es-page" style={{ display: "grid", placeItems: "center" }}>Loading account…</div>;
   }
-  if (!user) return <Navigate to="/login" replace />;
+  if (!user) {
+    const next = encodeURIComponent(`${loc.pathname}${loc.search}`);
+    return <Navigate to={`/login?next=${next}`} replace />;
+  }
 
   return (
     <div className="es-page">

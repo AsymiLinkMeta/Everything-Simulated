@@ -9,7 +9,7 @@ import { aud, gstInclusive } from "@/lib/utils";
 import type { CheckIssue, CheckResult, PackageSpec, Product, CartLine } from "@/lib/es/types";
 import { product, productImage, getCachedProductMap } from "@/lib/es/product-cache";
 import { useCart } from "@/lib/es/cart-store";
-import { checkCart } from "@/lib/es/checkCart";
+import { UNIQUE_CATEGORIES } from "@/lib/es/checkCart";
 import { askBuilder } from "@/lib/es/server";
 import { cn } from "@/lib/utils";
 
@@ -336,7 +336,7 @@ export function ProductTile({ item }: { item: Product }) {
             e.preventDefault();
             e.stopPropagation();
             add(item.sku);
-            toast.success(inCart && !["chassis", "wheelbase", "motion", "pc", "seat"].includes(item.category) ? "Quantity updated" : "Added to build");
+            toast.success(inCart && !UNIQUE_CATEGORIES.has(item.category) ? "Quantity updated" : "Added to build");
           }}
           className="absolute bottom-2 right-2 z-10 grid size-11 place-items-center rounded-full bg-paper text-ink shadow-lg transition-all duration-200 hover:scale-105"
         >

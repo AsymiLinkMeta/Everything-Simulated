@@ -22,14 +22,27 @@ function Pipeline() {
   const alerts = useQuery({
     queryKey: ["pipeline-alerts"],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const pipe = await supabase
         .from("pipeline_alerts")
         .select("id, order_id, kind, message, acknowledged, created_at")
         .eq("acknowledged", false)
         .order("created_at", { ascending: false })
         .limit(10);
-      if (error) throw new Error(error.message);
-      return data ?? [];
+      if (!pipe.error && (pipe.data?.length ?? 0) > 0) return pipe.data ?? [];
+      const staff = await supabase
+        .from("staff_alerts")
+        .select("id, kind, title, body, href, read_at, created_at")
+        .is("read_at", null)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      return (staff.data ?? []).map((row) => ({
+        id: row.id,
+        order_id: row.href?.split("/").pop() ?? null,
+        kind: row.kind,
+        message: row.body || row.title,
+        acknowledged: Boolean(row.read_at),
+        created_at: row.created_at,
+      }));
     },
     refetchInterval: 15000,
   });
@@ -41,6 +54,7 @@ function Pipeline() {
         .from("pipeline_alerts")
         .update({ acknowledged: true, acknowledged_by: user?.id ?? null, acknowledged_at: new Date().toISOString() })
         .eq("id", id);
+      await supabase.from("staff_alerts").update({ read_at: new Date().toISOString() }).eq("id", id);
       await qc.invalidateQueries({ queryKey: ["pipeline-alerts"] });
     } catch {
       // silent

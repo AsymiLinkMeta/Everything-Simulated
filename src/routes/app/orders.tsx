@@ -28,16 +28,21 @@ function AppOrders() {
       ) : (
         <ul className="space-y-2">
           {orders.data?.map((o) => (
-            <li key={o.id} className="es-card flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm">
-              <div>
-                <p className="font-medium">{o.id}</p>
-                <p className="text-xs text-muted capitalize">
-                  {o.status}
-                  {o.invoice_number ? ` · ${o.invoice_number}` : ""}
-                  {o.tracking_number ? ` · ${o.carrier} ${o.tracking_number}` : ""}
-                </p>
-              </div>
-              <span className="tabular-nums text-muted">{aud(o.total_ex_gst)} ex GST</span>
+            <li key={o.id}>
+              <Link
+                to={`/order?id=${encodeURIComponent(o.id)}`}
+                className="es-card flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm"
+              >
+                <div>
+                  <p className="font-medium">{o.id}</p>
+                  <p className="text-xs text-muted capitalize">
+                    {o.status}
+                    {o.invoice_number ? ` · ${o.invoice_number}` : ""}
+                    {o.tracking_number ? ` · ${o.carrier} ${o.tracking_number}` : ""}
+                  </p>
+                </div>
+                <span className="tabular-nums text-muted">{aud(o.total_ex_gst)} ex GST</span>
+              </Link>
             </li>
           ))}
         </ul>

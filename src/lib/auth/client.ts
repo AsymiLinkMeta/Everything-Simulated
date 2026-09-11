@@ -42,3 +42,15 @@ export async function signIn(providerId?: string, opts?: { callbackURL?: string 
 export async function signOut() {
   await supabase.auth.signOut();
 }
+
+export async function requestPasswordReset(email: string) {
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${window.location.origin}/login`,
+  });
+  return { error: error ? { message: error.message } : null };
+}
+
+export async function updatePassword(password: string) {
+  const { error } = await supabase.auth.updateUser({ password });
+  return { error: error ? { message: error.message } : null };
+}

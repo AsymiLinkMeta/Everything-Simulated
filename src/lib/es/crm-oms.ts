@@ -339,6 +339,13 @@ export async function staffCreateOrder(input: {
     invoice_number: null,
   });
   if (error) throw new Error(error.message);
+  await supabase.from("jobs").insert({
+    user_id: contact.user_id,
+    quote_id: input.quoteId ?? null,
+    order_id: id,
+    stage: "enquiry",
+    notes: `OMS order ${id}`,
+  });
   await supabase.from("crm_contacts").update({ crm_stage: "quoted" }).eq("id", input.contactId);
   if (input.quoteId) {
     await supabase.from("quotes").update({ status: "converted", updated_at: new Date().toISOString() }).eq("id", input.quoteId);
@@ -384,14 +391,6 @@ export async function staffConvertQuote(quoteId: string) {
     quoteId,
     lines,
     notes: `Converted from quote ${quoteId}`,
-  });
-
-  await supabase.from("jobs").insert({
-    user_id: q.user_id,
-    quote_id: quoteId,
-    order_id: order.id,
-    stage: "enquiry",
-    notes: `From quote ${quoteId} / order ${order.id}`,
   });
 
   void actor;

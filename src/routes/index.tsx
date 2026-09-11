@@ -7,8 +7,8 @@ import { JsonLd, Money } from "@/components/es/bits";
 import { BRAND, CITIES } from "@/lib/es/catalog";
 import { localBusinessLd, pageHead } from "@/lib/es/seo";
 import { fetchBrands } from "@/lib/es/brands";
-import { fetchFeaturedPrebuilds } from "@/lib/es/prebuilds";
-import type { PrebuildWithComponents } from "@/lib/es/prebuilds";
+import { fetchFeaturedPrebuilds, livePackages } from "@/lib/es/prebuilds";
+import { PACKAGES } from "@/lib/es/catalog";
 
 export const Route = createFileRoute("/")({
   head: () =>
@@ -167,9 +167,7 @@ function FeaturedPrebuilds() {
       <div className="mb-10 flex items-end justify-between gap-4">
         <div>
           <p className="es-kicker">Packages</p>
-          <h2 className="mt-2 text-3xl font-medium">
-            "Prebuilt simulators"
-          </h2>
+          <h2 className="mt-2 text-3xl font-medium">Prebuilt simulators</h2>
         </div>
         <Link to="/shop" className="hidden text-sm text-muted hover:text-paper md:inline">
           Or spec from parts
@@ -210,11 +208,32 @@ function FeaturedPrebuilds() {
           ))}
         </div>
       ) : (
-        <div className="es-card px-5 py-10 text-center">
-          <p className="text-muted">Prebuilt simulators are being prepared.</p>
-          <Link to="/prebuilds" className="mt-3 inline-block text-sm text-paper underline-offset-4 hover:underline">
-            View the prebuilds catalogue
-          </Link>
+        <div className="es-pack-grid">
+          {(livePackages().length ? livePackages() : PACKAGES).map((p) => (
+            <div key={p.slug} className="group">
+              <Link
+                to="/prebuilds/$slug"
+                params={{ slug: p.slug }}
+                className="relative block aspect-square overflow-hidden rounded-2xl border border-line bg-black transition-transform duration-300 group-hover:-translate-y-1"
+              >
+                <img
+                  src={p.image}
+                  alt={p.name}
+                  className="absolute inset-0 size-full bg-black object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                {p.kicker ? (
+                  <span className="es-kicker absolute left-4 top-4 rounded-lg bg-black/70 px-2 py-1.5">{p.kicker}</span>
+                ) : null}
+              </Link>
+              <div className="px-1 pt-4">
+                <h3 className="text-xl font-medium text-paper">{p.name}</h3>
+                <p className="mt-2 text-sm leading-6 text-muted">{p.blurb}</p>
+                <p className="mt-4 text-lg font-medium text-paper">
+                  <Money cents={p.priceExGst} gst />
+                </p>
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </section>

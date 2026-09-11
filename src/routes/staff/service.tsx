@@ -5,13 +5,13 @@ import { toast } from "sonner";
 import { Inbox } from "lucide-react";
 import {
   listInbox,
-  listMyTickets,
   listTicketMessages,
   markInboxRead,
   replyToTicket,
   setTicketStatus,
   staffGetChat,
   staffListChats,
+  staffListTickets,
   type InboxItem,
 } from "@/lib/es/inbox";
 import { Button } from "@/components/ui/button";
@@ -29,7 +29,7 @@ function StaffInbox() {
   const [reply, setReply] = useState("");
 
   const inbox = useQuery({ queryKey: ["staff-inbox"], queryFn: listInbox, refetchInterval: 15000 });
-  const tickets = useQuery({ queryKey: ["staff-tickets"], queryFn: listMyTickets });
+  const tickets = useQuery({ queryKey: ["staff-tickets"], queryFn: staffListTickets });
   const chats = useQuery({ queryKey: ["staff-chats"], queryFn: staffListChats, enabled: tab === "expert" });
   const thread = useQuery({
     queryKey: ["ticket-messages", activeTicket],
@@ -213,7 +213,7 @@ function StaffInbox() {
                   className={`es-card w-full p-4 text-left ${chatUser === c.user_id ? "ring-1 ring-accent" : ""}`}
                   onClick={() => setChatUser(c.user_id)}
                 >
-                  <p className="font-medium font-mono text-sm">{c.user_id.slice(0, 8)}</p>
+                  <p className="font-medium">{c.label}</p>
                   <p className="mt-1 line-clamp-2 text-sm text-muted">{c.preview}</p>
                   <p className="mt-1 text-xs text-muted">
                     {c.count} messages · {new Date(c.updated_at).toLocaleString("en-AU")}

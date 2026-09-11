@@ -41,8 +41,8 @@ function statusTone(s: string) {
 function TrackOrder() {
   const params = typeof window === "undefined" ? new URLSearchParams() : new URLSearchParams(window.location.search);
   const [orderId, setOrderId] = useState(params.get("id") ?? "");
-  const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState(params.get("email") ?? "");
+  const [loading, setLoading] = useState(Boolean(params.get("id")));
   const [paying, setPaying] = useState(false);
   const [order, setOrder] = useState<OrderRow | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -65,6 +65,44 @@ function TrackOrder() {
     const row = Array.isArray(data) ? data[0] : data;
     setOrder(row as OrderRow);
   }
+
+  useEffect(() => {
+    const id = params.get("id")?.trim();
+    const mail = (params.get("email") ?? "").trim().toLowerCase();
+    if (!id) return;
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const { data: session } = await supabase.auth.getUser();
+        if (session.user) {
+          const { data } = await supabase
+            .from("shop_orders")
+            .select("id, status, total_ex_gst, total_inc_gst, tracking_number, carrier, notes, created_at, invoice_number, paid_cents, refunded_cents")
+            .eq("id", id)
+            .eq("user_id", session.user.id)
+            .maybeSingle();
+          if (!cancelled && data) {
+            setOrder(data as OrderRow);
+            return;
+          }
+        }
+        if (mail) {
+          if (!cancelled) setEmail(mail);
+          await lookup(id, mail);
+        }
+      } catch (err) {
+        if (!cancelled) setError(err instanceof Error ? err.message : "Could not look up the order.");
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -190,6 +228,14 @@ function TrackOrder() {
             <Link to="/contact">Contact us about this order</Link>
           </Button>
         </div>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="mx-auto max-w-md px-5 py-16 text-center">
+        <p className="text-sm text-muted">Looking up your order…</p>
       </div>
     );
   }

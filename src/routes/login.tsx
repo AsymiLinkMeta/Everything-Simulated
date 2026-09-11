@@ -1,8 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import { GROK_PROVIDERS, authClient, authEnabled, signIn } from "@/lib/auth/client";
-import { useAuthState } from "@/lib/auth/provider";
+import { GROK_PROVIDERS, authClient, authEnabled, requestPasswordReset, signIn, updatePassword } from "@/lib/auth/client";
+import { RECOVERY_FLAG, useAuthState } from "@/lib/auth/provider";
+import { supabase } from "@/lib/db";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Logo } from "@/components/es/bits";
@@ -18,27 +19,92 @@ export const Route = createFileRoute("/login")({
   component: Login,
 });
 
+function safeNext(raw: string | null, staff: boolean) {
+  if (staff) return "/staff";
+  if (raw && (raw.startsWith("/app") || raw.startsWith("/staff") || raw.startsWith("/checkout") || raw.startsWith("/order"))) {
+    return raw;
+  }
+  return "/app";
+}
+
+function initialMode(): "in" | "up" | "reset" | "new" {
+  try {
+    if (sessionStorage.getItem(RECOVERY_FLAG) === "1") return "new";
+  } catch {
+    // ignore
+  }
+  if (typeof window === "undefined") return "in";
+  const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+  if (hash.get("type") === "recovery") return "new";
+  return "in";
+}
+
 function Login() {
   const [params] = useSearchParams();
   const staff = params.get("portal") === "staff";
-  const next = staff ? "/staff" : "/app";
-  const [mode, setMode] = useState<"in" | "up">("in");
+  const next = safeNext(params.get("next"), staff);
+  const [mode, setMode] = useState<"in" | "up" | "reset" | "new">(initialMode);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [info, setInfo] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
   const navigate = useNavigate();
   const { user } = useAuthState();
 
   useEffect(() => {
-    if (user) navigate(next, { replace: true });
-  }, [user, next, navigate]);
+    const { data } = supabase.auth.onAuthStateChange((event) => {
+      if (event === "PASSWORD_RECOVERY") setMode("new");
+    });
+    return () => data.subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (user && mode !== "new" && mode !== "reset") navigate(next, { replace: true });
+  }, [user, next, navigate, mode]);
 
   async function onEmail(e: React.FormEvent) {
     e.preventDefault();
     setPending(true);
     setError(null);
+    setInfo(null);
+    if (!staff && mode === "reset") {
+      const { error: err } = await requestPasswordReset(email);
+      setPending(false);
+      if (err) {
+        setError(err.message ?? "Could not send reset");
+        return;
+      }
+      setInfo("If that account exists, a reset link is on its way.");
+      return;
+    }
+    if (!staff && mode === "new") {
+      if (password.length < 8) {
+        setPending(false);
+        setError("Use at least 8 characters.");
+        return;
+      }
+      if (password !== confirm) {
+        setPending(false);
+        setError("Passwords do not match.");
+        return;
+      }
+      const { error: err } = await updatePassword(password);
+      setPending(false);
+      if (err) {
+        setError(err.message ?? "Could not update password");
+        return;
+      }
+      try {
+        sessionStorage.removeItem(RECOVERY_FLAG);
+      } catch {
+        // ignore
+      }
+      navigate(next, { replace: true });
+      return;
+    }
     if (!staff && mode === "up") {
       const { error: err } = await authClient.signUp.email({ email, password, name, callbackURL: next });
       setPending(false);
@@ -62,16 +128,20 @@ function Login() {
       <div className="es-card w-full max-w-sm space-y-5 p-6">
         <Logo />
         <div>
-          <h1 className="text-xl font-medium">{staff ? "Login" : "Sign In"}</h1>
+          <h1 className="text-xl font-medium">
+            {staff ? "Login" : mode === "new" ? "Set a new password" : mode === "reset" ? "Reset password" : "Sign In"}
+          </h1>
           <p className="mt-1 text-sm text-muted">
             {staff
               ? "Workshop, sales and admin. Customer accounts use Sign In in the header."
-              : "Quotes, orders and bookings. Your customer account lives here."}
+              : mode === "new"
+                ? "Choose a new password for this account."
+                : "Quotes, orders and bookings. Your customer account lives here."}
           </p>
         </div>
         {authEnabled ? (
           <>
-            {GROK_PROVIDERS.length > 0 && (
+            {GROK_PROVIDERS.length > 0 && mode !== "reset" && mode !== "new" && (
               <>
                 <div className="space-y-2">
                   {GROK_PROVIDERS.map((p) => (
@@ -114,24 +184,49 @@ function Login() {
                   required
                 />
               ) : null}
-              <Input
-                type="email"
-                placeholder="Email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-              />
-              <Input
-                type="password"
-                placeholder="Password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                minLength={8}
-                required
-              />
+              {mode !== "new" ? (
+                <Input
+                  type="email"
+                  placeholder="Email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                />
+              ) : null}
+              {mode !== "reset" ? (
+                <Input
+                  type="password"
+                  placeholder={mode === "new" ? "New password" : "Password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  minLength={8}
+                  required
+                />
+              ) : null}
+              {mode === "new" ? (
+                <Input
+                  type="password"
+                  placeholder="Confirm password"
+                  value={confirm}
+                  onChange={(e) => setConfirm(e.target.value)}
+                  minLength={8}
+                  required
+                />
+              ) : null}
               {error ? <p className="text-sm text-esred">{error}</p> : null}
+              {info ? <p className="text-sm text-muted">{info}</p> : null}
               <Button type="submit" className="w-full" disabled={pending}>
-                {pending ? "Please wait…" : staff ? "Login" : mode === "up" ? "Create account" : "Sign In"}
+                {pending
+                  ? "Please wait…"
+                  : staff
+                    ? "Login"
+                    : mode === "up"
+                      ? "Create account"
+                      : mode === "reset"
+                        ? "Send reset link"
+                        : mode === "new"
+                          ? "Save password"
+                          : "Sign In"}
               </Button>
             </form>
             {staff ? (
@@ -139,13 +234,32 @@ function Login() {
                 Customer? Sign In in the header.
               </a>
             ) : (
-              <button
-                type="button"
-                className="text-sm text-muted"
-                onClick={() => setMode(mode === "up" ? "in" : "up")}
-              >
-                {mode === "up" ? "Have an account? Sign In" : "New here? Create an account"}
-              </button>
+              <div className="space-y-2">
+                {mode !== "new" ? (
+                  <button
+                    type="button"
+                    className="text-sm text-muted"
+                    onClick={() => {
+                      setMode(mode === "up" ? "in" : "up");
+                      setError(null);
+                      setInfo(null);
+                    }}
+                  >
+                    {mode === "up" ? "Have an account? Sign In" : "New here? Create an account"}
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  className="block text-sm text-muted"
+                  onClick={() => {
+                    setMode(mode === "reset" || mode === "new" ? "in" : "reset");
+                    setError(null);
+                    setInfo(null);
+                  }}
+                >
+                  {mode === "reset" || mode === "new" ? "Back to Sign In" : "Forgot password?"}
+                </button>
+              </div>
             )}
           </>
         ) : (

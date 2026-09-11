@@ -60,7 +60,7 @@ export function CartPanel({ compact = false }: { compact?: boolean }) {
       </div>
       {!compact ? (
         <div className="flex flex-wrap gap-2">
-          {(packs.data ?? livePackages()).map((p) => (
+          {(packs.data?.length ? packs.data : livePackages()).map((p) => (
             <Button key={p.slug} variant="outline" size="sm" onClick={() => loadPackage(p.slug)}>
               Load {p.name}
             </Button>

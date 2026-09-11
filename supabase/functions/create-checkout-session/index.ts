@@ -46,8 +46,8 @@ Deno.serve(async (req: Request) => {
 
     const params = new URLSearchParams();
     params.set("mode", "payment");
-    params.set("success_url", `${origin}/order?id=${encodeURIComponent(orderId)}&paid=1`);
-    params.set("cancel_url", `${origin}/order?id=${encodeURIComponent(orderId)}&cancelled=1`);
+    params.set("success_url", `${origin}/order?id=${encodeURIComponent(orderId)}&paid=1&email=${encodeURIComponent(email)}`);
+    params.set("cancel_url", `${origin}/order?id=${encodeURIComponent(orderId)}&cancelled=1&email=${encodeURIComponent(email)}`);
     params.set("client_reference_id", orderId);
     params.set("customer_email", email);
     params.set("line_items[0][quantity]", "1");

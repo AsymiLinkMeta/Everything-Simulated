@@ -20,6 +20,8 @@ const AuthContext = createContext<AuthState>({
   isPending: true,
 });
 
+export const RECOVERY_FLAG = "es-pw-recovery";
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({
     user: null,
@@ -31,7 +33,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data }) => {
       setState({ user: toUser(data.session?.user ?? null), session: data.session, isPending: false });
     });
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        try {
+          sessionStorage.setItem(RECOVERY_FLAG, "1");
+        } catch {
+          // ignore
+        }
+      }
       setState({ user: toUser(session?.user ?? null), session, isPending: false });
     });
     return () => sub.subscription.unsubscribe();

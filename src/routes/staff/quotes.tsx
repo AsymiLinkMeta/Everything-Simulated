@@ -2,8 +2,8 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
-import { supabase } from "@/lib/db";
 import { staffListQuotes } from "@/lib/es/server";
+import { staffConvertQuote } from "@/lib/es/crm-oms";
 import { aud } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { FileText } from "lucide-react";
@@ -20,10 +20,8 @@ function StaffQuotes() {
   async function convert(id: string) {
     setConverting(id);
     try {
-      const { data, error } = await supabase.rpc("convert_quote_to_order", { p_quote_id: id });
-      if (error) throw new Error(error.message);
-      const result = data as { order_id: string; job_id: number } | null;
-      toast.success(`Order ${result?.order_id ?? ""} created with job #${result?.job_id ?? ""}`);
+      const result = await staffConvertQuote(id);
+      toast.success(`Order ${result.orderId} created`);
       await qc.invalidateQueries({ queryKey: ["staff-jobs"] });
       await qc.invalidateQueries({ queryKey: ["staff-quotes"] });
       await qc.invalidateQueries({ queryKey: ["oms-orders"] });

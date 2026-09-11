@@ -12,7 +12,7 @@ import { abs, breadcrumbLd, pageHead } from "@/lib/es/seo";
 export const Route = createFileRoute("/_site/shop/$sku")({
   head: ({ params }) => {
     return pageHead({
-      title: `${params.sku} | Sim racing Australia`,
+      title: "Sim racing part | Everything Simulated",
       description: "Gold Coast assembled racing simulator part. Compatibility checked. Australia-wide freight.",
       path: `/shop/${params.sku}`,
     });

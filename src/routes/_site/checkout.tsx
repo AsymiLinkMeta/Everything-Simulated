@@ -35,6 +35,7 @@ function Checkout() {
   const lines = useCart((s) => s.lines);
   const driverWeightKg = useCart((s) => s.driverWeightKg);
   const postcode = useCart((s) => s.postcode);
+  const quoteId = useCart((s) => s.quoteId);
   const setPostcode = useCart((s) => s.setPostcode);
   const clear = useCart((s) => s.clear);
   const result = useCart((s) => s.result)();
@@ -43,6 +44,7 @@ function Checkout() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
+  const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
   const [placing, setPlacing] = useState(false);
   const [orderId, setOrderId] = useState<string | null>(null);
@@ -115,10 +117,10 @@ function Checkout() {
     try {
       let id: string;
       if (user) {
-        const res = await placeOrder({ lines, postcode, driverWeightKg, notes });
+        const res = await placeOrder({ lines, postcode, driverWeightKg, notes, name: fullName, phone, address, quoteId: quoteId ?? undefined });
         id = res.id;
       } else {
-        const res = await placeGuestOrder({ lines, postcode, driverWeightKg, name: fullName, email: mail, phone, notes });
+        const res = await placeGuestOrder({ lines, postcode, driverWeightKg, name: fullName, email: mail, phone, notes, address });
         id = res.id;
       }
       void notifyOrder({ orderId: id, kind: "placed", email: mail });
@@ -248,6 +250,18 @@ function Checkout() {
             <label className="block">
               <span className="text-sm text-muted">Phone</span>
               <Input value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="04xx xxx xxx" autoComplete="tel" />
+            </label>
+
+            <label className="block">
+              <span className="text-sm text-muted">Delivery address *</span>
+              <textarea
+                required
+                rows={3}
+                value={address}
+                onChange={(e) => setAddress(e.target.value)}
+                placeholder="Street, suburb, state"
+                className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-paper placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-accent"
+              />
             </label>
 
             <label className="block">

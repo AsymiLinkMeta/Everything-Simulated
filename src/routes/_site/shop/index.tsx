@@ -27,6 +27,14 @@ const CATS: { id: ProductCategory | "all"; label: string }[] = [
   { id: "motion", label: "Motion" },
   { id: "monitor", label: "Screens" },
   { id: "pc", label: "PC" },
+  { id: "seat", label: "Seats" },
+  { id: "shifter", label: "Shifters" },
+  { id: "handbrake", label: "Handbrakes" },
+  { id: "mount", label: "Mounts" },
+  { id: "audio", label: "Audio" },
+  { id: "headset", label: "Headsets" },
+  { id: "software", label: "Software" },
+  { id: "accessory", label: "Livery" },
   { id: "adapter", label: "Adapters" },
 ];
 

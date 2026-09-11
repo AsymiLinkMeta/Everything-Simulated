@@ -89,76 +89,143 @@ export type PrebuildWithComponents = Prebuild & { components: PrebuildComponent[
 
 let prebuildCache: PrebuildWithComponents[] | null = null;
 
-// ---- Public ----
+const SLUG_ALIASES: Record<string, string> = {
+  "starter-rig": "starter",
+  "haptic-racing-simulator": "haptic",
+  "motion-racing-simulator": "motion",
+};
+
+export function resolvePrebuildSlug(slug: string) {
+  return SLUG_ALIASES[slug] || slug;
+}
+
+export function packageToPrebuild(p: PackageSpec): PrebuildWithComponents {
+  return {
+    id: `pack-${p.slug}`,
+    slug: p.slug,
+    name: p.name,
+    kicker: p.kicker,
+    blurb: p.blurb,
+    description: p.blurb,
+    image: p.image,
+    price_ex_gst: p.priceExGst,
+    highlights: p.highlights ?? [],
+    specs: {},
+    capabilities: [],
+    featured: Boolean(p.popular),
+    sort_order: 0,
+    status: "published",
+    created_by: null,
+    created_at: new Date().toISOString(),
+    updated_at: new Date().toISOString(),
+    components: p.lines.map((l, i) => ({
+      id: `${p.slug}-${l.sku}`,
+      prebuild_id: `pack-${p.slug}`,
+      sku: l.sku,
+      qty: l.qty,
+      sort_order: i,
+    })),
+  };
+}
+
+function catalogFallback(): PrebuildWithComponents[] {
+  return PACKAGES.map(packageToPrebuild);
+}
+
+function shapePrebuild(prebuild: Prebuild, comps: PrebuildComponent[]): PrebuildWithComponents {
+  return {
+    ...prebuild,
+    highlights: Array.isArray(prebuild.highlights) ? prebuild.highlights : [],
+    specs: prebuild.specs && typeof prebuild.specs === "object" && !Array.isArray(prebuild.specs) ? prebuild.specs : {},
+    capabilities: Array.isArray(prebuild.capabilities) ? prebuild.capabilities : [],
+    components: comps,
+  };
+}
 
 export async function fetchPublishedPrebuilds(): Promise<PrebuildWithComponents[]> {
-  const { data, error } = await supabase
-    .from("prebuilds")
-    .select("*")
-    .eq("status", "published")
-    .order("sort_order", { ascending: true });
-  if (error) throw new Error(error.message);
-  const prebuilds = (data ?? []) as Prebuild[];
-  if (!prebuilds.length) {
-    prebuildCache = [];
-    return [];
+  try {
+    const { data, error } = await supabase
+      .from("prebuilds")
+      .select("*")
+      .eq("status", "published")
+      .order("sort_order", { ascending: true });
+    if (error) throw new Error(error.message);
+    const prebuilds = (data ?? []) as Prebuild[];
+    if (!prebuilds.length) {
+      const fallback = catalogFallback();
+      prebuildCache = fallback;
+      return fallback;
+    }
+
+    const ids = prebuilds.map((p) => p.id);
+    const { data: comps } = await supabase
+      .from("prebuild_components")
+      .select("*")
+      .in("prebuild_id", ids)
+      .order("sort_order", { ascending: true });
+
+    const compMap = new Map<string, PrebuildComponent[]>();
+    for (const c of (comps ?? []) as PrebuildComponent[]) {
+      const list = compMap.get(c.prebuild_id) ?? [];
+      list.push(c);
+      compMap.set(c.prebuild_id, list);
+    }
+
+    const result = prebuilds.map((p) => {
+      const shaped = shapePrebuild(p, compMap.get(p.id) ?? []);
+      if (!shaped.components.length) {
+        const pack = PACKAGES.find((pkg) => pkg.slug === resolvePrebuildSlug(p.slug));
+        if (pack) shaped.components = packageToPrebuild(pack).components;
+      }
+      return shaped;
+    });
+    prebuildCache = result;
+    return result;
+  } catch {
+    const fallback = catalogFallback();
+    prebuildCache = fallback;
+    return fallback;
   }
-
-  const ids = prebuilds.map((p) => p.id);
-  const { data: comps } = await supabase
-    .from("prebuild_components")
-    .select("*")
-    .in("prebuild_id", ids)
-    .order("sort_order", { ascending: true });
-
-  const compMap = new Map<string, PrebuildComponent[]>();
-  for (const c of (comps ?? []) as PrebuildComponent[]) {
-    const list = compMap.get(c.prebuild_id) ?? [];
-    list.push(c);
-    compMap.set(c.prebuild_id, list);
-  }
-
-  const result = prebuilds.map((p) => ({
-    ...p,
-    highlights: Array.isArray(p.highlights) ? p.highlights : [],
-    specs: (p.specs && typeof p.specs === "object" && !Array.isArray(p.specs)) ? p.specs : {},
-    capabilities: Array.isArray(p.capabilities) ? p.capabilities : [],
-    components: compMap.get(p.id) ?? [],
-  }));
-  prebuildCache = result;
-  return result;
 }
 
 export async function fetchFeaturedPrebuilds(): Promise<PrebuildWithComponents[]> {
   const all = await fetchPublishedPrebuilds();
-  return all.filter((p) => p.featured);
+  const featured = all.filter((p) => p.featured);
+  return featured.length ? featured : all;
 }
 
 export async function fetchPrebuildBySlug(slug: string): Promise<PrebuildWithComponents | null> {
-  const { data, error } = await supabase
-    .from("prebuilds")
-    .select("*")
-    .eq("slug", slug)
-    .eq("status", "published")
-    .maybeSingle();
-  if (error) throw new Error(error.message);
-  if (!data) return null;
-
-  const prebuild = data as Prebuild;
-  const { data: comps } = await supabase
-    .from("prebuild_components")
-    .select("*")
-    .eq("prebuild_id", prebuild.id)
-    .order("sort_order", { ascending: true });
-
-  return {
-    ...prebuild,
-    highlights: Array.isArray(prebuild.highlights) ? prebuild.highlights : [],
-    specs: (prebuild.specs && typeof prebuild.specs === "object" && !Array.isArray(prebuild.specs)) ? prebuild.specs : {},
-    capabilities: Array.isArray(prebuild.capabilities) ? prebuild.capabilities : [],
-    components: (comps ?? []) as PrebuildComponent[],
-  };
+  const wanted = resolvePrebuildSlug(slug);
+  try {
+    const { data, error } = await supabase
+      .from("prebuilds")
+      .select("*")
+      .in("slug", [...new Set([slug, wanted])])
+      .eq("status", "published")
+      .limit(1)
+      .maybeSingle();
+    if (error) throw new Error(error.message);
+    if (data) {
+      const prebuild = data as Prebuild;
+      const { data: comps } = await supabase
+        .from("prebuild_components")
+        .select("*")
+        .eq("prebuild_id", prebuild.id)
+        .order("sort_order", { ascending: true });
+      const shaped = shapePrebuild(prebuild, (comps ?? []) as PrebuildComponent[]);
+      if (!shaped.components.length) {
+        const pack = PACKAGES.find((p) => p.slug === wanted);
+        if (pack) shaped.components = packageToPrebuild(pack).components;
+      }
+      return shaped;
+    }
+  } catch {
+    // fall through to catalogue crates
+  }
+  const pack = PACKAGES.find((p) => p.slug === wanted || p.slug === slug);
+  return pack ? packageToPrebuild(pack) : null;
 }
+
 
 // ---- Staff ----
 

@@ -304,6 +304,16 @@ export async function postNotice(input: {
   return { id: ticketId };
 }
 
+export async function staffListTickets(): Promise<SupportTicket[]> {
+  const { data, error } = await supabase
+    .from("support_tickets")
+    .select("*")
+    .order("updated_at", { ascending: false })
+    .limit(80);
+  if (error) throw new Error(error.message);
+  return (data ?? []) as SupportTicket[];
+}
+
 export async function staffListChats() {
   const { data, error } = await supabase
     .from("chat_messages")
@@ -311,7 +321,10 @@ export async function staffListChats() {
     .order("created_at", { ascending: false })
     .limit(200);
   if (error) throw new Error(error.message);
-  const byUser = new Map<string, { user_id: string; preview: string; updated_at: string; count: number }>();
+  const byUser = new Map<
+    string,
+    { user_id: string; preview: string; updated_at: string; count: number; label: string }
+  >();
   for (const row of data ?? []) {
     const current = byUser.get(row.user_id);
     if (!current) {
@@ -320,9 +333,21 @@ export async function staffListChats() {
         preview: row.content.slice(0, 140),
         updated_at: row.created_at,
         count: 1,
+        label: row.user_id.slice(0, 8),
       });
     } else {
       current.count += 1;
+    }
+  }
+  const ids = [...byUser.keys()];
+  if (ids.length) {
+    const { data: profiles } = await supabase
+      .from("profiles")
+      .select("user_id, display_name, email")
+      .in("user_id", ids);
+    for (const p of profiles ?? []) {
+      const row = byUser.get(p.user_id);
+      if (row) row.label = p.display_name || p.email || row.label;
     }
   }
   return [...byUser.values()];

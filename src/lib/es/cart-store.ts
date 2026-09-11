@@ -9,13 +9,14 @@ type CartState = {
   lines: CartLine[];
   driverWeightKg: number;
   postcode: string;
+  quoteId: string | null;
   setWeight: (kg: number) => void;
   setPostcode: (v: string) => void;
   loadPackage: (slug: string) => void;
   setQty: (sku: string, qty: number) => void;
   add: (sku: string) => void;
   remove: (sku: string) => void;
-  setLines: (lines: CartLine[]) => void;
+  setLines: (lines: CartLine[], quoteId?: string | null) => void;
   clear: () => void;
   result: () => CheckResult;
 };
@@ -26,11 +27,12 @@ export const useCart = create<CartState>()(
       lines: [],
       driverWeightKg: 80,
       postcode: "4215",
+      quoteId: null,
       setWeight: (driverWeightKg) => set({ driverWeightKg }),
       setPostcode: (postcode) => set({ postcode }),
       loadPackage: (slug) => {
         const pack = livePackages().find((p) => p.slug === slug);
-        if (pack) set({ lines: pack.lines.map((l) => ({ ...l })) });
+        if (pack) set({ lines: pack.lines.map((l) => ({ ...l })), quoteId: null });
       },
       setQty: (sku, qty) =>
         set({
@@ -53,8 +55,8 @@ export const useCart = create<CartState>()(
         set({ lines });
       },
       remove: (sku) => set({ lines: get().lines.filter((l) => l.sku !== sku) }),
-      setLines: (lines) => set({ lines: lines.map((l) => ({ ...l })) }),
-      clear: () => set({ lines: [] }),
+      setLines: (lines, quoteId) => set({ lines: lines.map((l) => ({ ...l })), quoteId: quoteId ?? null }),
+      clear: () => set({ lines: [], quoteId: null }),
       result: () => checkCart({ lines: get().lines, driverWeightKg: get().driverWeightKg, postcode: get().postcode }),
     }),
     { name: "es-cart-v2" },

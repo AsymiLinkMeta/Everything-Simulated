@@ -1,9 +1,10 @@
 import { supabase, supabaseAnonKey, supabaseUrl } from "@/lib/db";
-import { BRAND, GUIDES, PACKAGES, RULES } from "./catalog";
+import { BRAND, GUIDES, RULES } from "./catalog";
 import { getCachedProducts, getCachedProductMap, getLiveRules } from "./product-cache";
 import { checkCart } from "./checkCart";
 import { unwrap } from "./unwrap";
 import { freightExGst } from "./freight";
+import { livePackages } from "./prebuilds";
 import type { CartLine, ListingStatus, StaffRole } from "./types";
 
 const STAFF: StaffRole[] = ["sales", "workshop", "content", "support", "admin"];
@@ -77,7 +78,7 @@ export async function listMyQuotes() {
   const user = await getCurrentUser();
   const { data, error } = await supabase
     .from("quotes")
-    .select("id, title, status, total_ex_gst, check_ok, created_at")
+    .select("id, title, status, total_ex_gst, check_ok, created_at, lines, postcode")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
@@ -111,17 +112,29 @@ export async function listMyJobs() {
   const user = await getCurrentUser();
   const { data, error } = await supabase
     .from("jobs")
-    .select("id, stage, notes, quote_id")
+    .select("id, stage, notes, quote_id, order_id")
     .eq("user_id", user.id)
     .order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
   return data ?? [];
 }
 
+async function pingOps(orderId: string, message: string) {
+  await supabase.from("pipeline_alerts").insert({ order_id: orderId, kind: "new_order", message });
+}
+
 async function requireStaff(userId: string): Promise<StaffRole> {
   const row = await ensureProfile(userId);
   if (!STAFF.includes(row.role as StaffRole)) throw new Error("Staff access required");
   return row.role as StaffRole;
+}
+
+export async function staffSetBookingStatus(id: number, status: "requested" | "confirmed" | "cancelled") {
+  const user = await getCurrentUser();
+  await requireStaff(user.id);
+  const { error } = await supabase.from("bookings").update({ status }).eq("id", id);
+  if (error) throw new Error(error.message);
+  return { ok: true };
 }
 
 export async function staffListQuotes() {
@@ -141,7 +154,7 @@ export async function staffListJobs() {
   await requireStaff(user.id);
   const { data, error } = await supabase
     .from("jobs")
-    .select("id, user_id, stage, notes, quote_id")
+    .select("id, user_id, stage, notes, quote_id, order_id")
     .order("created_at", { ascending: false })
     .limit(50);
   if (error) throw new Error(error.message);
@@ -157,7 +170,16 @@ export async function staffListBookings() {
     .order("created_at", { ascending: false })
     .limit(50);
   if (error) throw new Error(error.message);
-  return data ?? [];
+  const rows = data ?? [];
+  const ids = [...new Set(rows.map((r) => r.user_id).filter(Boolean))];
+  const names = new Map<string, string>();
+  if (ids.length) {
+    const { data: profiles } = await supabase.from("profiles").select("user_id, display_name, email").in("user_id", ids);
+    for (const p of profiles ?? []) {
+      names.set(p.user_id, p.display_name || p.email || p.user_id.slice(0, 8));
+    }
+  }
+  return rows.map((r) => ({ ...r, customer: names.get(r.user_id) || r.user_id?.slice(0, 8) || "Customer" }));
 }
 
 export async function staffSetJobStage(data: { id: number; stage: string }) {
@@ -378,28 +400,62 @@ export async function listMyOrders() {
 
 export async function placeOrder(
   input:
-    | { lines: CartLine[]; postcode?: string; notes?: string; driverWeightKg?: number; quoteId?: string }
-    | { data: { lines: CartLine[]; postcode?: string; notes?: string; driverWeightKg?: number; quoteId?: string } },
+    | {
+        lines: CartLine[];
+        postcode?: string;
+        notes?: string;
+        driverWeightKg?: number;
+        quoteId?: string;
+        name?: string;
+        phone?: string;
+        address?: string;
+      }
+    | {
+        data: {
+          lines: CartLine[];
+          postcode?: string;
+          notes?: string;
+          driverWeightKg?: number;
+          quoteId?: string;
+          name?: string;
+          phone?: string;
+          address?: string;
+        };
+      },
 ) {
   const data = unwrap(input);
   const user = await getCurrentUser();
-  const profile = await ensureProfile(user.id, user.email, user.user_metadata?.display_name);
+  const profile = await ensureProfile(user.id, user.email, data.name || user.user_metadata?.display_name);
   const lines = (data.lines ?? []).filter((l) => l.sku && l.qty > 0);
   if (!lines.length) throw new Error("Cart is empty");
   const result = checkCart({ lines, driverWeightKg: data.driverWeightKg, postcode: data.postcode });
   const id = `ESO-${Date.now().toString(36).toUpperCase()}`;
+  const shipName = (data.name || profile.display_name || user.email || "Customer").trim();
 
   let contactId: string | null = null;
   const { data: existing } = await supabase.from("crm_contacts").select("id").eq("user_id", user.id).maybeSingle();
-  if (existing?.id) contactId = existing.id;
-  else {
+  if (existing?.id) {
+    contactId = existing.id;
+    await supabase
+      .from("crm_contacts")
+      .update({
+        display_name: shipName,
+        email: user.email,
+        phone: data.phone?.trim() || undefined,
+        postcode: data.postcode ?? null,
+        address: data.address?.trim() || undefined,
+      })
+      .eq("id", existing.id);
+  } else {
     const { data: created } = await supabase
       .from("crm_contacts")
       .insert({
         user_id: user.id,
-        display_name: profile.display_name || user.email || "Customer",
+        display_name: shipName,
         email: user.email,
+        phone: data.phone?.trim() || null,
         postcode: data.postcode ?? null,
+        address: data.address?.trim() || null,
         crm_stage: result.ok ? "quoted" : "lead",
         crm_source: "website",
         notes: data.notes ?? "",
@@ -418,7 +474,8 @@ export async function placeOrder(
     lines,
     total_ex_gst: result.totalExGst,
     total_inc_gst: result.totalIncGst,
-    shipping_name: profile.display_name,
+    shipping_name: shipName,
+    shipping_address: data.address?.trim() || null,
     postcode: data.postcode ?? null,
     notes: data.notes ?? "",
   });
@@ -426,11 +483,14 @@ export async function placeOrder(
   if (data.quoteId) {
     await supabase.from("quotes").update({ status: "won", updated_at: new Date().toISOString() }).eq("id", data.quoteId);
   }
-  await supabase.from("pipeline_alerts").insert({
+  await supabase.from("jobs").insert({
+    user_id: user.id,
+    quote_id: data.quoteId ?? null,
     order_id: id,
-    kind: "new_order",
-    message: `New order ${id} from ${profile.display_name || user.email || "customer"}`,
+    stage: "enquiry",
+    notes: `Web order ${id}`,
   });
+  await pingOps(id, `New order ${id} from ${shipName}`);
   return { id, result };
 }
 
@@ -444,7 +504,7 @@ export async function askBuilder(data: {
   await ensureProfile(user.id, user.email);
   await supabase.from("chat_messages").insert({ user_id: user.id, role: "user", content: data.message.slice(0, 4000) });
   const result = checkCart({ lines: data.lines, driverWeightKg: data.driverWeightKg });
-  const systemPrompt = `You are the Everything Simulated build agent on the Gold Coast. Phone ${BRAND.phone}. You help customers choose parts, understand compatibility, and prepare accurate quotes. Never invent SKUs, products, prices, stock or lead times. Only recommend these packages: ${PACKAGES.map((p) => p.slug).join(", ")} and catalogue SKUs: ${getCachedProducts().map((p) => p.sku).join(", ")}. Compatibility is decided by the checker JSON — never override a block. Prices are AUD ex GST. If the cart is blocked, explain the exact issue and suggest only fixes supported by the checker. Be concise, practical and premium. Current agent task: ${data.task ?? "chat"}.`;
+  const systemPrompt = `You are the Everything Simulated build agent on the Gold Coast. Phone ${BRAND.phone}. You help customers choose parts, understand compatibility, and prepare accurate quotes. Never invent SKUs, products, prices, stock or lead times. Only recommend these packages: ${livePackages().map((p) => p.slug).join(", ") || "starter, haptic, motion"} and catalogue SKUs: ${getCachedProducts().map((p) => p.sku).join(", ")}. Compatibility is decided by the checker JSON — never override a block. Prices are AUD ex GST. If the cart is blocked, explain the exact issue and suggest only fixes supported by the checker. Be concise, practical and premium. Current agent task: ${data.task ?? "chat"}.`;
   const userContent = `Checker JSON: ${JSON.stringify(result)}\nCart: ${JSON.stringify(data.lines)}\nDriver weight kg: ${data.driverWeightKg ?? 80}\nQuestion: ${data.message}`;
 
   let reply: string;
@@ -506,7 +566,7 @@ export async function publicCatalog() {
   return {
     products: getCachedProducts(),
     productMap: getCachedProductMap(),
-    packages: PACKAGES,
+    packages: livePackages(),
     guides: GUIDES,
     rules: getLiveRules().length ? getLiveRules() : RULES,
     brand: BRAND,
@@ -522,6 +582,7 @@ export async function placeGuestOrder(input: {
   name: string;
   email: string;
   phone?: string;
+  address?: string;
 }) {
   const lines = (input.lines ?? []).filter((l) => l.sku && l.qty > 0);
   if (!lines.length) throw new Error("Cart is empty");
@@ -529,14 +590,16 @@ export async function placeGuestOrder(input: {
   if (!input.email.trim()) throw new Error("Email is required");
   const result = checkCart({ lines, driverWeightKg: input.driverWeightKg, postcode: input.postcode });
   const id = `ESO-${Date.now().toString(36).toUpperCase()}`;
+  const shipName = input.name.trim();
 
   const { data: contact } = await supabase
     .from("crm_contacts")
     .insert({
-      display_name: input.name.trim(),
+      display_name: shipName,
       email: input.email.trim().toLowerCase(),
       phone: input.phone?.trim() || null,
       postcode: input.postcode ?? null,
+      address: input.address?.trim() || null,
       crm_stage: "lead",
       crm_source: "website",
       notes: input.notes ?? "",
@@ -551,16 +614,19 @@ export async function placeGuestOrder(input: {
     lines,
     total_ex_gst: result.totalExGst,
     total_inc_gst: result.totalIncGst,
-    shipping_name: input.name.trim(),
+    shipping_name: shipName,
+    shipping_address: input.address?.trim() || null,
     postcode: input.postcode ?? null,
     notes: input.notes ?? "",
   });
   if (error) throw new Error(error.message);
-  await supabase.from("pipeline_alerts").insert({
+  await supabase.from("jobs").insert({
+    user_id: null,
     order_id: id,
-    kind: "new_order",
-    message: `New guest order ${id} from ${input.name.trim()}`,
+    stage: "enquiry",
+    notes: `Guest order ${id} — ${shipName}`,
   });
+  await pingOps(id, `New guest order ${id} from ${shipName}`);
   return { id, result };
 }
 
