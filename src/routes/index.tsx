@@ -31,7 +31,7 @@ export function Home() {
         <HeroVideo />
         <div className="es-hero-mask" />
         <div className="es-hero-copy">
-          <p className="es-kicker">Gold Coast · Australia-wide</p>
+          <p className="es-kicker">Gold Coast · Australia-wide · 24H Ready</p>
           <h1>Simulator platforms, built in one workshop.</h1>
           <p className="lead">
             Racing crates already ship. Aircraft, drones and training are specced here too.
@@ -47,10 +47,11 @@ export function Home() {
           </div>
         </div>
       </section>
+      <hr className="es-racing-stripe" />
 
       <section className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-20">
         <p className="es-kicker">Platforms</p>
-        <h2 className="mt-3 text-3xl font-medium">What the workshop actually builds</h2>
+        <h2 className="mt-3 text-3xl font-bold">What the workshop actually builds</h2>
         <p className="mt-3 max-w-2xl text-muted">
           Four platforms. Racing is the live catalogue with shop and checker. The rest are consult-first — same crate, same studio.
         </p>
@@ -84,7 +85,7 @@ export function Home() {
         <div className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-20 es-roadmap-section">
           <div className="max-w-2xl">
             <p className="es-kicker">Your rig, your roadmap</p>
-            <h2 className="mt-3 text-3xl font-medium sm:text-4xl">
+            <h2 className="mt-3 text-3xl font-bold sm:text-4xl">
               Create an account to design, upgrade or maintain your rig.
             </h2>
             <p className="mt-4 text-muted">
@@ -349,7 +350,7 @@ function BrandLogo({
   ) : (
     <span className="text-base font-medium text-paper">{brand.name}</span>
   );
-  const className = "group flex h-44 w-44 shrink-0 items-center justify-center rounded-xl border border-line bg-black p-6 transition-all duration-300 hover:border-muted hover:bg-raised sm:h-52 sm:w-52";
+  const className = "group flex h-44 w-44 shrink-0 items-center justify-center rounded-xl border border-line bg-gloss p-6 transition-all duration-300 hover:border-esred hover:shadow-red-glow sm:h-52 sm:w-52";
   if (!brand.link_url) return <div className={className}>{content}</div>;
   return (
     <a href={brand.link_url} target="_blank" rel="noopener noreferrer" className={className} aria-hidden={ariaHidden} tabIndex={ariaHidden ? -1 : 0}>
