@@ -15,6 +15,7 @@ export const Route = createFileRoute("/login")({
       title: "Sign In | Everything Simulated",
       description: "Sign in to your Everything Simulated customer account for quotes, orders and bookings.",
       path: "/login",
+      index: false,
     }),
   component: Login,
 });

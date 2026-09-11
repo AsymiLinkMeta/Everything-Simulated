@@ -3,7 +3,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { BRAND } from "@/lib/es/catalog";
 import { createTicket } from "@/lib/es/inbox";
-import { pageHead } from "@/lib/es/seo";
+import { contactPageLd, pageHead } from "@/lib/es/seo";
+import { JsonLd } from "@/components/es/bits";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -45,6 +46,7 @@ function Contact() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-16">
+      <JsonLd data={contactPageLd()} />
       <p className="es-kicker">Workshop</p>
       <h1 className="mt-3 text-4xl font-medium">Talk to the people who bolt it together</h1>
       <p className="mt-3 text-muted">

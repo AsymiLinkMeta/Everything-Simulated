@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { SiteShell } from "@/components/es/site-shell";
 import { JsonLd, Money } from "@/components/es/bits";
 import { BRAND, CITIES } from "@/lib/es/catalog";
-import { localBusinessLd, pageHead } from "@/lib/es/seo";
+import { graphLd, localBusinessLd, organizationLd, pageHead, websiteLd, faqLd, FAQS } from "@/lib/es/seo";
 import { fetchBrands } from "@/lib/es/brands";
 import { fetchFeaturedPrebuilds, livePackages } from "@/lib/es/prebuilds";
 import { PACKAGES } from "@/lib/es/catalog";
@@ -24,7 +24,7 @@ export const Route = createFileRoute("/")({
 export function Home() {
   return (
     <SiteShell>
-      <JsonLd data={localBusinessLd()} />
+      <JsonLd data={graphLd(organizationLd(), websiteLd(), localBusinessLd(), faqLd(FAQS))} />
       <section className="es-hero">
         <img src="/rigs/Everything_Simulated_Hero copy.jpg" alt="Driver using a triple-screen racing simulator" className="es-hero-img" />
         <HeroVideo />
@@ -151,6 +151,22 @@ export function Home() {
             </Link>
           ))}
         </div>
+      </section>
+
+      <section className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 pb-20">
+        <p className="es-kicker">FAQ</p>
+        <h2 className="mt-3 text-2xl font-medium">Asked before the deposit</h2>
+        <dl className="mt-8 grid gap-6 md:grid-cols-2">
+          {FAQS.slice(0, 4).map((item) => (
+            <div key={item.q} className="es-card p-5">
+              <dt className="font-medium">{item.q}</dt>
+              <dd className="mt-2 text-sm text-muted">{item.a}</dd>
+            </div>
+          ))}
+        </dl>
+        <Link to="/faqs" className="mt-6 inline-flex items-center gap-1 text-sm text-paper underline-offset-4 hover:underline">
+          All FAQs <ArrowRight className="size-4" />
+        </Link>
       </section>
 
     </SiteShell>

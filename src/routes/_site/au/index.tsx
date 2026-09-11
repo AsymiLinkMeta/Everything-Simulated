@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { CITIES } from "@/lib/es/catalog";
-import { pageHead } from "@/lib/es/seo";
+import { itemListLd, pageHead } from "@/lib/es/seo";
+import { JsonLd } from "@/components/es/bits";
 
 export const Route = createFileRoute("/_site/au/")({
   head: () =>
@@ -16,6 +17,13 @@ export const Route = createFileRoute("/_site/au/")({
 function Australia() {
   return (
     <div className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-16">
+      <JsonLd
+        data={itemListLd(
+          "Racing simulators delivered Australia-wide",
+          "/au",
+          CITIES.map((c) => ({ name: `Sim racing ${c.name}`, path: `/au/${c.slug}` })),
+        )}
+      />
       <p className="es-kicker">Coverage</p>
       <h1 className="mt-3 text-4xl font-medium">Australia-wide from the Gold Coast</h1>
       <p className="mt-4 max-w-2xl text-muted">

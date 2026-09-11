@@ -78,6 +78,7 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
           <div className="es-footer-col">
             <Logo />
             <p>Gold Coast built racing simulators. Crate freight Australia-wide.</p>
+            <p>Gold Coast, Queensland, Australia</p>
             <p>{BRAND.phone}</p>
             <p>{BRAND.email}</p>
             <div className="flex items-center gap-3" style={{ marginTop: 16 }}>

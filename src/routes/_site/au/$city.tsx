@@ -26,7 +26,7 @@ function CityPage() {
   return (
     <div className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-16">
       <BackButton />
-      <JsonLd data={localBusinessLd()} />
+      <JsonLd data={localBusinessLd(city.name)} />
       <JsonLd data={faqLd(FAQS)} />
       <JsonLd
         data={breadcrumbLd([

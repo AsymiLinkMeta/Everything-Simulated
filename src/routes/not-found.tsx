@@ -1,7 +1,20 @@
-import { Link } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { Link, applyHeadPayload, useLocation } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
+import { pageHead } from "@/lib/es/seo";
 
 export function NotFoundPage() {
+  const loc = useLocation();
+  useEffect(() => {
+    applyHeadPayload(
+      pageHead({
+        title: "Page not found | Everything Simulated",
+        description: "That crate, SKU or city is not in the catalogue.",
+        path: loc.pathname || "/",
+        index: false,
+      }),
+    );
+  }, [loc.pathname]);
   return (
     <main className="grid min-h-dvh place-items-center bg-ink px-5 text-paper">
       <div className="es-card max-w-md space-y-4 p-8 text-center">

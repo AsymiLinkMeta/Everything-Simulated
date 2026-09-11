@@ -2,7 +2,7 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Check } from "lucide-react";
 import { BRAND, GUIDES } from "@/lib/es/catalog";
 import { livePackages } from "@/lib/es/prebuilds";
-import { FAQS, faqLd, pageHead } from "@/lib/es/seo";
+import { FAQS, faqLd, graphLd, organizationLd, pageHead } from "@/lib/es/seo";
 import { JsonLd, Money } from "@/components/es/bits";
 import { Button } from "@/components/ui/button";
 
@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_site/faqs")({
 function FAQs() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-16">
-      <JsonLd data={faqLd(FAQS)} />
+      <JsonLd data={graphLd(organizationLd(), faqLd(FAQS))} />
       <p className="es-kicker">Questions</p>
       <h1 className="mt-3 text-4xl font-medium">Frequently asked questions</h1>
       <p className="mt-4 text-muted">

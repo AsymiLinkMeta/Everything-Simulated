@@ -21,6 +21,7 @@ export const Route = createFileRoute("/_site/checkout")({
       title: "Checkout | Everything Simulated",
       description: "Review your sim racing build and place your order.",
       path: "/checkout",
+      index: false,
     }),
   component: Checkout,
 });

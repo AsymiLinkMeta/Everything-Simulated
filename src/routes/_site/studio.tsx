@@ -1,7 +1,8 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { BRAND } from "@/lib/es/catalog";
-import { pageHead } from "@/lib/es/seo";
+import { pageHead, serviceLd } from "@/lib/es/seo";
+import { JsonLd } from "@/components/es/bits";
 
 export const Route = createFileRoute("/_site/studio")({
   head: () =>
@@ -17,6 +18,7 @@ export const Route = createFileRoute("/_site/studio")({
 function Studio() {
   return (
     <div>
+      <JsonLd data={serviceLd()} />
       <section className="relative isolate min-h-[70dvh] overflow-hidden">
         <img src="/rigs/showroom.jpg" alt="Everything Simulated Gold Coast showroom" className="absolute inset-0 size-full object-cover" />
         <div

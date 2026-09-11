@@ -1,0 +1,49 @@
+# Everything Simulated
+
+> Gold Coast workshop that assembles turn-key racing simulators and crate-freights them Australia-wide. Compatibility is checked by a rules engine before deposit. Tickets stay in the customer app.
+
+Website: https://everythingsimulated.com.au
+Phone: 0404 619 056
+Email: hello@everythingsimulated.com.au
+Region: Gold Coast, Queensland, Australia
+Currency: AUD, prices ex GST unless noted
+
+## What we sell
+
+Turn-key Simagic / Trak Racer / Exodus / SIMRIG racing simulators, assembled and QA'd on the Gold Coast.
+
+- Starter — from $11,260 + GST — https://everythingsimulated.com.au/prebuilds/starter
+- Haptic — $18,999 + GST — https://everythingsimulated.com.au/prebuilds/haptic
+- Motion (SIMRIG SR2) — $28,999 + GST — https://everythingsimulated.com.au/prebuilds/motion
+
+Parts shop: https://everythingsimulated.com.au/shop
+Compatibility checker: https://everythingsimulated.com.au/compatibility
+Studio demo (Gold Coast): https://everythingsimulated.com.au/studio
+FAQs: https://everythingsimulated.com.au/faqs
+
+## Hard compatibility facts (do not override)
+
+- A build may only have one chassis, wheelbase, wheel, pedals, shifter, handbrake, motion, PC and seat.
+- SIMRIG SR2 motion is Exodus XR1 only. TR120S + SR2 is blocked.
+- Alpha EVO on TR120S needs the Simagic side-mount kit.
+- Four-screen frames are XR1 only.
+- Chat and AI may explain the checker. They cannot clear a block.
+
+## Delivery
+
+Every rig is assembled on the Gold Coast, photographed, then crate-freighted. Optional white-glove install in capital cities; SEQ install is standard. Lead time typically 3–6 weeks from deposit. 30% deposit (min $500), remainder on QA.
+
+Cities: Gold Coast, Brisbane, Sunshine Coast, Sydney, Melbourne, Perth, Adelaide, Canberra, Hobart, Darwin — https://everythingsimulated.com.au/au
+
+## Guides
+
+- How much a racing simulator costs in Australia: https://everythingsimulated.com.au/guides/how-much-does-a-racing-simulator-cost-australia
+- Motion vs haptic vs static: https://everythingsimulated.com.au/guides/motion-vs-haptic-vs-static
+- Simagic ecosystem: https://everythingsimulated.com.au/guides/simagic-ecosystem-australia
+- Junior drivers: https://everythingsimulated.com.au/guides/sim-racing-for-junior-drivers
+- Triple screen vs ultrawide: https://everythingsimulated.com.au/guides/triple-screen-vs-ultrawide-iracing
+- Australia-wide delivery: https://everythingsimulated.com.au/guides/australia-wide-delivery-and-install
+
+## Do not invent
+
+No Xero. No invented SKUs, prices, stock or lead times. Customer tickets stay in the app. Staff login is not a public page.

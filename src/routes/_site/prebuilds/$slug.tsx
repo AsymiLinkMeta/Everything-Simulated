@@ -1,8 +1,9 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, applyHeadPayload } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { BackButton, IncGst, JsonLd, LineName, Money } from "@/components/es/bits";
 import { Button } from "@/components/ui/button";
-import { abs, breadcrumbLd, pageHead } from "@/lib/es/seo";
+import { breadcrumbLd, pageHead, productLd } from "@/lib/es/seo";
 import { fetchPrebuildBySlug, fetchPublishedPrebuilds } from "@/lib/es/prebuilds";
 import { fetchProducts, getCachedProductMap } from "@/lib/es/product-cache";
 import { useCart } from "@/lib/es/cart-store";
@@ -12,9 +13,10 @@ import type { PrebuildWithComponents } from "@/lib/es/prebuilds";
 export const Route = createFileRoute("/_site/prebuilds/$slug")({
   head: ({ params }) =>
     pageHead({
-      title: `${params.slug} | Prebuilt Simulator | Everything Simulated`,
-      description: `View this prebuilt racing simulator from Everything Simulated. Gold Coast assembled, delivered Australia-wide.`,
+      title: `${params.slug} | Prebuilt racing simulator | Everything Simulated`,
+      description: `Gold Coast assembled prebuilt racing simulator. Compatibility checked. Crate freight Australia-wide.`,
       path: `/prebuilds/${params.slug}`,
+      type: "product",
     }),
   component: PrebuildDetailPage,
 });
@@ -25,6 +27,20 @@ function PrebuildDetailPage() {
   const allPrebuilds = useQuery({ queryKey: ["prebuilds"], queryFn: fetchPublishedPrebuilds });
   const products = useQuery({ queryKey: ["products"], queryFn: () => fetchProducts() });
   const loadLines = useCart((s) => s.setLines);
+  const p = prebuild.data;
+
+  useEffect(() => {
+    if (!p) return;
+    applyHeadPayload(
+      pageHead({
+        title: `${p.name} | Everything Simulated`,
+        description: (p.blurb || p.description || `${p.name} Gold Coast assembled racing simulator.`).slice(0, 160),
+        path: `/prebuilds/${p.slug}`,
+        image: p.image,
+        type: "product",
+      }),
+    );
+  }, [p]);
 
   if (prebuild.isPending) {
     return (
@@ -34,7 +50,6 @@ function PrebuildDetailPage() {
     );
   }
 
-  const p = prebuild.data;
   if (!p) {
     return (
       <div className="mx-auto w-full max-w-6xl px-4 py-16 text-center">
@@ -63,21 +78,15 @@ function PrebuildDetailPage() {
         ])}
       />
       <JsonLd
-        data={{
-          "@context": "https://schema.org",
-          "@type": "Product",
+        data={productLd({
           name: p.name,
-          description: p.blurb || p.description,
-          image: p.image ? abs(p.image) : undefined,
           brand: "Everything Simulated",
-          offers: {
-            "@type": "Offer",
-            priceCurrency: "AUD",
-            price: (p.price_ex_gst / 100).toFixed(0),
-            availability: "https://schema.org/InStock",
-            url: abs(`/prebuilds/${p.slug}`),
-          },
-        }}
+          description: p.blurb || p.description,
+          image: p.image,
+          priceExGst: p.price_ex_gst,
+          url: `/prebuilds/${p.slug}`,
+          extras: (p.highlights ?? []).slice(0, 6).map((h) => ({ name: "Highlight", value: h })),
+        })}
       />
 
       <div className="grid grid-cols-1 gap-10 md:grid-cols-2">

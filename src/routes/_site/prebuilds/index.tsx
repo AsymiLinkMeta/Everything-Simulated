@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { Money } from "@/components/es/bits";
-import { pageHead } from "@/lib/es/seo";
+import { JsonLd, Money } from "@/components/es/bits";
+import { itemListLd, pageHead } from "@/lib/es/seo";
 import { fetchPublishedPrebuilds } from "@/lib/es/prebuilds";
 import type { PrebuildWithComponents } from "@/lib/es/prebuilds";
 
@@ -22,6 +22,13 @@ function PrebuildsPage() {
 
   return (
     <div className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-16">
+      <JsonLd
+        data={itemListLd(
+          "Prebuilt racing simulators",
+          "/prebuilds",
+          items.map((p) => ({ name: p.name, path: `/prebuilds/${p.slug}` })),
+        )}
+      />
       <p className="es-kicker">Turn-key</p>
       <h1 className="mt-3 text-4xl font-medium">Prebuilt Simulators</h1>
       <p className="mt-4 max-w-2xl text-muted">

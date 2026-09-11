@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { GUIDES } from "@/lib/es/catalog";
-import { pageHead } from "@/lib/es/seo";
+import { itemListLd, pageHead } from "@/lib/es/seo";
+import { JsonLd } from "@/components/es/bits";
 
 export const Route = createFileRoute("/_site/guides/")({
   head: () =>
@@ -16,6 +17,13 @@ export const Route = createFileRoute("/_site/guides/")({
 function Guides() {
   return (
     <div className="mx-auto max-w-3xl px-4 py-16">
+      <JsonLd
+        data={itemListLd(
+          "Sim racing buying guides Australia",
+          "/guides",
+          GUIDES.map((g) => ({ name: g.title, path: `/guides/${g.slug}` })),
+        )}
+      />
       <p className="es-kicker">Editorial</p>
       <h1 className="mt-3 text-4xl font-medium">Guides from the workshop</h1>
       <p className="mt-4 text-muted">

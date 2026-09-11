@@ -1,9 +1,62 @@
 User-agent: *
 Allow: /
 Disallow: /app
+Disallow: /app/
+Disallow: /staff
+Disallow: /staff/
+Disallow: /login
+Disallow: /checkout
+Disallow: /order
+Disallow: /api/
+
+User-agent: Googlebot
+Allow: /
+Disallow: /app
 Disallow: /staff
 Disallow: /login
-Disallow: /api/
 Disallow: /checkout
 
+User-agent: GPTBot
+Allow: /
+Disallow: /app
+Disallow: /staff
+Disallow: /login
+Disallow: /checkout
+
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /app
+Disallow: /staff
+
+User-agent: Google-Extended
+Allow: /
+Disallow: /app
+Disallow: /staff
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /app
+Disallow: /staff
+
+User-agent: ClaudeBot
+Allow: /
+Disallow: /app
+Disallow: /staff
+
+User-agent: Anthropic-AI
+Allow: /
+Disallow: /app
+Disallow: /staff
+
+User-agent: Applebot-Extended
+Allow: /
+Disallow: /app
+Disallow: /staff
+
+User-agent: Amazonbot
+Allow: /
+Disallow: /app
+Disallow: /staff
+
 Sitemap: https://everythingsimulated.com.au/sitemap.xml
+Host: https://everythingsimulated.com.au

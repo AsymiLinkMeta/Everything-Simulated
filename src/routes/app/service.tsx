@@ -20,6 +20,7 @@ export const Route = createFileRoute("/app/service")({
       title: "Messages | Everything Simulated",
       description: "Talk to the Gold Coast workshop about your build.",
       path: "/app/service",
+      index: false,
     }),
   component: ServiceDesk,
 });

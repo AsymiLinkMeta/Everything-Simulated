@@ -1,11 +1,12 @@
 import "./es-chrome";
-import { useState } from "react";
-import { Link, Outlet } from "@tanstack/react-router";
+import { useState, useEffect } from "react";
+import { Link, Outlet, applyHeadPayload } from "@tanstack/react-router";
 import { Navigate, useLocation } from "react-router-dom";
 import { Calendar, Gauge, LayoutDashboard, LifeBuoy, Menu, MessageSquare, Package, Wrench } from "lucide-react";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { useQuery } from "@tanstack/react-query";
 import { getProfile } from "@/lib/es/server";
+import { pageHead } from "@/lib/es/seo";
 import { AuthSlot, Logo } from "./bits";
 
 const TABS = [
@@ -27,6 +28,17 @@ export function AppShell() {
     queryFn: () => getProfile(),
     enabled: Boolean(user),
   });
+
+  useEffect(() => {
+    applyHeadPayload(
+      pageHead({
+        title: "Customer app | Everything Simulated",
+        description: "Quotes, builds and messages for Everything Simulated customers.",
+        path: loc.pathname || "/app",
+        index: false,
+      }),
+    );
+  }, [loc.pathname]);
 
   if (isPending) {
     return <div className="es-page" style={{ display: "grid", placeItems: "center" }}>Loading account…</div>;

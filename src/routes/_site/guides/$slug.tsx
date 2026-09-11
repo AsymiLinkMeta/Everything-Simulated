@@ -1,7 +1,7 @@
 import { createFileRoute, Link, notFound } from "@tanstack/react-router";
 import { BackButton, JsonLd } from "@/components/es/bits";
 import { guideBySlug, GUIDES } from "@/lib/es/catalog";
-import { breadcrumbLd, pageHead } from "@/lib/es/seo";
+import { articleLd, breadcrumbLd, pageHead } from "@/lib/es/seo";
 
 export const Route = createFileRoute("/_site/guides/$slug")({
   loader: ({ params }) => {
@@ -15,6 +15,7 @@ export const Route = createFileRoute("/_site/guides/$slug")({
       title: `${loaderData.title} | Everything Simulated`,
       description: loaderData.description,
       path: `/guides/${loaderData.slug}`,
+      type: "article",
     });
   },
   component: GuidePage,
@@ -32,6 +33,7 @@ function GuidePage() {
           { name: guide.title, path: `/guides/${guide.slug}` },
         ])}
       />
+      <JsonLd data={articleLd(guide)} />
       <p className="es-kicker">Guide</p>
       <h1 className="mt-3 text-4xl font-medium">{guide.title}</h1>
       <p className="mt-4 text-muted">{guide.description}</p>

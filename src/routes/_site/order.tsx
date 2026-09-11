@@ -14,6 +14,7 @@ export const Route = createFileRoute("/_site/order")({
       title: "Track an order | Everything Simulated",
       description: "Look up your build request by order ID and email.",
       path: "/order",
+      index: false,
     }),
   component: TrackOrder,
 });

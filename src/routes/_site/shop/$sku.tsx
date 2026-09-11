@@ -1,4 +1,4 @@
-import { createFileRoute, Link, notFound } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, applyHeadPayload } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BookOpen, Boxes, Check, Package } from "lucide-react";
@@ -7,14 +7,15 @@ import { CartPanel } from "@/components/es/cart-panel";
 import { BackButton, CheckPills, JsonLd, Money, IncGst, ProductTile } from "@/components/es/bits";
 import { fetchProducts, productImage } from "@/lib/es/product-cache";
 import { useCart } from "@/lib/es/cart-store";
-import { abs, breadcrumbLd, pageHead } from "@/lib/es/seo";
+import { breadcrumbLd, catalogProductLd, pageHead } from "@/lib/es/seo";
 
 export const Route = createFileRoute("/_site/shop/$sku")({
   head: ({ params }) => {
     return pageHead({
-      title: "Sim racing part | Everything Simulated",
-      description: "Gold Coast assembled racing simulator part. Compatibility checked. Australia-wide freight.",
+      title: `${params.sku} | Sim racing part | Everything Simulated`,
+      description: `Gold Coast assembled racing simulator part ${params.sku}. Compatibility checked. Australia-wide freight.`,
       path: `/shop/${params.sku}`,
+      type: "product",
     });
   },
   component: ProductPage,
@@ -36,7 +37,17 @@ function ProductPage() {
 
   useEffect(() => {
     if (uniqueGallery[0]) setHero(uniqueGallery[0]);
-    if (item) document.title = `${item.brand} ${item.name} | Everything Simulated`;
+    if (item) {
+      applyHeadPayload(
+        pageHead({
+          title: `${item.brand} ${item.name} | Everything Simulated`,
+          description: (item.description || item.notes || `${item.brand} ${item.name} for Gold Coast assembled racing simulators.`).slice(0, 160),
+          path: `/shop/${item.sku}`,
+          image: productImage(item),
+          type: "product",
+        }),
+      );
+    }
   }, [item?.sku, uniqueGallery[0]]);
 
   if (products.isPending) {
@@ -60,23 +71,7 @@ function ProductPage() {
           { name: item.name, path: `/shop/${item.sku}` },
         ])}
       />
-      <JsonLd
-        data={{
-          "@context": "https://schema.org",
-          "@type": "Product",
-          name: `${item.brand} ${item.name}`,
-          sku: item.sku,
-          brand: item.brand,
-          description: item.description || item.notes,
-          image: abs(hero || productImage(item)),
-          offers: {
-            "@type": "Offer",
-            priceCurrency: "AUD",
-            price: (item.sellExGst / 100).toFixed(0),
-            availability: item.stock === "stock" ? "https://schema.org/InStock" : "https://schema.org/PreOrder",
-          },
-        }}
-      />
+      <JsonLd data={catalogProductLd(item)} />
       <div className="grid min-w-0 grid-cols-1 gap-8 lg:grid-cols-[1fr_1fr_320px]">
         <div>
           <img

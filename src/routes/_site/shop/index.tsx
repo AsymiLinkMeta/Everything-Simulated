@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { ProductTile } from "@/components/es/bits";
+import { JsonLd, ProductTile } from "@/components/es/bits";
 import { CartPanel } from "@/components/es/cart-panel";
 import { fetchProducts } from "@/lib/es/product-cache";
-import { pageHead } from "@/lib/es/seo";
+import { itemListLd, pageHead } from "@/lib/es/seo";
 import type { ProductCategory } from "@/lib/es/types";
 
 export const Route = createFileRoute("/_site/shop/")({
@@ -56,6 +56,13 @@ function Shop() {
   }, [cat, q, products.data]);
   return (
     <div className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-16">
+      <JsonLd
+        data={itemListLd(
+          "Sim racing parts Australia",
+          "/shop",
+          (products.data ?? []).slice(0, 40).map((p) => ({ name: `${p.brand} ${p.name}`, path: `/shop/${p.sku}` })),
+        )}
+      />
       <p className="es-kicker">Catalogue</p>
       <h1 className="mt-3 text-4xl font-medium">Shop the spec we actually bolt together</h1>
       <p className="mt-4 max-w-2xl text-muted">

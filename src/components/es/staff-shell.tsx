@@ -1,6 +1,6 @@
 import "./es-chrome";
-import { useState } from "react";
-import { Link, Outlet } from "@tanstack/react-router";
+import { useState, useEffect } from "react";
+import { Link, Outlet, applyHeadPayload } from "@tanstack/react-router";
 import { Navigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -23,6 +23,7 @@ import {
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { getProfile } from "@/lib/es/server";
 import { unreadInboxCount } from "@/lib/es/inbox";
+import { pageHead } from "@/lib/es/seo";
 import { AuthSlot, Logo } from "./bits";
 
 const TABS = [
@@ -56,6 +57,17 @@ export function StaffShell() {
   });
 
   const [menuOpen, setMenuOpen] = useState(false);
+
+  useEffect(() => {
+    applyHeadPayload(
+      pageHead({
+        title: "Staff | Everything Simulated",
+        description: "Workshop portal.",
+        path: "/staff",
+        index: false,
+      }),
+    );
+  }, []);
 
   if (isPending || (user && profile.isPending)) {
     return (
