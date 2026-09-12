@@ -49,6 +49,8 @@ export function Home() {
       </section>
       <hr className="es-racing-stripe" />
 
+      <FeaturedPrebuilds />
+
       <section className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-20">
         <p className="es-kicker">Platforms</p>
         <h2 className="mt-3 text-3xl font-bold">What the workshop actually builds</h2>
@@ -78,8 +80,6 @@ export function Home() {
           </Link>
         </div>
       </section>
-
-      <FeaturedPrebuilds />
 
       <section className="border-y border-line bg-panel">
         <div className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-20 es-roadmap-section">
