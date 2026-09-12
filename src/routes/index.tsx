@@ -51,36 +51,6 @@ export function Home() {
 
       <FeaturedPrebuilds />
 
-      <section className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-20">
-        <p className="es-kicker">Platforms</p>
-        <h2 className="mt-3 text-3xl font-bold">What the workshop actually builds</h2>
-        <p className="mt-3 max-w-2xl text-muted">
-          Four platforms. Racing is the live catalogue with shop and checker. The rest are consult-first — same crate, same studio.
-        </p>
-        <div className="mt-10 grid gap-5 sm:grid-cols-2">
-          {PLATFORMS.map((p) => (
-            <Link key={p.slug} to={p.to} className="es-card group overflow-hidden">
-              <div className="aspect-[16/9] overflow-hidden">
-                <img src={p.image} alt="" className="size-full object-cover transition-transform duration-500 group-hover:scale-105" />
-              </div>
-              <div className="p-5">
-                <p className="es-kicker">{p.kicker}</p>
-                <h3 className="mt-2 text-xl font-medium">{p.name}</h3>
-                <p className="mt-2 text-sm text-muted">{p.blurb}</p>
-              </div>
-            </Link>
-          ))}
-        </div>
-        <div className="mt-8 flex flex-wrap gap-4 text-sm">
-          <Link to="/drivers" className="text-paper underline-offset-4 hover:underline">
-            Sponsored drivers
-          </Link>
-          <Link to="/partners" className="text-paper underline-offset-4 hover:underline">
-            Partners
-          </Link>
-        </div>
-      </section>
-
       <section className="border-y border-line bg-panel">
         <div className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-20 es-roadmap-section">
           <div className="max-w-2xl">
