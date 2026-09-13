@@ -31,11 +31,12 @@ export function Home() {
         <HeroVideo />
         <div className="es-hero-mask" />
         <div className="es-hero-copy">
-          <p className="es-kicker">Gold Coast · Australia-wide · 24H Ready</p>
+          <p className="es-kicker">Gold Coast · Try before you buy · Australia-wide</p>
           <h1>Simulator platforms, built in one workshop.</h1>
           <p className="lead">
-            Racing crates already ship. Aircraft, drones and training are specced here too.
-            Assembled and QA’d on the Gold Coast, then crate-freighted.
+            Racing crates already ship — motion, haptic, triples and an aux screen.
+            Aircraft, drones and training are specced on the same Gold Coast floor.
+            Sit the chassis before it leaves.
           </p>
           <div className="es-hero-actions">
             <Link to="/racing" className="es-btn">
@@ -48,6 +49,40 @@ export function Home() {
         </div>
       </section>
       <hr className="es-racing-stripe" />
+
+      <section className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-20">
+        <p className="es-kicker">Platforms</p>
+        <h2 className="mt-2 text-3xl font-medium">One workshop. Four ways in.</h2>
+        <p className="mt-3 max-w-2xl text-sm text-muted">
+          Racing is the live catalogue — motion, haptic, triples plus an aux screen.
+          Aircraft, drones and training are capacity we spec in studio. No fake shops.
+        </p>
+        <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {PLATFORMS.map((platform) => (
+            <Link
+              key={platform.slug}
+              to={platform.to}
+              className="group overflow-hidden rounded-2xl border border-line bg-black transition-transform duration-300 hover:-translate-y-1"
+            >
+              <div className="aspect-[4/3] overflow-hidden">
+                <img
+                  src={platform.image}
+                  alt=""
+                  className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+              </div>
+              <div className="p-5">
+                <p className="es-kicker">{platform.kicker}</p>
+                <h3 className="mt-2 text-lg font-medium text-paper">{platform.name}</h3>
+                <p className="mt-2 text-sm leading-6 text-muted">{platform.blurb}</p>
+                <span className="mt-5 inline-block text-sm text-paper underline-offset-4 group-hover:underline">
+                  Open platform
+                </span>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
 
       <FeaturedPrebuilds />
 
@@ -132,7 +167,8 @@ export function Home() {
             <p className="es-kicker">Studio</p>
             <h2 className="text-2xl font-medium">Try before the crate leaves</h2>
             <p className="text-sm text-muted">
-              Book a session at the {BRAND.region} workshop. We set pedal spacing and wheel height on the actual chassis.
+              Book a session with {BRAND.contactName} at the {BRAND.region} workshop.
+              Pedal spacing, wheel height and the coaching screen are set on the chassis you are buying.
             </p>
             <Link to="/studio" className="es-btn" style={{ width: "fit-content" }}>
               Book the studio
@@ -338,8 +374,8 @@ function BrandBanner() {
         <p className="es-kicker">Brands we spec</p>
         <h2 className="mt-2 text-2xl font-medium">Trusted hardware, assembled right</h2>
         <p className="mt-2 max-w-2xl text-sm text-muted">
-          We build with the best sim racing hardware brands. Every rig is compatibility-checked,
-          assembled and QA'd in our Gold Coast workshop.
+          Simagic, Trak Racer, Exodus, SIMRIG and Dynamix on the racing line. Player1 from January 2026.
+          Every crate is compatibility-checked, assembled and QA'd on the Gold Coast.
         </p>
         <div className="es-brand-marquee mt-8" aria-label="Brands we spec">
           <div className="es-brand-track">
