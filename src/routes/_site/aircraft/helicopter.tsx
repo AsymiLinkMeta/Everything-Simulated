@@ -29,7 +29,7 @@ function HelicopterPage() {
       <PageIntro
         kicker="Rotary"
         title="Helicopter simulators."
-        lead="Collective, cyclic and anti-torque layouts for training and rehearsal. We spec the cockpit, visuals and motion with you, then assemble on the Gold Coast."
+        lead="The rotary cockpit is the aircraft platform we have already put our name on. Collective, cyclic and anti-torque layouts for training and rehearsal — specced with you, assembled on the Gold Coast."
       />
       <ul className="mt-10 max-w-2xl space-y-3 text-sm text-muted">
         <li>Training and procedure rehearsal — not a public type-rating school.</li>

@@ -9,7 +9,7 @@ export const Route = createFileRoute("/_site/training/industrial")({
     pageHead({
       title: "Industrial and vehicle training simulators | Everything Simulated",
       description:
-        "Plant, heavy vehicle and industrial training simulators assembled on the Gold Coast. Enquire for a spec.",
+        "Plant, truck, side-kart and excavator training simulators assembled on the Gold Coast. Enquire for a spec — not a public catalogue.",
       path: "/training/industrial",
     }),
   component: IndustrialTraining,
@@ -29,10 +29,10 @@ function IndustrialTraining() {
       <PageIntro
         kicker="Industrial"
         title="Industrial and vehicle training."
-        lead="Plant, heavy vehicle and other vehicle programs that do not belong on a race chassis. We spec controls, visuals and room with you. No public SKU list — enquire."
+        lead="Plant, heavy vehicle, truck, side-kart and excavator programs that do not belong on a race chassis. We spec controls, visuals and room with you. No public SKU list — enquire."
       />
       <p className="mt-8 max-w-2xl text-sm text-muted">
-        Same Gold Coast assembly and crate freight as racing. Different cab, different software, same workshop photos before it ships.
+        Same Gold Coast assembly and crate freight as racing. Different cab, different software, same workshop photos before it ships. Corporate and event hire sits with partners — not a second shop on this site.
       </p>
       <Link to="/contact" className="es-btn mt-8 inline-flex">
         Enquire

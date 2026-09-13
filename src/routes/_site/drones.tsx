@@ -8,7 +8,7 @@ export const Route = createFileRoute("/_site/drones")({
     pageHead({
       title: "Drone simulators | Everything Simulated Gold Coast",
       description:
-        "FPV and ground-station drone simulators assembled on the Gold Coast. Studio consult for commercial and recreational trainers.",
+        "FPV and ground-station drone simulators assembled on the Gold Coast. Studio consult for commercial and recreational trainers — capacity, not a fake shop.",
       path: "/drones",
     }),
   component: DronesPage,
@@ -26,7 +26,7 @@ function DronesPage() {
       <PageIntro
         kicker="Drones"
         title="Drone simulators."
-        lead="Ground-station and FPV trainers for operators who need rehearsal without putting a airframe in the air. Specced with you, assembled here."
+        lead="Ground-station and FPV trainers for operators who need rehearsal without putting an airframe in the air. Named as workshop capacity — specced with you, assembled here. No public parts list."
       />
       <div className="mt-10">
         <ToolCards

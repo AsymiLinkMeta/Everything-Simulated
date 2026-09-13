@@ -9,7 +9,7 @@ export const Route = createFileRoute("/_site/training/driver")({
     pageHead({
       title: "Driver training simulators | Everything Simulated",
       description:
-        "Kart, junior and motorsport driver training on Gold Coast racing simulators. Studio fitting, then a crate.",
+        "Kart, junior and motorsport driver training on Gold Coast racing simulators with four-screen coaching layouts. Studio fitting, then a crate.",
       path: "/training/driver",
     }),
   component: DriverTraining,
@@ -29,10 +29,10 @@ function DriverTraining() {
       <PageIntro
         kicker="Driver"
         title="Driver training."
-        lead="Juniors, karting and motorsport drivers already use the racing crates. Pedal spacing, torque caps and a coaching screen are set in the studio before the crate leaves."
+        lead="Juniors, karting and motorsport drivers already use the racing crates. Pedal spacing, torque caps and a four-screen coaching layout — triples plus an aux — are set in the studio before the crate leaves."
       />
       <p className="mt-8 max-w-2xl text-sm text-muted">
-        Hardware lives under Racing — Starter or Haptic unless a coach asks for motion. The program (hours, coaching, junior pathway) lives here.
+        Hardware lives under Racing — Starter or Haptic unless a coach asks for motion. The program (hours, coaching, junior pathway) lives here. Named driver programs sit under People.
       </p>
       <div className="mt-8 flex flex-wrap gap-3">
         <Link to="/racing" className="es-btn">

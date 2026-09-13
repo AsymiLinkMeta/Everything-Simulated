@@ -29,7 +29,7 @@ function FlightPage() {
       <PageIntro
         kicker="Fixed-wing"
         title="Flight simulators."
-        lead="Fixed-wing and jet trainer cockpits. Same Gold Coast workshop as racing and rotary — different controls, same crate discipline."
+        lead="Fixed-wing and jet trainer cockpits. Same Gold Coast workshop as racing and rotary — different controls, same crate discipline. Enquire rather than browse a catalogue that does not exist yet."
       />
       <ul className="mt-10 max-w-2xl space-y-3 text-sm text-muted">
         <li>Specced to the airframe you train on. We do not invent a stock SKU list here.</li>
