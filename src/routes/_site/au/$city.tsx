@@ -3,6 +3,7 @@ import { BackButton, JsonLd, PackageCard } from "@/components/es/bits";
 import { CITIES, cityBySlug } from "@/lib/es/catalog";
 import { livePackages } from "@/lib/es/prebuilds";
 import { breadcrumbLd, faqLd, FAQS, localBusinessLd, pageHead } from "@/lib/es/seo";
+import { PageHero } from "@/components/es/section-page";
 
 export const Route = createFileRoute("/_site/au/$city")({
   loader: ({ params }) => {
@@ -24,54 +25,33 @@ export const Route = createFileRoute("/_site/au/$city")({
 function CityPage() {
   const city = Route.useLoaderData();
   return (
-    <div className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-16">
-      <BackButton />
+    <div>
       <JsonLd data={localBusinessLd(city.name)} />
       <JsonLd data={faqLd(FAQS)} />
-      <JsonLd
-        data={breadcrumbLd([
-          { name: "Home", path: "/" },
-          { name: "Australia", path: "/au" },
-          { name: city.name, path: `/au/${city.slug}` },
-        ])}
+      <JsonLd data={breadcrumbLd([{ name: "Home", path: "/" }, { name: "Australia", path: "/au" }, { name: city.name, path: `/au/${city.slug}` }])} />
+      <PageHero
+        kicker={`${city.state} · Australia-wide`}
+        title={`Racing simulators in ${city.name}.`}
+        lead={city.note}
+        image="/rigs/showroom.jpg"
       />
-      <p className="es-kicker">
-        {city.state} · Australia-wide
-      </p>
-      <h1 className="mt-3 text-4xl font-medium">Racing simulators in {city.name}</h1>
-      <p className="mt-4 max-w-2xl text-muted">{city.note}</p>
-      <p className="mt-3 max-w-2xl text-sm text-muted">
-        Every system is still assembled and QA’d on the Gold Coast. You get workshop photos before
-        the crate is sealed. Compatibility is checked in the build app before deposit.
-      </p>
-      <div className="mt-10 grid grid-cols-2 gap-6 md:grid-cols-3">
-        {livePackages().map((pack) => (
-          <PackageCard key={pack.slug} pack={pack} />
-        ))}
-      </div>
-      <div className="mt-12 es-card p-6">
-        <h2 className="text-xl font-medium">Delivery to {city.name}</h2>
-        <p className="mt-3 text-sm text-muted">
-          Starter and Haptic travel as a crate plus monitor cartons. Motion adds a dedicated SR2
-          crate. Optional on-site calibration is booked on a run — not overnight — except SEQ.
-        </p>
-        <Link to="/studio" className="mt-4 inline-flex min-h-11 items-center text-sm text-paper">
-          Prefer to demo on the Gold Coast first
-        </Link>
-      </div>
-      <div className="mt-10">
-        <p className="es-kicker mb-3">Other cities</p>
-        <div className="flex flex-wrap gap-2">
-          {CITIES.filter((c) => c.slug !== city.slug).map((c) => (
-            <Link
-              key={c.slug}
-              to="/au/$city"
-              params={{ city: c.slug }}
-              className="rounded-md border border-line px-3 py-2 text-sm text-muted hover:text-paper"
-            >
-              {c.name}
-            </Link>
+      <div className="es-body">
+        <BackButton />
+        <p className="max-w-2xl text-sm text-muted">Every system is still assembled and QA’d on the Gold Coast. Workshop photos before the crate is sealed.</p>
+        <div className="mt-10 grid grid-cols-2 gap-6 md:grid-cols-3">
+          {livePackages().map((pack) => (
+            <PackageCard key={pack.slug} pack={pack} />
           ))}
+        </div>
+        <div className="mt-12">
+          <p className="es-kicker es-kicker-telemetry mb-3">Other cities</p>
+          <div className="flex flex-wrap gap-2">
+            {CITIES.filter((c) => c.slug !== city.slug).map((c) => (
+              <Link key={c.slug} to="/au/$city" params={{ city: c.slug }} className="border border-line px-3 py-2 text-sm text-muted hover:text-paper">
+                {c.name}
+              </Link>
+            ))}
+          </div>
         </div>
       </div>
     </div>
