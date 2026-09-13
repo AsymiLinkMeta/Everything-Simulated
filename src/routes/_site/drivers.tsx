@@ -8,7 +8,7 @@ export const Route = createFileRoute("/_site/drivers")({
     pageHead({
       title: "Sponsored drivers | Everything Simulated",
       description:
-        "Workshop-supported and sponsored drivers on Everything Simulated racing simulators. Junior pathway and Gold Coast studio.",
+        "Workshop-supported drivers on Everything Simulated racing simulators — including Carter Cosgrove Racing. Junior pathway and Gold Coast studio.",
       path: "/drivers",
     }),
   component: DriversPage,
@@ -25,18 +25,25 @@ function DriversPage() {
       />
       <PageIntro
         kicker="People"
-        title="Sponsored drivers."
-        lead="The workshop backs drivers on the same crates we ship. Juniors on the karting pathway, and drivers who train with us between race weekends. Names and liveries are listed as agreements land — we do not invent a grid."
+        title="Drivers the workshop actually backs."
+        lead="The same crates we ship are the ones drivers train on. Juniors on the karting pathway, and named programs we have already stood next to. We do not invent a grid."
       />
       <ul className="mt-10 grid gap-4 sm:grid-cols-2">
+        <li className="es-card p-5">
+          <p className="es-kicker">Named</p>
+          <h2 className="mt-2 text-xl font-medium">Carter Cosgrove Racing</h2>
+          <p className="mt-2 text-sm text-muted">
+            A driver program the workshop has publicly stood with. Profile detail lands here as the agreement is current — not a placeholder livery.
+          </p>
+        </li>
         <li className="es-card p-5">
           <p className="es-kicker">Pathway</p>
           <h2 className="mt-2 text-xl font-medium">Junior drivers</h2>
           <p className="mt-2 text-sm text-muted">
-            Adjustable seat, 12Nm unless a coach asks otherwise, Gold Coast demo for pedal spacing. See Training → Driver.
+            Adjustable seat, 12Nm unless a coach asks otherwise, four-screen coaching layout, Gold Coast demo for pedal spacing. See Training → Driver.
           </p>
         </li>
-        <li className="es-card p-5">
+        <li className="es-card p-5 sm:col-span-2">
           <p className="es-kicker">Workshop</p>
           <h2 className="mt-2 text-xl font-medium">Supported programs</h2>
           <p className="mt-2 text-sm text-muted">

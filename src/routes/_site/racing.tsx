@@ -13,7 +13,7 @@ export const Route = createFileRoute("/_site/racing")({
     pageHead({
       title: "Racing simulators | Everything Simulated Gold Coast",
       description:
-        "Turn-key racing simulators, parts shop and compatibility checker. Gold Coast assembled, crate freight Australia-wide.",
+        "Turn-key racing simulators with motion, haptic and triple-plus-aux screens. Simagic, Trak Racer, Exodus and Dynamix. Gold Coast assembled, crate freight Australia-wide.",
       path: "/racing",
     }),
   component: RacingHub,
@@ -49,14 +49,14 @@ function RacingHub() {
       />
       <PageIntro
         kicker="Racing"
-        title="The racing line — shop, checker, crates."
-        lead="Everything Simulated’s live product is racing. Prebuilds, parts, the compatibility engine and the customer app all sit here. Aircraft, drones and training are separate platforms."
+        title="Motion, haptic, triples — the line that already ships."
+        lead="Everything Simulated’s live product is racing. Prebuilds, parts, the compatibility engine and the customer app all sit here. Sit the chassis on the Gold Coast before it crates. Aircraft, drones and training are separate platforms."
       />
 
       <section className="mt-12">
         <h2 className="text-2xl font-medium">Tools</h2>
         <p className="mt-2 max-w-2xl text-sm text-muted">
-          Same workshop rules as always. The checker is law. Chat only explains it.
+          Same workshop rules as always. The checker is law. Chat only explains it. Try-before-you-buy is a phone call to Taylah.
         </p>
         <div className="mt-6">
           <ToolCards links={RACING_TOOLS} />

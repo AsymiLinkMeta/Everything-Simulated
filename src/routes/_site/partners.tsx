@@ -9,7 +9,7 @@ export const Route = createFileRoute("/_site/partners")({
     pageHead({
       title: "Partners and industry | Everything Simulated",
       description:
-        "Hardware, events and industry partners for Everything Simulated — Simagic, Trak Racer, Exodus, SIMRIG and event hire.",
+        "Hardware, events and industry partners for Everything Simulated — Simagic, Trak Racer, Exodus, SIMRIG, Dynamix, Player1, Circolo and Adrenalin Events.",
       path: "/partners",
     }),
   component: PartnersPage,
@@ -26,8 +26,8 @@ function PartnersPage() {
       />
       <PageIntro
         kicker="Industry"
-        title="Partners."
-        lead="Hardware we bolt on, events we hire to, and industry connections around the workshop. Only names we actually work with."
+        title="Partners we name in public."
+        lead="Hardware we bolt on, events we hire to, and industry names already on the workshop’s socials. Only people and brands we actually work with."
       />
       <div className="mt-12 grid gap-10 md:grid-cols-3">
         {PARTNER_GROUPS.map((g) => (
