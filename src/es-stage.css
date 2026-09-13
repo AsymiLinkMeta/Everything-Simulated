@@ -22,7 +22,11 @@
   line-height: 0.92;
 }
 
-/* Full-bleed chrome — boxed header/footer is what made the site feel like a card template. */
+.es-hero-copy h1 {
+  max-width: 14ch;
+  font-size: clamp(3.4rem, 11vw, 7.4rem);
+}
+
 .es-header {
   border-radius: 0;
 }
@@ -33,7 +37,6 @@
   margin-top: 0;
 }
 
-/* Text nav instead of a row of identical buttons. */
 .es-nav-link {
   background: transparent;
   border-color: transparent;
@@ -56,7 +59,6 @@
   letter-spacing: 0.06em;
 }
 
-/* Subtle carbon grain over the whole public page. */
 .es-page::before {
   content: "";
   pointer-events: none;
@@ -68,7 +70,6 @@
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
 }
 
-/* ---- cinematic inner-page stage ---- */
 .es-stage {
   position: relative;
   isolation: isolate;
@@ -141,7 +142,6 @@
   background: currentColor;
 }
 
-/* Start lights — five lamps, last one live red. */
 .es-lights {
   display: flex;
   gap: 0.4rem;
@@ -159,16 +159,13 @@
   box-shadow: 0 0 12px var(--es-red-glow);
 }
 
-/* Pit-lane section tabs */
 .es-pit-tabs {
   display: flex;
   flex-wrap: wrap;
   gap: 0;
   border-bottom: 1px solid var(--es-line);
-  margin-bottom: 0;
 }
 .es-pit-tab {
-  position: relative;
   display: inline-flex;
   align-items: center;
   min-height: 48px;
@@ -188,7 +185,6 @@
   border-bottom-color: var(--es-red);
 }
 
-/* Expedition / garage tiles */
 .es-expedition {
   display: grid;
   gap: 1px;
@@ -214,7 +210,6 @@
   background: var(--es-panel);
   color: inherit;
   text-decoration: none;
-  transition: background 180ms ease, transform 180ms ease;
 }
 .es-expedition-tile:hover {
   background: #16161f;
@@ -226,7 +221,6 @@
   color: var(--es-red);
   line-height: 1;
 }
-.es-expedition-tile h3,
 .es-expedition-tile .es-expedition-label {
   margin: 1.4rem 0 0.4rem;
   font-size: 1.05rem;
@@ -239,10 +233,8 @@
   color: var(--es-muted);
 }
 
-/* Numbered process rail */
 .es-rail {
   display: grid;
-  gap: 0;
   border-left: 1px solid var(--es-line);
 }
 .es-rail-step {
@@ -282,9 +274,7 @@
 }
 
 .es-pack-tile {
-  position: relative;
   display: block;
-  overflow: hidden;
   color: inherit;
   text-decoration: none;
 }
@@ -320,9 +310,80 @@
   margin: 0;
 }
 
+/* Homepage chapters — full-bleed racing / adventure bands */
+.es-chapter {
+  position: relative;
+  isolation: isolate;
+  display: block;
+  min-height: 82dvh;
+  overflow: hidden;
+  color: var(--es-paper);
+  text-decoration: none;
+}
+.es-chapter img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.03);
+  transition: transform 800ms ease;
+}
+.es-chapter:hover img {
+  transform: scale(1.07);
+}
+.es-chapter-veil {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(5, 5, 7, 0.88) 0%, rgba(5, 5, 7, 0.35) 62%, rgba(5, 5, 7, 0.15) 100%),
+    linear-gradient(180deg, rgba(5, 5, 7, 0.1) 0%, rgba(5, 5, 7, 0.78) 100%);
+}
+.es-chapter-copy {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: inherit;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 4rem 1rem;
+}
+.es-chapter-idx {
+  font-family: var(--es-font-display);
+  font-size: clamp(3rem, 8vw, 6rem);
+  line-height: 0.8;
+  color: var(--es-red);
+}
+.es-chapter-copy h2 {
+  font-family: var(--es-font-display);
+  font-size: clamp(2.6rem, 7vw, 5.2rem);
+  margin: 0.4rem 0 0;
+  line-height: 0.9;
+}
+.es-chapter-copy p {
+  max-width: 32rem;
+  margin-top: 1rem;
+  color: var(--es-muted);
+}
+.es-chapter-row {
+  display: grid;
+  gap: 0;
+}
+.es-chapter-row .es-chapter {
+  min-height: 58dvh;
+}
+@media (min-width: 900px) {
+  .es-chapter-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .es-page::before,
-  .es-pack-tile-frame img {
+  .es-pack-tile-frame img,
+  .es-chapter img {
     transition: none;
   }
 }
