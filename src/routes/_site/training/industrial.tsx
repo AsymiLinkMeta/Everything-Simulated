@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { JsonLd } from "@/components/es/bits";
-import { PageIntro, SectionLinks } from "@/components/es/section-page";
+import { PageHero, SectionLinks } from "@/components/es/section-page";
 import { TRAINING_PAGES } from "@/lib/es/platforms";
 import { breadcrumbLd, pageHead } from "@/lib/es/seo";
 
@@ -9,7 +9,7 @@ export const Route = createFileRoute("/_site/training/industrial")({
     pageHead({
       title: "Industrial and vehicle training simulators | Everything Simulated",
       description:
-        "Plant, heavy vehicle and industrial training simulators assembled on the Gold Coast. Enquire for a spec.",
+        "Plant, truck, side-kart and excavator training simulators assembled on the Gold Coast. Enquire for a spec — not a public catalogue.",
       path: "/training/industrial",
     }),
   component: IndustrialTraining,
@@ -17,7 +17,7 @@ export const Route = createFileRoute("/_site/training/industrial")({
 
 function IndustrialTraining() {
   return (
-    <div className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-16">
+    <div>
       <JsonLd
         data={breadcrumbLd([
           { name: "Home", path: "/" },
@@ -25,18 +25,22 @@ function IndustrialTraining() {
           { name: "Industrial", path: "/training/industrial" },
         ])}
       />
-      <SectionLinks links={TRAINING_PAGES} current="/training/industrial" />
-      <PageIntro
+      <PageHero
         kicker="Industrial"
-        title="Industrial and vehicle training."
-        lead="Plant, heavy vehicle and other vehicle programs that do not belong on a race chassis. We spec controls, visuals and room with you. No public SKU list — enquire."
+        title="Not every vehicle is a race car."
+        lead="Plant, heavy vehicle, truck, side-kart and excavator programs. We spec controls, visuals and room with you. No public SKU list — enquire."
+        image="/rigs/starter.jpg"
+        tone="adventure"
       />
-      <p className="mt-8 max-w-2xl text-sm text-muted">
-        Same Gold Coast assembly and crate freight as racing. Different cab, different software, same workshop photos before it ships.
-      </p>
-      <Link to="/contact" className="es-btn mt-8 inline-flex">
-        Enquire
-      </Link>
+      <div className="es-body">
+        <SectionLinks links={TRAINING_PAGES} current="/training/industrial" tone="adventure" />
+        <p className="mt-8 max-w-2xl text-sm text-muted">
+          Same Gold Coast assembly and crate freight as racing. Different cab, different software, same workshop photos before it ships.
+        </p>
+        <Link to="/contact" className="es-btn mt-8 inline-flex">
+          Enquire
+        </Link>
+      </div>
     </div>
   );
 }

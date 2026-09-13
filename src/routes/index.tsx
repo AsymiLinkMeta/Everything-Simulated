@@ -23,6 +23,9 @@ export const Route = createFileRoute("/")({
 });
 
 export function Home() {
+  const racing = PLATFORMS.find((p) => p.slug === "racing");
+  const rest = PLATFORMS.filter((p) => p.slug !== "racing");
+
   return (
     <SiteShell>
       <JsonLd data={graphLd(organizationLd(), websiteLd(), localBusinessLd(), faqLd(FAQS))} />
@@ -31,15 +34,19 @@ export function Home() {
         <HeroVideo />
         <div className="es-hero-mask" />
         <div className="es-hero-copy">
-          <p className="es-kicker">Gold Coast · Australia-wide · 24H Ready</p>
-          <h1>Simulator platforms, built in one workshop.</h1>
+          <div className="es-lights" aria-hidden="true">
+            <i /><i /><i /><i /><i />
+          </div>
+          <p className="es-kicker es-kicker-telemetry">Gold Coast · Try before you buy · Australia-wide</p>
+          <h1>One workshop. Every machine.</h1>
           <p className="lead">
-            Racing crates already ship. Aircraft, drones and training are specced here too.
-            Assembled and QA’d on the Gold Coast, then crate-freighted.
+            Racing crates already ship — motion, haptic, triples and an aux screen.
+            Aircraft, drones and training are specced on the same Gold Coast floor.
+            Sit the chassis before it leaves.
           </p>
           <div className="es-hero-actions">
             <Link to="/racing" className="es-btn">
-              Racing tools <ArrowRight className="size-4" />
+              Enter the garage <ArrowRight className="size-4" />
             </Link>
             <Link to="/studio" className="es-btn es-btn-paper">
               Book a studio demo
@@ -47,104 +54,81 @@ export function Home() {
           </div>
         </div>
       </section>
-      <hr className="es-racing-stripe" />
+
+      {racing ? (
+        <Link to={racing.to} className="es-chapter">
+          <img src={racing.image} alt="" />
+          <div className="es-chapter-veil" />
+          <div className="es-chapter-copy">
+            <span className="es-chapter-idx">01</span>
+            <p className="es-kicker es-kicker-telemetry">{racing.kicker}</p>
+            <h2>{racing.name}</h2>
+            <p>{racing.blurb}</p>
+          </div>
+        </Link>
+      ) : null}
+
+      <div className="es-chapter-row">
+        {rest.map((platform, i) => (
+          <Link key={platform.slug} to={platform.to} className="es-chapter">
+            <img src={platform.image} alt="" />
+            <div className="es-chapter-veil" />
+            <div className="es-chapter-copy">
+              <span className="es-chapter-idx">{String(i + 2).padStart(2, "0")}</span>
+              <p className="es-kicker es-kicker-telemetry">{platform.kicker}</p>
+              <h2>{platform.name}</h2>
+              <p>{platform.blurb}</p>
+            </div>
+          </Link>
+        ))}
+      </div>
 
       <FeaturedPrebuilds />
 
-      <section className="border-y border-line bg-panel">
-        <div className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-20 es-roadmap-section">
-          <div className="max-w-2xl">
-            <p className="es-kicker">Your rig, your roadmap</p>
-            <h2 className="mt-3 text-3xl font-bold sm:text-4xl">
-              Create an account to design, upgrade or maintain your rig.
-            </h2>
-            <p className="mt-4 text-muted">
-              Keep every decision in one place, from the first compatible build to future upgrades,
-              saved quotes and ongoing care.
-            </p>
-          </div>
-          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {[
-              {
-                title: "Design your build",
-                body: "Configure a complete rig with the parts we actually assemble and ship.",
-                image: "/rigs/starter.jpg",
-                to: "/app/build",
-              },
-              {
-                title: "Check compatibility",
-                body: "Validate torque, payload, QR and mount choices before you commit.",
-                image: "/rigs/haptic.jpg",
-                to: "/compatibility",
-              },
-              {
-                title: "Upgrade with confidence",
-                body: "Save your current setup, compare options and request a tailored quote.",
-                image: "/rigs/motion.jpg",
-                to: "/app/quotes",
-              },
-              {
-                title: "Maintain over time",
-                body: "Keep your build history close and get help when your rig evolves.",
-                image: "/rigs/showroom.jpg",
-                to: "/app/chat",
-              },
-            ].map((feature) => (
-              <Link
-                key={feature.title}
-                to={feature.to}
-                className="group overflow-hidden rounded-2xl border border-line bg-black transition-transform duration-300 hover:-translate-y-1"
-              >
-                <div className="aspect-[4/3] overflow-hidden">
-                  <img
-                    src={feature.image}
-                    alt=""
-                    className="size-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                </div>
-                <div className="p-5">
-                  <h3 className="text-lg font-medium text-paper">{feature.title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-muted">{feature.body}</p>
-                  <span className="mt-5 inline-block text-sm text-paper underline-offset-4 group-hover:underline">
-                    Explore tool
-                  </span>
-                </div>
-              </Link>
-            ))}
-          </div>
-          <div className="mt-10 flex flex-wrap items-center gap-4">
-            <Link to="/login" className="es-btn">
-              Create your account <ArrowRight className="size-4" />
-            </Link>
-            <Link to="/login" className="text-sm text-muted underline-offset-4 hover:text-paper hover:underline">
-              Already have an account? Sign in
-            </Link>
-          </div>
+      <section className="es-body grid gap-12 md:grid-cols-[1fr_1.2fr]">
+        <div>
+          <p className="es-kicker es-kicker-telemetry">The build</p>
+          <h2 className="es-display mt-2 text-5xl">From first spec to a crate on the floor.</h2>
         </div>
+        <ol className="es-rail">
+          <li className="es-rail-step">
+            <strong>01 Design the crate</strong>
+            <span>Walk the same steps the workshop uses. Only parts we actually bolt on.</span>
+          </li>
+          <li className="es-rail-step">
+            <strong>02 Run the checker</strong>
+            <span>Torque, payload, QR and mounts. Chat cannot override a block.</span>
+          </li>
+          <li className="es-rail-step">
+            <strong>03 Sit it on the Coast</strong>
+            <span>Book Taylah. Pedal spacing and wheel height are set before it ships.</span>
+          </li>
+          <li className="es-rail-step">
+            <strong>04 Keep the build</strong>
+            <span>Quotes, upgrades and care live in the customer app after the crate leaves.</span>
+          </li>
+        </ol>
       </section>
 
       <BrandBanner />
 
-      <section className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-8">
-        <div className="es-card es-split" style={{ overflow: "hidden" }}>
-          <img src="/rigs/Everything_Simulated_Hero.jpg" alt="Driver using a racing simulator" className="h-72 w-full object-cover md:h-full" />
-          <div className="flex flex-col justify-center gap-4 p-8">
-            <p className="es-kicker">Studio</p>
-            <h2 className="text-2xl font-medium">Try before the crate leaves</h2>
-            <p className="text-sm text-muted">
-              Book a session at the {BRAND.region} workshop. We set pedal spacing and wheel height on the actual chassis.
-            </p>
-            <Link to="/studio" className="es-btn" style={{ width: "fit-content" }}>
-              Book the studio
-            </Link>
-          </div>
+      <Link to="/studio" className="es-chapter">
+        <img src="/rigs/Everything_Simulated_Hero.jpg" alt="Driver using a racing simulator" />
+        <div className="es-chapter-veil" />
+        <div className="es-chapter-copy">
+          <p className="es-kicker es-kicker-telemetry">Studio</p>
+          <h2>Try before the crate leaves</h2>
+          <p>
+            Book a session with {BRAND.contactName} at the {BRAND.region} workshop.
+            Pedal spacing, wheel height and the coaching screen are set on the chassis you are buying.
+          </p>
         </div>
-      </section>
+      </Link>
 
-      <section className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-16">
+      <section className="es-body">
         <div className="mb-8 flex items-center gap-2">
           <MapPin className="size-4 text-esred" />
-          <h2 className="text-2xl font-medium">Delivered Australia-wide</h2>
+          <h2 className="es-display text-4xl">Delivered Australia-wide</h2>
         </div>
         <div className="es-city-grid">
           {CITIES.map((c) => (
@@ -155,9 +139,9 @@ export function Home() {
         </div>
       </section>
 
-      <section className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 pb-20">
-        <p className="es-kicker">FAQ</p>
-        <h2 className="mt-3 text-2xl font-medium">Asked before the deposit</h2>
+      <section className="es-body pt-0">
+        <p className="es-kicker es-kicker-telemetry">FAQ</p>
+        <h2 className="es-display mt-2 text-4xl">Asked before the deposit</h2>
         <dl className="mt-8 grid gap-6 md:grid-cols-2">
           {FAQS.slice(0, 4).map((item) => (
             <div key={item.q} className="es-card p-5">
@@ -170,7 +154,6 @@ export function Home() {
           All FAQs <ArrowRight className="size-4" />
         </Link>
       </section>
-
     </SiteShell>
   );
 }
@@ -181,11 +164,11 @@ function FeaturedPrebuilds() {
   const hasDynamic = items.length > 0;
 
   return (
-    <section className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-20">
+    <section className="es-body">
       <div className="mb-10 flex items-end justify-between gap-4">
         <div>
-          <p className="es-kicker">Racing · live catalogue</p>
-          <h2 className="mt-2 text-3xl font-medium">Prebuilt racing crates</h2>
+          <p className="es-kicker es-kicker-telemetry">Racing · live catalogue</p>
+          <h2 className="es-display mt-2 text-5xl">Prebuilt racing crates</h2>
         </div>
         <Link to="/shop" className="hidden text-sm text-muted hover:text-paper md:inline">
           Or spec from parts
@@ -198,25 +181,14 @@ function FeaturedPrebuilds() {
               <Link
                 to="/prebuilds/$slug"
                 params={{ slug: p.slug }}
-                className="relative block aspect-square overflow-hidden rounded-2xl border border-line bg-black transition-transform duration-300 group-hover:-translate-y-1"
+                className="es-pack-tile"
               >
-                {p.image ? (
-                  <img
-                    src={p.image}
-                    alt={p.name}
-                    className="absolute inset-0 size-full bg-black object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                ) : (
-                  <div className="absolute inset-0 flex items-center justify-center bg-raised text-muted">No image</div>
-                )}
-                {p.kicker && (
-                  <span className="es-kicker absolute left-4 top-4 rounded-lg bg-black/70 px-2 py-1.5">
-                    {p.kicker}
-                  </span>
-                )}
+                <div className="es-pack-tile-frame">
+                  {p.image ? <img src={p.image} alt={p.name} /> : <div className="grid size-full place-items-center bg-raised text-muted">No image</div>}
+                </div>
               </Link>
-              <div className="px-1 pt-4">
-                <h3 className="text-xl font-medium text-paper">{p.name}</h3>
+              <div className="es-pack-tile-meta">
+                <h3 className="text-paper">{p.name}</h3>
                 <p className="mt-2 text-sm leading-6 text-muted">{p.blurb}</p>
                 <p className="mt-4 text-lg font-medium text-paper">
                   <Money cents={p.price_ex_gst} gst />
@@ -229,22 +201,13 @@ function FeaturedPrebuilds() {
         <div className="es-pack-grid">
           {(livePackages().length ? livePackages() : PACKAGES).map((p) => (
             <div key={p.slug} className="group">
-              <Link
-                to="/prebuilds/$slug"
-                params={{ slug: p.slug }}
-                className="relative block aspect-square overflow-hidden rounded-2xl border border-line bg-black transition-transform duration-300 group-hover:-translate-y-1"
-              >
-                <img
-                  src={p.image}
-                  alt={p.name}
-                  className="absolute inset-0 size-full bg-black object-cover transition-transform duration-500 group-hover:scale-105"
-                />
-                {p.kicker ? (
-                  <span className="es-kicker absolute left-4 top-4 rounded-lg bg-black/70 px-2 py-1.5">{p.kicker}</span>
-                ) : null}
+              <Link to="/prebuilds/$slug" params={{ slug: p.slug }} className="es-pack-tile">
+                <div className="es-pack-tile-frame">
+                  <img src={p.image} alt={p.name} />
+                </div>
               </Link>
-              <div className="px-1 pt-4">
-                <h3 className="text-xl font-medium text-paper">{p.name}</h3>
+              <div className="es-pack-tile-meta">
+                <h3 className="text-paper">{p.name}</h3>
                 <p className="mt-2 text-sm leading-6 text-muted">{p.blurb}</p>
                 <p className="mt-4 text-lg font-medium text-paper">
                   <Money cents={p.priceExGst} gst />
@@ -280,30 +243,14 @@ function HeroVideo() {
   return (
     <>
       <div className={`es-hero-video-wrap${phase === "revealed" ? " is-finished" : ""}`}>
-        <video
-          ref={desktopRef}
-          className="es-hero-video es-hero-video-desktop"
-          muted
-          playsInline
-          preload="auto"
-          poster="/rigs/Everything_Simulated_Hero copy.jpg"
-        >
+        <video ref={desktopRef} className="es-hero-video es-hero-video-desktop" muted playsInline preload="auto" poster="/rigs/Everything_Simulated_Hero copy.jpg">
           <source src="/videos/hero-uw.mp4" type="video/mp4" />
         </video>
-        <video
-          ref={mobileRef}
-          className="es-hero-video es-hero-video-mobile"
-          muted
-          playsInline
-          preload="auto"
-          poster="/rigs/Everything_Simulated_Hero copy.jpg"
-        >
+        <video ref={mobileRef} className="es-hero-video es-hero-video-mobile" muted playsInline preload="auto" poster="/rigs/Everything_Simulated_Hero copy.jpg">
           <source src="/videos/hero-mobile.mp4" type="video/mp4" />
         </video>
       </div>
-      <div
-        className={`es-hero-blackout${phase !== "playing" ? " is-visible" : ""}${phase === "revealed" ? " is-fading" : ""}`}
-      />
+      <div className={`es-hero-blackout${phase !== "playing" ? " is-visible" : ""}${phase === "revealed" ? " is-fading" : ""}`} />
     </>
   );
 }
@@ -335,11 +282,11 @@ function BrandBanner() {
   return (
     <section className="border-y border-line bg-panel">
       <div className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-16">
-        <p className="es-kicker">Brands we spec</p>
-        <h2 className="mt-2 text-2xl font-medium">Trusted hardware, assembled right</h2>
+        <p className="es-kicker es-kicker-telemetry">Brands we spec</p>
+        <h2 className="es-display mt-2 text-4xl">Trusted hardware, assembled right</h2>
         <p className="mt-2 max-w-2xl text-sm text-muted">
-          We build with the best sim racing hardware brands. Every rig is compatibility-checked,
-          assembled and QA'd in our Gold Coast workshop.
+          Simagic, Trak Racer, Exodus, SIMRIG and Dynamix on the racing line. Player1 from January 2026.
+          Every crate is compatibility-checked, assembled and QA'd on the Gold Coast.
         </p>
         <div className="es-brand-marquee mt-8" aria-label="Brands we spec">
           <div className="es-brand-track">

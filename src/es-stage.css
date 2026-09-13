@@ -1,0 +1,389 @@
+/* Racing + adventure stage on the Le Mans tokens.
+   One scheme only: gloss black, racing red, white. Adventure is layout, not a second palette. */
+
+:root {
+  --es-font-display: "Teko", "Outfit", ui-sans-serif, sans-serif;
+}
+
+.es-display {
+  font-family: var(--es-font-display);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 0.92;
+  text-wrap: balance;
+}
+
+.es-page main h1,
+.es-hero-copy h1,
+.es-stage-copy h1 {
+  font-family: var(--es-font-display);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 0.92;
+}
+
+.es-hero-copy h1 {
+  max-width: 14ch;
+  font-size: clamp(3.4rem, 11vw, 7.4rem);
+}
+
+.es-header {
+  border-radius: 0;
+}
+.es-footer {
+  border-radius: 0;
+  border-left: 0;
+  border-right: 0;
+  margin-top: 0;
+}
+
+.es-nav-link {
+  background: transparent;
+  border-color: transparent;
+  border-radius: 0;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-size: 0.72rem;
+  font-weight: 600;
+}
+.es-nav-link:hover,
+.es-nav-link.is-active {
+  background: transparent;
+  box-shadow: none;
+  border-color: transparent;
+  color: var(--es-paper);
+}
+.es-header-phone {
+  background: transparent;
+  border-color: transparent;
+  letter-spacing: 0.06em;
+}
+
+.es-page::before {
+  content: "";
+  pointer-events: none;
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  opacity: 0.18;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='0.55'/%3E%3C/svg%3E");
+}
+
+.es-stage {
+  position: relative;
+  isolation: isolate;
+  min-height: min(72dvh, 38rem);
+  overflow: hidden;
+  color: var(--es-paper);
+  margin: 0;
+}
+.es-stage-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.04);
+  filter: saturate(0.85) contrast(1.08);
+}
+.es-stage-veil {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    linear-gradient(90deg, rgba(5, 5, 7, 0.9) 0%, rgba(5, 5, 7, 0.5) 52%, rgba(225, 6, 0, 0.18) 100%),
+    linear-gradient(180deg, rgba(5, 5, 7, 0.2) 0%, rgba(5, 5, 7, 0.88) 100%);
+}
+.es-stage::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 2;
+  height: 3px;
+  background: linear-gradient(90deg, transparent, var(--es-red) 35%, var(--es-red-bright) 50%, var(--es-red) 65%, transparent);
+}
+.es-stage-copy {
+  position: relative;
+  z-index: 3;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: inherit;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 7rem 1rem 3.25rem;
+}
+.es-stage-copy h1 {
+  max-width: 18ch;
+  margin: 0.6rem 0 0;
+  font-size: clamp(2.75rem, 8vw, 5.6rem);
+}
+.es-stage-copy .es-lead,
+.es-stage-copy .lead {
+  max-width: 38rem;
+  margin-top: 1.15rem;
+  font-size: 1.05rem;
+  line-height: 1.6;
+  color: var(--es-muted);
+}
+
+.es-kicker-telemetry {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.7rem;
+}
+.es-kicker-telemetry::before {
+  content: "";
+  width: 1.75rem;
+  height: 2px;
+  background: currentColor;
+}
+
+.es-lights {
+  display: flex;
+  gap: 0.4rem;
+  margin: 0 0 1rem;
+}
+.es-lights i {
+  width: 10px;
+  height: 10px;
+  border-radius: 999px;
+  background: #2a1212;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+.es-lights i:last-child {
+  background: var(--es-red-bright);
+  box-shadow: 0 0 12px var(--es-red-glow);
+}
+
+.es-pit-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0;
+  border-bottom: 1px solid var(--es-line);
+}
+.es-pit-tab {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 0 1rem;
+  font-size: 0.78rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--es-subtle);
+  text-decoration: none;
+  border-bottom: 2px solid transparent;
+}
+.es-pit-tab:hover {
+  color: var(--es-paper);
+}
+.es-pit-tab.is-current {
+  color: var(--es-paper);
+  border-bottom-color: var(--es-red);
+}
+
+.es-expedition {
+  display: grid;
+  gap: 1px;
+  background: var(--es-line);
+  border: 1px solid var(--es-line);
+}
+@media (min-width: 640px) {
+  .es-expedition {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1024px) {
+  .es-expedition {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.es-expedition-tile {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: 11.5rem;
+  padding: 1.25rem 1.15rem 1.15rem;
+  background: var(--es-panel);
+  color: inherit;
+  text-decoration: none;
+}
+.es-expedition-tile:hover {
+  background: #16161f;
+}
+.es-expedition-idx {
+  font-family: var(--es-font-display);
+  font-size: 1.65rem;
+  letter-spacing: 0.06em;
+  color: var(--es-red);
+  line-height: 1;
+}
+.es-expedition-tile .es-expedition-label {
+  margin: 1.4rem 0 0.4rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+.es-expedition-tile p {
+  margin: 0;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: var(--es-muted);
+}
+
+.es-rail {
+  display: grid;
+  border-left: 1px solid var(--es-line);
+}
+.es-rail-step {
+  position: relative;
+  padding: 1.15rem 0 1.15rem 1.5rem;
+}
+.es-rail-step::before {
+  content: "";
+  position: absolute;
+  left: -5px;
+  top: 1.45rem;
+  width: 9px;
+  height: 9px;
+  border-radius: 999px;
+  background: var(--es-red);
+  box-shadow: var(--es-red-glow-shadow);
+}
+.es-rail-step strong {
+  display: block;
+  font-family: var(--es-font-display);
+  font-size: 1.35rem;
+  letter-spacing: 0.04em;
+  color: var(--es-paper);
+}
+.es-rail-step span {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--es-muted);
+}
+
+.es-body {
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 2.5rem 1rem 4.5rem;
+}
+
+.es-pack-tile {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+.es-pack-tile-frame {
+  position: relative;
+  aspect-ratio: 1;
+  overflow: hidden;
+  background: #000;
+}
+.es-pack-tile-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 600ms ease;
+}
+.es-pack-tile:hover img {
+  transform: scale(1.06);
+}
+.es-pack-tile-frame::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 42%;
+  background: linear-gradient(180deg, transparent, rgba(5, 5, 7, 0.92));
+}
+.es-pack-tile-meta {
+  padding: 1rem 0.15rem 0;
+}
+.es-pack-tile-meta h3 {
+  font-family: var(--es-font-display);
+  font-size: 1.85rem;
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+
+/* Homepage chapters — full-bleed racing / adventure bands */
+.es-chapter {
+  position: relative;
+  isolation: isolate;
+  display: block;
+  min-height: 82dvh;
+  overflow: hidden;
+  color: var(--es-paper);
+  text-decoration: none;
+}
+.es-chapter img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scale(1.03);
+  transition: transform 800ms ease;
+}
+.es-chapter:hover img {
+  transform: scale(1.07);
+}
+.es-chapter-veil {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(5, 5, 7, 0.88) 0%, rgba(5, 5, 7, 0.35) 62%, rgba(5, 5, 7, 0.15) 100%),
+    linear-gradient(180deg, rgba(5, 5, 7, 0.1) 0%, rgba(5, 5, 7, 0.78) 100%);
+}
+.es-chapter-copy {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-end;
+  min-height: inherit;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 4rem 1rem;
+}
+.es-chapter-idx {
+  font-family: var(--es-font-display);
+  font-size: clamp(3rem, 8vw, 6rem);
+  line-height: 0.8;
+  color: var(--es-red);
+}
+.es-chapter-copy h2 {
+  font-family: var(--es-font-display);
+  font-size: clamp(2.6rem, 7vw, 5.2rem);
+  margin: 0.4rem 0 0;
+  line-height: 0.9;
+}
+.es-chapter-copy p {
+  max-width: 32rem;
+  margin-top: 1rem;
+  color: var(--es-muted);
+}
+.es-chapter-row {
+  display: grid;
+  gap: 0;
+}
+.es-chapter-row .es-chapter {
+  min-height: 58dvh;
+}
+@media (min-width: 900px) {
+  .es-chapter-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .es-page::before,
+  .es-pack-tile-frame img,
+  .es-chapter img {
+    transition: none;
+  }
+}

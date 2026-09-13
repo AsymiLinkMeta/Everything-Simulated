@@ -3,6 +3,7 @@ import { getCachedProductMap } from "./product-cache";
 
 export const BRAND = {
   name: "Everything Simulated",
+  contactName: "Taylah",
   phone: "0404 619 056",
   email: "hello@everythingsimulated.com.au",
   region: "Gold Coast, Queensland",
@@ -233,6 +234,3 @@ export function guideBySlug(slug: string) {
 export function cityBySlug(slug: string) {
   return CITIES.find((c) => c.slug === slug);
 }
-
-
-

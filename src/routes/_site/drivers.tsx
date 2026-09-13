@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { JsonLd } from "@/components/es/bits";
-import { PageIntro } from "@/components/es/section-page";
+import { PageHero } from "@/components/es/section-page";
 import { breadcrumbLd, pageHead } from "@/lib/es/seo";
 
 export const Route = createFileRoute("/_site/drivers")({
@@ -8,7 +8,7 @@ export const Route = createFileRoute("/_site/drivers")({
     pageHead({
       title: "Sponsored drivers | Everything Simulated",
       description:
-        "Workshop-supported and sponsored drivers on Everything Simulated racing simulators. Junior pathway and Gold Coast studio.",
+        "Workshop-supported drivers on Everything Simulated racing simulators — including Carter Cosgrove Racing. Junior pathway and Gold Coast studio.",
       path: "/drivers",
     }),
   component: DriversPage,
@@ -16,41 +16,61 @@ export const Route = createFileRoute("/_site/drivers")({
 
 function DriversPage() {
   return (
-    <div className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-16">
+    <div>
       <JsonLd
         data={breadcrumbLd([
           { name: "Home", path: "/" },
           { name: "Drivers", path: "/drivers" },
         ])}
       />
-      <PageIntro
+      <PageHero
         kicker="People"
-        title="Sponsored drivers."
-        lead="The workshop backs drivers on the same crates we ship. Juniors on the karting pathway, and drivers who train with us between race weekends. Names and liveries are listed as agreements land — we do not invent a grid."
+        title="Drivers the workshop backs."
+        lead="The same crates we ship are the ones drivers train on. Juniors on the karting pathway, and named programs we have already stood next to. We do not invent a grid."
+        image="/rigs/haptic.jpg"
+        tone="race"
       />
-      <ul className="mt-10 grid gap-4 sm:grid-cols-2">
-        <li className="es-card p-5">
-          <p className="es-kicker">Pathway</p>
-          <h2 className="mt-2 text-xl font-medium">Junior drivers</h2>
-          <p className="mt-2 text-sm text-muted">
-            Adjustable seat, 12Nm unless a coach asks otherwise, Gold Coast demo for pedal spacing. See Training → Driver.
-          </p>
-        </li>
-        <li className="es-card p-5">
-          <p className="es-kicker">Workshop</p>
-          <h2 className="mt-2 text-xl font-medium">Supported programs</h2>
-          <p className="mt-2 text-sm text-muted">
-            If you already have a driver, team or series agreement, send it to the inbox. We will add the profile here when it is real.
-          </p>
-        </li>
-      </ul>
-      <div className="mt-8 flex flex-wrap gap-3">
-        <Link to="/training/driver" className="es-btn">
-          Driver training
-        </Link>
-        <Link to="/contact" className="es-btn es-btn-paper">
-          Nominate a driver
-        </Link>
+      <div className="es-body">
+        <ul className="es-expedition" data-tone="race">
+          <li>
+            <div className="es-expedition-tile">
+              <span className="es-expedition-idx">01</span>
+              <div>
+                <p className="es-kicker">Named</p>
+                <p className="es-expedition-label">Carter Cosgrove Racing</p>
+                <p>A driver program the workshop has publicly stood with. Profile detail lands here as the agreement is current.</p>
+              </div>
+            </div>
+          </li>
+          <li>
+            <div className="es-expedition-tile">
+              <span className="es-expedition-idx">02</span>
+              <div>
+                <p className="es-kicker">Pathway</p>
+                <p className="es-expedition-label">Junior drivers</p>
+                <p>Adjustable seat, 12Nm unless a coach asks otherwise, four-screen coaching layout, Gold Coast demo for pedal spacing.</p>
+              </div>
+            </div>
+          </li>
+          <li>
+            <div className="es-expedition-tile">
+              <span className="es-expedition-idx">03</span>
+              <div>
+                <p className="es-kicker">Workshop</p>
+                <p className="es-expedition-label">Supported programs</p>
+                <p>If you already have a driver, team or series agreement, send it to the inbox. We add the profile when it is real.</p>
+              </div>
+            </div>
+          </li>
+        </ul>
+        <div className="mt-10 flex flex-wrap gap-3">
+          <Link to="/training/driver" className="es-btn">
+            Driver training
+          </Link>
+          <Link to="/contact" className="es-btn es-btn-paper">
+            Nominate a driver
+          </Link>
+        </div>
       </div>
     </div>
   );

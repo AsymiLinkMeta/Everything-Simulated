@@ -12,7 +12,7 @@ export const Route = createFileRoute("/_site/contact")({
   head: () =>
     pageHead({
       title: "Contact Everything Simulated | Gold Coast sim racing workshop",
-      description: `Call ${BRAND.phone} or message the workshop. Gold Coast showroom demos and Australia-wide crate freight.`,
+      description: `Call ${BRAND.contactName} on ${BRAND.phone} or message the workshop. Gold Coast try-before-you-buy demos and Australia-wide crate freight.`,
       path: "/contact",
     }),
   component: Contact,
@@ -50,11 +50,11 @@ function Contact() {
       <p className="es-kicker">Workshop</p>
       <h1 className="mt-3 text-4xl font-medium">Talk to the people who bolt it together</h1>
       <p className="mt-3 text-muted">
-        Messages go straight to the staff inbox. If you have an account, the same thread stays in your app.
+        Call {BRAND.contactName} for a Gold Coast demo, or send a message — it lands in the staff inbox. If you have an account, the same thread stays in your app.
       </p>
       <div className="mt-10 grid gap-4 sm:grid-cols-2">
         <a href={`tel:${BRAND.phone.replace(/\s/g, "")}`} className="es-card p-5">
-          <p className="es-kicker">Phone</p>
+          <p className="es-kicker">Phone · {BRAND.contactName}</p>
           <p className="mt-2 text-xl">{BRAND.phone}</p>
         </a>
         <div className="es-card p-5">
