@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { JsonLd } from "@/components/es/bits";
-import { PageIntro, SectionLinks } from "@/components/es/section-page";
+import { PageHero, SectionLinks } from "@/components/es/section-page";
 import { AIRCRAFT_PAGES } from "@/lib/es/platforms";
 import { breadcrumbLd, pageHead } from "@/lib/es/seo";
 
@@ -17,7 +17,7 @@ export const Route = createFileRoute("/_site/aircraft/helicopter")({
 
 function HelicopterPage() {
   return (
-    <div className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-16">
+    <div>
       <JsonLd
         data={breadcrumbLd([
           { name: "Home", path: "/" },
@@ -25,24 +25,37 @@ function HelicopterPage() {
           { name: "Helicopter", path: "/aircraft/helicopter" },
         ])}
       />
-      <SectionLinks links={AIRCRAFT_PAGES} current="/aircraft/helicopter" />
-      <PageIntro
+      <PageHero
         kicker="Rotary"
         title="Helicopter simulators."
-        lead="The rotary cockpit is the aircraft platform we have already put our name on. Collective, cyclic and anti-torque layouts for training and rehearsal — specced with you, assembled on the Gold Coast."
+        lead="Collective, cyclic and anti-torque layouts for training and rehearsal — specced with you, assembled on the Gold Coast."
+        image="/rigs/showroom.jpg"
+        tone="adventure"
       />
-      <ul className="mt-10 max-w-2xl space-y-3 text-sm text-muted">
-        <li>Training and procedure rehearsal — not a public type-rating school.</li>
-        <li>Room, payload and motion are quoted, not guessed in chat.</li>
-        <li>Same crate-freight path as racing: workshop photos, then Australia-wide.</li>
-      </ul>
-      <div className="mt-8 flex flex-wrap gap-3">
-        <Link to="/studio" className="es-btn">
-          Book the studio
-        </Link>
-        <Link to="/contact" className="es-btn es-btn-paper">
-          Enquire
-        </Link>
+      <div className="es-body">
+        <SectionLinks links={AIRCRAFT_PAGES} current="/aircraft/helicopter" tone="adventure" />
+        <ul className="es-rail mt-10 max-w-2xl">
+          <li className="es-rail-step">
+            <strong>Rehearsal, not a school</strong>
+            <span>Training and procedure work. We are not a public type-rating shop.</span>
+          </li>
+          <li className="es-rail-step">
+            <strong>Quoted, not guessed</strong>
+            <span>Room, payload and motion are a consult. Chat does not invent a spec.</span>
+          </li>
+          <li className="es-rail-step">
+            <strong>Same crate path</strong>
+            <span>Workshop photos, then Australia-wide freight — same discipline as racing.</span>
+          </li>
+        </ul>
+        <div className="mt-10 flex flex-wrap gap-3">
+          <Link to="/studio" className="es-btn">
+            Book the studio
+          </Link>
+          <Link to="/contact" className="es-btn es-btn-paper">
+            Enquire
+          </Link>
+        </div>
       </div>
     </div>
   );
