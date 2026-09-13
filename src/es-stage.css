@@ -1,13 +1,8 @@
-/* Racing + adventure stage — sits on top of the Le Mans tokens in es.css.
-   Race tone = redline / pit lane. Adventure tone = horizon / expedition amber. */
+/* Racing + adventure stage on the Le Mans tokens.
+   One scheme only: gloss black, racing red, white. Adventure is layout, not a second palette. */
 
 :root {
   --es-font-display: "Teko", "Outfit", ui-sans-serif, sans-serif;
-  --es-amber: #e8b86d;
-  --es-amber-dim: #9a7340;
-  --es-amber-glow: rgba(232, 184, 109, 0.28);
-  --es-horizon: #7ea0b8;
-  --es-carbon: rgba(255, 255, 255, 0.035);
 }
 
 .es-display {
@@ -96,18 +91,8 @@
   inset: 0;
   z-index: 1;
   background:
-    linear-gradient(90deg, rgba(5, 5, 7, 0.88) 0%, rgba(5, 5, 7, 0.55) 48%, rgba(5, 5, 7, 0.2) 100%),
-    linear-gradient(180deg, rgba(5, 5, 7, 0.15) 0%, rgba(5, 5, 7, 0.82) 100%);
-}
-.es-stage-race .es-stage-veil {
-  background:
     linear-gradient(90deg, rgba(5, 5, 7, 0.9) 0%, rgba(5, 5, 7, 0.5) 52%, rgba(225, 6, 0, 0.18) 100%),
     linear-gradient(180deg, rgba(5, 5, 7, 0.2) 0%, rgba(5, 5, 7, 0.88) 100%);
-}
-.es-stage-adventure .es-stage-veil {
-  background:
-    linear-gradient(90deg, rgba(5, 5, 7, 0.9) 0%, rgba(5, 5, 7, 0.48) 50%, rgba(126, 160, 184, 0.22) 100%),
-    linear-gradient(180deg, rgba(5, 5, 7, 0.12) 0%, rgba(5, 5, 7, 0.88) 100%);
 }
 .es-stage::after {
   content: "";
@@ -117,12 +102,7 @@
   bottom: 0;
   z-index: 2;
   height: 3px;
-}
-.es-stage-race::after {
   background: linear-gradient(90deg, transparent, var(--es-red) 35%, var(--es-red-bright) 50%, var(--es-red) 65%, transparent);
-}
-.es-stage-adventure::after {
-  background: linear-gradient(90deg, transparent, var(--es-amber-dim) 30%, var(--es-amber) 50%, var(--es-horizon) 70%, transparent);
 }
 .es-stage-copy {
   position: relative;
@@ -148,9 +128,6 @@
   line-height: 1.6;
   color: var(--es-muted);
 }
-.es-stage-adventure .es-kicker {
-  color: var(--es-amber);
-}
 
 .es-kicker-telemetry {
   display: inline-flex;
@@ -164,7 +141,7 @@
   background: currentColor;
 }
 
-/* Start lights — five lamps, last one live. */
+/* Start lights — five lamps, last one live red. */
 .es-lights {
   display: flex;
   gap: 0.4rem;
@@ -180,10 +157,6 @@
 .es-lights i:last-child {
   background: var(--es-red-bright);
   box-shadow: 0 0 12px var(--es-red-glow);
-}
-.es-stage-adventure .es-lights i:last-child {
-  background: var(--es-amber);
-  box-shadow: 0 0 12px var(--es-amber-glow);
 }
 
 /* Pit-lane section tabs */
@@ -213,9 +186,6 @@
 .es-pit-tab.is-current {
   color: var(--es-paper);
   border-bottom-color: var(--es-red);
-}
-.es-pit-tabs[data-tone="adventure"] .es-pit-tab.is-current {
-  border-bottom-color: var(--es-amber);
 }
 
 /* Expedition / garage tiles */
@@ -255,10 +225,6 @@
   letter-spacing: 0.06em;
   color: var(--es-red);
   line-height: 1;
-}
-.es-stage-wrap[data-tone="adventure"] .es-expedition-idx,
-.es-expedition[data-tone="adventure"] .es-expedition-idx {
-  color: var(--es-amber);
 }
 .es-expedition-tile h3,
 .es-expedition-tile .es-expedition-label {
