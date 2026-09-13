@@ -78,7 +78,7 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
         <div className="es-footer-grid">
           <div className="es-footer-col">
             <Logo />
-            <p>Gold Coast simulator workshop. Racing, aircraft, drones and training. Crate freight Australia-wide.</p>
+            <p>Gold Coast simulator workshop. Try before you buy. Racing, aircraft, drones and training. Crate freight Australia-wide.</p>
             <p>Gold Coast, Queensland, Australia</p>
             <p>{BRAND.phone}</p>
             <p>{BRAND.email}</p>
