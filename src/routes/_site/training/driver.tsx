@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { JsonLd } from "@/components/es/bits";
-import { PageHero, SectionLinks } from "@/components/es/section-page";
+import { CtaStrip, ImageCards, PageHero, SectionLinks } from "@/components/es/section-page";
 import { TRAINING_PAGES } from "@/lib/es/platforms";
 import { breadcrumbLd, pageHead } from "@/lib/es/seo";
 
@@ -35,19 +35,21 @@ function DriverTraining() {
       <div className="es-body">
         <SectionLinks links={TRAINING_PAGES} current="/training/driver" tone="race" />
         <p className="mt-8 max-w-2xl text-sm text-muted">
-          Hardware lives under Racing — Starter or Haptic unless a coach asks for motion. One-to-one programs live here. Named drivers sit under Ambassadors. Bring a squad and we treat it as an event on the warehouse floor.
+          Hardware lives under Racing — Starter or Haptic unless a coach asks for motion. One-to-one programs live here. Named drivers sit under Ambassadors.
         </p>
-        <div className="mt-8 flex flex-wrap gap-3">
-          <Link to="/racing" className="es-btn">
-            Racing tools
-          </Link>
-          <Link to="/events" className="es-btn es-btn-paper">
-            Group days
-          </Link>
-          <Link to="/ambassadors" className="es-btn es-btn-paper">
-            Ambassadors
-          </Link>
+        <div className="mt-10">
+          <ImageCards
+            cards={[
+              { to: "/racing", image: "/rigs/motion.jpg", kicker: "Hardware", title: "Racing tools", hint: "The crates the program runs on." },
+              { to: "/events", image: "/rigs/showroom.jpg", kicker: "Groups", title: "Group days", hint: "Professional and amateur sessions at the warehouse." },
+              { to: "/ambassadors", image: "/rigs/haptic.jpg", kicker: "People", title: "Ambassadors", hint: "Drivers the workshop stands with." },
+            ]}
+          />
         </div>
+        <CtaStrip title="Bring a squad." lead="We treat it as an event on the warehouse floor.">
+          <Link to="/events" className="es-btn">Group days</Link>
+          <Link to="/studio" className="es-btn es-btn-paper">Studio</Link>
+        </CtaStrip>
       </div>
     </div>
   );

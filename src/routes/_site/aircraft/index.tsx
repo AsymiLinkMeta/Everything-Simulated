@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { JsonLd } from "@/components/es/bits";
-import { PageHero, SectionLinks } from "@/components/es/section-page";
+import { CtaStrip, ImageCards, PageHero, SectionLinks } from "@/components/es/section-page";
 import { AIRCRAFT_PAGES } from "@/lib/es/platforms";
 import { breadcrumbLd, pageHead } from "@/lib/es/seo";
 
@@ -24,42 +24,20 @@ function AircraftHub() {
         lead="Racing is the live catalogue. Aircraft is workshop capacity — rotary first — then assembled on the Gold Coast."
         image="/rigs/showroom.jpg"
       />
-      <div className="es-chapter-row">
-        <Link to="/aircraft/helicopter" className="es-chapter">
-          <img src="/rigs/showroom.jpg" alt="" />
-          <div className="es-chapter-veil" />
-          <div className="es-chapter-copy">
-            <span className="es-chapter-idx">01</span>
-            <p className="es-kicker es-kicker-telemetry">Rotary</p>
-            <h2>Helicopter</h2>
-            <p>Collective, cyclic and anti-torque layouts for rehearsal.</p>
-          </div>
-        </Link>
-        <Link to="/aircraft/flight" className="es-chapter">
-          <img src="/rigs/motion.jpg" alt="" />
-          <div className="es-chapter-veil" />
-          <div className="es-chapter-copy">
-            <span className="es-chapter-idx">02</span>
-            <p className="es-kicker es-kicker-telemetry">Fixed-wing</p>
-            <h2>Flight</h2>
-            <p>Same workshop, different controls. Enquire, not a catalogue.</p>
-          </div>
-        </Link>
-        <Link to="/studio" className="es-chapter">
-          <img src="/rigs/haptic.jpg" alt="" />
-          <div className="es-chapter-veil" />
-          <div className="es-chapter-copy">
-            <span className="es-chapter-idx">03</span>
-            <p className="es-kicker es-kicker-telemetry">Studio</p>
-            <h2>Sit the layout</h2>
-            <p>Gold Coast consult before anything crates.</p>
-          </div>
-        </Link>
-      </div>
       <div className="es-body">
         <SectionLinks links={AIRCRAFT_PAGES} current="/aircraft" />
-        <p className="mt-8 max-w-2xl text-sm text-muted">Capacity is consult-first. The racing checker does not apply here.</p>
-        <Link to="/contact" className="es-btn mt-6 inline-flex">Talk to the workshop</Link>
+        <div className="mt-10">
+          <ImageCards
+            cards={[
+              { to: "/aircraft/helicopter", image: "/rigs/showroom.jpg", kicker: "Rotary", title: "Helicopter", hint: "Collective, cyclic and anti-torque layouts for rehearsal." },
+              { to: "/aircraft/flight", image: "/rigs/motion.jpg", kicker: "Fixed-wing", title: "Flight", hint: "Same workshop, different controls. Enquire, not a catalogue." },
+              { to: "/studio", image: "/rigs/haptic.jpg", kicker: "Studio", title: "Sit the layout", hint: "Gold Coast consult before anything crates." },
+            ]}
+          />
+        </div>
+        <CtaStrip title="Capacity is consult-first." lead="The racing checker does not apply here.">
+          <Link to="/contact" className="es-btn">Talk to the workshop</Link>
+        </CtaStrip>
       </div>
     </div>
   );

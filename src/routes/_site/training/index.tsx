@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { JsonLd } from "@/components/es/bits";
-import { PageHero, SectionLinks } from "@/components/es/section-page";
+import { CtaStrip, ImageCards, PageHero, SectionLinks } from "@/components/es/section-page";
 import { TRAINING_PAGES } from "@/lib/es/platforms";
 import { breadcrumbLd, pageHead } from "@/lib/es/seo";
 
@@ -24,40 +24,21 @@ function TrainingHub() {
         lead="Motorsport and juniors already run on four-screen racing crates. Group days for professional and amateur drivers sit on the warehouse floor — enquire. Truck, side-kart and excavator work is capacity."
         image="/rigs/starter.jpg"
       />
-      <div className="es-chapter-row">
-        <Link to="/training/driver" className="es-chapter">
-          <img src="/rigs/haptic.jpg" alt="" />
-          <div className="es-chapter-veil" />
-          <div className="es-chapter-copy">
-            <span className="es-chapter-idx">01</span>
-            <p className="es-kicker es-kicker-telemetry">Driver</p>
-            <h2>Kart. Road. Motorsport.</h2>
-            <p>Four-screen coaching on the racing crates.</p>
-          </div>
-        </Link>
-        <Link to="/events" className="es-chapter">
-          <img src="/rigs/showroom.jpg" alt="" />
-          <div className="es-chapter-veil" />
-          <div className="es-chapter-copy">
-            <span className="es-chapter-idx">02</span>
-            <p className="es-kicker es-kicker-telemetry">Groups</p>
-            <h2>Pro and amateur days</h2>
-            <p>Warehouse group training plus catering. Enquire, not a calendar.</p>
-          </div>
-        </Link>
-        <Link to="/training/industrial" className="es-chapter">
-          <img src="/rigs/starter.jpg" alt="" />
-          <div className="es-chapter-veil" />
-          <div className="es-chapter-copy">
-            <span className="es-chapter-idx">03</span>
-            <p className="es-kicker es-kicker-telemetry">Industrial</p>
-            <h2>Plant and heavy vehicle</h2>
-            <p>Truck, side-kart, excavator — enquire, not a shop.</p>
-          </div>
-        </Link>
-      </div>
       <div className="es-body">
         <SectionLinks links={TRAINING_PAGES} current="/training" />
+        <div className="mt-10">
+          <ImageCards
+            cards={[
+              { to: "/training/driver", image: "/rigs/haptic.jpg", kicker: "Driver", title: "Kart. Road. Motorsport.", hint: "Four-screen coaching on the racing crates." },
+              { to: "/events", image: "/rigs/showroom.jpg", kicker: "Groups", title: "Pro and amateur days", hint: "Warehouse group training plus catering. Enquire, not a calendar." },
+              { to: "/training/industrial", image: "/rigs/starter.jpg", kicker: "Industrial", title: "Plant and heavy vehicle", hint: "Truck, side-kart, excavator — enquire, not a shop." },
+            ]}
+          />
+        </div>
+        <CtaStrip title="Programs, not a second shop." lead="Hardware lives under Racing. Hours live here.">
+          <Link to="/studio" className="es-btn">Book the studio</Link>
+          <Link to="/contact" className="es-btn es-btn-paper">Enquire</Link>
+        </CtaStrip>
       </div>
     </div>
   );
