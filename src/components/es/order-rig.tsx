@@ -46,7 +46,6 @@ export function OrderRigButton({
     <Link
       to="/prebuilds/$slug"
       params={{ slug: crate.slug }}
-      search={{ ref: ambassador.code }}
       className="es-btn"
       onClick={() => {
         armAmbassadorRig(ambassador);
