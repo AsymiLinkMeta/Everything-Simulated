@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { JsonLd } from "@/components/es/bits";
-import { PageHero, SectionLinks } from "@/components/es/section-page";
+import { CtaStrip, ImageCards, PageHero, SectionLinks } from "@/components/es/section-page";
 import { TRAINING_PAGES } from "@/lib/es/platforms";
 import { breadcrumbLd, pageHead } from "@/lib/es/seo";
 
@@ -37,9 +37,18 @@ function IndustrialTraining() {
         <p className="mt-8 max-w-2xl text-sm text-muted">
           Same Gold Coast assembly and crate freight as racing. Different cab, different software, same workshop photos before it ships.
         </p>
-        <Link to="/contact" className="es-btn mt-8 inline-flex">
-          Enquire
-        </Link>
+        <div className="mt-10">
+          <ImageCards
+            columns={2}
+            cards={[
+              { to: "/events", image: "/rigs/showroom.jpg", kicker: "Venue", title: "Group days", hint: "Corporate and training groups on the warehouse floor." },
+              { to: "/contact", image: "/rigs/motion.jpg", kicker: "Enquire", title: "Spec the cab", hint: "No public catalogue." },
+            ]}
+          />
+        </div>
+        <CtaStrip title="Enquire." lead="Not a shop.">
+          <Link to="/contact" className="es-btn">Enquire</Link>
+        </CtaStrip>
       </div>
     </div>
   );

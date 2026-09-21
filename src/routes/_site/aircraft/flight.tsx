@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { JsonLd } from "@/components/es/bits";
-import { PageHero, SectionLinks } from "@/components/es/section-page";
+import { CtaStrip, ImageCards, PageHero, SectionLinks } from "@/components/es/section-page";
 import { AIRCRAFT_PAGES } from "@/lib/es/platforms";
 import { breadcrumbLd, pageHead } from "@/lib/es/seo";
 
@@ -48,14 +48,19 @@ function FlightPage() {
             <span>Curriculum and hours sit next door. This page is the cockpit.</span>
           </li>
         </ul>
-        <div className="mt-10 flex flex-wrap gap-3">
-          <Link to="/training" className="es-btn">
-            Training programs
-          </Link>
-          <Link to="/contact" className="es-btn es-btn-paper">
-            Enquire
-          </Link>
+        <div className="mt-12">
+          <ImageCards
+            columns={2}
+            cards={[
+              { to: "/aircraft/helicopter", image: "/rigs/showroom.jpg", kicker: "Rotary", title: "Helicopter", hint: "Collective and cyclic on the same floor." },
+              { to: "/training", image: "/rigs/starter.jpg", kicker: "Programs", title: "Training", hint: "Hours live here. Hardware lives on Racing." },
+            ]}
+          />
         </div>
+        <CtaStrip title="Enquire first." lead="No public type list.">
+          <Link to="/training" className="es-btn">Training programs</Link>
+          <Link to="/contact" className="es-btn es-btn-paper">Enquire</Link>
+        </CtaStrip>
       </div>
     </div>
   );

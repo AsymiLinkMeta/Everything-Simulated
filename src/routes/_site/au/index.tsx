@@ -1,8 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { CITIES } from "@/lib/es/catalog";
 import { itemListLd, pageHead } from "@/lib/es/seo";
 import { JsonLd } from "@/components/es/bits";
-import { PageHero } from "@/components/es/section-page";
+import { ImageCards, PageHero } from "@/components/es/section-page";
 
 export const Route = createFileRoute("/_site/au/")({
   head: () =>
@@ -25,13 +25,15 @@ function Australia() {
         image="/rigs/showroom.jpg"
       />
       <div className="es-body">
-        <div className="es-city-grid">
-          {CITIES.map((c) => (
-            <Link key={c.slug} to="/au/$city" params={{ city: c.slug }} className="es-card es-city-card">
-              {c.name} <span>{c.state}</span>
-            </Link>
-          ))}
-        </div>
+        <ImageCards
+          cards={CITIES.map((c) => ({
+            to: `/au/${c.slug}`,
+            image: c.slug === "gold-coast" ? "/rigs/showroom.jpg" : "/rigs/haptic.jpg",
+            kicker: c.state,
+            title: c.name,
+            hint: c.note,
+          }))}
+        />
       </div>
     </div>
   );

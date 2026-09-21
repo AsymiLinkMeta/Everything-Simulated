@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { JsonLd } from "@/components/es/bits";
-import { PageHero, SectionLinks } from "@/components/es/section-page";
+import { CtaStrip, ImageCards, PageHero, SectionLinks } from "@/components/es/section-page";
 import { AIRCRAFT_PAGES } from "@/lib/es/platforms";
 import { breadcrumbLd, pageHead } from "@/lib/es/seo";
 
@@ -48,14 +48,19 @@ function HelicopterPage() {
             <span>Workshop photos, then Australia-wide freight — same discipline as racing.</span>
           </li>
         </ul>
-        <div className="mt-10 flex flex-wrap gap-3">
-          <Link to="/studio" className="es-btn">
-            Book the studio
-          </Link>
-          <Link to="/contact" className="es-btn es-btn-paper">
-            Enquire
-          </Link>
+        <div className="mt-12">
+          <ImageCards
+            columns={2}
+            cards={[
+              { to: "/aircraft/flight", image: "/rigs/motion.jpg", kicker: "Fixed-wing", title: "Flight", hint: "Same floor, different controls." },
+              { to: "/studio", image: "/rigs/haptic.jpg", kicker: "Studio", title: "Sit the layout", hint: "Consult before the crate." },
+            ]}
+          />
         </div>
+        <CtaStrip title="Book the studio." lead="Capacity, not a catalogue.">
+          <Link to="/studio" className="es-btn">Book the studio</Link>
+          <Link to="/contact" className="es-btn es-btn-paper">Enquire</Link>
+        </CtaStrip>
       </div>
     </div>
   );
