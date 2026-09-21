@@ -351,6 +351,10 @@ export const FAQS = [
     q: "Do you train helicopter or drone pilots?",
     a: "We assemble the simulator. Licence courses sit with the right training partner. If you need a cockpit or FPV trainer, we spec it. If you need a CASA ticket, we will say so.",
   },
+  {
+    q: "Can we book a corporate event or group driver session?",
+    a: "Yes — enquire. Corporate days, professional and amateur driver groups, and on-site catering are planned on the warehouse floor behind the studio (about 200 square metres). That is capacity, not a public hire catalogue or a live street address. Call Taylah.",
+  },
 ];
 
 export const allIndexPaths = [
@@ -368,7 +372,8 @@ export const allIndexPaths = [
   "/training",
   "/training/driver",
   "/training/industrial",
-  "/drivers",
+  "/ambassadors",
+  "/events",
   "/partners",
   "/studio",
   "/guides",
