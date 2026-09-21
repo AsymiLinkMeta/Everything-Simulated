@@ -15,6 +15,7 @@ const SIMULATORS = [
 ] as const;
 
 const NAV = [
+  { to: "/shop", label: "Shop" },
   { to: "/training", label: "Training" },
   { to: "/ambassadors", label: "Ambassadors" },
   { to: "/studio", label: "Studio" },
@@ -72,7 +73,7 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
               </div>
             </div>
             {NAV.map((n) => (
-              <Link key={n.to} to={n.to} className="es-nav-link">
+              <Link key={n.to} to={n.to} className={`es-nav-link${location.pathname === n.to || location.pathname.startsWith(n.to + "/") ? " is-active" : ""}`}>
                 {n.label}
               </Link>
             ))}
@@ -81,14 +82,10 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
             <Phone className="size-4" />
             {BRAND.phone}
           </a>
-          <Link to="/checkout" className="relative inline-flex items-center gap-1.5 rounded-md border border-line px-3 py-2 text-sm transition-colors hover:border-paper hover:text-paper">
+          <Link to="/checkout" className="es-cart-pill" aria-label="Cart">
             <ShoppingCart className="size-4" />
             <span className="hidden sm:inline">Cart</span>
-            {cartCount > 0 && (
-              <span className="absolute -right-1.5 -top-1.5 grid min-w-4 place-items-center rounded-full bg-accent px-1 text-[0.625rem] font-semibold leading-4 text-ink">
-                {cartCount}
-              </span>
-            )}
+            {cartCount > 0 ? <span className="es-cart-count">{cartCount}</span> : null}
           </Link>
           <AuthSlot />
           <div className={`es-menu ${menuOpen ? "is-open" : ""}`}>
@@ -109,7 +106,6 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
                   </Link>
                 ))}
                 <Link to="/partners">Partners</Link>
-                <Link to="/shop">Racing shop</Link>
                 <AuthSlot />
                 <Link to="/checkout">Cart ({cartCount})</Link>
                 <Link to="/contact">Contact</Link>
