@@ -1,28 +1,45 @@
 import "./es-chrome";
 import { Link, Outlet, useLocation } from "@tanstack/react-router";
-import { Facebook, Instagram, Phone, ShoppingCart } from "lucide-react";
+import { ChevronDown, Facebook, Instagram, Phone, ShoppingCart } from "lucide-react";
 import { useEffect, useState } from "react";
 import { CookieDisclaimer, AuthSlot, Logo, StaffLoginLink } from "./bits";
 import { useCart } from "@/lib/es/cart-store";
 import { livePackages } from "@/lib/es/prebuilds";
 import { BRAND, CITIES, GUIDES, PACKAGES } from "@/lib/es/catalog";
 
+const SIMULATORS = [
+  { to: "/racing", label: "Racing", hint: "Motion, haptic, triples — live catalogue" },
+  { to: "/aircraft", label: "Aircraft", hint: "Helicopter and fixed-wing, studio first" },
+  { to: "/drones", label: "Drones", hint: "FPV and ground-station trainers" },
+] as const;
+
 const NAV = [
-  { to: "/racing", label: "Racing" },
-  { to: "/aircraft", label: "Aircraft" },
-  { to: "/drones", label: "Drones" },
   { to: "/training", label: "Training" },
-  { to: "/drivers", label: "Drivers" },
+  { to: "/ambassadors", label: "Ambassadors" },
   { to: "/studio", label: "Studio" },
 ] as const;
+
+function simActive(pathname: string) {
+  return (
+    pathname === "/racing" ||
+    pathname.startsWith("/racing/") ||
+    pathname === "/aircraft" ||
+    pathname.startsWith("/aircraft/") ||
+    pathname === "/drones" ||
+    pathname.startsWith("/drones/")
+  );
+}
 
 export function SiteShell({ children }: { children?: React.ReactNode }) {
   const location = useLocation();
   const [menuOpen, setMenuOpen] = useState(false);
+  const [simOpen, setSimOpen] = useState(false);
   const cartCount = useCart((s) => s.lines.reduce((n, l) => n + l.qty, 0));
+  const simOn = simActive(location.pathname);
 
   useEffect(() => {
     setMenuOpen(false);
+    setSimOpen(false);
   }, [location.pathname]);
 
   return (
@@ -31,6 +48,26 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
         <div className="es-header-inner">
           <Logo />
           <nav className="es-nav" aria-label="Primary">
+            <div className={`es-nav-drop${simOn ? " is-active" : ""}${simOpen ? " is-open" : ""}`}>
+              <button
+                type="button"
+                className={`es-nav-link${simOn ? " is-active" : ""}`}
+                aria-expanded={simOpen}
+                aria-haspopup="true"
+                onClick={() => setSimOpen((v) => !v)}
+              >
+                Simulators
+                <ChevronDown className="size-3.5" />
+              </button>
+              <div className="es-nav-drop-panel" role="menu">
+                {SIMULATORS.map((s) => (
+                  <Link key={s.to} to={s.to} role="menuitem">
+                    <span>{s.label}</span>
+                    <em>{s.hint}</em>
+                  </Link>
+                ))}
+              </div>
+            </div>
             {NAV.map((n) => (
               <Link key={n.to} to={n.to} className="es-nav-link">
                 {n.label}
@@ -57,6 +94,12 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
             </button>
             {menuOpen && (
               <div className="es-menu-panel">
+                <p className="es-menu-label">Simulators</p>
+                {SIMULATORS.map((s) => (
+                  <Link key={s.to} to={s.to}>
+                    {s.label}
+                  </Link>
+                ))}
                 {NAV.map((n) => (
                   <Link key={n.to} to={n.to}>
                     {n.label}
@@ -108,7 +151,7 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
             </p>
           </div>
           <div className="es-footer-col">
-            <p className="es-kicker">Platforms</p>
+            <p className="es-kicker">Simulators</p>
             <ul>
               <li>
                 <Link to="/racing">Racing</Link>
@@ -123,7 +166,7 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
                 <Link to="/training">Training</Link>
               </li>
               <li>
-                <Link to="/drivers">Drivers</Link>
+                <Link to="/ambassadors">Ambassadors</Link>
               </li>
               <li>
                 <Link to="/partners">Partners</Link>
