@@ -2,14 +2,14 @@ import "./es-chrome";
 import { useState, useEffect } from "react";
 import { Link, Outlet, applyHeadPayload } from "@tanstack/react-router";
 import { Navigate, useLocation } from "react-router-dom";
-import { Calendar, Gauge, LayoutDashboard, LifeBuoy, Menu, MessageSquare, Package, Wrench } from "lucide-react";
+import { Calendar, Flag, Gauge, LayoutDashboard, LifeBuoy, Menu, MessageSquare, Package, Wrench } from "lucide-react";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { useQuery } from "@tanstack/react-query";
 import { getProfile } from "@/lib/es/server";
 import { pageHead } from "@/lib/es/seo";
 import { AuthSlot, Logo } from "./bits";
 
-const TABS = [
+const BASE_TABS = [
   { to: "/app", label: "Home", icon: LayoutDashboard },
   { to: "/app/build", label: "Build", icon: Gauge },
   { to: "/app/quotes", label: "Quotes", icon: Wrench },
@@ -18,6 +18,8 @@ const TABS = [
   { to: "/app/book", label: "Book", icon: Calendar },
   { to: "/app/service", label: "Messages", icon: LifeBuoy },
 ] as const;
+
+const AMBASSADOR_TAB = { to: "/app/ambassador", label: "Ambassador", icon: Flag } as const;
 
 export function AppShell() {
   const { user, isPending } = useCurrentUserState();
@@ -28,6 +30,9 @@ export function AppShell() {
     queryFn: () => getProfile(),
     enabled: Boolean(user),
   });
+  const TABS = profile.data?.role === "ambassador"
+    ? [BASE_TABS[0], AMBASSADOR_TAB, ...BASE_TABS.slice(1)]
+    : [...BASE_TABS, AMBASSADOR_TAB];
 
   useEffect(() => {
     applyHeadPayload(
