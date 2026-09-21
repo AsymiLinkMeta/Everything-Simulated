@@ -46,13 +46,20 @@ export const PLATFORMS: {
   },
 ];
 
+export const HOME_DOORS: { to: string; image: string; kicker: string; title: string; hint: string }[] = [
+  { to: "/prebuilds", image: "/rigs/haptic.jpg", kicker: "Live", title: "Prebuilds", hint: "Starter, Haptic and Motion crates that ship." },
+  { to: "/shop", image: "/rigs/starter.jpg", kicker: "Parts", title: "Shop", hint: "The SKUs we actually bolt on." },
+  { to: "/ambassadors", image: "/rigs/motion.jpg", kicker: "People", title: "Ambassadors", hint: "Drivers and the rig they sit in." },
+  { to: "/studio", image: "/rigs/showroom.jpg", kicker: "Floor", title: "Studio", hint: "Sit the chassis before it crates." },
+];
+
 export const RACING_TOOLS: PlatformLink[] = [
   { to: "/prebuilds", label: "Prebuilds", hint: "Starter, Haptic and Motion crates — triples plus an aux screen on the upper two." },
   { to: "/shop", label: "Parts shop", hint: "The SKUs we actually bolt on. Not a warehouse catalogue." },
   { to: "/compatibility", label: "Checker", hint: "Torque, payload, QR and mounts. Chat cannot override a block." },
   { to: "/app/build", label: "Spec a crate", hint: "Customer app — walk the same steps the workshop uses." },
   { to: "/app/chat", label: "Build expert", hint: "AI copilot that only explains the checker JSON." },
-  { to: "/studio", label: "Studio demo", hint: "Try before you buy on the Gold Coast. Call Taylah to book." },
+  { to: "/studio", label: "Studio demo", hint: "Try before you buy on the Gold Coast. Call the workshop to book." },
   { to: "/guides", label: "Guides", hint: "Cost, motion vs haptic, juniors, triples, delivery." },
   { to: "/faqs", label: "FAQs", hint: "Deposit, freight, lead times, warranty." },
 ];

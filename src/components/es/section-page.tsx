@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
+import { BRAND } from "@/lib/es/catalog";
 import type { PlatformLink } from "@/lib/es/platforms";
 
 export type ImageCard = {
@@ -59,10 +60,11 @@ export function ImageCards({
   columns = 3,
 }: {
   cards: ImageCard[];
-  columns?: 2 | 3;
+  columns?: 2 | 3 | 4;
 }) {
+  const cols = columns === 4 ? "is-4" : columns === 2 ? "is-2" : "is-3";
   return (
-    <ul className={`es-tile-grid is-${columns}`}>
+    <ul className={`es-tile-grid ${cols}`}>
       {cards.map((card) => (
         <li key={card.to}>
           <Link to={card.to} className="es-tile">
@@ -166,6 +168,25 @@ export function CtaStrip({
       </p>
       <div className="es-cta-actions">{children}</div>
     </div>
+  );
+}
+
+export function PhoneStrip({
+  title = "Talk to the workshop.",
+  lead = "Gold Coast demos, crate questions and event enquiries.",
+}: {
+  title?: string;
+  lead?: string;
+}) {
+  return (
+    <CtaStrip title={title} lead={lead}>
+      <a href={`tel:${BRAND.phone.replace(/\s/g, "")}`} className="es-btn">
+        {BRAND.phone}
+      </a>
+      <Link to="/contact" className="es-btn es-btn-paper">
+        Enquire
+      </Link>
+    </CtaStrip>
   );
 }
 
