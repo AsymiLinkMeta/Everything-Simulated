@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { JsonLd } from "@/components/es/bits";
-import { PageHero, ToolCards } from "@/components/es/section-page";
+import { CtaStrip, ImageCards, PageHero } from "@/components/es/section-page";
 import { breadcrumbLd, pageHead } from "@/lib/es/seo";
 
 export const Route = createFileRoute("/_site/drones")({
@@ -31,21 +31,18 @@ function DronesPage() {
         tone="adventure"
       />
       <div className="es-body">
-        <ToolCards
-          tone="adventure"
-          links={[
-            { to: "/studio", label: "Studio", hint: "See a control layout before we build." },
-            { to: "/training", label: "Training", hint: "Programs that run on drone simulators." },
-            { to: "/contact", label: "Enquire", hint: "Tell us RePL rehearsal, FPV or commercial ops." },
-            { to: "/aircraft", label: "Aircraft", hint: "Manned aviation sits next door." },
+        <ImageCards
+          columns={2}
+          cards={[
+            { to: "/studio", image: "/rigs/showroom.jpg", kicker: "Studio", title: "See the layout", hint: "Control layout before we build." },
+            { to: "/training", image: "/rigs/starter.jpg", kicker: "Training", title: "Hours on the sticks", hint: "Programs that run on drone simulators." },
+            { to: "/aircraft", image: "/rigs/haptic.jpg", kicker: "Aircraft", title: "Manned next door", hint: "Helicopter and fixed-wing sit on the same floor." },
+            { to: "/contact", image: "/rigs/motion.jpg", kicker: "Enquire", title: "RePL, FPV or ops", hint: "Tell us the brief. We are not a CASA RTO." },
           ]}
         />
-        <p className="mt-10 max-w-2xl text-sm text-muted">
-          We are not a CASA RTO on this site. If you need a licence course, we will say so and point you at the right partner — we build the simulator.
-        </p>
-        <Link to="/contact" className="es-btn mt-6 inline-flex">
-          Enquire
-        </Link>
+        <CtaStrip title="We build the simulator." lead="Licence courses sit with the right partner. If you need a ticket, we will say so.">
+          <Link to="/contact" className="es-btn">Enquire</Link>
+        </CtaStrip>
       </div>
     </div>
   );

@@ -1,8 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { GUIDES } from "@/lib/es/catalog";
 import { itemListLd, pageHead } from "@/lib/es/seo";
 import { JsonLd } from "@/components/es/bits";
-import { PageHero } from "@/components/es/section-page";
+import { ImageCards, PageHero } from "@/components/es/section-page";
 
 export const Route = createFileRoute("/_site/guides/")({
   head: () =>
@@ -14,6 +14,8 @@ export const Route = createFileRoute("/_site/guides/")({
   component: Guides,
 });
 
+const GUIDE_IMAGES = ["/rigs/starter.jpg", "/rigs/haptic.jpg", "/rigs/motion.jpg", "/rigs/showroom.jpg"];
+
 function Guides() {
   return (
     <div>
@@ -24,19 +26,16 @@ function Guides() {
         lead="Written against the builds we actually crate — not affiliate parts lists."
         image="/rigs/starter.jpg"
       />
-      <div className="es-body mx-auto max-w-3xl">
-        <ol className="es-rail">
-          {GUIDES.map((g, i) => (
-            <li key={g.slug} className="es-rail-step">
-              <strong>
-                <Link to="/guides/$slug" params={{ slug: g.slug }} className="text-paper">
-                  {String(i + 1).padStart(2, "0")} {g.title}
-                </Link>
-              </strong>
-              <span>{g.description}</span>
-            </li>
-          ))}
-        </ol>
+      <div className="es-body">
+        <ImageCards
+          cards={GUIDES.map((g, i) => ({
+            to: `/guides/${g.slug}`,
+            image: GUIDE_IMAGES[i % GUIDE_IMAGES.length],
+            kicker: String(i + 1).padStart(2, "0"),
+            title: g.title,
+            hint: g.description,
+          }))}
+        />
       </div>
     </div>
   );

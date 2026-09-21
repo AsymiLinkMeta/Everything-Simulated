@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { JsonLd } from "@/components/es/bits";
-import { PageHero } from "@/components/es/section-page";
+import { CtaStrip, PageHero } from "@/components/es/section-page";
 import { PARTNER_GROUPS } from "@/lib/es/platforms";
 import { breadcrumbLd, pageHead } from "@/lib/es/seo";
 
@@ -32,27 +32,25 @@ function PartnersPage() {
         tone="race"
       />
       <div className="es-body">
-        <div className="grid gap-12 md:grid-cols-3">
-          {PARTNER_GROUPS.map((g) => (
-            <section key={g.title}>
-              <p className="es-kicker es-kicker-telemetry">{g.title}</p>
-              <ul className="mt-5 space-y-px bg-line">
-                {g.items.map((p) => (
-                  <li key={p.name} className="bg-panel px-4 py-4">
-                    <p className="font-medium">{p.name}</p>
-                    <p className="mt-1 text-sm text-muted">{p.role}</p>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          ))}
-        </div>
-        <p className="mt-12 max-w-2xl text-sm text-muted">
-          Want to be listed? Hardware, venues, teams and training partners go through the staff inbox — not a public form farm.
-        </p>
-        <Link to="/contact" className="es-btn mt-6 inline-flex">
-          Talk to the workshop
-        </Link>
+        {PARTNER_GROUPS.map((g) => (
+          <section key={g.title} className="mb-12 last:mb-0">
+            <p className="es-kicker es-kicker-telemetry">{g.title}</p>
+            <ul className="es-tile-grid is-3 mt-6">
+              {g.items.map((p) => (
+                <li key={p.name} className="es-tile">
+                  <div className="es-tile-copy">
+                    <p className="es-kicker">{g.title}</p>
+                    <h3>{p.name}</h3>
+                    <p>{p.role}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </section>
+        ))}
+        <CtaStrip title="Want to be listed?" lead="Hardware, venues, teams and training partners go through the staff inbox.">
+          <Link to="/contact" className="es-btn">Talk to the workshop</Link>
+        </CtaStrip>
       </div>
     </div>
   );
