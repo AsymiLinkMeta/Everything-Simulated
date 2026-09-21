@@ -4,12 +4,11 @@ import { ArrowRight, MapPin } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { SiteShell } from "@/components/es/site-shell";
 import { JsonLd, Money } from "@/components/es/bits";
-import { ImageCards, MediaSplit, PhoneStrip } from "@/components/es/section-page";
 import { BRAND, CITIES, PACKAGES } from "@/lib/es/catalog";
 import { graphLd, localBusinessLd, organizationLd, pageHead, websiteLd, faqLd, FAQS } from "@/lib/es/seo";
 import { fetchBrands } from "@/lib/es/brands";
 import { fetchFeaturedPrebuilds, livePackages } from "@/lib/es/prebuilds";
-import { HOME_DOORS } from "@/lib/es/platforms";
+import { PLATFORMS } from "@/lib/es/platforms";
 
 export const Route = createFileRoute("/")({
   head: () =>
@@ -23,6 +22,9 @@ export const Route = createFileRoute("/")({
 });
 
 export function Home() {
+  const racing = PLATFORMS.find((p) => p.slug === "racing");
+  const rest = PLATFORMS.filter((p) => p.slug !== "racing");
+
   return (
     <SiteShell>
       <JsonLd data={graphLd(organizationLd(), websiteLd(), localBusinessLd(), faqLd(FAQS))} />
@@ -52,32 +54,35 @@ export function Home() {
         </div>
       </section>
 
-      <section className="es-body">
-        <p className="es-kicker es-kicker-telemetry">Doors</p>
-        <h2 className="es-display mt-2 text-5xl">What you can do today.</h2>
-        <p className="mt-4 max-w-2xl text-base leading-7 text-muted">
-          Prebuilds and parts are live. Ambassadors and the studio sit on the same floor.
-        </p>
-        <div className="mt-8">
-          <ImageCards columns={4} cards={HOME_DOORS} />
-        </div>
-      </section>
+      {racing ? (
+        <Link to={racing.to} className="es-chapter">
+          <img src={racing.image} alt="" />
+          <div className="es-chapter-veil" />
+          <div className="es-chapter-copy">
+            <span className="es-chapter-idx">01</span>
+            <p className="es-kicker es-kicker-telemetry">{racing.kicker}</p>
+            <h2>{racing.name}</h2>
+            <p>{racing.blurb}</p>
+          </div>
+        </Link>
+      ) : null}
+
+      <div className="es-chapter-row">
+        {rest.map((platform, i) => (
+          <Link key={platform.slug} to={platform.to} className="es-chapter">
+            <img src={platform.image} alt="" />
+            <div className="es-chapter-veil" />
+            <div className="es-chapter-copy">
+              <span className="es-chapter-idx">{String(i + 2).padStart(2, "0")}</span>
+              <p className="es-kicker es-kicker-telemetry">{platform.kicker}</p>
+              <h2>{platform.name}</h2>
+              <p>{platform.blurb}</p>
+            </div>
+          </Link>
+        ))}
+      </div>
 
       <FeaturedPrebuilds />
-
-      <section className="es-body pt-0">
-        <MediaSplit
-          image="/rigs/haptic.jpg"
-          kicker="Featured crate"
-          title="Haptic. The one we ship most."
-          lead="Exodus XR1, Simagic Alpha 15Nm, hydraulic P1000 and four screens. Sit it on the Coast before it crates."
-        >
-          <div className="mt-2 flex flex-wrap gap-3">
-            <Link to="/prebuilds/haptic" className="es-btn">Order this crate</Link>
-            <Link to="/prebuilds" className="es-btn es-btn-paper">All prebuilds</Link>
-          </div>
-        </MediaSplit>
-      </section>
 
       <section className="es-body grid gap-12 md:grid-cols-[1fr_1.2fr]">
         <div>
@@ -106,6 +111,19 @@ export function Home() {
 
       <BrandBanner />
 
+      <Link to="/studio" className="es-chapter">
+        <img src="/rigs/Everything_Simulated_Hero.jpg" alt="Driver using a racing simulator" />
+        <div className="es-chapter-veil" />
+        <div className="es-chapter-copy">
+          <p className="es-kicker es-kicker-telemetry">Studio</p>
+          <h2>Try before the crate leaves</h2>
+          <p>
+            Book a session at the {BRAND.region} workshop.
+            Pedal spacing, wheel height and the coaching screen are set on the chassis you are buying.
+          </p>
+        </div>
+      </Link>
+
       <section className="es-body">
         <div className="mb-8 flex items-center gap-2">
           <MapPin className="size-4 text-esred" />
@@ -118,7 +136,6 @@ export function Home() {
             </Link>
           ))}
         </div>
-        <PhoneStrip title="Sit it before it ships." lead={`${BRAND.region}. ${BRAND.phone}.`} />
       </section>
 
       <section className="es-body pt-0">
@@ -146,7 +163,7 @@ function FeaturedPrebuilds() {
   const hasDynamic = items.length > 0;
 
   return (
-    <section className="es-body pt-0">
+    <section className="es-body">
       <div className="mb-10 flex items-end justify-between gap-4">
         <div>
           <p className="es-kicker es-kicker-telemetry">Racing · live catalogue</p>
