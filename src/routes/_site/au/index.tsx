@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { CITIES } from "@/lib/es/catalog";
 import { itemListLd, pageHead } from "@/lib/es/seo";
 import { JsonLd } from "@/components/es/bits";
-import { ImageCards, PageHero } from "@/components/es/section-page";
+import { ImageCards, PageHero, PhoneStrip } from "@/components/es/section-page";
 
 export const Route = createFileRoute("/_site/au/")({
   head: () =>
@@ -34,6 +34,7 @@ function Australia() {
             hint: c.note,
           }))}
         />
+        <PhoneStrip title="Freight from the Coast." lead="SEQ install is standard. Capitals are scheduled. Regional is quoted." />
       </div>
     </div>
   );
