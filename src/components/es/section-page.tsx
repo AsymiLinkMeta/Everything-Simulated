@@ -99,3 +99,67 @@ export function PageHero({
     </header>
   );
 }
+
+export function PageBand({
+  children,
+  ink = false,
+}: {
+  children: ReactNode;
+  ink?: boolean;
+}) {
+  return (
+    <section className={`es-page-band${ink ? " is-ink" : ""}`}>
+      <div className="es-body">{children}</div>
+    </section>
+  );
+}
+
+export function CtaStrip({
+  title,
+  lead,
+  children,
+}: {
+  title: string;
+  lead: string;
+  children?: ReactNode;
+}) {
+  return (
+    <div className="es-cta-strip">
+      <p>
+        <strong>{title}</strong>
+        {lead}
+      </p>
+      <div className="es-cta-actions">{children}</div>
+    </div>
+  );
+}
+
+export function MediaSplit({
+  image,
+  kicker,
+  title,
+  lead,
+  flip = false,
+  children,
+}: {
+  image: string;
+  kicker: string;
+  title: string;
+  lead: string;
+  flip?: boolean;
+  children?: ReactNode;
+}) {
+  return (
+    <div className={`es-media-split${flip ? " is-flip" : ""}`}>
+      <div className="es-media-split-frame">
+        <img src={image} alt="" />
+      </div>
+      <div className="es-media-split-copy">
+        <p className="es-kicker">{kicker}</p>
+        <h2>{title}</h2>
+        <p className="text-sm leading-6 text-muted">{lead}</p>
+        {children}
+      </div>
+    </div>
+  );
+}

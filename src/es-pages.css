@@ -1,0 +1,228 @@
+/* Inner pages: same density as the homepage, still red / black / white. */
+
+.es-stage {
+  min-height: min(88dvh, 48rem);
+}
+.es-stage-copy {
+  padding: 8rem 1.25rem 4.5rem;
+}
+.es-stage-copy h1 {
+  max-width: 16ch;
+}
+.es-stage-copy .es-lead,
+.es-stage-copy .lead {
+  font-size: 1.12rem;
+  max-width: 40rem;
+}
+
+.es-body {
+  max-width: 76rem;
+  padding: 4.25rem 1.25rem 5.5rem;
+}
+.es-body + .es-body {
+  padding-top: 0;
+}
+.es-body > section + section,
+.es-body > .es-page-block + .es-page-block {
+  margin-top: 4.5rem;
+}
+
+.es-page-band {
+  position: relative;
+  isolation: isolate;
+  padding: 4.5rem 0;
+  background: var(--es-panel);
+  border-top: 1px solid var(--es-line);
+  border-bottom: 1px solid var(--es-line);
+}
+.es-page-band .es-body {
+  padding-top: 0;
+  padding-bottom: 0;
+}
+.es-page-band.is-ink {
+  background: var(--es-ink);
+}
+
+.es-media-split {
+  display: grid;
+  gap: 0;
+  border: 1px solid var(--es-line);
+  background: var(--es-line);
+}
+@media (min-width: 900px) {
+  .es-media-split {
+    grid-template-columns: 1.15fr 0.85fr;
+    min-height: 28rem;
+  }
+  .es-media-split.is-flip {
+    grid-template-columns: 0.85fr 1.15fr;
+  }
+  .es-media-split.is-flip .es-media-split-frame {
+    order: 2;
+  }
+}
+.es-media-split-frame {
+  position: relative;
+  min-height: 16rem;
+  background: #000;
+  overflow: hidden;
+}
+.es-media-split-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  position: absolute;
+  inset: 0;
+}
+.es-media-split-copy {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.85rem;
+  padding: 1.75rem 1.35rem;
+  background: var(--es-panel);
+}
+.es-media-split-copy h2,
+.es-media-split-copy h3 {
+  margin: 0;
+  font-family: var(--es-font-display);
+  font-size: clamp(2rem, 4vw, 3.1rem);
+  line-height: 0.92;
+}
+
+.es-cta-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem 1.5rem;
+  margin-top: 3rem;
+  padding: 1.35rem 1.4rem;
+  background: #0a0a0f;
+  border: 1px solid var(--es-line);
+  border-left: 3px solid var(--es-red);
+}
+.es-cta-strip p {
+  margin: 0;
+  max-width: 36rem;
+  color: var(--es-muted);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+.es-cta-strip strong {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: var(--es-paper);
+  font-family: var(--es-font-display);
+  font-size: 1.65rem;
+  letter-spacing: 0.02em;
+}
+.es-cta-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
+.es-spec-table {
+  display: grid;
+  margin: 0;
+  border: 1px solid var(--es-line);
+}
+.es-spec-table div {
+  display: grid;
+  grid-template-columns: minmax(7rem, 0.4fr) 1fr;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  border-top: 1px solid var(--es-line);
+}
+.es-spec-table div:first-child {
+  border-top: 0;
+}
+.es-spec-table dt {
+  margin: 0;
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--es-subtle);
+}
+.es-spec-table dd {
+  margin: 0;
+  color: var(--es-paper);
+  font-size: 0.95rem;
+}
+
+.es-offer-grid {
+  display: grid;
+  gap: 1px;
+  background: var(--es-line);
+  border: 1px solid var(--es-line);
+}
+@media (min-width: 700px) {
+  .es-offer-grid.is-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .es-offer-grid.is-4 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (min-width: 1024px) {
+  .es-offer-grid.is-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+.es-offer-grid > article {
+  padding: 1.35rem 1.2rem 1.5rem;
+  background: var(--es-panel);
+  border-radius: 0;
+  box-shadow: none;
+  transform: none;
+}
+.es-offer-grid > article:hover {
+  transform: none;
+  box-shadow: none;
+  border-color: transparent;
+  background: #14141c;
+}
+
+.es-product {
+  max-width: 76rem;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 5rem;
+}
+
+.es-ambassador-card {
+  display: flex;
+  flex-direction: column;
+}
+.es-ambassador-rig {
+  margin-top: auto;
+  padding-top: 1.15rem;
+  border-top: 1px solid var(--es-line);
+}
+.es-ambassador-rig-head {
+  display: flex;
+  gap: 0.9rem;
+  align-items: center;
+}
+.es-ambassador-rig-head img {
+  width: 5.5rem;
+  height: 4rem;
+  object-fit: cover;
+  background: #000;
+}
+.es-ambassador-rig-head p {
+  margin: 0;
+}
+.es-ambassador-rig-head strong {
+  display: block;
+  font-family: var(--es-font-display);
+  font-size: 1.45rem;
+  letter-spacing: 0.02em;
+  color: var(--es-paper);
+}
+.es-ambassador-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.9rem;
+}
