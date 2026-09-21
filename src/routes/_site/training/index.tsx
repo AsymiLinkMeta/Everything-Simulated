@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { JsonLd } from "@/components/es/bits";
-import { CtaStrip, ImageCards, PageHero, SectionLinks } from "@/components/es/section-page";
+import { ImageCards, PageHero, PhoneStrip, SectionLinks } from "@/components/es/section-page";
 import { TRAINING_PAGES } from "@/lib/es/platforms";
 import { breadcrumbLd, pageHead } from "@/lib/es/seo";
 
@@ -23,7 +23,12 @@ function TrainingHub() {
         title="Hours before the real thing."
         lead="Motorsport and juniors already run on four-screen racing crates. Group days for professional and amateur drivers sit on the warehouse floor — enquire. Truck, side-kart and excavator work is capacity."
         image="/rigs/starter.jpg"
-      />
+      >
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <Link to="/training/driver" className="es-btn">Driver programs</Link>
+          <Link to="/events" className="es-btn es-btn-paper">Group days</Link>
+        </div>
+      </PageHero>
       <div className="es-body">
         <SectionLinks links={TRAINING_PAGES} current="/training" />
         <div className="mt-10">
@@ -35,10 +40,7 @@ function TrainingHub() {
             ]}
           />
         </div>
-        <CtaStrip title="Programs, not a second shop." lead="Hardware lives under Racing. Hours live here.">
-          <Link to="/studio" className="es-btn">Book the studio</Link>
-          <Link to="/contact" className="es-btn es-btn-paper">Enquire</Link>
-        </CtaStrip>
+        <PhoneStrip title="Programs, not a second shop." lead="Hardware lives under Racing. Hours live here." />
       </div>
     </div>
   );

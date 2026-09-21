@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { JsonLd } from "@/components/es/bits";
-import { CtaStrip, ImageCards, PageHero } from "@/components/es/section-page";
+import { ImageCards, PageHero, PhoneStrip } from "@/components/es/section-page";
 import { breadcrumbLd, pageHead } from "@/lib/es/seo";
 
 export const Route = createFileRoute("/_site/drones")({
@@ -29,7 +29,12 @@ function DronesPage() {
         lead="Ground-station and FPV trainers for operators who need hours on the sticks first. Named as workshop capacity — specced with you, assembled here."
         image="/rigs/motion.jpg"
         tone="adventure"
-      />
+      >
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <Link to="/contact" className="es-btn">Enquire</Link>
+          <Link to="/studio" className="es-btn es-btn-paper">Studio</Link>
+        </div>
+      </PageHero>
       <div className="es-body">
         <ImageCards
           columns={2}
@@ -40,9 +45,7 @@ function DronesPage() {
             { to: "/contact", image: "/rigs/motion.jpg", kicker: "Enquire", title: "RePL, FPV or ops", hint: "Tell us the brief. We are not a CASA RTO." },
           ]}
         />
-        <CtaStrip title="We build the simulator." lead="Licence courses sit with the right partner. If you need a ticket, we will say so.">
-          <Link to="/contact" className="es-btn">Enquire</Link>
-        </CtaStrip>
+        <PhoneStrip title="We build the simulator." lead="Licence courses sit with the right partner. If you need a ticket, we will say so." />
       </div>
     </div>
   );

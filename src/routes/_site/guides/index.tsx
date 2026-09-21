@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { GUIDES } from "@/lib/es/catalog";
 import { itemListLd, pageHead } from "@/lib/es/seo";
 import { JsonLd } from "@/components/es/bits";
-import { ImageCards, PageHero } from "@/components/es/section-page";
+import { ImageCards, PageHero, PhoneStrip } from "@/components/es/section-page";
 
 export const Route = createFileRoute("/_site/guides/")({
   head: () =>
@@ -36,6 +36,7 @@ function Guides() {
             hint: g.description,
           }))}
         />
+        <PhoneStrip title="Still choosing a crate?" lead="The workshop will walk the checker with you." />
       </div>
     </div>
   );

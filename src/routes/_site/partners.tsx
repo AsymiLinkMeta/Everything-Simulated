@@ -1,6 +1,6 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { JsonLd } from "@/components/es/bits";
-import { CtaStrip, PageHero } from "@/components/es/section-page";
+import { PageHero, PhoneStrip } from "@/components/es/section-page";
 import { PARTNER_GROUPS } from "@/lib/es/platforms";
 import { breadcrumbLd, pageHead } from "@/lib/es/seo";
 
@@ -48,9 +48,7 @@ function PartnersPage() {
             </ul>
           </section>
         ))}
-        <CtaStrip title="Want to be listed?" lead="Hardware, venues, teams and training partners go through the staff inbox.">
-          <Link to="/contact" className="es-btn">Talk to the workshop</Link>
-        </CtaStrip>
+        <PhoneStrip title="Want to be listed?" lead="Hardware, venues, teams and training partners go through the staff inbox." />
       </div>
     </div>
   );
