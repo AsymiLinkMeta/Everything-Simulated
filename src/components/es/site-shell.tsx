@@ -3,6 +3,7 @@ import { Link, Outlet, useLocation } from "@tanstack/react-router";
 import { ChevronDown, Facebook, Instagram, Phone, ShoppingCart } from "lucide-react";
 import { useEffect, useState } from "react";
 import { CookieDisclaimer, AuthSlot, Logo, StaffLoginLink } from "./bits";
+import { ReferralCapture } from "./referral-capture";
 import { useCart } from "@/lib/es/cart-store";
 import { livePackages } from "@/lib/es/prebuilds";
 import { BRAND, CITIES, GUIDES, PACKAGES } from "@/lib/es/catalog";
@@ -44,6 +45,7 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
 
   return (
     <div className="es-page">
+      <ReferralCapture />
       <header className="es-header">
         <div className="es-header-inner">
           <Logo />
