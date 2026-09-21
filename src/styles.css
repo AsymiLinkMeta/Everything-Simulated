@@ -1,5 +1,9 @@
 @import "tailwindcss";
 @import "./es.css";
+@import "./es-stage.css";
+@import "./es-ambassadors.css";
+@import "./es-pages.css";
+@import "./es-radius.css";
 
 @theme {
   --color-ink: #050507;
@@ -16,11 +20,11 @@
   --color-ok: #3d9a6a;
   --color-warn: #c4a15a;
   --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
-  --radius-sm: 8px;
-  --radius-md: 12px;
-  --radius-lg: 16px;
-  --radius-xl: 16px;
-  --radius-card: 12px;
+  --radius-sm: 15px;
+  --radius-md: 15px;
+  --radius-lg: 15px;
+  --radius-xl: 15px;
+  --radius-card: 15px;
 }
 
 @layer base {
