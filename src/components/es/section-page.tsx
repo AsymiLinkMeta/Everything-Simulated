@@ -2,6 +2,14 @@ import type { ReactNode } from "react";
 import { Link } from "@tanstack/react-router";
 import type { PlatformLink } from "@/lib/es/platforms";
 
+export type ImageCard = {
+  to: string;
+  image: string;
+  kicker: string;
+  title: string;
+  hint: string;
+};
+
 export function SectionLinks({
   links,
   current,
@@ -38,6 +46,33 @@ export function ToolCards({
             <div>
               <p className="es-expedition-label">{l.label}</p>
               <p>{l.hint}</p>
+            </div>
+          </Link>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+export function ImageCards({
+  cards,
+  columns = 3,
+}: {
+  cards: ImageCard[];
+  columns?: 2 | 3;
+}) {
+  return (
+    <ul className={`es-tile-grid is-${columns}`}>
+      {cards.map((card) => (
+        <li key={card.to}>
+          <Link to={card.to} className="es-tile">
+            <div className="es-tile-frame">
+              <img src={card.image} alt="" />
+            </div>
+            <div className="es-tile-copy">
+              <p className="es-kicker">{card.kicker}</p>
+              <h3>{card.title}</h3>
+              <p>{card.hint}</p>
             </div>
           </Link>
         </li>

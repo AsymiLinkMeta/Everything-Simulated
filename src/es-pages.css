@@ -1,36 +1,32 @@
-/* Inner pages: same density as the homepage, still red / black / white. */
+/* Inner pages: pit-wall grids. Homepage keeps full-bleed chapters. */
 
 .es-stage {
-  min-height: min(88dvh, 48rem);
+  min-height: min(78dvh, 42rem);
 }
 .es-stage-copy {
-  padding: 8rem 1.25rem 4.5rem;
+  padding: 7.5rem 1.25rem 3.75rem;
 }
 .es-stage-copy h1 {
   max-width: 16ch;
 }
 .es-stage-copy .es-lead,
 .es-stage-copy .lead {
-  font-size: 1.12rem;
+  font-size: 1.08rem;
   max-width: 40rem;
 }
 
 .es-body {
   max-width: 76rem;
-  padding: 4.25rem 1.25rem 5.5rem;
+  padding: 3.75rem 1.25rem 5.5rem;
 }
 .es-body + .es-body {
   padding-top: 0;
-}
-.es-body > section + section,
-.es-body > .es-page-block + .es-page-block {
-  margin-top: 4.5rem;
 }
 
 .es-page-band {
   position: relative;
   isolation: isolate;
-  padding: 4.5rem 0;
+  padding: 4.25rem 0;
   background: var(--es-panel);
   border-top: 1px solid var(--es-line);
   border-bottom: 1px solid var(--es-line);
@@ -151,23 +147,32 @@
   font-size: 0.95rem;
 }
 
-.es-offer-grid {
+.es-offer-grid,
+.es-tile-grid {
   display: grid;
   gap: 1px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
   background: var(--es-line);
   border: 1px solid var(--es-line);
 }
 @media (min-width: 700px) {
-  .es-offer-grid.is-2 {
+  .es-offer-grid.is-2,
+  .es-tile-grid.is-2 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-  .es-offer-grid.is-4 {
+  .es-offer-grid.is-4,
+  .es-tile-grid.is-3 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
-@media (min-width: 1024px) {
+@media (min-width: 1100px) {
   .es-offer-grid.is-4 {
     grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .es-tile-grid.is-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 }
 .es-offer-grid > article {
@@ -182,6 +187,68 @@
   box-shadow: none;
   border-color: transparent;
   background: #14141c;
+}
+
+.es-tile {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  background: var(--es-panel);
+  color: inherit;
+  text-decoration: none;
+}
+.es-tile-frame {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  overflow: hidden;
+  background: #000;
+}
+.es-tile-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 560ms ease;
+}
+.es-tile:hover img {
+  transform: scale(1.06);
+}
+.es-tile-frame::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 42%;
+  background: linear-gradient(180deg, transparent, rgba(5, 5, 7, 0.55));
+  pointer-events: none;
+}
+.es-tile-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 1.15rem 1.15rem 1.4rem;
+  flex: 1;
+}
+.es-tile-copy h3 {
+  margin: 0;
+  font-family: var(--es-font-display);
+  font-size: clamp(1.7rem, 2.4vw, 2.35rem);
+  line-height: 0.92;
+  letter-spacing: 0.02em;
+}
+.es-tile-copy p:last-child {
+  margin: 0.35rem 0 0;
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--es-muted);
+}
+
+.es-pack-grid {
+  justify-items: stretch;
+}
+.es-pack-grid > * {
+  max-width: none;
+}
+.es-pack-tile-frame {
+  aspect-ratio: 16 / 10;
 }
 
 .es-product {
@@ -225,4 +292,15 @@
   flex-wrap: wrap;
   gap: 0.55rem;
   margin-top: 0.9rem;
+}
+
+/* Inner pages only: do not reuse homepage chapter slabs. */
+.es-page main .es-chapter-row {
+  display: grid;
+  gap: 1px;
+  background: var(--es-line);
+  border: 1px solid var(--es-line);
+}
+.es-page main .es-chapter-row .es-chapter {
+  min-height: 0;
 }
