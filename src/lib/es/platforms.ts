@@ -66,6 +66,7 @@ export const AIRCRAFT_PAGES: PlatformLink[] = [
 export const TRAINING_PAGES: PlatformLink[] = [
   { to: "/training", label: "Overview", hint: "Programs that run on our platforms." },
   { to: "/training/driver", label: "Driver", hint: "Kart, junior pathway and motorsport — four-screen coaching setups." },
+  { to: "/events", label: "Group days", hint: "Professional and amateur driver groups at the warehouse, with catering." },
   { to: "/training/industrial", label: "Industrial", hint: "Truck, side-kart, excavator and plant — enquire, not a catalogue." },
 ];
 

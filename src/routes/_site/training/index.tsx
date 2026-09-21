@@ -8,7 +8,7 @@ export const Route = createFileRoute("/_site/training/")({
   head: () =>
     pageHead({
       title: "Simulator training | Driver, industrial, aviation | Everything Simulated",
-      description: "Motorsport, driver, industrial and vehicle training programs on Gold Coast assembled simulators. Four-screen coaching on racing crates. Aircraft and drone platforms underneath.",
+      description: "Motorsport, driver, industrial and vehicle training programs on Gold Coast assembled simulators. Group sessions for professional and amateur drivers at the planned warehouse.",
       path: "/training",
     }),
   component: TrainingHub,
@@ -21,7 +21,7 @@ function TrainingHub() {
       <PageHero
         kicker="Training · programs"
         title="Hours before the real thing."
-        lead="Motorsport and juniors already run on four-screen racing crates. Truck, side-kart and excavator work is capacity — enquire."
+        lead="Motorsport and juniors already run on four-screen racing crates. Group days for professional and amateur drivers sit on the warehouse floor — enquire. Truck, side-kart and excavator work is capacity."
         image="/rigs/starter.jpg"
       />
       <div className="es-chapter-row">
@@ -35,24 +35,24 @@ function TrainingHub() {
             <p>Four-screen coaching on the racing crates.</p>
           </div>
         </Link>
+        <Link to="/events" className="es-chapter">
+          <img src="/rigs/showroom.jpg" alt="" />
+          <div className="es-chapter-veil" />
+          <div className="es-chapter-copy">
+            <span className="es-chapter-idx">02</span>
+            <p className="es-kicker es-kicker-telemetry">Groups</p>
+            <h2>Pro and amateur days</h2>
+            <p>Warehouse group training plus catering. Enquire, not a calendar.</p>
+          </div>
+        </Link>
         <Link to="/training/industrial" className="es-chapter">
           <img src="/rigs/starter.jpg" alt="" />
           <div className="es-chapter-veil" />
           <div className="es-chapter-copy">
-            <span className="es-chapter-idx">02</span>
+            <span className="es-chapter-idx">03</span>
             <p className="es-kicker es-kicker-telemetry">Industrial</p>
             <h2>Plant and heavy vehicle</h2>
             <p>Truck, side-kart, excavator — enquire, not a shop.</p>
-          </div>
-        </Link>
-        <Link to="/studio" className="es-chapter">
-          <img src="/rigs/showroom.jpg" alt="" />
-          <div className="es-chapter-veil" />
-          <div className="es-chapter-copy">
-            <span className="es-chapter-idx">03</span>
-            <p className="es-kicker es-kicker-telemetry">Studio</p>
-            <h2>Book Taylah</h2>
-            <p>Gold Coast session before the program is specced.</p>
           </div>
         </Link>
       </div>

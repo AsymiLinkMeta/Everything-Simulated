@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { BRAND } from "@/lib/es/catalog";
+import { VENUE, VENUE_FLOOR } from "@/lib/es/events";
 import { pageHead, serviceLd } from "@/lib/es/seo";
 import { JsonLd } from "@/components/es/bits";
 import { PageHero } from "@/components/es/section-page";
@@ -63,6 +64,37 @@ function Studio() {
           </li>
         </ol>
       </div>
+
+      <section className="es-body">
+        <p className="es-kicker">Capacity · planned venue</p>
+        <h2 className="es-display mt-2 text-4xl">A warehouse floor behind the studio.</h2>
+        <p className="mt-4 max-w-2xl text-sm text-muted">
+          The owner intention is a lease of {VENUE.size}: warehousing on the floor,
+          the build studio out the back, corporate events and group driver training on the same site,
+          and catering when a booking needs it. That is {VENUE.status} — not a live street address and not a hire
+          catalogue. When the lease is real, this page gets the address. Until then, enquire.
+        </p>
+        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {VENUE_FLOOR.map((bay) => (
+            <article key={bay.title} className="es-card p-5">
+              <p className="es-kicker">{bay.kicker}</p>
+              <p className="mt-2 font-medium">{bay.title}</p>
+              <p className="mt-1 text-sm text-muted">{bay.blurb}</p>
+            </article>
+          ))}
+        </div>
+        <div className="mt-8 flex flex-wrap gap-3">
+          <Button asChild>
+            <Link to="/events">Events & catering</Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link to="/contact">Enquire about the venue</Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link to="/app/book">Book a current studio slot</Link>
+          </Button>
+        </div>
+      </section>
     </div>
   );
 }
