@@ -8,6 +8,7 @@ import {
   Calendar,
   ClipboardList,
   FileText,
+  Flag,
   Handshake,
   Inbox,
   Menu,
@@ -40,6 +41,7 @@ const TABS = [
   { to: "/staff/jobs", label: "Jobs", icon: Wrench },
   { to: "/staff/bookings", label: "Bookings", icon: Calendar },
   { to: "/staff/team", label: "Team", icon: Users },
+  { to: "/staff/ambassadors", label: "Ambassadors", icon: Flag },
 ] as const;
 
 export function StaffShell() {

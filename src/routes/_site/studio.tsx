@@ -63,6 +63,42 @@ function Studio() {
           </li>
         </ol>
       </div>
+
+      <section className="es-body">
+        <p className="es-kicker">Capacity · planned venue</p>
+        <h2 className="es-display mt-2 text-4xl">A warehouse floor behind the studio.</h2>
+        <p className="mt-4 max-w-2xl text-sm text-muted">
+          The owner intention is a lease of about 200 square metres: warehousing on the floor,
+          the build studio out the back, corporate events on the same site, and catering when a
+          booking needs it. That is planned capacity — not a live street address and not a hire
+          catalogue. When the lease is real, this page gets the address. Until then, enquire.
+        </p>
+        <div className="mt-6 grid gap-3 sm:grid-cols-3">
+          <article className="es-card p-5">
+            <p className="es-kicker">Floor</p>
+            <p className="mt-2 font-medium">Warehousing</p>
+            <p className="mt-1 text-sm text-muted">Incoming chassis, outgoing crates. Not open browse.</p>
+          </article>
+          <article className="es-card p-5">
+            <p className="es-kicker">Back</p>
+            <p className="mt-2 font-medium">Build studio</p>
+            <p className="mt-1 text-sm text-muted">Assembly, fitment, try-before-you-buy on the same site.</p>
+          </article>
+          <article className="es-card p-5">
+            <p className="es-kicker">Events</p>
+            <p className="mt-2 font-medium">Corporate + catering</p>
+            <p className="mt-1 text-sm text-muted">On-site food when a booking needs it. Ask first — no public hire list.</p>
+          </article>
+        </div>
+        <div className="mt-8 flex flex-wrap gap-3">
+          <Button asChild>
+            <Link to="/contact">Enquire about the venue</Link>
+          </Button>
+          <Button variant="outline" asChild>
+            <Link to="/app/book">Book a current studio slot</Link>
+          </Button>
+        </div>
+      </section>
     </div>
   );
 }

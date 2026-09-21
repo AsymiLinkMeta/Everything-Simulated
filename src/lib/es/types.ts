@@ -19,7 +19,7 @@ export type ProductCategory =
 export type StockStatus = "stock" | "indent" | "discontinued";
 export type ListingStatus = "draft" | "published" | "archived";
 export type Severity = "allow" | "adapter" | "warn" | "block";
-export type StaffRole = "customer" | "sales" | "workshop" | "content" | "support" | "admin";
+export type StaffRole = "customer" | "ambassador" | "sales" | "workshop" | "content" | "support" | "admin";
 
 export type Product = {
   sku: string;

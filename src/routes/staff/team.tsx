@@ -13,7 +13,7 @@ export const Route = createFileRoute("/staff/team")({
   component: Team,
 });
 
-const ROLES: StaffRole[] = ["customer", "sales", "workshop", "content", "support", "admin"];
+const ROLES: StaffRole[] = ["customer", "ambassador", "sales", "workshop", "content", "support", "admin"];
 
 type NewStaff = {
   displayName: string;

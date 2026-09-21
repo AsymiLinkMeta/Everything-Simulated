@@ -54,6 +54,8 @@ import { Route as DriverTrainingRoute } from "@/routes/_site/training/driver";
 import { Route as IndustrialTrainingRoute } from "@/routes/_site/training/industrial";
 import { Route as DriversRoute } from "@/routes/_site/drivers";
 import { Route as PartnersRoute } from "@/routes/_site/partners";
+import { Route as AppAmbassadorRoute } from "@/routes/app/ambassador";
+import { Route as StaffAmbassadorsRoute } from "@/routes/staff/ambassadors";
 
 function Page({ C }: { C: React.ComponentType }) {
   return (
@@ -119,6 +121,8 @@ export default function App() {
   const IndustrialTraining = IndustrialTrainingRoute.component!;
   const Drivers = DriversRoute.component!;
   const Partners = PartnersRoute.component!;
+  const AppAmbassador = AppAmbassadorRoute.component!;
+  const StaffAmbassadors = StaffAmbassadorsRoute.component!;
 
   return (
     <RouteError>
@@ -165,6 +169,7 @@ export default function App() {
         <Route path="orders" element={<AppOrders />} />
         <Route path="service" element={<AppService />} />
         <Route path="book" element={<AppBook />} />
+        <Route path="ambassador" element={<AppAmbassador />} />
       </Route>
       <Route path="/staff" element={<StaffShell />}>
         <Route index element={<StaffIndex />} />
@@ -182,6 +187,7 @@ export default function App() {
         <Route path="prebuilds" element={<StaffPrebuilds />} />
         <Route path="service" element={<StaffService />} />
         <Route path="agent" element={<StaffAgent />} />
+        <Route path="ambassadors" element={<StaffAmbassadors />} />
       </Route>
       <Route path="*" element={<NotFoundPage />} />
     </Routes>

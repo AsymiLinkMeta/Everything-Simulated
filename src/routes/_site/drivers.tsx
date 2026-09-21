@@ -1,7 +1,9 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
 import { JsonLd } from "@/components/es/bits";
 import { PageHero } from "@/components/es/section-page";
-import { AMBASSADOR_PROFILE_FIELDS, AMBASSADORS, ambassadorLink } from "@/lib/es/ambassadors";
+import { AMBASSADOR_PROFILE_FIELDS, ambassadorLink } from "@/lib/es/ambassadors";
+import { fetchPublishedAmbassadors } from "@/lib/es/ambassador-api";
 import { breadcrumbLd, pageHead } from "@/lib/es/seo";
 
 export const Route = createFileRoute("/_site/drivers")({
@@ -16,7 +18,8 @@ export const Route = createFileRoute("/_site/drivers")({
 });
 
 export function AmbassadorsPage() {
-  const published = AMBASSADORS.filter((a) => a.published);
+  const list = useQuery({ queryKey: ["published-ambassadors"], queryFn: fetchPublishedAmbassadors });
+  const published = list.data ?? [];
 
   return (
     <div>
@@ -35,6 +38,7 @@ export function AmbassadorsPage() {
       />
 
       <div className="es-body">
+        {list.isPending ? <p className="text-sm text-muted">Loading cards…</p> : null}
         <ul className="es-ambassador-grid">
           {published.map((a) => (
             <li key={a.slug} className="es-ambassador-card">
@@ -108,13 +112,16 @@ export function AmbassadorsPage() {
           <h2 className="es-display mt-2 text-4xl">The code attributes the crate. It does not discount it.</h2>
           <p className="mt-3 max-w-2xl text-sm text-muted">
             A buyer uses the ambassador link or types the code at checkout. The order notes record which ambassador it came through.
-            Commission is settled by the workshop from that record — not taken off the customer's ticket.
+            Commission is settled by the workshop from that record — not taken off the customer&apos;s ticket.
           </p>
         </section>
 
         <div className="mt-10 flex flex-wrap gap-3">
           <Link to="/contact" className="es-btn">
             Nominate an ambassador
+          </Link>
+          <Link to="/app/ambassador" className="es-btn es-btn-paper">
+            Ambassador login
           </Link>
           <Link to="/training/driver" className="es-btn es-btn-paper">
             Driver training
