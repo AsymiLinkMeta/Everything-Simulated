@@ -2,6 +2,7 @@
 @import "./es.css";
 @import "./es-stage.css";
 @import "./es-ambassadors.css";
+@import "./es-pages.css";
 
 @tailwind base;
 @tailwind components;
