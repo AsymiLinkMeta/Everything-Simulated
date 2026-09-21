@@ -135,7 +135,8 @@ export default function App() {
       <Route path="/training" element={<Page C={Training} />} />
       <Route path="/training/driver" element={<Page C={DriverTraining} />} />
       <Route path="/training/industrial" element={<Page C={IndustrialTraining} />} />
-      <Route path="/drivers" element={<Page C={Drivers} />} />
+      <Route path="/ambassadors" element={<Page C={Drivers} />} />
+      <Route path="/drivers" element={<Navigate to="/ambassadors" replace />} />
       <Route path="/partners" element={<Page C={Partners} />} />
       <Route path="/builds" element={<Navigate to="/prebuilds" replace />} />
       <Route path="/builds/:slug" element={<BuildsToPrebuilds />} />
