@@ -32,6 +32,24 @@ export type AmbassadorRecord = Ambassador & {
   guardianApproved: boolean;
 };
 
+export type AmbassadorDraft = {
+  name: string;
+  photo?: string;
+  bio: string;
+  motorsport: string;
+  series: string;
+  className: string;
+  teamStatus: string;
+  base: string;
+  ageBand?: AgeBand | "";
+  crate?: string;
+  instagram?: string;
+  tiktok?: string;
+  youtube?: string;
+  facebook?: string;
+  under18?: boolean;
+};
+
 export function ambassadorLink(code: string) {
   return `/ambassadors?ref=${encodeURIComponent(code.toUpperCase())}`;
 }
@@ -40,6 +58,11 @@ export function lookupAmbassadorCode(raw: string, list: Ambassador[] = AMBASSADO
   const code = raw.trim().toUpperCase();
   if (!code) return null;
   return list.find((a) => a.published && a.code === code) ?? null;
+}
+
+export function notesHaveAmbassadorCode(notes: string | null | undefined, code: string) {
+  const needle = `AMBASSADOR CODE: ${code.trim().toUpperCase()}`;
+  return (notes || "").toUpperCase().includes(needle);
 }
 
 export const AGE_BANDS: AgeBand[] = ["U12", "12-15", "16-17", "18+"];
