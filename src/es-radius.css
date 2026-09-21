@@ -1,0 +1,80 @@
+/* Site-wide corner: 15px on every bordered module. Full-bleed hero/chapters stay square. */
+
+:root {
+  --es-radius: 15px;
+  --es-radius-sm: 15px;
+  --es-radius-md: 15px;
+  --es-radius-lg: 15px;
+}
+
+.es-card,
+.es-tile,
+.es-pack-tile,
+.es-pack-tile-frame,
+.es-media-split,
+.es-cta-strip,
+.es-spec-table,
+.es-ambassador-card,
+.es-ambassador-photo,
+.es-ambassador-rig-head img,
+.es-offer-grid > article,
+.es-profile-fields,
+.es-profile-fields li,
+.es-expedition,
+.es-expedition-tile,
+.es-menu-panel,
+.es-nav-drop-panel,
+.es-cookie-bar,
+.es-city-card,
+.es-logo,
+.es-btn,
+.es-social-link,
+.es-header-phone,
+.es-header-signin,
+.es-menu-toggle,
+.es-nav-drop-panel a {
+  border-radius: 15px;
+}
+
+.es-card,
+.es-tile,
+.es-pack-tile-frame,
+.es-media-split,
+.es-ambassador-card,
+.es-ambassador-photo,
+.es-offer-grid > article,
+.es-profile-fields li,
+.es-expedition-tile,
+.es-menu-panel,
+.es-nav-drop-panel {
+  overflow: hidden;
+}
+
+.es-tile-grid,
+.es-offer-grid,
+.es-ambassador-grid,
+.es-expedition,
+.es-profile-fields {
+  gap: 0.85rem;
+  background: transparent;
+  border: 0;
+}
+
+.es-tile,
+.es-offer-grid > article,
+.es-ambassador-card,
+.es-expedition-tile,
+.es-profile-fields li {
+  border: 1px solid var(--es-line);
+}
+
+.es-offer-grid > article {
+  border-radius: 15px;
+}
+
+.es-page input,
+.es-page textarea,
+.es-page select,
+.es-page [class*="rounded"] {
+  border-radius: 15px;
+}
