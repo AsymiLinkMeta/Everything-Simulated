@@ -2,10 +2,15 @@ import { supabase } from "@/lib/db";
 import { getProfile } from "./server";
 import {
   AMBASSADORS,
+  notesHaveAmbassadorCode,
   type AgeBand,
   type Ambassador,
+  type AmbassadorDraft,
   type AmbassadorRecord,
 } from "./ambassadors";
+import type { ShopOrder } from "./crm-oms";
+
+export type { AmbassadorDraft };
 
 function slugify(value: string) {
   return value
@@ -61,11 +66,7 @@ function toPublic(row: AmbassadorRecord): Ambassador {
 }
 
 export async function fetchPublishedAmbassadors(): Promise<Ambassador[]> {
-  const { data, error } = await supabase
-    .from("ambassadors")
-    .select("*")
-    .eq("published", true)
-    .order("name");
+  const { data, error } = await supabase.from("ambassadors").select("*").eq("published", true).order("name");
   if (error || !data?.length) {
     return AMBASSADORS.filter((a) => a.published);
   }
@@ -75,7 +76,7 @@ export async function fetchPublishedAmbassadors(): Promise<Ambassador[]> {
 export async function lookupLiveAmbassadorCode(raw: string): Promise<Ambassador | null> {
   const code = raw.trim().toUpperCase();
   if (!code) return null;
-  const { data } = await supabase.from("ambassadors").select("*").eq("code", code).maybeSingle();
+  const { data } = await supabase.from("ambassadors").select("*").ilike("code", code).maybeSingle();
   if (data) {
     const rec = rowToRecord(data as Record<string, unknown>);
     return rec.published ? toPublic(rec) : null;
@@ -90,24 +91,6 @@ export async function fetchMyAmbassador(): Promise<AmbassadorRecord | null> {
   if (error || !data) return null;
   return rowToRecord(data as Record<string, unknown>);
 }
-
-export type AmbassadorDraft = {
-  name: string;
-  photo?: string;
-  bio: string;
-  motorsport: string;
-  series: string;
-  className: string;
-  teamStatus: string;
-  base: string;
-  ageBand?: AgeBand | "";
-  crate?: string;
-  instagram?: string;
-  tiktok?: string;
-  youtube?: string;
-  facebook?: string;
-  under18?: boolean;
-};
 
 export async function saveMyAmbassador(draft: AmbassadorDraft) {
   const { data: session } = await supabase.auth.getUser();
@@ -144,7 +127,8 @@ export async function saveMyAmbassador(draft: AmbassadorDraft) {
 }
 
 export async function staffListAmbassadors(): Promise<AmbassadorRecord[]> {
-  await getProfile();
+  const profile = await getProfile();
+  if (!profile.isStaff) throw new Error("Staff only");
   const { data, error } = await supabase.from("ambassadors").select("*").order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
   return (data ?? []).map((row) => rowToRecord(row as Record<string, unknown>));
@@ -173,6 +157,7 @@ export async function staffCreateAmbassador(input: {
     .select("*")
     .maybeSingle();
   if (error) throw new Error(error.message);
+  if (input.userId) await promoteAmbassadorRole(input.userId);
   return rowToRecord(data as Record<string, unknown>);
 }
 
@@ -199,7 +184,12 @@ export async function staffUpdateAmbassador(
   if (patch.facebook !== undefined) update.facebook = patch.facebook?.trim() || null;
   if (patch.under18 !== undefined) update.under_18 = patch.under18;
   if (patch.guardianApproved !== undefined) update.guardian_approved = patch.guardianApproved;
-  if (patch.userId !== undefined) update.user_id = patch.userId;
+  let previousUserId: string | null | undefined;
+  if (patch.userId !== undefined) {
+    const { data: currentSeat } = await supabase.from("ambassadors").select("user_id").eq("id", id).maybeSingle();
+    previousUserId = (currentSeat?.user_id as string) || null;
+    update.user_id = patch.userId;
+  }
   if (patch.code !== undefined) update.code = patch.code.trim().toUpperCase();
   if (patch.published !== undefined) {
     if (patch.published) {
@@ -213,5 +203,38 @@ export async function staffUpdateAmbassador(
   }
   const { error } = await supabase.from("ambassadors").update(update).eq("id", id);
   if (error) throw new Error(error.message);
+  if (previousUserId && previousUserId !== patch.userId) {
+    await supabase.from("profiles").update({ role: "customer" }).eq("user_id", previousUserId).eq("role", "ambassador");
+  }
+  if (patch.userId) await promoteAmbassadorRole(patch.userId);
   return { ok: true };
+}
+
+export async function staffAttachAmbassadorLogin(id: string, userId: string | null) {
+  return staffUpdateAmbassador(id, { userId });
+}
+
+async function promoteAmbassadorRole(userId: string) {
+  const { data } = await supabase.from("profiles").select("role").eq("user_id", userId).maybeSingle();
+  if (!data) return;
+  if (data.role !== "customer" && data.role !== "ambassador") return;
+  await supabase.from("profiles").update({ role: "ambassador" }).eq("user_id", userId).in("role", ["customer", "ambassador"]);
+}
+
+export function attributedOrdersForCode(orders: ShopOrder[], code: string) {
+  return orders.filter((o) => notesHaveAmbassadorCode(o.notes, code) && o.status !== "cancelled");
+}
+
+export function commissionBoard(orders: ShopOrder[], rows: AmbassadorRecord[]) {
+  return rows.map((row) => {
+    const hits = attributedOrdersForCode(orders, row.code);
+    const attributedExGst = hits.reduce((n, o) => n + (o.total_ex_gst || 0), 0);
+    return {
+      code: row.code,
+      name: row.name,
+      count: hits.length,
+      attributedExGst,
+      orderIds: hits.map((o) => o.id),
+    };
+  });
 }
