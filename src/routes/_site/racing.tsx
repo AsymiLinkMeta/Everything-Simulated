@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { JsonLd, Money } from "@/components/es/bits";
-import { CtaStrip, ImageCards, PageHero } from "@/components/es/section-page";
+import { ImageCards, MediaSplit, PageHero, PhoneStrip } from "@/components/es/section-page";
 import { pageHead, breadcrumbLd, itemListLd } from "@/lib/es/seo";
 import { RACING_TOOLS } from "@/lib/es/platforms";
 import { fetchFeaturedPrebuilds, livePackages } from "@/lib/es/prebuilds";
@@ -63,7 +63,12 @@ function RacingHub() {
         lead="Motion, haptic, triples plus an aux screen. Prebuilds, parts and the compatibility engine all sit here. Sit the chassis on the Gold Coast before it crates."
         image="/rigs/motion.jpg"
         tone="race"
-      />
+      >
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <Link to="/prebuilds" className="es-btn">Sit a crate</Link>
+          <Link to="/shop" className="es-btn es-btn-paper">Parts shop</Link>
+        </div>
+      </PageHero>
 
       <div className="es-body">
         <p className="es-kicker es-kicker-telemetry">Grid</p>
@@ -85,8 +90,21 @@ function RacingHub() {
             </Link>
           ))}
         </div>
+      </div>
 
-        <p className="es-kicker es-kicker-telemetry mt-16">Garage</p>
+      <section className="es-body pt-0">
+        <MediaSplit
+          image="/rigs/haptic.jpg"
+          kicker="Featured"
+          title="Haptic Racing Simulator"
+          lead="The crate we ship most. Exodus XR1, Alpha 15Nm, hydraulic P1000, four screens."
+        >
+          <Link to="/prebuilds/haptic" className="es-btn">Order this crate</Link>
+        </MediaSplit>
+      </section>
+
+      <div className="es-body pt-0">
+        <p className="es-kicker es-kicker-telemetry">Garage</p>
         <h2 className="es-display mt-2 text-5xl">Tools</h2>
         <p className="mt-3 max-w-2xl text-sm text-muted">
           The checker is law. Chat only explains it. Try-before-you-buy is a phone call to the workshop.
@@ -102,10 +120,7 @@ function RacingHub() {
             }))}
           />
         </div>
-        <CtaStrip title="Sit it on the Coast." lead="Pedal spacing and wheel height are set on the chassis you are buying.">
-          <Link to="/studio" className="es-btn">Book a demo</Link>
-          <Link to="/prebuilds" className="es-btn es-btn-paper">All prebuilds</Link>
-        </CtaStrip>
+        <PhoneStrip title="Sit it on the Coast." lead="Pedal spacing and wheel height are set on the chassis you are buying." />
       </div>
     </div>
   );
