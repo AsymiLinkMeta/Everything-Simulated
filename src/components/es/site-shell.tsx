@@ -18,6 +18,7 @@ const NAV = [
   { to: "/training", label: "Training" },
   { to: "/ambassadors", label: "Ambassadors" },
   { to: "/studio", label: "Studio" },
+  { to: "/events", label: "Events" },
 ] as const;
 
 function simActive(pathname: string) {
@@ -169,6 +170,12 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
               </li>
               <li>
                 <Link to="/ambassadors">Ambassadors</Link>
+              </li>
+              <li>
+                <Link to="/studio">Studio</Link>
+              </li>
+              <li>
+                <Link to="/events">Events & catering</Link>
               </li>
               <li>
                 <Link to="/partners">Partners</Link>
