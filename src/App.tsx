@@ -9,6 +9,7 @@ import { Route as ShopRoute } from "@/routes/_site/shop/index";
 import { Route as ShopSkuRoute } from "@/routes/_site/shop/$sku";
 import { Route as CompatRoute } from "@/routes/_site/compatibility";
 import { Route as StudioRoute } from "@/routes/_site/studio";
+import { Route as EventsRoute } from "@/routes/_site/events";
 import { Route as GuidesRoute } from "@/routes/_site/guides/index";
 import { Route as GuideSlugRoute } from "@/routes/_site/guides/$slug";
 import { Route as AuRoute } from "@/routes/_site/au/index";
@@ -74,6 +75,7 @@ export default function App() {
   const ShopSku = ShopSkuRoute.component!;
   const Compat = CompatRoute.component!;
   const Studio = StudioRoute.component!;
+  const Events = EventsRoute.component!;
   const Guides = GuidesRoute.component!;
   const GuideSlug = GuideSlugRoute.component!;
   const Au = AuRoute.component!;
@@ -144,6 +146,8 @@ export default function App() {
       <Route path="/shop/:sku" element={<Page C={ShopSku} />} />
       <Route path="/compatibility" element={<Page C={Compat} />} />
       <Route path="/studio" element={<Page C={Studio} />} />
+      <Route path="/events" element={<Page C={Events} />} />
+      <Route path="/catering" element={<Navigate to="/events" replace />} />
       <Route path="/guides" element={<Page C={Guides} />} />
       <Route path="/guides/:slug" element={<Page C={GuideSlug} />} />
       <Route path="/au" element={<Page C={Au} />} />
