@@ -6,7 +6,7 @@ import { CartPanel } from "@/components/es/cart-panel";
 import { fetchProducts } from "@/lib/es/product-cache";
 import { itemListLd, pageHead } from "@/lib/es/seo";
 import type { ProductCategory } from "@/lib/es/types";
-import { PageHero } from "@/components/es/section-page";
+import { PageHero, PhoneStrip } from "@/components/es/section-page";
 
 export const Route = createFileRoute("/_site/shop/")({
   head: () =>
@@ -78,6 +78,7 @@ function Shop() {
             <CartPanel compact />
           </div>
         </div>
+        <PhoneStrip title="Not sure on a SKU?" lead="The checker will block a bad crate before a deposit." />
       </div>
     </div>
   );

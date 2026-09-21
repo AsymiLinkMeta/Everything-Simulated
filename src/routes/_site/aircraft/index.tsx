@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { JsonLd } from "@/components/es/bits";
-import { CtaStrip, ImageCards, PageHero, SectionLinks } from "@/components/es/section-page";
+import { ImageCards, PageHero, PhoneStrip, SectionLinks } from "@/components/es/section-page";
 import { AIRCRAFT_PAGES } from "@/lib/es/platforms";
 import { breadcrumbLd, pageHead } from "@/lib/es/seo";
 
@@ -23,7 +23,12 @@ function AircraftHub() {
         title="Cockpits from the same floor."
         lead="Racing is the live catalogue. Aircraft is workshop capacity — rotary first — then assembled on the Gold Coast."
         image="/rigs/showroom.jpg"
-      />
+      >
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <Link to="/contact" className="es-btn">Enquire</Link>
+          <Link to="/studio" className="es-btn es-btn-paper">Studio consult</Link>
+        </div>
+      </PageHero>
       <div className="es-body">
         <SectionLinks links={AIRCRAFT_PAGES} current="/aircraft" />
         <div className="mt-10">
@@ -35,9 +40,7 @@ function AircraftHub() {
             ]}
           />
         </div>
-        <CtaStrip title="Capacity is consult-first." lead="The racing checker does not apply here.">
-          <Link to="/contact" className="es-btn">Talk to the workshop</Link>
-        </CtaStrip>
+        <PhoneStrip title="Capacity is consult-first." lead="The racing checker does not apply here." />
       </div>
     </div>
   );
