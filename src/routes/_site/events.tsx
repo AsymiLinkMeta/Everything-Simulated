@@ -1,7 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Button } from "@/components/ui/button";
 import { JsonLd } from "@/components/es/bits";
-import { PageHero } from "@/components/es/section-page";
+import { CtaStrip, PageHero } from "@/components/es/section-page";
 import { BRAND } from "@/lib/es/catalog";
 import { VENUE, VENUE_FLOOR, VENUE_OFFERS } from "@/lib/es/events";
 import { breadcrumbLd, pageHead } from "@/lib/es/seo";
@@ -34,59 +33,58 @@ function EventsPage() {
         tone="race"
       >
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          <Button asChild>
-            <Link to="/contact">Enquire about a date</Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <a href={`tel:${BRAND.phone.replace(/\s/g, "")}`}>Call {BRAND.contactName}</a>
-          </Button>
+          <Link to="/contact" className="es-btn">
+            Enquire about a date
+          </Link>
+          <a href={`tel:${BRAND.phone.replace(/\s/g, "")}`} className="es-btn es-btn-paper">
+            Call {BRAND.contactName}
+          </a>
         </div>
       </PageHero>
 
       <div className="es-body">
         <p className="es-kicker">What we host</p>
-        <h2 className="es-display mt-2 text-4xl">Company days and driver groups.</h2>
-        <p className="mt-4 max-w-2xl text-sm text-muted">
+        <h2 className="es-display mt-2 text-5xl">Company days and driver groups.</h2>
+        <p className="mt-4 max-w-2xl text-base leading-7 text-muted">
           Handled at the warehouse once the lease is live. Until then this is capacity language —
           we take the brief, hold the date if we can, and do not publish a calendar or a street.
         </p>
-        <div className="mt-8 grid gap-3 md:grid-cols-2">
+        <div className="es-offer-grid is-2 mt-10">
           {VENUE_OFFERS.map((offer) => (
-            <article key={offer.slug} className="es-card p-5">
+            <article key={offer.slug}>
               <p className="es-kicker">{offer.kicker}</p>
-              <h3 className="mt-2 text-xl">{offer.title}</h3>
-              <p className="mt-2 text-sm text-muted">{offer.blurb}</p>
+              <h3 className="es-display mt-3 text-3xl">{offer.title}</h3>
+              <p className="mt-3 text-sm leading-6 text-muted">{offer.blurb}</p>
             </article>
           ))}
         </div>
       </div>
 
-      <section className="es-body">
-        <p className="es-kicker">Capacity · planned venue</p>
-        <h2 className="es-display mt-2 text-4xl">Same site as the studio.</h2>
-        <p className="mt-4 max-w-2xl text-sm text-muted">
-          A lease of {VENUE.size}: warehousing on the floor, the build studio out the back,
-          events and group training on that floor, catering when a booking needs it. {VENUE.note}
-        </p>
-        <div className="mt-6 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          {VENUE_FLOOR.map((bay) => (
-            <article key={bay.title} className="es-card p-5">
-              <p className="es-kicker">{bay.kicker}</p>
-              <p className="mt-2 font-medium">{bay.title}</p>
-              <p className="mt-1 text-sm text-muted">{bay.blurb}</p>
-            </article>
-          ))}
-        </div>
-        <div className="mt-8 flex flex-wrap gap-3">
-          <Button asChild>
-            <Link to="/contact">Enquire</Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link to="/studio">Current studio demo</Link>
-          </Button>
-          <Button variant="outline" asChild>
-            <Link to="/training">Training programs</Link>
-          </Button>
+      <section className="es-page-band">
+        <div className="es-body">
+          <p className="es-kicker">Capacity · planned venue</p>
+          <h2 className="es-display mt-2 text-5xl">Same site as the studio.</h2>
+          <p className="mt-4 max-w-2xl text-base leading-7 text-muted">
+            A lease of {VENUE.size}: warehousing on the floor, the build studio out the back,
+            events and group training on that floor, catering when a booking needs it. {VENUE.note}
+          </p>
+          <div className="es-offer-grid is-4 mt-10">
+            {VENUE_FLOOR.map((bay) => (
+              <article key={bay.title}>
+                <p className="es-kicker">{bay.kicker}</p>
+                <p className="es-display mt-3 text-3xl">{bay.title}</p>
+                <p className="mt-2 text-sm leading-6 text-muted">{bay.blurb}</p>
+              </article>
+            ))}
+          </div>
+          <CtaStrip title="Hold a date." lead="No public hire list. Call Taylah or send the brief." >
+            <Link to="/contact" className="es-btn">
+              Enquire
+            </Link>
+            <Link to="/studio" className="es-btn es-btn-paper">
+              Current studio demo
+            </Link>
+          </CtaStrip>
         </div>
       </section>
     </div>

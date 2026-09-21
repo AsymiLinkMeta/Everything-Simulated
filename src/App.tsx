@@ -54,6 +54,7 @@ import { Route as TrainingRoute } from "@/routes/_site/training/index";
 import { Route as DriverTrainingRoute } from "@/routes/_site/training/driver";
 import { Route as IndustrialTrainingRoute } from "@/routes/_site/training/industrial";
 import { Route as DriversRoute } from "@/routes/_site/drivers";
+import { Route as AmbassadorProfileRoute } from "@/routes/_site/ambassador-profile";
 import { Route as PartnersRoute } from "@/routes/_site/partners";
 
 function Page({ C }: { C: React.ComponentType }) {
@@ -120,6 +121,7 @@ export default function App() {
   const DriverTraining = DriverTrainingRoute.component!;
   const IndustrialTraining = IndustrialTrainingRoute.component!;
   const Drivers = DriversRoute.component!;
+  const AmbassadorProfile = AmbassadorProfileRoute.component!;
   const Partners = PartnersRoute.component!;
 
   return (
@@ -138,6 +140,7 @@ export default function App() {
       <Route path="/training/driver" element={<Page C={DriverTraining} />} />
       <Route path="/training/industrial" element={<Page C={IndustrialTraining} />} />
       <Route path="/ambassadors" element={<Page C={Drivers} />} />
+      <Route path="/ambassadors/:slug" element={<Page C={AmbassadorProfile} />} />
       <Route path="/drivers" element={<Navigate to="/ambassadors" replace />} />
       <Route path="/partners" element={<Page C={Partners} />} />
       <Route path="/builds" element={<Navigate to="/prebuilds" replace />} />
