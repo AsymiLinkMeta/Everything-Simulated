@@ -1,0 +1,164 @@
+/* Visible site UI: merch cards + shop chrome. Home chapters stay full-bleed. */
+
+.es-header {
+  background: rgba(5, 5, 7, 0.94);
+}
+.es-header-inner {
+  max-width: 76rem;
+  gap: 0.55rem;
+}
+.es-cart-pill {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-height: 44px;
+  padding: 0 0.9rem;
+  color: var(--es-paper);
+  background: var(--es-ink);
+  border: 1px solid var(--es-line);
+  border-radius: 15px;
+  text-decoration: none;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+.es-cart-pill:hover {
+  border-color: var(--es-red);
+  box-shadow: var(--es-red-glow-shadow);
+}
+.es-cart-count {
+  position: absolute;
+  right: -0.35rem;
+  top: -0.35rem;
+  min-width: 1.1rem;
+  height: 1.1rem;
+  padding: 0 0.28rem;
+  border-radius: 999px;
+  background: var(--es-red);
+  color: #fff;
+  font-size: 0.62rem;
+  line-height: 1.1rem;
+  text-align: center;
+}
+
+.es-card,
+.es-tile,
+.es-ambassador-card,
+.es-pack-tile {
+  transition: border-color 200ms ease, transform 200ms ease, box-shadow 200ms ease;
+}
+.es-card:hover,
+.es-tile:hover,
+.es-ambassador-card:hover,
+.es-pack-tile:hover {
+  border-color: var(--es-red);
+  transform: translateY(-3px);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.35), var(--es-red-glow-shadow);
+}
+
+.es-pack-tile {
+  display: flex;
+  flex-direction: column;
+  background: var(--es-panel);
+  border: 1px solid var(--es-line);
+  border-radius: 15px;
+  overflow: hidden;
+  color: inherit;
+  text-decoration: none;
+}
+.es-pack-tile-frame {
+  aspect-ratio: 16 / 10;
+  border-radius: 0;
+}
+.es-pack-tile-meta {
+  padding: 1.05rem 1.15rem 1.2rem;
+}
+.es-pack-tile-meta h3 {
+  font-size: clamp(1.55rem, 2.2vw, 2rem);
+}
+.es-pack-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.9rem;
+}
+
+.es-merch {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  background: var(--es-panel);
+  border: 1px solid var(--es-line);
+  border-radius: 15px;
+  overflow: hidden;
+  color: inherit;
+  text-decoration: none;
+}
+.es-merch-frame {
+  position: relative;
+  aspect-ratio: 16 / 10;
+  background: #000;
+  overflow: hidden;
+}
+.es-merch-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 480ms ease;
+}
+.es-merch:hover img {
+  transform: scale(1.05);
+}
+.es-merch-body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 1rem 1.1rem 1.15rem;
+  flex: 1;
+}
+.es-merch-body h3 {
+  margin: 0;
+  font-family: var(--es-font-display);
+  font-size: 1.55rem;
+  line-height: 0.95;
+}
+.es-merch-price {
+  margin-top: auto;
+  padding-top: 0.65rem;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+.es-merch-foot {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-top: 0.55rem;
+}
+.es-merch-foot span {
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--es-subtle);
+}
+
+.es-tile-frame {
+  border-radius: 15px 15px 0 0;
+}
+.es-media-split {
+  border-radius: 15px;
+  overflow: hidden;
+}
+.es-cta-strip {
+  border-radius: 15px;
+}
+
+.es-body {
+  max-width: 76rem;
+}
+.es-header-inner,
+.es-footer-grid {
+  max-width: 76rem;
+}
