@@ -1,13 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo, useState } from "react";
 import { JsonLd } from "@/components/es/bits";
 import { PageHero } from "@/components/es/section-page";
-import {
-  AMBASSADOR_PROFILE_FIELDS,
-  AMBASSADOR_SERIES,
-  AMBASSADORS,
-  type AmbassadorSeries,
-} from "@/lib/es/ambassadors";
+import { AMBASSADOR_PROFILE_FIELDS, AMBASSADORS, ambassadorLink } from "@/lib/es/ambassadors";
 import { breadcrumbLd, pageHead } from "@/lib/es/seo";
 
 export const Route = createFileRoute("/_site/drivers")({
@@ -15,21 +9,14 @@ export const Route = createFileRoute("/_site/drivers")({
     pageHead({
       title: "Ambassadors | Everything Simulated",
       description:
-        "Everything Simulated ambassadors — kart through Carrera Cup. Public racing cards with series, age band and social links. Named only when the agreement is current.",
+        "Everything Simulated ambassadors. Each card is photo, name, bio, motorsport, series and class — written by the driver. Referral codes attribute checkout to the ambassador.",
       path: "/ambassadors",
     }),
   component: AmbassadorsPage,
 });
 
 export function AmbassadorsPage() {
-  const [series, setSeries] = useState<AmbassadorSeries | "all">("all");
-  const published = useMemo(
-    () =>
-      AMBASSADORS.filter((a) => a.published).filter((a) =>
-        series === "all" ? true : a.series.includes(series),
-      ),
-    [series],
-  );
+  const published = AMBASSADORS.filter((a) => a.published);
 
   return (
     <div>
@@ -42,44 +29,29 @@ export function AmbassadorsPage() {
       <PageHero
         kicker="People · Ambassadors"
         title="Drivers the workshop stands with."
-        lead="Kart through Carrera Cup. Public cards only — name, series, this season, an age band if they want it, and links out to their own socials. We do not invent a grid."
+        lead="Photo, name, bio, the motorsport they race, the series and class they are in. They type it. A code on the card attributes a checkout to them — it is not a discount."
         image="/rigs/haptic.jpg"
         tone="race"
       />
 
       <div className="es-body">
-        <div className="es-series-filter" role="tablist" aria-label="Series">
-          <button
-            type="button"
-            className={`es-series-chip${series === "all" ? " is-on" : ""}`}
-            onClick={() => setSeries("all")}
-          >
-            All
-          </button>
-          {AMBASSADOR_SERIES.map((s) => (
-            <button
-              key={s.id}
-              type="button"
-              className={`es-series-chip${series === s.id ? " is-on" : ""}`}
-              onClick={() => setSeries(s.id)}
-            >
-              {s.label}
-            </button>
-          ))}
-        </div>
-
         <ul className="es-ambassador-grid">
           {published.map((a) => (
             <li key={a.slug} className="es-ambassador-card">
-              <p className="es-kicker">{a.program ?? a.series[0]}</p>
+              {a.photo ? (
+                <div className="es-ambassador-photo">
+                  <img src={a.photo} alt="" />
+                </div>
+              ) : (
+                <p className="es-kicker">Photo pending</p>
+              )}
               <h2>{a.name}</h2>
               <p className="es-ambassador-meta">
-                {a.series.join(" · ")}
-                {a.ageBand ? ` · ${a.ageBand}` : ""}
-                {a.base ? ` · ${a.base}` : ""}
+                {[a.motorsport, a.series, a.className, a.teamStatus, a.ageBand, a.base]
+                  .filter(Boolean)
+                  .join(" · ")}
               </p>
-              {a.season ? <p className="es-ambassador-season">{a.season}</p> : null}
-              <p>{a.bio}</p>
+              <p className="es-ambassador-bio">{a.bio}</p>
               {a.social && Object.values(a.social).some(Boolean) ? (
                 <p className="es-ambassador-socials">
                   {a.social.instagram ? (
@@ -104,46 +76,22 @@ export function AmbassadorsPage() {
                   ) : null}
                 </p>
               ) : (
-                <p className="es-ambassador-socials is-empty">Socials land when the driver sends them.</p>
+                <p className="es-ambassador-socials is-empty">Socials land when they send the links.</p>
               )}
+              <p className="es-ambassador-code">
+                Code <strong>{a.code}</strong>
+                <Link to={ambassadorLink(a.code)}>Use this link at checkout</Link>
+              </p>
             </li>
           ))}
-          {published.length === 0 ? (
-            <li className="es-ambassador-card is-open">
-              <p className="es-kicker">Open</p>
-              <h2>No published card in this series yet.</h2>
-              <p>Named ambassadors go up after the agreement is current. Filter back to All, or nominate a driver.</p>
-            </li>
-          ) : null}
         </ul>
-
-        <section className="es-ambassador-pathway">
-          <p className="es-kicker">Pathway</p>
-          <h2 className="es-display mt-2 text-4xl">The grid we will fill.</h2>
-          <p className="mt-3 max-w-2xl text-sm text-muted">
-            From the sprint weekends through national tin-top. Seats stay open until a name is real.
-          </p>
-          <ul className="es-expedition mt-8" data-tone="race">
-            {AMBASSADOR_SERIES.map((s, i) => (
-              <li key={s.id}>
-                <div className="es-expedition-tile">
-                  <span className="es-expedition-idx">{String(i + 1).padStart(2, "0")}</span>
-                  <div>
-                    <p className="es-expedition-label">{s.label}</p>
-                    <p>{s.note}</p>
-                  </div>
-                </div>
-              </li>
-            ))}
-          </ul>
-        </section>
 
         <section className="es-ambassador-form-preview">
           <p className="es-kicker">Their card</p>
-          <h2 className="es-display mt-2 text-4xl">What they can put on a profile.</h2>
+          <h2 className="es-display mt-2 text-4xl">They fill it. We do not preset the grid.</h2>
           <p className="mt-3 max-w-2xl text-sm text-muted">
-            A racing card, not a Facebook wall. Age is a band they choose to show. Date of birth, school, phone and street stay off the site.
-            Under 18: guardian on the login, staff publish.
+            Motorsport, series and class are blank fields. Carrera Cup, a state sprint cup, a kart class, privateer or works — they write the words.
+            The workshop issues the code. Staff still publish the card.
           </p>
           <ul className="es-profile-fields">
             {AMBASSADOR_PROFILE_FIELDS.map((f) => (
@@ -153,6 +101,15 @@ export function AmbassadorsPage() {
               </li>
             ))}
           </ul>
+        </section>
+
+        <section className="es-ambassador-form-preview">
+          <p className="es-kicker">Referrals</p>
+          <h2 className="es-display mt-2 text-4xl">The code attributes the crate. It does not discount it.</h2>
+          <p className="mt-3 max-w-2xl text-sm text-muted">
+            A buyer uses the ambassador link or types the code at checkout. The order notes record which ambassador it came through.
+            Commission is settled by the workshop from that record — not taken off the customer's ticket.
+          </p>
         </section>
 
         <div className="mt-10 flex flex-wrap gap-3">

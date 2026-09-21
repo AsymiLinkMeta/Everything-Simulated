@@ -60,33 +60,6 @@
   color: var(--es-red);
 }
 
-.es-series-filter {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.5rem;
-  margin-bottom: 1.75rem;
-}
-.es-series-chip {
-  min-height: 40px;
-  padding: 0 0.9rem;
-  border: 1px solid var(--es-line);
-  background: transparent;
-  color: var(--es-muted);
-  font: inherit;
-  font-size: 0.75rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  cursor: pointer;
-}
-.es-series-chip:hover,
-.es-series-chip.is-on {
-  border-color: var(--es-red);
-  color: var(--es-paper);
-}
-.es-series-chip.is-on {
-  background: rgba(225, 6, 0, 0.12);
-}
-
 .es-ambassador-grid {
   display: grid;
   gap: 1px;
@@ -111,8 +84,7 @@
   font-size: clamp(1.8rem, 4vw, 2.6rem);
   line-height: 0.95;
 }
-.es-ambassador-meta,
-.es-ambassador-season {
+.es-ambassador-meta {
   margin: 0.55rem 0 0;
   font-size: 0.8rem;
   letter-spacing: 0.08em;
@@ -124,6 +96,17 @@
   font-size: 0.92rem;
   line-height: 1.55;
   color: var(--es-muted);
+}
+.es-ambassador-photo {
+  aspect-ratio: 4 / 3;
+  margin: 0 0 1rem;
+  overflow: hidden;
+  background: #000;
+}
+.es-ambassador-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 .es-ambassador-socials {
   display: flex;
@@ -143,11 +126,27 @@
   color: var(--es-subtle);
   font-size: 0.8rem;
 }
-.es-ambassador-card.is-open {
-  min-height: 12rem;
+.es-ambassador-code {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.75rem;
+  margin-top: 1.1rem;
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--es-subtle);
+}
+.es-ambassador-code strong {
+  color: var(--es-paper);
+  font-weight: 600;
+}
+.es-ambassador-code a {
+  color: var(--es-paper);
+  text-decoration: none;
+  border-bottom: 1px solid var(--es-red);
 }
 
-.es-ambassador-pathway,
 .es-ambassador-form-preview {
   margin-top: 3.5rem;
 }

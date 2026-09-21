@@ -8,6 +8,7 @@ import { fetchProducts } from "@/lib/es/product-cache";
 import { placeGuestOrder, placeOrder } from "@/lib/es/server";
 import { quoteFreight } from "@/lib/es/freight";
 import { fetchBillingConfig, notifyOrder, startDepositCheckout } from "@/lib/es/billing";
+import { lookupAmbassadorCode } from "@/lib/es/ambassadors";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { aud, gstInclusive } from "@/lib/utils";
 import { pageHead } from "@/lib/es/seo";
@@ -37,8 +38,11 @@ function Checkout() {
   const driverWeightKg = useCart((s) => s.driverWeightKg);
   const postcode = useCart((s) => s.postcode);
   const quoteId = useCart((s) => s.quoteId);
+  const referralCode = useCart((s) => s.referralCode);
+  const setReferralCode = useCart((s) => s.setReferralCode);
   const setPostcode = useCart((s) => s.setPostcode);
   const clear = useCart((s) => s.clear);
+  const referredBy = lookupAmbassadorCode(referralCode);
   const result = useCart((s) => s.result)();
   const freight = quoteFreight({ postcode, lines });
 
@@ -116,12 +120,20 @@ function Checkout() {
     }
     setPlacing(true);
     try {
+      const stamped = [
+        notes.trim(),
+        referralCode
+          ? `Ambassador code: ${referralCode}${referredBy ? ` (${referredBy.name})` : ""}`
+          : "",
+      ]
+        .filter(Boolean)
+        .join("\n");
       let id: string;
       if (user) {
-        const res = await placeOrder({ lines, postcode, driverWeightKg, notes, name: fullName, phone, address, quoteId: quoteId ?? undefined });
+        const res = await placeOrder({ lines, postcode, driverWeightKg, notes: stamped, name: fullName, phone, address, quoteId: quoteId ?? undefined });
         id = res.id;
       } else {
-        const res = await placeGuestOrder({ lines, postcode, driverWeightKg, name: fullName, email: mail, phone, notes, address });
+        const res = await placeGuestOrder({ lines, postcode, driverWeightKg, name: fullName, email: mail, phone, notes: stamped, address });
         id = res.id;
       }
       void notifyOrder({ orderId: id, kind: "placed", email: mail });
@@ -291,6 +303,21 @@ function Checkout() {
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Anything we should know about your build?"
               />
+            </label>
+
+            <label className="block">
+              <span className="text-sm text-muted">Ambassador code</span>
+              <Input
+                value={referralCode}
+                onChange={(e) => setReferralCode(e.target.value)}
+                placeholder="e.g. COSGROVE"
+                autoComplete="off"
+              />
+              <span className="mt-1 block text-xs text-muted">
+                {referredBy
+                  ? `This crate will be attributed to ${referredBy.name}. It does not change the price.`
+                  : "Optional. Attributes the order to an ambassador — not a discount."}
+              </span>
             </label>
           </div>
 
