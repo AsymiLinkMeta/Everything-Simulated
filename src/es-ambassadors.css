@@ -17,6 +17,7 @@
   padding: 0.4rem;
   background: rgba(13, 13, 18, 0.97);
   border: 1px solid var(--es-line);
+  border-radius: 15px;
   box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
 }
 .es-nav-drop:hover .es-nav-drop-panel,
