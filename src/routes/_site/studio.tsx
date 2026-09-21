@@ -10,7 +10,7 @@ export const Route = createFileRoute("/_site/studio")({
     pageHead({
       title: "Gold Coast sim racing showroom | Try before you buy",
       description:
-        "Book a Gold Coast studio session with Taylah. Sit racing crates, or consult on aircraft, drone and training layouts before we assemble.",
+        "Book a Gold Coast studio session. Sit racing crates, or consult on aircraft, drone and training layouts before we assemble.",
       path: "/studio",
     }),
   component: Studio,
@@ -23,7 +23,7 @@ function Studio() {
       <PageHero
         kicker="Showroom · try before you buy"
         title="Sit in the rig before it ships."
-        lead={`The workshop is on the Gold Coast. Book Starter, Haptic or Motion. Ask for ${BRAND.contactName} — we set wheel height, pedal spacing and the coaching screen on the chassis you are buying.`}
+        lead="The workshop is on the Gold Coast. Book Starter, Haptic or Motion. We set wheel height, pedal spacing and the coaching screen on the chassis you are buying."
         image="/rigs/showroom.jpg"
         tone="race"
       >
@@ -32,7 +32,7 @@ function Studio() {
             Book a demo
           </Link>
           <a href={`tel:${BRAND.phone.replace(/\s/g, "")}`} className="es-btn es-btn-paper">
-            Call {BRAND.contactName}
+            Call the workshop
           </a>
         </div>
       </PageHero>
@@ -47,7 +47,7 @@ function Studio() {
         <ol className="es-rail">
           <li className="es-rail-step">
             <strong>01 Book or call</strong>
-            <span>Weekday and Saturday slots. {BRAND.contactName} on {BRAND.phone}.</span>
+            <span>Weekday and Saturday slots. {BRAND.phone}.</span>
           </li>
           <li className="es-rail-step">
             <strong>02 Sit the chassis</strong>

@@ -28,7 +28,7 @@ function EventsPage() {
       <PageHero
         kicker="Events · catering · group training"
         title="The warehouse floor, when a group needs it."
-        lead={`Corporate days, professional and amateur driver groups, and catering on the same Gold Coast site as the build studio. Planned venue of ${VENUE.size} — ${VENUE.status}. Call ${BRAND.contactName} to enquire.`}
+        lead={`Corporate days, professional and amateur driver groups, and catering on the same Gold Coast site as the build studio. Planned venue of ${VENUE.size} — ${VENUE.status}. Call the workshop to enquire.`}
         image="/rigs/showroom.jpg"
         tone="race"
       >
@@ -37,7 +37,7 @@ function EventsPage() {
             Enquire about a date
           </Link>
           <a href={`tel:${BRAND.phone.replace(/\s/g, "")}`} className="es-btn es-btn-paper">
-            Call {BRAND.contactName}
+            Call the workshop
           </a>
         </div>
       </PageHero>
@@ -77,7 +77,7 @@ function EventsPage() {
               </article>
             ))}
           </div>
-          <CtaStrip title="Hold a date." lead="No public hire list. Call Taylah or send the brief." >
+          <CtaStrip title="Hold a date." lead="No public hire list. Call the workshop or send the brief.">
             <Link to="/contact" className="es-btn">
               Enquire
             </Link>
