@@ -10,8 +10,10 @@ type CartState = {
   driverWeightKg: number;
   postcode: string;
   quoteId: string | null;
+  referralCode: string;
   setWeight: (kg: number) => void;
   setPostcode: (v: string) => void;
+  setReferralCode: (v: string) => void;
   loadPackage: (slug: string) => void;
   setQty: (sku: string, qty: number) => void;
   add: (sku: string) => void;
@@ -21,6 +23,10 @@ type CartState = {
   result: () => CheckResult;
 };
 
+function normaliseCode(v: string) {
+  return v.trim().toUpperCase().replace(/[^A-Z0-9-]/g, "").slice(0, 24);
+}
+
 export const useCart = create<CartState>()(
   persist(
     (set, get) => ({
@@ -28,8 +34,10 @@ export const useCart = create<CartState>()(
       driverWeightKg: 80,
       postcode: "4215",
       quoteId: null,
+      referralCode: "",
       setWeight: (driverWeightKg) => set({ driverWeightKg }),
       setPostcode: (postcode) => set({ postcode }),
+      setReferralCode: (v) => set({ referralCode: normaliseCode(v) }),
       loadPackage: (slug) => {
         const pack = livePackages().find((p) => p.slug === slug);
         if (pack) set({ lines: pack.lines.map((l) => ({ ...l })), quoteId: null });
