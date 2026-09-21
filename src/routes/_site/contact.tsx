@@ -13,7 +13,7 @@ export const Route = createFileRoute("/_site/contact")({
   head: () =>
     pageHead({
       title: "Contact Everything Simulated | Gold Coast sim racing workshop",
-      description: `Call ${BRAND.contactName} on ${BRAND.phone} or message the workshop. Gold Coast try-before-you-buy demos and Australia-wide crate freight.`,
+      description: `Call the workshop on ${BRAND.phone} or send a message. Gold Coast try-before-you-buy demos and Australia-wide crate freight.`,
       path: "/contact",
     }),
   component: Contact,
@@ -51,13 +51,13 @@ function Contact() {
       <PageHero
         kicker="Workshop"
         title="Talk to the people who bolt it together."
-        lead={`Call ${BRAND.contactName} for a Gold Coast demo, or send a message — it lands in the staff inbox.`}
+        lead="Call the workshop for a Gold Coast demo, or send a message — it lands in the staff inbox."
         image="/rigs/showroom.jpg"
       />
       <div className="es-body mx-auto max-w-3xl">
         <div className="grid gap-4 sm:grid-cols-2">
           <a href={`tel:${BRAND.phone.replace(/\s/g, "")}`} className="es-card p-5">
-            <p className="es-kicker">Phone · {BRAND.contactName}</p>
+            <p className="es-kicker">Phone</p>
             <p className="mt-2 text-xl">{BRAND.phone}</p>
           </a>
           <div className="es-card p-5">

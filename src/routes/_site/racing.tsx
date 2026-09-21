@@ -89,7 +89,7 @@ function RacingHub() {
         <p className="es-kicker es-kicker-telemetry mt-16">Garage</p>
         <h2 className="es-display mt-2 text-5xl">Tools</h2>
         <p className="mt-3 max-w-2xl text-sm text-muted">
-          The checker is law. Chat only explains it. Try-before-you-buy is a phone call to Taylah.
+          The checker is law. Chat only explains it. Try-before-you-buy is a phone call to the workshop.
         </p>
         <div className="mt-8">
           <ImageCards
