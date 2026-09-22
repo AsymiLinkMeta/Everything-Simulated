@@ -106,7 +106,6 @@ export function PageHero({
   title,
   lead,
   image,
-  tone = "race",
   children,
 }: {
   kicker: string;
@@ -117,22 +116,20 @@ export function PageHero({
   children?: ReactNode;
 }) {
   return (
-    <header className={`es-stage es-stage-${tone}`}>
-      {image ? <img src={image} alt="" className="es-stage-img" /> : null}
-      <div className="es-stage-veil" />
-      <div className="es-stage-copy">
-        <div className="es-lights" aria-hidden="true">
-          <i />
-          <i />
-          <i />
-          <i />
-          <i />
+    <header className="es-title-wrap">
+      <div className="es-title-band">
+        <div className="es-title-band-inner">
+          <p className="es-kicker">{kicker}</p>
+          <h1>{title}</h1>
+          <p className="es-lead">{lead}</p>
+          {children}
         </div>
-        <p className="es-kicker es-kicker-telemetry">{kicker}</p>
-        <h1>{title}</h1>
-        <p className="es-lead">{lead}</p>
-        {children}
       </div>
+      {image ? (
+        <div className="es-hero-sheet">
+          <img src={image} alt="" />
+        </div>
+      ) : null}
     </header>
   );
 }
