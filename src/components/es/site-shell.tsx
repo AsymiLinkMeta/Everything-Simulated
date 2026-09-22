@@ -1,6 +1,6 @@
 import "./es-chrome";
 import { Link, Outlet, useLocation } from "@tanstack/react-router";
-import { ChevronDown, Facebook, Instagram, ShoppingCart } from "lucide-react";
+import { ChevronDown, Facebook, Instagram, Phone, ShoppingCart } from "lucide-react";
 import { useEffect, useState } from "react";
 import { CookieDisclaimer, AuthSlot, Logo, StaffLoginLink } from "./bits";
 import { ReferralCapture } from "./referral-capture";
@@ -48,10 +48,6 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
   return (
     <div className="es-page">
       <ReferralCapture />
-      <div className="es-utility">
-        <span>Gold Coast · Try before you buy</span>
-        <a href={`tel:${BRAND.phone.replace(/\s/g, "")}`}>{BRAND.phone}</a>
-      </div>
       <header className="es-header">
         <div className="es-header-inner">
           <Logo />
@@ -82,41 +78,40 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
               </Link>
             ))}
           </nav>
-          <div className="es-header-tools">
-            <Link to="/studio" className="es-book-pill">
-              Book studio
-            </Link>
-            <Link to="/checkout" className="es-cart-pill" aria-label="Cart">
-              <ShoppingCart className="size-4" />
-              {cartCount > 0 ? <span className="es-cart-count">{cartCount}</span> : null}
-            </Link>
-            <AuthSlot />
-            <div className={`es-menu ${menuOpen ? "is-open" : ""}`}>
-              <button type="button" className="es-menu-toggle" onClick={() => setMenuOpen((v) => !v)} aria-expanded={menuOpen}>
-                Menu
-              </button>
-              {menuOpen && (
-                <div className="es-menu-panel">
-                  <p className="es-menu-label">Simulators</p>
-                  {SIMULATORS.map((s) => (
-                    <Link key={s.to} to={s.to}>
-                      {s.label}
-                    </Link>
-                  ))}
-                  {NAV.map((n) => (
-                    <Link key={n.to} to={n.to}>
-                      {n.label}
-                    </Link>
-                  ))}
-                  <Link to="/partners">Partners</Link>
-                  <Link to="/studio">Book studio</Link>
-                  <AuthSlot />
-                  <Link to="/checkout">Cart ({cartCount})</Link>
-                  <Link to="/contact">Contact</Link>
-                  <a href={`tel:${BRAND.phone.replace(/\s/g, "")}`}>{BRAND.phone}</a>
-                </div>
-              )}
-            </div>
+          <a href={`tel:${BRAND.phone.replace(/\s/g, "")}`} className="es-header-phone">
+            <Phone className="size-4" />
+            {BRAND.phone}
+          </a>
+          <Link to="/checkout" className="es-cart-pill" aria-label="Cart">
+            <ShoppingCart className="size-4" />
+            <span className="hidden sm:inline">Cart</span>
+            {cartCount > 0 ? <span className="es-cart-count">{cartCount}</span> : null}
+          </Link>
+          <AuthSlot />
+          <div className={`es-menu ${menuOpen ? "is-open" : ""}`}>
+            <button type="button" className="es-menu-toggle" onClick={() => setMenuOpen((v) => !v)} aria-expanded={menuOpen}>
+              Menu
+            </button>
+            {menuOpen && (
+              <div className="es-menu-panel">
+                <p className="es-menu-label">Simulators</p>
+                {SIMULATORS.map((s) => (
+                  <Link key={s.to} to={s.to}>
+                    {s.label}
+                  </Link>
+                ))}
+                {NAV.map((n) => (
+                  <Link key={n.to} to={n.to}>
+                    {n.label}
+                  </Link>
+                ))}
+                <Link to="/partners">Partners</Link>
+                <AuthSlot />
+                <Link to="/checkout">Cart ({cartCount})</Link>
+                <Link to="/contact">Contact</Link>
+                <a href={`tel:${BRAND.phone.replace(/\s/g, "")}`}>{BRAND.phone}</a>
+              </div>
+            )}
           </div>
         </div>
       </header>
