@@ -1,6 +1,6 @@
 import "./es-chrome";
 import { Link, Outlet, useLocation } from "@tanstack/react-router";
-import { ChevronDown, Facebook, Instagram, Phone, ShoppingCart } from "lucide-react";
+import { ChevronDown, Facebook, Instagram, ShoppingCart } from "lucide-react";
 import { useEffect, useState } from "react";
 import { CookieDisclaimer, AuthSlot, Logo, StaffLoginLink } from "./bits";
 import { ReferralCapture } from "./referral-capture";
@@ -48,6 +48,10 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
   return (
     <div className="es-page">
       <ReferralCapture />
+      <div className="es-utility">
+        <span>Gold Coast · Try before you buy</span>
+        <a href={`tel:${BRAND.phone.replace(/\s/g, "")}`}>{BRAND.phone}</a>
+      </div>
       <header className="es-header">
         <div className="es-header-inner">
           <Logo />
@@ -73,45 +77,46 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
               </div>
             </div>
             {NAV.map((n) => (
-              <Link key={n.to} to={n.to} className={`es-nav-link${location.pathname === n.to || location.pathname.startsWith(n.to + "/") ? " is-active" : ""}`}>
+              <Link key={n.to} to={n.to} className={`es-nav-link${location.pathname === n.to || location.pathname.startsWith(`${n.to}/`) ? " is-active" : ""}`}>
                 {n.label}
               </Link>
             ))}
           </nav>
-          <a href={`tel:${BRAND.phone.replace(/\s/g, "")}`} className="es-header-phone">
-            <Phone className="size-4" />
-            {BRAND.phone}
-          </a>
-          <Link to="/checkout" className="es-cart-pill" aria-label="Cart">
-            <ShoppingCart className="size-4" />
-            <span className="hidden sm:inline">Cart</span>
-            {cartCount > 0 ? <span className="es-cart-count">{cartCount}</span> : null}
-          </Link>
-          <AuthSlot />
-          <div className={`es-menu ${menuOpen ? "is-open" : ""}`}>
-            <button type="button" className="es-menu-toggle" onClick={() => setMenuOpen((v) => !v)} aria-expanded={menuOpen}>
-              Menu
-            </button>
-            {menuOpen && (
-              <div className="es-menu-panel">
-                <p className="es-menu-label">Simulators</p>
-                {SIMULATORS.map((s) => (
-                  <Link key={s.to} to={s.to}>
-                    {s.label}
-                  </Link>
-                ))}
-                {NAV.map((n) => (
-                  <Link key={n.to} to={n.to}>
-                    {n.label}
-                  </Link>
-                ))}
-                <Link to="/partners">Partners</Link>
-                <AuthSlot />
-                <Link to="/checkout">Cart ({cartCount})</Link>
-                <Link to="/contact">Contact</Link>
-                <a href={`tel:${BRAND.phone.replace(/\s/g, "")}`}>{BRAND.phone}</a>
-              </div>
-            )}
+          <div className="es-header-tools">
+            <Link to="/studio" className="es-book-pill">
+              Book studio
+            </Link>
+            <Link to="/checkout" className="es-cart-pill" aria-label="Cart">
+              <ShoppingCart className="size-4" />
+              {cartCount > 0 ? <span className="es-cart-count">{cartCount}</span> : null}
+            </Link>
+            <AuthSlot />
+            <div className={`es-menu ${menuOpen ? "is-open" : ""}`}>
+              <button type="button" className="es-menu-toggle" onClick={() => setMenuOpen((v) => !v)} aria-expanded={menuOpen}>
+                Menu
+              </button>
+              {menuOpen && (
+                <div className="es-menu-panel">
+                  <p className="es-menu-label">Simulators</p>
+                  {SIMULATORS.map((s) => (
+                    <Link key={s.to} to={s.to}>
+                      {s.label}
+                    </Link>
+                  ))}
+                  {NAV.map((n) => (
+                    <Link key={n.to} to={n.to}>
+                      {n.label}
+                    </Link>
+                  ))}
+                  <Link to="/partners">Partners</Link>
+                  <Link to="/studio">Book studio</Link>
+                  <AuthSlot />
+                  <Link to="/checkout">Cart ({cartCount})</Link>
+                  <Link to="/contact">Contact</Link>
+                  <a href={`tel:${BRAND.phone.replace(/\s/g, "")}`}>{BRAND.phone}</a>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>
@@ -125,22 +130,10 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
             <p>{BRAND.phone}</p>
             <p>{BRAND.email}</p>
             <div className="flex items-center gap-3" style={{ marginTop: 16 }}>
-              <a
-                href="https://www.facebook.com/EverythingSimulated/"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Everything Simulated on Facebook"
-                className="es-social-link"
-              >
+              <a href="https://www.facebook.com/EverythingSimulated/" target="_blank" rel="noopener noreferrer" aria-label="Everything Simulated on Facebook" className="es-social-link">
                 <Facebook className="size-5" />
               </a>
-              <a
-                href="https://www.instagram.com/everything_simulated/"
-                target="_blank"
-                rel="noopener noreferrer"
-                aria-label="Everything Simulated on Instagram"
-                className="es-social-link"
-              >
+              <a href="https://www.instagram.com/everything_simulated/" target="_blank" rel="noopener noreferrer" aria-label="Everything Simulated on Instagram" className="es-social-link">
                 <Instagram className="size-5" />
               </a>
             </div>
@@ -152,30 +145,14 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
           <div className="es-footer-col">
             <p className="es-kicker">Simulators</p>
             <ul>
-              <li>
-                <Link to="/racing">Racing</Link>
-              </li>
-              <li>
-                <Link to="/aircraft">Aircraft</Link>
-              </li>
-              <li>
-                <Link to="/drones">Drones</Link>
-              </li>
-              <li>
-                <Link to="/training">Training</Link>
-              </li>
-              <li>
-                <Link to="/ambassadors">Ambassadors</Link>
-              </li>
-              <li>
-                <Link to="/studio">Studio</Link>
-              </li>
-              <li>
-                <Link to="/events">Events & catering</Link>
-              </li>
-              <li>
-                <Link to="/partners">Partners</Link>
-              </li>
+              <li><Link to="/racing">Racing</Link></li>
+              <li><Link to="/aircraft">Aircraft</Link></li>
+              <li><Link to="/drones">Drones</Link></li>
+              <li><Link to="/training">Training</Link></li>
+              <li><Link to="/ambassadors">Ambassadors</Link></li>
+              <li><Link to="/studio">Studio</Link></li>
+              <li><Link to="/events">Events & catering</Link></li>
+              <li><Link to="/partners">Partners</Link></li>
             </ul>
           </div>
           <div className="es-footer-col">
@@ -183,17 +160,11 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
             <ul>
               {(livePackages().length ? livePackages() : PACKAGES).map((p) => (
                 <li key={p.slug}>
-                  <Link to="/prebuilds/$slug" params={{ slug: p.slug }}>
-                    {p.name}
-                  </Link>
+                  <Link to="/prebuilds/$slug" params={{ slug: p.slug }}>{p.name}</Link>
                 </li>
               ))}
-              <li>
-                <Link to="/shop">Parts shop</Link>
-              </li>
-              <li>
-                <Link to="/compatibility">Compatibility checker</Link>
-              </li>
+              <li><Link to="/shop">Parts shop</Link></li>
+              <li><Link to="/compatibility">Compatibility checker</Link></li>
             </ul>
           </div>
           <div className="es-footer-col">
@@ -201,14 +172,10 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
             <ul>
               {CITIES.slice(0, 6).map((c) => (
                 <li key={c.slug}>
-                  <Link to="/au/$city" params={{ city: c.slug }}>
-                    Sim racing {c.name}
-                  </Link>
+                  <Link to="/au/$city" params={{ city: c.slug }}>Sim racing {c.name}</Link>
                 </li>
               ))}
-              <li>
-                <Link to="/au">All cities</Link>
-              </li>
+              <li><Link to="/au">All cities</Link></li>
             </ul>
           </div>
           <div className="es-footer-col">
@@ -216,9 +183,7 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
             <ul>
               {GUIDES.slice(0, 4).map((g) => (
                 <li key={g.slug}>
-                  <Link to="/guides/$slug" params={{ slug: g.slug }}>
-                    {g.title}
-                  </Link>
+                  <Link to="/guides/$slug" params={{ slug: g.slug }}>{g.title}</Link>
                 </li>
               ))}
               <li>
@@ -238,9 +203,7 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
         </p>
         <p style={{ margin: 0, padding: "0.75rem 1rem 1.25rem", textAlign: "center", fontSize: "0.75rem", color: "var(--es-subtle)" }}>
           Powered by{" "}
-          <a href="https://asymilinkmeta.com" target="_blank" rel="noopener noreferrer" style={{ color: "var(--es-muted)" }}>
-            AsymiLink Meta
-          </a>
+          <a href="https://asymilinkmeta.com" target="_blank" rel="noopener noreferrer" style={{ color: "var(--es-muted)" }}>AsymiLink Meta</a>
         </p>
       </footer>
       <CookieDisclaimer />
