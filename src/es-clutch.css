@@ -1,0 +1,221 @@
+/* Clutch-derived chrome on ES tokens. Every public page. */
+
+.es-utility {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  min-height: 2.15rem;
+  padding: 0 1rem;
+  background: #050507;
+  color: #fff;
+  border-bottom: 1px solid var(--es-line);
+  font-size: 0.72rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.es-utility a {
+  color: #fff;
+  text-decoration: none;
+}
+.es-utility a:hover {
+  color: var(--es-red);
+}
+
+.es-header {
+  background: #0a0a0e;
+  border-bottom: 1px solid var(--es-line);
+  border-radius: 0;
+}
+.es-header::after {
+  display: none;
+}
+.es-header-inner {
+  max-width: 88rem;
+  gap: 0.75rem;
+}
+.es-nav {
+  flex: 1;
+  justify-content: center;
+}
+.es-header-tools {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-left: auto;
+  flex-shrink: 0;
+}
+.es-book-pill {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 0 1.1rem;
+  border-radius: 999px;
+  background: var(--es-red);
+  color: #fff;
+  text-decoration: none;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.es-book-pill:hover {
+  background: var(--es-red-bright);
+}
+@media (min-width: 1100px) {
+  .es-book-pill {
+    display: inline-flex;
+  }
+}
+.es-icon-tool {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 15px;
+  color: var(--es-paper);
+  text-decoration: none;
+  border: 1px solid transparent;
+}
+.es-icon-tool:hover {
+  border-color: var(--es-red);
+}
+.es-cart-pill {
+  width: 40px;
+  height: 40px;
+  min-height: 40px;
+  padding: 0;
+  justify-content: center;
+  background: transparent;
+  border-color: transparent;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.es-cart-pill span.hidden {
+  display: none !important;
+}
+
+.es-page {
+  background: #07070a;
+}
+.es-page > main {
+  padding: 0 0.85rem 2rem;
+}
+
+.es-hero,
+.es-stage,
+.es-chapter {
+  margin: 0.85rem 0 0;
+  border-radius: 15px;
+  overflow: hidden;
+  min-height: min(72dvh, 40rem);
+}
+.es-chapter-row {
+  display: grid;
+  gap: 0.85rem;
+  margin-top: 0.85rem;
+}
+.es-chapter-row .es-chapter {
+  min-height: 52dvh;
+  margin-top: 0;
+}
+@media (min-width: 900px) {
+  .es-chapter-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.es-title-band {
+  margin: 0.85rem 0 0;
+  padding: 2.5rem 1.25rem 2.25rem;
+  border-radius: 15px;
+  background:
+    linear-gradient(90deg, #7a0a08 0%, var(--es-red) 42%, #1a0505 100%);
+  color: #fff;
+}
+.es-title-band-inner {
+  max-width: 76rem;
+  margin: 0 auto;
+}
+.es-title-band .es-kicker {
+  color: #fff;
+}
+.es-title-band h1 {
+  margin: 0.35rem 0 0;
+  font-family: var(--es-font-display);
+  font-size: clamp(3rem, 10vw, 7rem);
+  line-height: 0.86;
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  max-width: 16ch;
+}
+.es-title-band .es-lead {
+  max-width: 38rem;
+  margin-top: 0.9rem;
+  color: rgba(255, 255, 255, 0.84);
+  font-size: 1.02rem;
+  line-height: 1.55;
+}
+.es-hero-sheet {
+  margin-top: 0.85rem;
+  border-radius: 15px;
+  overflow: hidden;
+  min-height: min(42dvh, 22rem);
+  background: #000;
+}
+.es-hero-sheet img {
+  display: block;
+  width: 100%;
+  height: min(42dvh, 22rem);
+  object-fit: cover;
+}
+
+.es-hero-copy {
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+.es-hero-actions .es-btn {
+  border-radius: 999px;
+}
+
+.es-pack-tile-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.35rem 1rem;
+}
+.es-pack-tile-meta h3 {
+  flex: 1 1 12rem;
+}
+.es-pack-tile-meta p:last-child {
+  margin: 0;
+  font-weight: 600;
+}
+
+.es-card .p-4 {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.25rem 0.85rem;
+}
+.es-card .p-4 .es-kicker {
+  flex: 1 0 100%;
+}
+
+.es-footer {
+  margin: 0.85rem;
+  border-radius: 15px;
+  border: 1px solid var(--es-line);
+}
+
+@media (max-width: 767px) {
+  .es-utility {
+    font-size: 0.64rem;
+  }
+  .es-page > main {
+    padding: 0 0.65rem 1.5rem;
+  }
+}
