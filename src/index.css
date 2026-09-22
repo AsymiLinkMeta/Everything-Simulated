@@ -5,7 +5,6 @@
 @import "./es-pages.css";
 @import "./es-radius.css";
 @import "./es-ui.css";
-@import "./es-clutch.css";
 
 @tailwind base;
 @tailwind components;
