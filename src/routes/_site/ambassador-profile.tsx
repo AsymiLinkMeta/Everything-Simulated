@@ -1,10 +1,13 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, applyHeadPayload } from "@tanstack/react-router";
+import { useEffect } from "react";
 import { useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { JsonLd, Money } from "@/components/es/bits";
 import { OrderRigButton } from "@/components/es/order-rig";
 import { CtaStrip, PageHero } from "@/components/es/section-page";
 import {
-  ambassadorBySlug,
+  fetchAmbassadors,
+  getCachedAmbassadorBySlug,
   ambassadorLink,
   crateForAmbassador,
   specsForAmbassador,
@@ -23,7 +26,32 @@ export const Route = createFileRoute("/_site/ambassador-profile")({
 
 export function AmbassadorProfile() {
   const { slug } = useParams();
-  const ambassador = ambassadorBySlug(slug || "");
+  const { data, isPending } = useQuery({ queryKey: ["ambassadors"], queryFn: fetchAmbassadors });
+
+  const ambassador = data
+    ? data.find((a) => a.slug === (slug || ""))
+    : getCachedAmbassadorBySlug(slug || "");
+
+  useEffect(() => {
+    if (ambassador) {
+      applyHeadPayload(
+        pageHead({
+          title: `${ambassador.name} | Ambassador | Everything Simulated`,
+          description: ambassador.bio.slice(0, 160),
+          path: `/ambassadors/${ambassador.slug}`,
+          image: ambassador.photo,
+        }),
+      );
+    }
+  }, [ambassador?.slug]);
+
+  if (isPending) {
+    return (
+      <div className="es-body">
+        <div className="h-96 animate-pulse rounded-2xl bg-raised" />
+      </div>
+    );
+  }
 
   if (!ambassador) {
     return (

@@ -8,7 +8,7 @@ import { fetchProducts } from "@/lib/es/product-cache";
 import { placeGuestOrder, placeOrder } from "@/lib/es/server";
 import { quoteFreight } from "@/lib/es/freight";
 import { fetchBillingConfig, notifyOrder, startDepositCheckout } from "@/lib/es/billing";
-import { lookupAmbassadorCode } from "@/lib/es/ambassadors";
+import { fetchAmbassadors, getCachedAmbassadorByCode } from "@/lib/es/ambassadors";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { aud, gstInclusive } from "@/lib/utils";
 import { pageHead } from "@/lib/es/seo";
@@ -42,7 +42,8 @@ function Checkout() {
   const setReferralCode = useCart((s) => s.setReferralCode);
   const setPostcode = useCart((s) => s.setPostcode);
   const clear = useCart((s) => s.clear);
-  const referredBy = lookupAmbassadorCode(referralCode);
+  useQuery({ queryKey: ["ambassadors"], queryFn: fetchAmbassadors });
+  const referredBy = referralCode ? getCachedAmbassadorByCode(referralCode) : undefined;
   const result = useCart((s) => s.result)();
   const freight = quoteFreight({ postcode, lines });
 
