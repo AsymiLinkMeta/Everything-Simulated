@@ -2,7 +2,7 @@ import "./es-chrome";
 import { useState, useEffect } from "react";
 import { Link, Outlet, applyHeadPayload } from "@tanstack/react-router";
 import { Navigate, useLocation } from "react-router-dom";
-import { Calendar, Gauge, LayoutDashboard, LifeBuoy, Menu, MessageSquare, Package, Wrench } from "lucide-react";
+import { Calendar, Gauge, LayoutDashboard, LifeBuoy, Menu, MessageSquare, Package, Users, Wrench } from "lucide-react";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { useQuery } from "@tanstack/react-query";
 import { getProfile } from "@/lib/es/server";
@@ -17,6 +17,7 @@ const TABS = [
   { to: "/app/chat", label: "Expert", icon: MessageSquare },
   { to: "/app/book", label: "Book", icon: Calendar },
   { to: "/app/service", label: "Messages", icon: LifeBuoy },
+  { to: "/app/ambassador", label: "Ambassador", icon: Users },
 ] as const;
 
 export function AppShell() {

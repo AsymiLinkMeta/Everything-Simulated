@@ -24,6 +24,7 @@ import { Route as AppIndexRouteImport } from './routes/app/index'
 import { Route as AppBookRouteImport } from './routes/app/book'
 import { Route as AppBuildRouteImport } from './routes/app/build'
 import { Route as AppChatRouteImport } from './routes/app/chat'
+import { Route as AppAmbassadorRouteImport } from './routes/app/ambassador'
 import { Route as AppQuotesRouteImport } from './routes/app/quotes'
 import { Route as StaffIndexRouteImport } from './routes/staff/index'
 import { Route as StaffBookingsRouteImport } from './routes/staff/bookings'
@@ -41,6 +42,7 @@ import { Route as SiteGuidesSlugRouteImport } from './routes/_site/guides/$slug'
 import { Route as SiteShopIndexRouteImport } from './routes/_site/shop/index'
 import { Route as SiteShopSkuRouteImport } from './routes/_site/shop/$sku'
 import { Route as StaffPrebuildsRouteImport } from './routes/staff/prebuilds'
+import { Route as StaffAmbassadorsRouteImport } from './routes/staff/ambassadors'
 import { Route as SitePrebuildsIndexRouteImport } from './routes/_site/prebuilds/index'
 import { Route as SitePrebuildsSlugRouteImport } from './routes/_site/prebuilds/$slug'
 
@@ -111,6 +113,11 @@ const AppBuildRoute = AppBuildRouteImport.update({
 const AppChatRoute = AppChatRouteImport.update({
   id: '/chat',
   path: '/chat',
+  getParentRoute: () => AppRouteRoute,
+} as any)
+const AppAmbassadorRoute = AppAmbassadorRouteImport.update({
+  id: '/ambassador',
+  path: '/ambassador',
   getParentRoute: () => AppRouteRoute,
 } as any)
 const AppQuotesRoute = AppQuotesRouteImport.update({
@@ -198,6 +205,11 @@ const StaffPrebuildsRoute = StaffPrebuildsRouteImport.update({
   path: '/prebuilds',
   getParentRoute: () => StaffRouteRoute,
 } as any)
+const StaffAmbassadorsRoute = StaffAmbassadorsRouteImport.update({
+  id: '/ambassadors',
+  path: '/ambassadors',
+  getParentRoute: () => StaffRouteRoute,
+} as any)
 const SiteCheckoutRoute = SiteCheckoutRouteImport.update({
   id: '/checkout',
   path: '/checkout',
@@ -245,6 +257,7 @@ export interface FileRoutesByFullPath {
   '/guides/': typeof SiteGuidesIndexRoute
   '/shop/': typeof SiteShopIndexRoute
   '/staff/prebuilds': typeof StaffPrebuildsRoute
+  '/staff/ambassadors': typeof StaffAmbassadorsRoute
   '/prebuilds/$slug': typeof SitePrebuildsSlugRoute
   '/prebuilds/': typeof SitePrebuildsIndexRoute
 }
@@ -277,6 +290,7 @@ export interface FileRoutesByTo {
   '/guides': typeof SiteGuidesIndexRoute
   '/shop': typeof SiteShopIndexRoute
   '/staff/prebuilds': typeof StaffPrebuildsRoute
+  '/staff/ambassadors': typeof StaffAmbassadorsRoute
   '/prebuilds/$slug': typeof SitePrebuildsSlugRoute
   '/prebuilds': typeof SitePrebuildsIndexRoute
 }
@@ -313,6 +327,7 @@ export interface FileRoutesById {
   '/_site/guides/': typeof SiteGuidesIndexRoute
   '/_site/shop/': typeof SiteShopIndexRoute
   '/staff/prebuilds': typeof StaffPrebuildsRoute
+  '/staff/ambassadors': typeof StaffAmbassadorsRoute
   '/_site/prebuilds/': typeof SitePrebuildsIndexRoute
   '/_site/prebuilds/$slug': typeof SitePrebuildsSlugRoute
 }
@@ -349,6 +364,7 @@ export interface FileRouteTypes {
     | '/guides/'
     | '/shop/'
     | '/staff/prebuilds'
+    | '/staff/ambassadors'
     | '/prebuilds/$slug'
     | '/prebuilds/'
   fileRoutesByTo: FileRoutesByTo
@@ -381,6 +397,7 @@ export interface FileRouteTypes {
     | '/guides'
     | '/shop'
     | '/staff/prebuilds'
+    | '/staff/ambassadors'
     | '/prebuilds/$slug'
     | '/prebuilds'
   id:
@@ -416,6 +433,7 @@ export interface FileRouteTypes {
     | '/_site/guides/'
     | '/_site/shop/'
     | '/staff/prebuilds'
+    | '/staff/ambassadors'
     | '/_site/prebuilds/'
     | '/_site/prebuilds/$slug'
   fileRoutesById: FileRoutesById
@@ -526,6 +544,13 @@ declare module '@tanstack/react-router' {
       path: '/chat'
       fullPath: '/app/chat'
       preLoaderRoute: typeof AppChatRouteImport
+      parentRoute: typeof AppRouteRoute
+    }
+    '/app/ambassador': {
+      id: '/app/ambassador'
+      path: '/ambassador'
+      fullPath: '/app/ambassador'
+      preLoaderRoute: typeof AppAmbassadorRouteImport
       parentRoute: typeof AppRouteRoute
     }
     '/app/quotes': {
@@ -647,6 +672,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof StaffPrebuildsRouteImport
       parentRoute: typeof StaffRouteRoute
     }
+    '/staff/ambassadors': {
+      id: '/staff/ambassadors'
+      path: '/ambassadors'
+      fullPath: '/staff/ambassadors'
+      preLoaderRoute: typeof StaffAmbassadorsRouteImport
+      parentRoute: typeof StaffRouteRoute
+    }
     '/_site/prebuilds/': {
       id: '/_site/prebuilds/'
       path: '/prebuilds'
@@ -668,6 +700,7 @@ interface AppRouteRouteChildren {
   AppBookRoute: typeof AppBookRoute
   AppBuildRoute: typeof AppBuildRoute
   AppChatRoute: typeof AppChatRoute
+  AppAmbassadorRoute: typeof AppAmbassadorRoute
   AppQuotesRoute: typeof AppQuotesRoute
   AppIndexRoute: typeof AppIndexRoute
 }
@@ -676,6 +709,7 @@ const AppRouteRouteChildren: AppRouteRouteChildren = {
   AppBookRoute: AppBookRoute,
   AppBuildRoute: AppBuildRoute,
   AppChatRoute: AppChatRoute,
+  AppAmbassadorRoute: AppAmbassadorRoute,
   AppQuotesRoute: AppQuotesRoute,
   AppIndexRoute: AppIndexRoute,
 }
@@ -692,6 +726,7 @@ interface StaffRouteRouteChildren {
   StaffTeamRoute: typeof StaffTeamRoute
   StaffBrandsRoute: typeof StaffBrandsRoute
   StaffPrebuildsRoute: typeof StaffPrebuildsRoute
+  StaffAmbassadorsRoute: typeof StaffAmbassadorsRoute
   StaffIndexRoute: typeof StaffIndexRoute
 }
 
@@ -703,6 +738,7 @@ const StaffRouteRouteChildren: StaffRouteRouteChildren = {
   StaffTeamRoute: StaffTeamRoute,
   StaffBrandsRoute: StaffBrandsRoute,
   StaffPrebuildsRoute: StaffPrebuildsRoute,
+  StaffAmbassadorsRoute: StaffAmbassadorsRoute,
   StaffIndexRoute: StaffIndexRoute,
 }
 
