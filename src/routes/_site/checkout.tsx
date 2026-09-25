@@ -307,7 +307,7 @@ function Checkout() {
             </label>
 
             <label className="block">
-              <span className="text-sm text-muted">Ambassador code</span>
+              <span className="text-sm text-muted">Ambassador code / voucher / gift card</span>
               <Input
                 value={referralCode}
                 onChange={(e) => setReferralCode(e.target.value)}
@@ -317,7 +317,7 @@ function Checkout() {
               <span className="mt-1 block text-xs text-muted">
                 {referredBy
                   ? `This crate will be attributed to ${referredBy.name}. It does not change the price.`
-                  : "Optional. Attributes the order to an ambassador — not a discount."}
+                  : "Enter an ambassador code, voucher or gift card if you have one."}
               </span>
             </label>
           </div>

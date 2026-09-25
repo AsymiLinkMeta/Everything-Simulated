@@ -81,7 +81,7 @@ function toAmbassador(row: DbRow): Ambassador {
 }
 
 export function ambassadorLink(code: string) {
-  return `/ambassadors?ref=${encodeURIComponent(code.toUpperCase())}`;
+  return `/checkout?ref=${encodeURIComponent(code.toUpperCase())}`;
 }
 
 export function ambassadorProfilePath(slug: string) {
