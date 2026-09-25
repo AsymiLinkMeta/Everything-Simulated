@@ -129,9 +129,7 @@ export function AmbassadorsPage() {
         <section className="es-ambassador-form-preview">
           <p className="es-kicker">Their card</p>
           <h2 className="es-display mt-2 text-4xl">Driver Profiles & Rig Specs</h2>
-          <p className="mt-3 max-w-2xl text-sm text-muted">
-            Each ambassador completes their own profile. The workshop attaches a live prebuild so buyers can order the identical rig configuration.
-          </p>
+
           <ul className="es-profile-fields">
             {AMBASSADOR_PROFILE_FIELDS.map((f) => (
               <li key={f.label}>
