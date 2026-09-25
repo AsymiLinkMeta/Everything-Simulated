@@ -59,7 +59,7 @@ function RacingHub() {
       />
       <PageHero
         kicker="Racing · live catalogue"
-        title="The line that already ships."
+        title="Prebuilt, Ready To Race."
         lead="Motion, haptic, triples plus an aux screen. Prebuilds, parts and the compatibility engine all sit here. Sit the chassis on the Gold Coast before it crates."
         image="/rigs/motion.jpg"
         tone="race"
