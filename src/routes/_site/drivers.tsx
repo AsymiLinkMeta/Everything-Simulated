@@ -3,7 +3,6 @@ import { JsonLd, Money } from "@/components/es/bits";
 import { OrderRigButton } from "@/components/es/order-rig";
 import { CtaStrip, PageHero } from "@/components/es/section-page";
 import {
-  AMBASSADOR_PROFILE_FIELDS,
   AMBASSADORS,
   ambassadorLink,
   ambassadorProfilePath,
@@ -126,19 +125,6 @@ export function AmbassadorsPage() {
           })}
         </ul>
 
-        <section className="es-ambassador-form-preview">
-          <p className="es-kicker">Their card</p>
-          <h2 className="es-display mt-2 text-4xl">Driver Profiles & Rig Specs</h2>
-
-          <ul className="es-profile-fields">
-            {AMBASSADOR_PROFILE_FIELDS.map((f) => (
-              <li key={f.label}>
-                <strong>{f.label}</strong>
-                <span>{f.note}</span>
-              </li>
-            ))}
-          </ul>
-        </section>
 
         <CtaStrip title="Ambassador Referral Program" lead="Ambassador codes attribute the order to the driver. Commission is managed by the workshop — it is not a customer discount.">
           <Link to="/contact" className="es-btn">
