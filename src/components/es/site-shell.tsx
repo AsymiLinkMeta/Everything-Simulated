@@ -6,7 +6,7 @@ import { CookieDisclaimer, AuthSlot, Logo, StaffLoginLink } from "./bits";
 import { ReferralCapture } from "./referral-capture";
 import { useCart } from "@/lib/es/cart-store";
 import { livePackages } from "@/lib/es/prebuilds";
-import { BRAND, CITIES, GUIDES, PACKAGES } from "@/lib/es/catalog";
+import { BRAND, CITIES, PACKAGES } from "@/lib/es/catalog";
 
 const SIMULATORS = [
   { to: "/racing", label: "Racing", hint: "Motion, haptic, triples — live catalogue" },
@@ -174,13 +174,7 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
             </ul>
           </div>
           <div className="es-footer-col">
-            <p className="es-kicker">Guides</p>
             <ul>
-              {GUIDES.slice(0, 4).map((g) => (
-                <li key={g.slug}>
-                  <Link to="/guides/$slug" params={{ slug: g.slug }}>{g.title}</Link>
-                </li>
-              ))}
               <li>
                 <Link to="/privacy">Privacy</Link>
                 {" · "}
