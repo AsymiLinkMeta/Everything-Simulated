@@ -7,9 +7,9 @@ import { breadcrumbLd, pageHead } from "@/lib/es/seo";
 export const Route = createFileRoute("/_site/training/industrial")({
   head: () =>
     pageHead({
-      title: "Industrial and vehicle training simulators | Everything Simulated",
+      title: "Industrial & Heavy Vehicle Training Simulators | Everything Simulated",
       description:
-        "Plant, truck, side-kart and excavator training simulators assembled on the Gold Coast. Enquire for a spec — not a public catalogue.",
+        "Custom plant, truck, forklift and excavator training simulators assembled on the Gold Coast. Controls, visuals and environment specced to your operational requirements.",
       path: "/training/industrial",
     }),
   component: IndustrialTraining,
@@ -27,8 +27,8 @@ function IndustrialTraining() {
       />
       <PageHero
         kicker="Industrial"
-        title="Not every vehicle is a race car."
-        lead="Plant, heavy vehicle, truck, side-kart and excavator programs. We spec controls, visuals and room with you. No public SKU list — enquire."
+        title="Industrial & Heavy Vehicle Training Simulators"
+        lead="Plant, truck, forklift and excavator training simulators. We spec controls, visuals and the operating environment to your requirements. Each build is quoted individually."
         image="/rigs/starter.jpg"
         tone="adventure"
       />
@@ -46,7 +46,7 @@ function IndustrialTraining() {
             ]}
           />
         </div>
-        <CtaStrip title="Enquire." lead="Not a shop.">
+        <CtaStrip title="Enquire About Your Build" lead="Every industrial simulator is quoted to your specific operational requirements.">
           <Link to="/contact" className="es-btn">Enquire</Link>
         </CtaStrip>
       </div>

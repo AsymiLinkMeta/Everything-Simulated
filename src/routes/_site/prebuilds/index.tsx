@@ -9,8 +9,8 @@ import { PageHero } from "@/components/es/section-page";
 export const Route = createFileRoute("/_site/prebuilds/")({
   head: () =>
     pageHead({
-      title: "Prebuilt Racing Simulators | Everything Simulated",
-      description: "Browse our range of prebuilt racing simulators. Gold Coast assembled, delivered Australia-wide. Choose a complete rig or customise from parts.",
+      title: "Prebuilt Racing Simulators Australia | Ready to Ship | Everything Simulated",
+      description: "Gold Coast assembled prebuilt racing simulators — tested, photographed and shipped Australia-wide. Choose a complete turn-key package or customise from individual components.",
       path: "/prebuilds",
     }),
   component: PrebuildsPage,
@@ -25,8 +25,8 @@ function PrebuildsPage() {
       <JsonLd data={itemListLd("Prebuilt racing simulators", "/prebuilds", items.map((p) => ({ name: p.name, path: `/prebuilds/${p.slug}` })))} />
       <PageHero
         kicker="Turn-key"
-        title="Prebuilt crates."
-        lead="Each rig is assembled, tested and photographed on the Gold Coast before it ships."
+        title="Prebuilt Racing Simulators"
+        lead="Every rig is assembled, tested and photographed on the Gold Coast before dispatch."
         image="/rigs/motion.jpg"
       />
       <div className="es-body">

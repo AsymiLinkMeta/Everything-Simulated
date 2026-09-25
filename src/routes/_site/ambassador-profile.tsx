@@ -14,8 +14,8 @@ import { breadcrumbLd, pageHead } from "@/lib/es/seo";
 export const Route = createFileRoute("/_site/ambassador-profile")({
   head: () =>
     pageHead({
-      title: "Ambassador | Everything Simulated",
-      description: "Ambassador profile, rig specs and Order this rig.",
+      title: "Ambassador Profile | Everything Simulated",
+      description: "View this ambassador's motorsport profile, simulator specs and order the exact rig they train on.",
       path: "/ambassadors",
     }),
   component: AmbassadorProfile,
@@ -29,8 +29,8 @@ export function AmbassadorProfile() {
     return (
       <div className="es-body">
         <p className="es-kicker">Ambassadors</p>
-        <h1 className="es-display mt-2 text-5xl">Card not published.</h1>
-        <p className="mt-4 max-w-xl text-muted">That seat is not live yet, or the link is wrong.</p>
+        <h1 className="es-display mt-2 text-5xl">Profile Not Published</h1>
+        <p className="mt-4 max-w-xl text-muted">This ambassador profile is not live yet, or the link may be incorrect.</p>
         <Link to="/ambassadors" className="es-btn mt-8 inline-flex">
           All ambassadors
         </Link>

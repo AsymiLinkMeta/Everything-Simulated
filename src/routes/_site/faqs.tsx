@@ -9,8 +9,8 @@ import { PageHero } from "@/components/es/section-page";
 export const Route = createFileRoute("/_site/faqs")({
   head: () =>
     pageHead({
-      title: "FAQs | Everything Simulated racing simulators",
-      description: "Answers on pricing, motion vs haptic, compatibility, delivery and warranty for Gold Coast assembled racing simulators.",
+      title: "Racing Simulator FAQs | Pricing, Delivery & Compatibility | Everything Simulated",
+      description: "Answers to common questions about racing simulator pricing, motion vs haptic feedback, compatibility, Australia-wide delivery and warranty from Everything Simulated.",
       path: "/faqs",
     }),
   component: FAQs,
@@ -22,8 +22,8 @@ function FAQs() {
       <JsonLd data={graphLd(organizationLd(), faqLd(FAQS))} />
       <PageHero
         kicker="Questions"
-        title="Asked before the deposit."
-        lead="Pricing, motion vs haptic, compatibility, delivery and warranty — the same answers we give on the workshop floor."
+        title="Frequently Asked Questions"
+        lead="Pricing, motion vs haptic, component compatibility, Australia-wide delivery and warranty — the same answers we give on the workshop floor."
         image="/rigs/haptic.jpg"
       />
       <div className="es-body mx-auto max-w-3xl">
@@ -42,7 +42,7 @@ function FAQs() {
         </div>
         <section className="mt-16">
           <p className="es-kicker es-kicker-telemetry">Learn more</p>
-          <h2 className="es-display mt-2 text-4xl">Guides</h2>
+          <h2 className="es-display mt-2 text-4xl">Buying Guides</h2>
           <div className="es-guide-grid mt-6">
             {GUIDES.map((g) => (
               <Link key={g.slug} to="/guides/$slug" params={{ slug: g.slug }} className="es-card p-5">

@@ -7,9 +7,9 @@ import { breadcrumbLd, pageHead } from "@/lib/es/seo";
 export const Route = createFileRoute("/_site/aircraft/flight")({
   head: () =>
     pageHead({
-      title: "Fixed-wing flight simulators | Everything Simulated",
+      title: "Fixed-Wing Flight Simulators | Everything Simulated Gold Coast",
       description:
-        "Fixed-wing and jet trainer cockpits assembled on the Gold Coast. Studio consult, then crate freight Australia-wide.",
+        "Custom fixed-wing and jet trainer cockpit simulators assembled on the Gold Coast. Studio consultation followed by professional assembly and Australia-wide delivery.",
       path: "/aircraft/flight",
     }),
   component: FlightPage,
@@ -27,8 +27,8 @@ function FlightPage() {
       />
       <PageHero
         kicker="Fixed-wing"
-        title="Flight simulators."
-        lead="Fixed-wing and jet trainer cockpits. Same Gold Coast workshop as racing and rotary — different controls, same crate discipline."
+        title="Fixed-Wing Flight Simulators"
+        lead="Custom fixed-wing and jet trainer cockpits. Built on the same Gold Coast floor as our racing and rotary platforms — different controls, same build quality."
         image="/rigs/showroom.jpg"
         tone="adventure"
       />
@@ -57,7 +57,7 @@ function FlightPage() {
             ]}
           />
         </div>
-        <CtaStrip title="Enquire first." lead="No public type list.">
+        <CtaStrip title="Enquire About Your Build" lead="Each aircraft simulator is quoted individually.">
           <Link to="/training" className="es-btn">Training programs</Link>
           <Link to="/contact" className="es-btn es-btn-paper">Enquire</Link>
         </CtaStrip>

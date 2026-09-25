@@ -10,9 +10,9 @@ import { PACKAGES } from "@/lib/es/catalog";
 export const Route = createFileRoute("/_site/racing")({
   head: () =>
     pageHead({
-      title: "Racing simulators | Everything Simulated Gold Coast",
+      title: "Turn-Key Racing Simulators Australia | Motion, Haptic & Triple Screen | Everything Simulated",
       description:
-        "Turn-key racing simulators with motion, haptic and triple-plus-aux screens. Simagic, Trak Racer, Exodus and Dynamix. Gold Coast assembled, crate freight Australia-wide.",
+        "Gold Coast assembled turn-key racing simulators with motion, haptic feedback and triple-plus-auxiliary screens. Simagic, Trak Racer, Exodus and Dynamix — compatibility checked and shipped Australia-wide.",
       path: "/racing",
     }),
   component: RacingHub,
@@ -59,8 +59,8 @@ function RacingHub() {
       />
       <PageHero
         kicker="Racing · live catalogue"
-        title="Prebuilt, Ready To Race."
-        lead="Motion, haptic, triples plus an aux screen. Prebuilds, parts and the compatibility engine all sit here. Sit the chassis on the Gold Coast before it crates."
+        title="Turn-Key Racing Simulators"
+        lead="Motion platforms, haptic feedback, triple screens and an auxiliary display — fully assembled on the Gold Coast. Browse prebuilt packages, individual components or run the compatibility checker before you commit."
         image="/rigs/motion.jpg"
         tone="race"
       >
@@ -72,7 +72,7 @@ function RacingHub() {
 
       <div className="es-body">
         <p className="es-kicker es-kicker-telemetry">Grid</p>
-        <h2 className="es-display mt-2 text-5xl">Prebuilt crates</h2>
+        <h2 className="es-display mt-2 text-5xl">Prebuilt Packages</h2>
         <div className="es-pack-grid mt-8">
           {packs.slice(0, 3).map((p) => (
             <Link key={p.slug} to="/prebuilds/$slug" params={{ slug: p.slug }} className="es-pack-tile">
@@ -97,7 +97,7 @@ function RacingHub() {
           image="/rigs/haptic.jpg"
           kicker="Featured"
           title="Haptic Racing Simulator"
-          lead="The crate we ship most. Exodus XR1, Alpha 15Nm, hydraulic P1000, four screens."
+          lead="Our most popular build. Exodus XR1 chassis, Simagic Alpha 15Nm wheelbase, hydraulic P1000 pedals, four screens."
         >
           <Link to="/prebuilds/haptic" className="es-btn">Order this crate</Link>
         </MediaSplit>
@@ -105,9 +105,9 @@ function RacingHub() {
 
       <div className="es-body pt-0">
         <p className="es-kicker es-kicker-telemetry">Garage</p>
-        <h2 className="es-display mt-2 text-5xl">Tools</h2>
+        <h2 className="es-display mt-2 text-5xl">Build & Configure Tools</h2>
         <p className="mt-3 max-w-2xl text-sm text-muted">
-          The checker is law. Chat only explains it. Try-before-you-buy is a phone call to the workshop.
+          The compatibility checker enforces every rule. Use the tools below to configure your build, browse parts or book the showroom.
         </p>
         <div className="mt-8">
           <ImageCards
@@ -120,7 +120,7 @@ function RacingHub() {
             }))}
           />
         </div>
-        <PhoneStrip title="Sit it on the Coast." lead="Pedal spacing and wheel height are set on the chassis you are buying." />
+        <PhoneStrip title="Visit the Gold Coast Showroom" lead="Every build can be test-driven before dispatch. Pedal spacing and wheel height are fitted to your position." />
       </div>
     </div>
   );

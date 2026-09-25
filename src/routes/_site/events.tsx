@@ -8,9 +8,9 @@ import { breadcrumbLd, pageHead } from "@/lib/es/seo";
 export const Route = createFileRoute("/_site/events")({
   head: () =>
     pageHead({
-      title: "Events & catering | Corporate and group driver training | Everything Simulated",
+      title: "Corporate Simulator Events & Group Driver Training | Everything Simulated",
       description:
-        "Corporate events, on-site catering, and group training for professional and amateur drivers at the planned Gold Coast warehouse. Enquire — not a hire catalogue.",
+        "Host corporate team days, product launches and group driver training sessions at our Gold Coast simulator facility. Full catering available. Enquire to book a date.",
       path: "/events",
     }),
   component: EventsPage,
@@ -27,8 +27,8 @@ function EventsPage() {
       />
       <PageHero
         kicker="Events · catering · group training"
-        title="The warehouse floor, when a group needs it."
-        lead={`Corporate days, professional and amateur driver groups, and catering on the same Gold Coast site as the build studio. Planned venue of ${VENUE.size} — ${VENUE.status}. Call the workshop to enquire.`}
+        title="Corporate Events & Group Training"
+        lead={`Team-building days, professional driver groups and catered events at the Gold Coast simulator facility. Planned venue of ${VENUE.size} — ${VENUE.status}. Contact the workshop to secure a date.`}
         image="/rigs/showroom.jpg"
         tone="race"
       >
@@ -44,7 +44,7 @@ function EventsPage() {
 
       <div className="es-body">
         <p className="es-kicker">What we host</p>
-        <h2 className="es-display mt-2 text-5xl">Company days and driver groups.</h2>
+        <h2 className="es-display mt-2 text-5xl">What We Host</h2>
         <p className="mt-4 max-w-2xl text-base leading-7 text-muted">
           Handled at the warehouse once the lease is live. Until then this is capacity language —
           we take the brief, hold the date if we can, and do not publish a calendar or a street.
@@ -63,7 +63,7 @@ function EventsPage() {
       <section className="es-page-band">
         <div className="es-body">
           <p className="es-kicker">Capacity · planned venue</p>
-          <h2 className="es-display mt-2 text-5xl">Same site as the studio.</h2>
+          <h2 className="es-display mt-2 text-5xl">Integrated Venue & Workshop</h2>
           <p className="mt-4 max-w-2xl text-base leading-7 text-muted">
             A lease of {VENUE.size}: warehousing on the floor, the build studio out the back,
             events and group training on that floor, catering when a booking needs it. {VENUE.note}
@@ -77,7 +77,7 @@ function EventsPage() {
               </article>
             ))}
           </div>
-          <CtaStrip title="Hold a date." lead="No public hire list. Call the workshop or send the brief.">
+          <CtaStrip title="Reserve Your Event Date" lead="No public hire list. Contact the workshop with your brief to discuss availability.">
             <Link to="/contact" className="es-btn">
               Enquire
             </Link>

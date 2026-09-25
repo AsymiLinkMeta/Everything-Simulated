@@ -7,9 +7,9 @@ import { breadcrumbLd, pageHead } from "@/lib/es/seo";
 export const Route = createFileRoute("/_site/training/driver")({
   head: () =>
     pageHead({
-      title: "Driver training simulators | Everything Simulated",
+      title: "Motorsport & Junior Driver Training Simulators | Everything Simulated",
       description:
-        "Kart, junior and motorsport driver training on Gold Coast racing simulators. Solo studio fitting, or group days for professional and amateur drivers at the planned warehouse.",
+        "Kart, junior and motorsport driver training on Gold Coast racing simulators. Four-screen coaching layout, adjustable ergonomics and torque-limited setups for young drivers.",
       path: "/training/driver",
     }),
   component: DriverTraining,
@@ -27,8 +27,8 @@ function DriverTraining() {
       />
       <PageHero
         kicker="Driver"
-        title="Kart. Road. Motorsport."
-        lead="Juniors and race drivers already use the racing crates. Pedal spacing, torque caps and a four-screen coaching layout are set in the studio before the crate leaves. Groups — professional or amateur — run as warehouse events."
+        title="Motorsport & Junior Driver Training"
+        lead="Juniors and race drivers already train on our four-screen racing simulators. Pedal spacing, torque limits and coaching displays are fitted in the studio before dispatch. Group sessions for professional and amateur drivers run as warehouse events."
         image="/rigs/haptic.jpg"
         tone="race"
       >
@@ -51,7 +51,7 @@ function DriverTraining() {
             ]}
           />
         </div>
-        <PhoneStrip title="Bring a squad." lead="We treat it as an event on the warehouse floor." />
+        <PhoneStrip title="Book a Group Session" lead="Group training runs as an event at the warehouse. Contact us with your requirements." />
       </div>
     </div>
   );

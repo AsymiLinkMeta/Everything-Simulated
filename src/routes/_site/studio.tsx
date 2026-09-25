@@ -8,9 +8,9 @@ import { CtaStrip, PageHero } from "@/components/es/section-page";
 export const Route = createFileRoute("/_site/studio")({
   head: () =>
     pageHead({
-      title: "Gold Coast sim racing showroom | Try before you buy",
+      title: "Gold Coast Simulator Showroom | Try Before You Buy | Everything Simulated",
       description:
-        "Book a Gold Coast studio session. Sit racing crates, or consult on aircraft, drone and training layouts before we assemble.",
+        "Book a hands-on demo at our Gold Coast showroom. Test racing simulators in person or consult on aircraft, drone and training builds before we assemble and ship.",
       path: "/studio",
     }),
   component: Studio,
@@ -22,8 +22,8 @@ function Studio() {
       <JsonLd data={serviceLd()} />
       <PageHero
         kicker="Showroom · try before you buy"
-        title="Sit in the rig before it ships."
-        lead="The workshop is on the Gold Coast. Book Starter, Haptic or Motion. We set wheel height, pedal spacing and the coaching screen on the chassis you are buying."
+        title="Gold Coast Simulator Showroom"
+        lead="Experience your build before it ships. Book a session on Starter, Haptic or Motion — we adjust wheel height, pedal spacing and coaching displays to your exact driving position."
         image="/rigs/showroom.jpg"
         tone="race"
       >
@@ -39,7 +39,7 @@ function Studio() {
       <div className="es-body grid gap-12 md:grid-cols-[1fr_1.1fr]">
         <div>
           <p className="es-kicker es-kicker-telemetry">Process</p>
-          <h2 className="es-display mt-2 text-5xl">Four steps to a crate.</h2>
+          <h2 className="es-display mt-2 text-5xl">From Demo to Delivery</h2>
           <p className="mt-4 text-sm text-muted">
             {BRAND.region} · {BRAND.phone} · {BRAND.email}
           </p>
@@ -67,7 +67,7 @@ function Studio() {
       <section className="es-page-band">
         <div className="es-body">
           <p className="es-kicker">Capacity · planned venue</p>
-          <h2 className="es-display mt-2 text-5xl">A warehouse floor behind the studio.</h2>
+          <h2 className="es-display mt-2 text-5xl">Dedicated Workshop & Event Space</h2>
           <p className="mt-4 max-w-2xl text-base leading-7 text-muted">
             The owner intention is a lease of {VENUE.size}: warehousing on the floor,
             the build studio out the back, corporate events and group driver training on the same site,
@@ -83,7 +83,7 @@ function Studio() {
               </article>
             ))}
           </div>
-          <CtaStrip title="Book the current studio." lead="Events and catering stay enquire-only until the lease is real.">
+          <CtaStrip title="Book a Showroom Session" lead="Events and catering are available by enquiry. Contact the workshop to arrange a visit.">
             <Link to="/app/book" className="es-btn">
               Book a slot
             </Link>

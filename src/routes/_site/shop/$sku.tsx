@@ -12,8 +12,8 @@ import { breadcrumbLd, catalogProductLd, pageHead } from "@/lib/es/seo";
 export const Route = createFileRoute("/_site/shop/$sku")({
   head: ({ params }) => {
     return pageHead({
-      title: `${params.sku} | Sim racing part | Everything Simulated`,
-      description: `Gold Coast assembled racing simulator part ${params.sku}. Compatibility checked. Australia-wide freight.`,
+      title: `${params.sku} | Racing Simulator Component | Everything Simulated`,
+      description: `${params.sku} — Gold Coast stocked racing simulator component. Compatibility verified, professionally assembled and shipped Australia-wide.`,
       path: `/shop/${params.sku}`,
       type: "product",
     });

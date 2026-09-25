@@ -12,8 +12,8 @@ import { PageHero } from "@/components/es/section-page";
 export const Route = createFileRoute("/_site/contact")({
   head: () =>
     pageHead({
-      title: "Contact Everything Simulated | Gold Coast sim racing workshop",
-      description: `Call the workshop on ${BRAND.phone} or send a message. Gold Coast try-before-you-buy demos and Australia-wide crate freight.`,
+      title: "Contact Everything Simulated | Gold Coast Simulator Workshop",
+      description: `Call ${BRAND.phone} or send an enquiry. Book a hands-on demo at our Gold Coast showroom or discuss a custom build. Australia-wide delivery available.`,
       path: "/contact",
     }),
   component: Contact,
@@ -50,8 +50,8 @@ function Contact() {
       <JsonLd data={contactPageLd()} />
       <PageHero
         kicker="Workshop"
-        title="Talk to the people who bolt it together."
-        lead="Call the workshop for a Gold Coast demo, or send a message — it lands in the staff inbox."
+        title="Contact the Workshop"
+        lead="Call us directly for a showroom demo, or send an enquiry below — it goes straight to the team."
         image="/rigs/showroom.jpg"
       />
       <div className="es-body mx-auto max-w-3xl">

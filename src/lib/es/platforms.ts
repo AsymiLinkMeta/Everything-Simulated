@@ -14,7 +14,7 @@ export const PLATFORMS: {
     kicker: "Live catalogue",
     name: "Racing simulators",
     blurb:
-      "Motion, haptic and triple-plus-aux crates that already ship. Simagic, Trak Racer, Exodus and Dynamix — checker before deposit.",
+      "Turn-key racing simulators with motion, haptic feedback and triple-plus-auxiliary screens. Simagic, Trak Racer, Exodus and Dynamix — compatibility verified before deposit.",
     image: "/rigs/haptic.jpg",
   },
   {
@@ -23,7 +23,7 @@ export const PLATFORMS: {
     kicker: "Workshop platform",
     name: "Aircraft simulators",
     blurb:
-      "Helicopter cockpits from the same Gold Coast floor. Studio consult, then a crate — no invented type-rating shop.",
+      "Helicopter and fixed-wing cockpit simulators built on the same Gold Coast floor. Every aircraft build starts with a studio consultation.",
     image: "/rigs/showroom.jpg",
   },
   {
@@ -32,7 +32,7 @@ export const PLATFORMS: {
     kicker: "Workshop platform",
     name: "Drone simulators",
     blurb:
-      "FPV and ground-station trainers for commercial and recreational operators. Capacity we spec with you, not a parts list.",
+      "Purpose-built FPV and ground-station trainers for commercial and recreational operators. Specced to your mission requirements.",
     image: "/rigs/motion.jpg",
   },
   {
@@ -41,16 +41,16 @@ export const PLATFORMS: {
     kicker: "Programs",
     name: "Training",
     blurb:
-      "Motorsport, driver, aviation, drone and industrial hours on the platforms above. Programs, not a second hardware shop.",
+      "Motorsport, driver coaching, aviation and industrial training programs. Professional instruction on the simulators we build.",
     image: "/rigs/starter.jpg",
   },
 ];
 
 export const HOME_DOORS: { to: string; image: string; kicker: string; title: string; hint: string }[] = [
-  { to: "/prebuilds", image: "/rigs/haptic.jpg", kicker: "Live", title: "Prebuilds", hint: "Starter, Haptic and Motion crates that ship." },
-  { to: "/shop", image: "/rigs/starter.jpg", kicker: "Parts", title: "Shop", hint: "The SKUs we actually bolt on." },
-  { to: "/ambassadors", image: "/rigs/motion.jpg", kicker: "People", title: "Ambassadors", hint: "Drivers and the rig they sit in." },
-  { to: "/studio", image: "/rigs/showroom.jpg", kicker: "Floor", title: "Studio", hint: "Sit the chassis before it crates." },
+  { to: "/prebuilds", image: "/rigs/haptic.jpg", kicker: "Live", title: "Prebuilds", hint: "Starter, Haptic and Motion packages ready to ship." },
+  { to: "/shop", image: "/rigs/starter.jpg", kicker: "Parts", title: "Shop", hint: "Every component we install, wire and ship." },
+  { to: "/ambassadors", image: "/rigs/motion.jpg", kicker: "People", title: "Ambassadors", hint: "The drivers we support and the rigs they train on." },
+  { to: "/studio", image: "/rigs/showroom.jpg", kicker: "Floor", title: "Studio", hint: "Test-drive your build before dispatch." },
 ];
 
 export const RACING_TOOLS: PlatformLink[] = [

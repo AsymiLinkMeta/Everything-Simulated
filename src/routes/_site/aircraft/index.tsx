@@ -7,8 +7,8 @@ import { breadcrumbLd, pageHead } from "@/lib/es/seo";
 export const Route = createFileRoute("/_site/aircraft/")({
   head: () =>
     pageHead({
-      title: "Aircraft simulators | Helicopter and flight | Everything Simulated",
-      description: "Gold Coast assembled helicopter and fixed-wing simulator cockpits. Studio consult, then a crate Australia-wide — capacity, not a fake catalogue.",
+      title: "Aircraft & Cockpit Simulators | Helicopter & Fixed-Wing | Everything Simulated",
+      description: "Custom helicopter and fixed-wing cockpit simulators assembled on the Gold Coast. Book a studio consultation, then we build and ship Australia-wide.",
       path: "/aircraft",
     }),
   component: AircraftHub,
@@ -20,8 +20,8 @@ function AircraftHub() {
       <JsonLd data={breadcrumbLd([{ name: "Home", path: "/" }, { name: "Aircraft", path: "/aircraft" }])} />
       <PageHero
         kicker="Aircraft · workshop platform"
-        title="Cockpits from the same floor."
-        lead="Racing is the live catalogue. Aircraft is workshop capacity — rotary first — then assembled on the Gold Coast."
+        title="Aircraft & Cockpit Simulators"
+        lead="Helicopter and fixed-wing cockpits built on the same Gold Coast floor as our racing simulators. Every aircraft build starts with a studio consultation."
         image="/rigs/showroom.jpg"
       >
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -40,7 +40,7 @@ function AircraftHub() {
             ]}
           />
         </div>
-        <PhoneStrip title="Capacity is consult-first." lead="The racing checker does not apply here." />
+        <PhoneStrip title="Consultation First" lead="Aircraft builds are quoted individually. Contact us to discuss your requirements." />
       </div>
     </div>
   );

@@ -13,8 +13,8 @@ import type { PrebuildWithComponents } from "@/lib/es/prebuilds";
 export const Route = createFileRoute("/_site/prebuilds/$slug")({
   head: ({ params }) =>
     pageHead({
-      title: `${params.slug} | Prebuilt racing simulator | Everything Simulated`,
-      description: `Gold Coast assembled prebuilt racing simulator. Compatibility checked. Crate freight Australia-wide.`,
+      title: `${params.slug} | Prebuilt Racing Simulator | Everything Simulated`,
+      description: `Gold Coast assembled prebuilt racing simulator — compatibility verified and shipped Australia-wide.`,
       path: `/prebuilds/${params.slug}`,
       type: "product",
     }),

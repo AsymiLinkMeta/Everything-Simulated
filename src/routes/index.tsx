@@ -13,9 +13,9 @@ import { PLATFORMS } from "@/lib/es/platforms";
 export const Route = createFileRoute("/")({
   head: () =>
     pageHead({
-      title: "Everything Simulated | Gold Coast simulator workshop — racing, aircraft, drones, training",
+      title: "Everything Simulated | Gold Coast Racing & Flight Simulator Workshop",
       description:
-        "Gold Coast workshop for racing, aircraft, drone and training simulators. Racing crates ship with a compatibility checker. Other platforms are specced in studio. Australia-wide freight.",
+        "Australia's dedicated simulator workshop on the Gold Coast. Turn-key racing, aircraft, drone and training simulators — assembled, tested and shipped nationwide with a compatibility guarantee.",
       path: "/",
     }),
   component: Home,
@@ -37,11 +37,11 @@ export function Home() {
             <i /><i /><i /><i /><i />
           </div>
           <p className="es-kicker es-kicker-telemetry">Gold Coast · Try before you buy · Australia-wide</p>
-          <h1>One workshop. Every machine.</h1>
+          <h1>Australia's Turn-Key Simulator Workshop</h1>
           <p className="lead">
-            Racing crates already ship — motion, haptic, triples and an aux screen.
-            Aircraft, drones and training are specced on the same Gold Coast floor.
-            Sit the chassis before it leaves.
+            Racing simulators ship now — motion, haptic, triple screens and an auxiliary display.
+            Aircraft, drone and training platforms are specced on the same Gold Coast floor.
+            Every build is assembled, tested and photographed before it leaves.
           </p>
           <div className="es-hero-actions">
             <Link to="/racing" className="es-btn">
@@ -87,24 +87,24 @@ export function Home() {
       <section className="es-body grid gap-12 md:grid-cols-[1fr_1.2fr]">
         <div>
           <p className="es-kicker es-kicker-telemetry">The build</p>
-          <h2 className="es-display mt-2 text-5xl">From first spec to a crate on the floor.</h2>
+          <h2 className="es-display mt-2 text-5xl">How We Build Your Simulator</h2>
         </div>
         <ol className="es-rail">
           <li className="es-rail-step">
-            <strong>01 Design the crate</strong>
-            <span>Walk the same steps the workshop uses. Only parts we actually bolt on.</span>
+            <strong>01 Configure your build</strong>
+            <span>Select from the same components our technicians use. Every part is compatibility-verified.</span>
           </li>
           <li className="es-rail-step">
-            <strong>02 Run the checker</strong>
-            <span>Torque, payload, QR and mounts. Chat cannot override a block.</span>
+            <strong>02 Compatibility check</strong>
+            <span>Torque limits, payload ratings, quick-release and mount clearances — verified automatically.</span>
           </li>
           <li className="es-rail-step">
-            <strong>03 Sit it on the Coast</strong>
-            <span>Book the workshop. Pedal spacing and wheel height are set before it ships.</span>
+            <strong>03 Try before you buy</strong>
+            <span>Book the Gold Coast showroom. Pedal spacing and wheel height are set to your driving position.</span>
           </li>
           <li className="es-rail-step">
-            <strong>04 Keep the build</strong>
-            <span>Quotes, upgrades and care live in the customer app after the crate leaves.</span>
+            <strong>04 Ongoing support</strong>
+            <span>Quotes, upgrades and service history remain in your account after delivery.</span>
           </li>
         </ol>
       </section>
@@ -116,10 +116,10 @@ export function Home() {
         <div className="es-chapter-veil" />
         <div className="es-chapter-copy">
           <p className="es-kicker es-kicker-telemetry">Studio</p>
-          <h2>Try before the crate leaves</h2>
+          <h2>Visit the Gold Coast Showroom</h2>
           <p>
-            Book a session at the {BRAND.region} workshop.
-            Pedal spacing, wheel height and the coaching screen are set on the chassis you are buying.
+            Book a hands-on session at the {BRAND.region} workshop.
+            Pedal spacing, wheel height and coaching displays are fitted to your driving position before dispatch.
           </p>
         </div>
       </Link>
@@ -140,7 +140,7 @@ export function Home() {
 
       <section className="es-body pt-0">
         <p className="es-kicker es-kicker-telemetry">FAQ</p>
-        <h2 className="es-display mt-2 text-4xl">Asked before the deposit</h2>
+        <h2 className="es-display mt-2 text-4xl">Frequently Asked Questions</h2>
         <dl className="mt-8 grid gap-6 md:grid-cols-2">
           {FAQS.slice(0, 4).map((item) => (
             <div key={item.q} className="es-card p-5">
@@ -167,7 +167,7 @@ function FeaturedPrebuilds() {
       <div className="mb-10 flex items-end justify-between gap-4">
         <div>
           <p className="es-kicker es-kicker-telemetry">Racing · live catalogue</p>
-          <h2 className="es-display mt-2 text-5xl">Prebuilt racing crates</h2>
+          <h2 className="es-display mt-2 text-5xl">Prebuilt Racing Simulators</h2>
         </div>
         <Link to="/shop" className="hidden text-sm text-muted hover:text-paper md:inline">
           Or spec from parts
@@ -278,10 +278,10 @@ function BrandBanner() {
     <section className="border-y border-line bg-panel">
       <div className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-16">
         <p className="es-kicker es-kicker-telemetry">Brands we spec</p>
-        <h2 className="es-display mt-2 text-4xl">Trusted hardware, assembled right</h2>
+        <h2 className="es-display mt-2 text-4xl">Premium Hardware, Professionally Assembled</h2>
         <p className="mt-2 max-w-2xl text-sm text-muted">
           Simagic, Trak Racer, Exodus, SIMRIG and Dynamix on the racing line. Player1 from January 2026.
-          Every crate is compatibility-checked, assembled and QA'd on the Gold Coast.
+          Every simulator is compatibility-checked, assembled and quality-tested on the Gold Coast.
         </p>
         <div className="es-brand-marquee mt-8" aria-label="Brands we spec">
           <div className="es-brand-track">

@@ -7,9 +7,9 @@ import { breadcrumbLd, pageHead } from "@/lib/es/seo";
 export const Route = createFileRoute("/_site/aircraft/helicopter")({
   head: () =>
     pageHead({
-      title: "Helicopter simulators | Everything Simulated Gold Coast",
+      title: "Helicopter Simulators Australia | Training & Rehearsal | Everything Simulated",
       description:
-        "Helicopter cockpit simulators specced and assembled on the Gold Coast. Studio consult for training and rehearsal builds.",
+        "Custom helicopter cockpit simulators with collective, cyclic and anti-torque controls. Specced to your training requirements and assembled on the Gold Coast.",
       path: "/aircraft/helicopter",
     }),
   component: HelicopterPage,
@@ -27,8 +27,8 @@ function HelicopterPage() {
       />
       <PageHero
         kicker="Rotary"
-        title="Helicopter simulators."
-        lead="Collective, cyclic and anti-torque layouts for training and rehearsal — specced with you, assembled on the Gold Coast."
+        title="Helicopter Simulators"
+        lead="Collective, cyclic and anti-torque control layouts for training and procedure rehearsal — specced to your requirements and assembled on the Gold Coast."
         image="/rigs/showroom.jpg"
         tone="adventure"
       >
@@ -62,7 +62,7 @@ function HelicopterPage() {
             ]}
           />
         </div>
-        <PhoneStrip title="Book the studio." lead="Capacity, not a catalogue." />
+        <PhoneStrip title="Book a Studio Consultation" lead="Every helicopter build starts with a consultation to define your requirements." />
       </div>
     </div>
   );

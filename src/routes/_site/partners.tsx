@@ -7,9 +7,9 @@ import { breadcrumbLd, pageHead } from "@/lib/es/seo";
 export const Route = createFileRoute("/_site/partners")({
   head: () =>
     pageHead({
-      title: "Partners and industry | Everything Simulated",
+      title: "Hardware & Industry Partners | Everything Simulated",
       description:
-        "Hardware, events and industry partners for Everything Simulated — Simagic, Trak Racer, Exodus, SIMRIG, Dynamix, Player1, Circolo and Adrenalin Events.",
+        "The hardware brands, event partners and industry collaborators behind Everything Simulated — Simagic, Trak Racer, Exodus, SIMRIG, Dynamix, Player1, Circolo and Adrenalin Events.",
       path: "/partners",
     }),
   component: PartnersPage,
@@ -26,8 +26,8 @@ function PartnersPage() {
       />
       <PageHero
         kicker="Industry"
-        title="Partners we name in public."
-        lead="Hardware we bolt on, events we hire to, and industry names already on the workshop’s socials. Only people and brands we actually work with."
+        title="Hardware & Industry Partners"
+        lead="The brands we install, the venues we partner with and the industry names behind our builds. Every listing represents an active working relationship."
         image="/rigs/starter.jpg"
         tone="race"
       />
@@ -48,7 +48,7 @@ function PartnersPage() {
             </ul>
           </section>
         ))}
-        <PhoneStrip title="Want to be listed?" lead="Hardware, venues, teams and training partners go through the staff inbox." />
+        <PhoneStrip title="Become a Partner" lead="We work with hardware manufacturers, venues, racing teams and training providers. Get in touch via the enquiry form." />
       </div>
     </div>
   );

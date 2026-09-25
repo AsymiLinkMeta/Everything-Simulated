@@ -11,8 +11,8 @@ import { Input } from "@/components/ui/input";
 export const Route = createFileRoute("/_site/order")({
   head: () =>
     pageHead({
-      title: "Track an order | Everything Simulated",
-      description: "Look up your build request by order ID and email.",
+      title: "Track Your Order | Everything Simulated",
+      description: "Look up your racing simulator order by reference number and email to check build status, tracking and delivery.",
       path: "/order",
       index: false,
     }),
@@ -254,7 +254,7 @@ function TrackOrder() {
         <div className="mx-auto mb-5 grid size-14 place-items-center rounded-full bg-raised">
           <Package className="size-7 text-muted" />
         </div>
-        <h1 className="text-2xl font-medium">Track an order</h1>
+        <h1 className="text-2xl font-medium">Track Your Order</h1>
         <p className="mt-2 text-sm text-muted">
           Enter your order ID and the email used at checkout to see the status of your build.
         </p>

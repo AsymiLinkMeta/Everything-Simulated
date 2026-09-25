@@ -8,8 +8,8 @@ import { PageHero } from "@/components/es/section-page";
 export const Route = createFileRoute("/_site/compatibility")({
   head: () =>
     pageHead({
-      title: "Sim racing compatibility checker Australia | Everything Simulated",
-      description: "Check Simagic, Trak Racer, Exodus and SIMRIG builds before you buy. Torque, payload, QR and mounts are enforced by rules — not guessed by chat.",
+      title: "Racing Simulator Compatibility Checker | Everything Simulated",
+      description: "Verify your racing simulator build before you buy. Our compatibility engine checks Simagic, Trak Racer, Exodus and SIMRIG components for torque, payload, quick-release and mount clearance.",
       path: "/compatibility",
     }),
   component: Compatibility,
@@ -21,8 +21,8 @@ function Compatibility() {
       <JsonLd data={breadcrumbLd([{ name: "Home", path: "/" }, { name: "Compatibility checker", path: "/compatibility" }])} />
       <PageHero
         kicker="Build engine"
-        title="Spec a compatible crate."
-        lead="One category at a time. The checker blocks a bad mix before deposit — chat can explain a result, it cannot override it."
+        title="Racing Simulator Compatibility Checker"
+        lead="Select one component at a time. The compatibility engine automatically blocks incompatible combinations before you reach the deposit stage."
         image="/rigs/motion.jpg"
       />
       <div className="es-body grid min-w-0 gap-8 lg:grid-cols-[1fr_360px]">

@@ -20,7 +20,7 @@ export const Route = createFileRoute("/_site/checkout")({
   head: () =>
     pageHead({
       title: "Checkout | Everything Simulated",
-      description: "Review your sim racing build and place your order.",
+      description: "Review your racing simulator build, verify compatibility and place your order.",
       path: "/checkout",
       index: false,
     }),
@@ -95,7 +95,7 @@ function Checkout() {
     return (
       <div className="mx-auto max-w-lg px-5 py-20 text-center">
         <ShoppingCart className="mx-auto mb-4 size-12 text-muted" />
-        <h1 className="text-xl font-medium">Your cart is empty</h1>
+        <h1 className="text-xl font-medium">Your build is empty</h1>
         <p className="mt-2 text-sm text-muted">
           Add parts from the shop or load a pre-configured package to get started.
         </p>

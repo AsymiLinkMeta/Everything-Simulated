@@ -15,9 +15,9 @@ import { breadcrumbLd, pageHead } from "@/lib/es/seo";
 export const Route = createFileRoute("/_site/drivers")({
   head: () =>
     pageHead({
-      title: "Ambassadors | Everything Simulated",
+      title: "Ambassador Drivers & Sponsored Teams | Everything Simulated",
       description:
-        "Everything Simulated ambassadors. Each card is photo, name, bio, motorsport, series, class and the rig they run — with Order this rig on a live prebuild.",
+        "Meet the drivers and teams behind Everything Simulated. Each ambassador profile features their motorsport, series, class and the exact simulator they train on — available to order.",
       path: "/ambassadors",
     }),
   component: AmbassadorsPage,
@@ -36,8 +36,8 @@ export function AmbassadorsPage() {
       />
       <PageHero
         kicker="People · Ambassadors"
-        title="Drivers the workshop stands with."
-        lead="Photo, name, the motorsport they race, and the crate they sit in. Order this rig loads that prebuild and stamps their code on the checkout — it is not a discount."
+        title="Our Ambassador Drivers"
+        lead="The drivers and teams we stand behind. Each profile shows their motorsport, series and the simulator they train on. Order their exact rig configuration — the ambassador code attributes the build, not a discount."
         image="/rigs/haptic.jpg"
         tone="race"
       />
@@ -128,9 +128,9 @@ export function AmbassadorsPage() {
 
         <section className="es-ambassador-form-preview">
           <p className="es-kicker">Their card</p>
-          <h2 className="es-display mt-2 text-4xl">They fill it. We attach the crate.</h2>
+          <h2 className="es-display mt-2 text-4xl">Driver Profiles & Rig Specs</h2>
           <p className="mt-3 max-w-2xl text-sm text-muted">
-            Motorsport, series and class stay blank fields. The workshop attaches a live prebuild so a buyer can order the same rig.
+            Each ambassador completes their own profile. The workshop attaches a live prebuild so buyers can order the identical rig configuration.
           </p>
           <ul className="es-profile-fields">
             {AMBASSADOR_PROFILE_FIELDS.map((f) => (
@@ -142,7 +142,7 @@ export function AmbassadorsPage() {
           </ul>
         </section>
 
-        <CtaStrip title="The code attributes the crate." lead="It does not discount it. Commission is settled by the workshop from the order notes.">
+        <CtaStrip title="Ambassador Referral Program" lead="Ambassador codes attribute the order to the driver. Commission is managed by the workshop — it is not a customer discount.">
           <Link to="/contact" className="es-btn">
             Nominate an ambassador
           </Link>

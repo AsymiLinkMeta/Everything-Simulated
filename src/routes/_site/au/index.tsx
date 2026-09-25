@@ -7,8 +7,8 @@ import { ImageCards, PageHero, PhoneStrip } from "@/components/es/section-page";
 export const Route = createFileRoute("/_site/au/")({
   head: () =>
     pageHead({
-      title: "Racing simulators delivered Australia-wide | Everything Simulated",
-      description: "Gold Coast built sim racing rigs crate-freighted to Sydney, Melbourne, Brisbane, Perth, Adelaide, Canberra, Hobart, Darwin and the Sunshine Coast.",
+      title: "Racing Simulators Delivered Australia-Wide | Everything Simulated",
+      description: "Gold Coast assembled racing simulators delivered to Sydney, Melbourne, Brisbane, Perth, Adelaide, Canberra, Hobart, Darwin and the Sunshine Coast. Professional crate freight with optional white-glove installation.",
       path: "/au",
     }),
   component: Australia,
@@ -20,8 +20,8 @@ function Australia() {
       <JsonLd data={itemListLd("Racing simulators delivered Australia-wide", "/au", CITIES.map((c) => ({ name: `Sim racing ${c.name}`, path: `/au/${c.slug}` })))} />
       <PageHero
         kicker="Coverage"
-        title="Australia-wide from the Gold Coast."
-        lead="One workshop. Capital-city crates. Optional white-glove install."
+        title="Australia-Wide Simulator Delivery"
+        lead="One workshop. Every capital city. Professional crate freight with optional white-glove installation."
         image="/rigs/showroom.jpg"
       />
       <div className="es-body">
@@ -34,7 +34,7 @@ function Australia() {
             hint: c.note,
           }))}
         />
-        <PhoneStrip title="Freight from the Coast." lead="SEQ install is standard. Capitals are scheduled. Regional is quoted." />
+        <PhoneStrip title="Delivery & Installation" lead="South-East Queensland installation is included. Capital cities are scheduled. Regional areas are quoted individually." />
       </div>
     </div>
   );

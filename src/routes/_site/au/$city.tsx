@@ -14,8 +14,8 @@ export const Route = createFileRoute("/_site/au/$city")({
   head: ({ loaderData }) => {
     if (!loaderData) return {};
     return pageHead({
-      title: `Sim racing simulator ${loaderData.name} ${loaderData.state} | Everything Simulated`,
-      description: `Buy a Gold Coast built racing simulator delivered to ${loaderData.name}. ${loaderData.note} Starter, Haptic and Motion packages with Simagic and SIMRIG.`,
+      title: `Racing Simulators ${loaderData.name} ${loaderData.state} | Buy & Deliver | Everything Simulated`,
+      description: `Turn-key racing simulators assembled on the Gold Coast and delivered to ${loaderData.name}. ${loaderData.note} Starter, Haptic and Motion packages featuring Simagic and SIMRIG.`,
       path: `/au/${loaderData.slug}`,
     });
   },
@@ -31,13 +31,13 @@ function CityPage() {
       <JsonLd data={breadcrumbLd([{ name: "Home", path: "/" }, { name: "Australia", path: "/au" }, { name: city.name, path: `/au/${city.slug}` }])} />
       <PageHero
         kicker={`${city.state} · Australia-wide`}
-        title={`Racing simulators in ${city.name}.`}
+        title={`Racing Simulators Delivered to ${city.name}`}
         lead={city.note}
         image="/rigs/showroom.jpg"
       />
       <div className="es-body">
         <BackButton />
-        <p className="max-w-2xl text-sm text-muted">Every system is still assembled and QA’d on the Gold Coast. Workshop photos before the crate is sealed.</p>
+        <p className="max-w-2xl text-sm text-muted">Every simulator is assembled, tested and quality-checked on the Gold Coast. Build photos are taken before the crate is sealed.</p>
         <div className="mt-10 grid grid-cols-2 gap-6 md:grid-cols-3">
           {livePackages().map((pack) => (
             <PackageCard key={pack.slug} pack={pack} />

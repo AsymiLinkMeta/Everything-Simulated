@@ -11,8 +11,8 @@ import { PageHero, PhoneStrip } from "@/components/es/section-page";
 export const Route = createFileRoute("/_site/shop/")({
   head: () =>
     pageHead({
-      title: "Sim racing parts shop Australia | Simagic, Trak Racer, Exodus",
-      description: "Shop Simagic wheelbases, Trak Racer and Exodus chassis, SIMRIG motion, AOC triples and race PCs. Gold Coast stocked, compatibility checked, shipped Australia-wide.",
+      title: "Sim Racing Parts & Components Australia | Simagic, Trak Racer, Exodus",
+      description: "Shop Simagic wheelbases, Trak Racer and Exodus chassis, SIMRIG motion platforms, AOC triple screens and race PCs. Gold Coast stocked, compatibility verified and shipped Australia-wide.",
       path: "/shop",
     }),
   component: Shop,
@@ -55,8 +55,8 @@ function Shop() {
       <JsonLd data={itemListLd("Sim racing parts Australia", "/shop", (products.data ?? []).slice(0, 40).map((p) => ({ name: `${p.brand} ${p.name}`, path: `/shop/${p.sku}` })))} />
       <PageHero
         kicker="Catalogue"
-        title="The spec we actually bolt on."
-        lead="Not a parts warehouse. Every SKU is something we mount, cable and crate."
+        title="Sim Racing Parts & Components"
+        lead="Every component in this catalogue is one we install, wire and ship. No third-party drop-shipping."
         image="/rigs/starter.jpg"
       />
       <div className="es-body">
@@ -78,7 +78,7 @@ function Shop() {
             <CartPanel compact />
           </div>
         </div>
-        <PhoneStrip title="Not sure on a SKU?" lead="The checker will block a bad crate before a deposit." />
+        <PhoneStrip title="Need Help Choosing?" lead="The compatibility checker will flag any issues before you place a deposit." />
       </div>
     </div>
   );

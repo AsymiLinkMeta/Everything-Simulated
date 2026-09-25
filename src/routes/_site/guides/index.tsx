@@ -7,8 +7,8 @@ import { ImageCards, PageHero, PhoneStrip } from "@/components/es/section-page";
 export const Route = createFileRoute("/_site/guides/")({
   head: () =>
     pageHead({
-      title: "Sim racing buying guides Australia | Everything Simulated",
-      description: "How much a racing simulator costs in Australia, motion vs haptic, Simagic ecosystem, junior setups, triples vs ultrawide, and Australia-wide delivery.",
+      title: "Sim Racing Buying Guides Australia | Everything Simulated",
+      description: "Expert buying guides covering racing simulator pricing in Australia, motion vs haptic feedback, the Simagic ecosystem, junior setups, screen configurations and nationwide delivery.",
       path: "/guides",
     }),
   component: Guides,
@@ -22,8 +22,8 @@ function Guides() {
       <JsonLd data={itemListLd("Sim racing buying guides Australia", "/guides", GUIDES.map((g) => ({ name: g.title, path: `/guides/${g.slug}` })))} />
       <PageHero
         kicker="Editorial"
-        title="Guides from the workshop."
-        lead="Written against the builds we actually crate — not affiliate parts lists."
+        title="Sim Racing Buying Guides"
+        lead="Written from hands-on experience with the builds we assemble — not affiliate parts lists."
         image="/rigs/starter.jpg"
       />
       <div className="es-body">
@@ -36,7 +36,7 @@ function Guides() {
             hint: g.description,
           }))}
         />
-        <PhoneStrip title="Still choosing a crate?" lead="The workshop will walk the checker with you." />
+        <PhoneStrip title="Still Deciding?" lead="Call the workshop and we will walk through the compatibility checker with you." />
       </div>
     </div>
   );

@@ -6,9 +6,9 @@ import { breadcrumbLd, pageHead } from "@/lib/es/seo";
 export const Route = createFileRoute("/_site/drones")({
   head: () =>
     pageHead({
-      title: "Drone simulators | Everything Simulated Gold Coast",
+      title: "Drone & FPV Simulators Australia | Ground Station Training | Everything Simulated",
       description:
-        "FPV and ground-station drone simulators assembled on the Gold Coast. Studio consult for commercial and recreational trainers — capacity, not a fake shop.",
+        "FPV and ground-station drone simulators assembled on the Gold Coast. Custom-built for commercial and recreational operators — specced to your mission profile and shipped Australia-wide.",
       path: "/drones",
     }),
   component: DronesPage,
@@ -25,8 +25,8 @@ function DronesPage() {
       />
       <PageHero
         kicker="Drones · workshop platform"
-        title="Rehearsal without the airframe."
-        lead="Ground-station and FPV trainers for operators who need hours on the sticks first. Named as workshop capacity — specced with you, assembled here."
+        title="Drone & FPV Training Simulators"
+        lead="Purpose-built ground-station and FPV trainers for operators who need logged hours before flying live. Each build is specced to your mission requirements and assembled on the Gold Coast."
         image="/rigs/motion.jpg"
         tone="adventure"
       >
@@ -45,7 +45,7 @@ function DronesPage() {
             { to: "/contact", image: "/rigs/motion.jpg", kicker: "Enquire", title: "RePL, FPV or ops", hint: "Tell us the brief. We are not a CASA RTO." },
           ]}
         />
-        <PhoneStrip title="We build the simulator." lead="Licence courses sit with the right partner. If you need a ticket, we will say so." />
+        <PhoneStrip title="We Build the Simulator" lead="Licensing and certification courses are delivered by accredited partners. If you need a qualification, we will refer you to the right provider." />
       </div>
     </div>
   );
