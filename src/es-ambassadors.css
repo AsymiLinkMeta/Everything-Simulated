@@ -152,6 +152,79 @@
   margin-top: 3.5rem;
 }
 
+/* Tier header and badges */
+.es-tier-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--es-line);
+}
+.es-tier-badge {
+  display: inline-block;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  border-radius: 4px;
+}
+.es-tier-badge--fully_sponsored {
+  background: var(--es-red);
+  color: #fff;
+}
+.es-tier-badge--sponsored_driver {
+  background: rgba(255, 255, 255, 0.12);
+  color: var(--es-paper);
+  border: 1px solid var(--es-line);
+}
+.es-tier-badge--sponsored_customer {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--es-muted);
+  border: 1px solid var(--es-line);
+}
+
+.es-tier-pill {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: 3px;
+  white-space: nowrap;
+}
+.es-tier-pill--fully_sponsored {
+  background: var(--es-red);
+  color: #fff;
+}
+.es-tier-pill--sponsored_driver {
+  background: rgba(255, 255, 255, 0.1);
+  color: var(--es-paper);
+}
+.es-tier-pill--sponsored_customer {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--es-muted);
+}
+
+.es-ambassador-card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.es-qr-panel {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5rem 2rem;
+  background: var(--es-panel);
+  border: 1px solid var(--es-line);
+  border-radius: 12px;
+}
+
 .es-profile-fields {
   display: grid;
   gap: 1px;

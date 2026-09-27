@@ -1,16 +1,19 @@
 import { createFileRoute, Link, applyHeadPayload } from "@tanstack/react-router";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { JsonLd, Money } from "@/components/es/bits";
 import { OrderRigButton } from "@/components/es/order-rig";
+import { QrCode } from "@/components/es/qr-code";
 import { CtaStrip, PageHero } from "@/components/es/section-page";
 import {
   fetchAmbassadors,
   getCachedAmbassadorBySlug,
   ambassadorLink,
+  ambassadorProfileUrl,
   crateForAmbassador,
   specsForAmbassador,
+  TIER_LABELS,
 } from "@/lib/es/ambassadors";
 import { breadcrumbLd, pageHead } from "@/lib/es/seo";
 
@@ -27,6 +30,7 @@ export const Route = createFileRoute("/_site/ambassador-profile")({
 export function AmbassadorProfile() {
   const { slug } = useParams();
   const { data, isPending } = useQuery({ queryKey: ["ambassadors"], queryFn: fetchAmbassadors });
+  const [showQr, setShowQr] = useState(false);
 
   const ambassador = data
     ? data.find((a) => a.slug === (slug || ""))
@@ -68,6 +72,7 @@ export function AmbassadorProfile() {
 
   const crate = crateForAmbassador(ambassador);
   const specs = specsForAmbassador(ambassador);
+  const profileUrl = ambassadorProfileUrl(ambassador.slug);
 
   return (
     <div>
@@ -85,13 +90,37 @@ export function AmbassadorProfile() {
         image={ambassador.photo || crate?.image || "/rigs/haptic.jpg"}
         tone="race"
       >
+        <div className="mt-4">
+          <span className={`es-tier-pill es-tier-pill--${ambassador.tier}`}>{TIER_LABELS[ambassador.tier]}</span>
+        </div>
         <div className="mt-8 flex flex-wrap gap-3">
           {crate ? <OrderRigButton ambassador={ambassador} /> : null}
           <Link to={ambassadorLink(ambassador.code)} className="es-btn es-btn-paper">
             Code {ambassador.code}
           </Link>
+          <button
+            type="button"
+            className="es-btn es-btn-ghost"
+            onClick={() => setShowQr(!showQr)}
+          >
+            {showQr ? "Hide QR" : "Show QR Code"}
+          </button>
         </div>
       </PageHero>
+
+      {showQr && (
+        <div className="es-body" style={{ textAlign: "center", paddingBottom: 0 }}>
+          <div className="es-qr-panel">
+            <QrCode url={profileUrl} size={200} />
+            <p className="mt-3 text-sm text-muted">
+              Scan to view this profile on another device
+            </p>
+            <p className="mt-1 text-xs text-muted break-all" style={{ maxWidth: 320, margin: "4px auto 0" }}>
+              {profileUrl}
+            </p>
+          </div>
+        </div>
+      )}
 
       <div className="es-body">
         <div className="es-media-split">

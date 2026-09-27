@@ -3,11 +3,14 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { QrCode } from "@/components/es/qr-code";
 import {
   fetchMyAmbassadorProfile,
   ambassadorSelfUpdate,
   ambassadorLink,
   ambassadorProfilePath,
+  ambassadorProfileUrl,
+  TIER_LABELS,
 } from "@/lib/es/ambassadors";
 import type { AmbassadorSocial, RigSpec } from "@/lib/es/ambassadors";
 
@@ -36,6 +39,7 @@ function AmbassadorSelfEdit() {
   const [youtube, setYoutube] = useState("");
   const [facebook, setFacebook] = useState("");
   const [rigSpecs, setRigSpecs] = useState<RigSpec[]>([]);
+  const [showQr, setShowQr] = useState(false);
 
   useEffect(() => {
     if (!profile) return;
@@ -105,16 +109,31 @@ function AmbassadorSelfEdit() {
         <h1 className="mt-1 text-2xl font-medium">{profile.name}</h1>
         <p className="mt-1 text-sm text-muted">
           Code: <strong>{profile.code}</strong>
+          {" · "}{TIER_LABELS[profile.tier]}
           {profile.published ? " · Published" : " · Draft (not public yet)"}
         </p>
-        <div className="mt-2 flex gap-3 text-sm">
+        <div className="mt-3 flex flex-wrap gap-3 text-sm">
           <a href={ambassadorProfilePath(profile.slug)} className="text-accent hover:underline">
             View public profile
           </a>
           <a href={ambassadorLink(profile.code)} className="text-accent hover:underline">
             Checkout link
           </a>
+          <button
+            type="button"
+            onClick={() => setShowQr(!showQr)}
+            className="text-accent hover:underline"
+            style={{ background: "none", border: "none", cursor: "pointer" }}
+          >
+            {showQr ? "Hide QR" : "Show QR code"}
+          </button>
         </div>
+        {showQr && (
+          <div className="mt-4">
+            <QrCode url={ambassadorProfileUrl(profile.slug)} size={180} />
+            <p className="mt-2 text-xs text-muted">Show this on your phone so others can scan to view your profile.</p>
+          </div>
+        )}
       </div>
 
       <form
@@ -128,45 +147,21 @@ function AmbassadorSelfEdit() {
           <legend className="text-lg font-medium">About you</legend>
           <label className="block">
             <span className="text-sm text-muted">Bio</span>
-            <textarea
-              className="mt-1 block w-full rounded-lg border border-white/10 bg-raised px-3 py-2 text-sm"
-              rows={3}
-              value={bio}
-              onChange={(e) => setBio(e.target.value)}
-            />
+            <textarea className="mt-1 block w-full rounded-lg border border-white/10 bg-raised px-3 py-2 text-sm" rows={3} value={bio} onChange={(e) => setBio(e.target.value)} />
           </label>
           <label className="block">
             <span className="text-sm text-muted">Photo URL</span>
             <Input value={photo} onChange={(e) => setPhoto(e.target.value)} placeholder="/rigs/your-photo.jpg" />
           </label>
           <div className="grid gap-4 sm:grid-cols-2">
-            <label className="block">
-              <span className="text-sm text-muted">Motorsport</span>
-              <Input value={motorsport} onChange={(e) => setMotorsport(e.target.value)} placeholder="e.g. Karting" />
-            </label>
-            <label className="block">
-              <span className="text-sm text-muted">Series</span>
-              <Input value={series} onChange={(e) => setSeries(e.target.value)} placeholder="e.g. AKC" />
-            </label>
-            <label className="block">
-              <span className="text-sm text-muted">Class</span>
-              <Input value={className} onChange={(e) => setClassName(e.target.value)} placeholder="e.g. KA3 Junior" />
-            </label>
-            <label className="block">
-              <span className="text-sm text-muted">Team / status</span>
-              <Input value={teamStatus} onChange={(e) => setTeamStatus(e.target.value)} placeholder="e.g. Privateer" />
-            </label>
-            <label className="block">
-              <span className="text-sm text-muted">Base</span>
-              <Input value={base} onChange={(e) => setBase(e.target.value)} placeholder="e.g. Gold Coast" />
-            </label>
+            <label className="block"><span className="text-sm text-muted">Motorsport</span><Input value={motorsport} onChange={(e) => setMotorsport(e.target.value)} placeholder="e.g. Karting" /></label>
+            <label className="block"><span className="text-sm text-muted">Series</span><Input value={series} onChange={(e) => setSeries(e.target.value)} placeholder="e.g. AKC" /></label>
+            <label className="block"><span className="text-sm text-muted">Class</span><Input value={className} onChange={(e) => setClassName(e.target.value)} placeholder="e.g. KA3 Junior" /></label>
+            <label className="block"><span className="text-sm text-muted">Team / status</span><Input value={teamStatus} onChange={(e) => setTeamStatus(e.target.value)} placeholder="e.g. Privateer" /></label>
+            <label className="block"><span className="text-sm text-muted">Base</span><Input value={base} onChange={(e) => setBase(e.target.value)} placeholder="e.g. Gold Coast" /></label>
             <label className="block">
               <span className="text-sm text-muted">Age band</span>
-              <select
-                className="mt-1 block w-full rounded-lg border border-white/10 bg-raised px-3 py-2 text-sm"
-                value={ageBand}
-                onChange={(e) => setAgeBand(e.target.value)}
-              >
+              <select className="mt-1 block w-full rounded-lg border border-white/10 bg-raised px-3 py-2 text-sm" value={ageBand} onChange={(e) => setAgeBand(e.target.value)}>
                 <option value="">Not set</option>
                 <option value="U12">U12</option>
                 <option value="12-15">12-15</option>
@@ -180,22 +175,10 @@ function AmbassadorSelfEdit() {
         <fieldset className="space-y-4">
           <legend className="text-lg font-medium">Socials</legend>
           <div className="grid gap-4 sm:grid-cols-2">
-            <label className="block">
-              <span className="text-sm text-muted">Instagram URL</span>
-              <Input value={instagram} onChange={(e) => setInstagram(e.target.value)} placeholder="https://instagram.com/..." />
-            </label>
-            <label className="block">
-              <span className="text-sm text-muted">TikTok URL</span>
-              <Input value={tiktok} onChange={(e) => setTiktok(e.target.value)} placeholder="https://tiktok.com/@..." />
-            </label>
-            <label className="block">
-              <span className="text-sm text-muted">YouTube URL</span>
-              <Input value={youtube} onChange={(e) => setYoutube(e.target.value)} placeholder="https://youtube.com/..." />
-            </label>
-            <label className="block">
-              <span className="text-sm text-muted">Facebook URL</span>
-              <Input value={facebook} onChange={(e) => setFacebook(e.target.value)} placeholder="https://facebook.com/..." />
-            </label>
+            <label className="block"><span className="text-sm text-muted">Instagram URL</span><Input value={instagram} onChange={(e) => setInstagram(e.target.value)} placeholder="https://instagram.com/..." /></label>
+            <label className="block"><span className="text-sm text-muted">TikTok URL</span><Input value={tiktok} onChange={(e) => setTiktok(e.target.value)} placeholder="https://tiktok.com/@..." /></label>
+            <label className="block"><span className="text-sm text-muted">YouTube URL</span><Input value={youtube} onChange={(e) => setYoutube(e.target.value)} placeholder="https://youtube.com/..." /></label>
+            <label className="block"><span className="text-sm text-muted">Facebook URL</span><Input value={facebook} onChange={(e) => setFacebook(e.target.value)} placeholder="https://facebook.com/..." /></label>
           </div>
         </fieldset>
 
@@ -203,55 +186,16 @@ function AmbassadorSelfEdit() {
           <legend className="text-lg font-medium">Rig</legend>
           <label className="block">
             <span className="text-sm text-muted">Rig note</span>
-            <textarea
-              className="mt-1 block w-full rounded-lg border border-white/10 bg-raised px-3 py-2 text-sm"
-              rows={2}
-              value={rigNote}
-              onChange={(e) => setRigNote(e.target.value)}
-            />
+            <textarea className="mt-1 block w-full rounded-lg border border-white/10 bg-raised px-3 py-2 text-sm" rows={2} value={rigNote} onChange={(e) => setRigNote(e.target.value)} />
           </label>
           {rigSpecs.map((spec, i) => (
             <div key={i} className="flex gap-2 items-end">
-              <label className="flex-1">
-                <span className="text-sm text-muted">Label</span>
-                <Input
-                  value={spec.label}
-                  onChange={(e) => {
-                    const next = [...rigSpecs];
-                    next[i] = { ...spec, label: e.target.value };
-                    setRigSpecs(next);
-                  }}
-                />
-              </label>
-              <label className="flex-[2]">
-                <span className="text-sm text-muted">Value</span>
-                <Input
-                  value={spec.value}
-                  onChange={(e) => {
-                    const next = [...rigSpecs];
-                    next[i] = { ...spec, value: e.target.value };
-                    setRigSpecs(next);
-                  }}
-                />
-              </label>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={() => setRigSpecs(rigSpecs.filter((_, j) => j !== i))}
-              >
-                Remove
-              </Button>
+              <label className="flex-1"><span className="text-sm text-muted">Label</span><Input value={spec.label} onChange={(e) => { const next = [...rigSpecs]; next[i] = { ...spec, label: e.target.value }; setRigSpecs(next); }} /></label>
+              <label className="flex-[2]"><span className="text-sm text-muted">Value</span><Input value={spec.value} onChange={(e) => { const next = [...rigSpecs]; next[i] = { ...spec, value: e.target.value }; setRigSpecs(next); }} /></label>
+              <Button type="button" variant="ghost" size="sm" onClick={() => setRigSpecs(rigSpecs.filter((_, j) => j !== i))}>Remove</Button>
             </div>
           ))}
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => setRigSpecs([...rigSpecs, { label: "", value: "" }])}
-          >
-            Add spec row
-          </Button>
+          <Button type="button" variant="outline" size="sm" onClick={() => setRigSpecs([...rigSpecs, { label: "", value: "" }])}>Add spec row</Button>
         </fieldset>
 
         <div className="flex items-center gap-4">

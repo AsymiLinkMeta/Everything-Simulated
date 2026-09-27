@@ -4,6 +4,13 @@ import { livePackages } from "./prebuilds";
 import type { PackageSpec } from "./types";
 
 export type AgeBand = "U12" | "12-15" | "16-17" | "18+";
+export type AmbassadorTier = "fully_sponsored" | "sponsored_driver" | "sponsored_customer";
+
+export const TIER_LABELS: Record<AmbassadorTier, string> = {
+  fully_sponsored: "Fully Sponsored Driver",
+  sponsored_driver: "Brand Ambassador",
+  sponsored_customer: "Sponsored Customer",
+};
 
 export type AmbassadorSocial = {
   instagram?: string;
@@ -14,7 +21,6 @@ export type AmbassadorSocial = {
 
 export type RigSpec = { label: string; value: string };
 
-/** Everything on the card is typed by the driver. No preset series list. */
 export type Ambassador = {
   slug: string;
   name: string;
@@ -26,13 +32,13 @@ export type Ambassador = {
   teamStatus?: string;
   base?: string;
   ageBand?: AgeBand;
-  /** Live prebuild slug this driver showcases. */
   crate?: string;
   rigNote?: string;
   rigSpecs?: RigSpec[];
   code: string;
   social?: AmbassadorSocial;
   published: boolean;
+  tier: AmbassadorTier;
 };
 
 type DbRow = {
@@ -53,7 +59,11 @@ type DbRow = {
   social: unknown;
   published: boolean;
   sort_order: number;
+  tier: string;
 };
+
+const SELECT_COLS = "slug, name, photo, bio, motorsport, series, class_name, team_status, base, age_band, crate, rig_note, rig_specs, code, social, published, sort_order, tier";
+const SELECT_COLS_FULL = "id, user_id, " + SELECT_COLS;
 
 function toAmbassador(row: DbRow): Ambassador {
   const social = (row.social && typeof row.social === "object" ? row.social : {}) as AmbassadorSocial;
@@ -77,6 +87,7 @@ function toAmbassador(row: DbRow): Ambassador {
     code: row.code,
     social: Object.values(social).some(Boolean) ? social : undefined,
     published: row.published,
+    tier: (row.tier as AmbassadorTier) || "sponsored_driver",
   };
 }
 
@@ -86,6 +97,10 @@ export function ambassadorLink(code: string) {
 
 export function ambassadorProfilePath(slug: string) {
   return `/ambassadors/${slug}`;
+}
+
+export function ambassadorProfileUrl(slug: string) {
+  return `${window.location.origin}/ambassadors/${slug}`;
 }
 
 export function crateForAmbassador(a: Ambassador): PackageSpec | null {
@@ -109,7 +124,7 @@ export async function fetchAmbassadors(): Promise<Ambassador[]> {
   const run = (async () => {
     const { data, error } = await supabase
       .from("ambassadors")
-      .select("slug, name, photo, bio, motorsport, series, class_name, team_status, base, age_band, crate, rig_note, rig_specs, code, social, published, sort_order")
+      .select(SELECT_COLS)
       .order("sort_order");
 
     if (error || !data) {
@@ -158,7 +173,7 @@ export async function fetchMyAmbassadorProfile(): Promise<AmbassadorRow | null> 
   if (!user) return null;
   const { data } = await supabase
     .from("ambassadors")
-    .select("id, slug, name, photo, bio, motorsport, series, class_name, team_status, base, age_band, crate, rig_note, rig_specs, code, social, published, sort_order, user_id")
+    .select(SELECT_COLS_FULL)
     .eq("user_id", user.id)
     .maybeSingle();
   if (!data) return null;
@@ -199,7 +214,7 @@ export async function ambassadorSelfUpdate(fields: {
 export async function staffListAllAmbassadors(): Promise<AmbassadorRow[]> {
   const { data, error } = await supabase
     .from("ambassadors")
-    .select("id, slug, name, photo, bio, motorsport, series, class_name, team_status, base, age_band, crate, rig_note, rig_specs, code, social, published, sort_order, user_id")
+    .select(SELECT_COLS_FULL)
     .order("sort_order");
   if (error) throw new Error(error.message);
   return (data as FullDbRow[]).map(toFullRow);
@@ -224,6 +239,7 @@ export async function staffUpsertAmbassador(input: {
   published?: boolean;
   sortOrder?: number;
   userId?: string;
+  tier?: AmbassadorTier;
 }) {
   const row: Record<string, unknown> = {
     slug: input.slug.trim().toLowerCase().replace(/[^a-z0-9-]/g, "-"),
@@ -244,6 +260,7 @@ export async function staffUpsertAmbassador(input: {
     published: input.published ?? false,
     sort_order: input.sortOrder ?? 0,
     user_id: input.userId ?? null,
+    tier: input.tier ?? "sponsored_driver",
     updated_at: new Date().toISOString(),
   };
   const { data, error } = await supabase

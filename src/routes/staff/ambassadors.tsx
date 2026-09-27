@@ -7,8 +7,11 @@ import {
   staffListAllAmbassadors,
   staffUpsertAmbassador,
   staffDeleteAmbassador,
+  TIER_LABELS,
+  ambassadorProfilePath,
 } from "@/lib/es/ambassadors";
-import type { AmbassadorRow, AmbassadorSocial, RigSpec } from "@/lib/es/ambassadors";
+import type { AmbassadorRow, AmbassadorSocial, AmbassadorTier, RigSpec } from "@/lib/es/ambassadors";
+import { QrCode } from "@/components/es/qr-code";
 
 export const Route = createFileRoute("/staff/ambassadors")({
   component: StaffAmbassadors,
@@ -21,6 +24,7 @@ function StaffAmbassadors() {
     queryFn: staffListAllAmbassadors,
   });
   const [editing, setEditing] = useState<AmbassadorRow | "new" | null>(null);
+  const [qrSlug, setQrSlug] = useState<string | null>(null);
 
   const del = useMutation({
     mutationFn: (slug: string) => staffDeleteAmbassador(slug),
@@ -50,29 +54,45 @@ function StaffAmbassadors() {
 
       <div className="space-y-2">
         {rows.map((a) => (
-          <div key={a.slug} className="es-card flex items-center justify-between gap-4 px-4 py-3">
-            <div className="min-w-0 flex-1">
-              <p className="font-medium truncate">{a.name}</p>
-              <p className="text-sm text-muted truncate">
-                {a.code} · {a.published ? "Published" : "Draft"}
-                {a.userId ? " · Linked" : " · Not linked"}
-                {a.motorsport ? ` · ${a.motorsport}` : ""}
-              </p>
+          <div key={a.slug} className="es-card px-4 py-3">
+            <div className="flex items-center justify-between gap-4">
+              <div className="min-w-0 flex-1 flex items-center gap-3">
+                {a.photo ? (
+                  <img src={a.photo} alt="" className="size-10 rounded-full object-cover shrink-0" />
+                ) : (
+                  <div className="size-10 rounded-full bg-raised shrink-0" />
+                )}
+                <div className="min-w-0">
+                  <p className="font-medium truncate">{a.name}</p>
+                  <p className="text-sm text-muted truncate">
+                    {a.code} · {TIER_LABELS[a.tier]} · {a.published ? "Published" : "Draft"}
+                    {a.userId ? " · Linked" : ""}
+                  </p>
+                </div>
+              </div>
+              <div className="flex gap-2 shrink-0">
+                <Button variant="outline" size="sm" onClick={() => setQrSlug(qrSlug === a.slug ? null : a.slug)}>
+                  QR
+                </Button>
+                <Button variant="outline" size="sm" onClick={() => setEditing(a)}>
+                  Edit
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => {
+                    if (confirm(`Delete ${a.name}?`)) del.mutate(a.slug);
+                  }}
+                >
+                  Delete
+                </Button>
+              </div>
             </div>
-            <div className="flex gap-2 shrink-0">
-              <Button variant="outline" size="sm" onClick={() => setEditing(a)}>
-                Edit
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => {
-                  if (confirm(`Delete ${a.name}?`)) del.mutate(a.slug);
-                }}
-              >
-                Delete
-              </Button>
-            </div>
+            {qrSlug === a.slug && (
+              <div className="mt-3 pt-3 border-t border-white/10 flex justify-center">
+                <QrCode url={`${window.location.origin}${ambassadorProfilePath(a.slug)}`} size={180} />
+              </div>
+            )}
           </div>
         ))}
       </div>
@@ -107,6 +127,7 @@ function AmbassadorForm({ initial, onClose }: { initial: AmbassadorRow | null; o
   const [published, setPublished] = useState(initial?.published ?? false);
   const [sortOrder, setSortOrder] = useState(initial?.sortOrder ?? 0);
   const [userId, setUserId] = useState(initial?.userId ?? "");
+  const [tier, setTier] = useState<AmbassadorTier>(initial?.tier ?? "sponsored_driver");
   const [instagram, setInstagram] = useState(initial?.social?.instagram ?? "");
   const [tiktok, setTiktok] = useState(initial?.social?.tiktok ?? "");
   const [youtube, setYoutube] = useState(initial?.social?.youtube ?? "");
@@ -139,6 +160,7 @@ function AmbassadorForm({ initial, onClose }: { initial: AmbassadorRow | null; o
         published,
         sortOrder,
         userId: userId.trim() || undefined,
+        tier,
       });
     },
     onSuccess: () => {
@@ -171,30 +193,32 @@ function AmbassadorForm({ initial, onClose }: { initial: AmbassadorRow | null; o
           </label>
           <label className="block">
             <span className="text-sm text-muted">Slug</span>
-            <Input
-              value={slug}
-              onChange={(e) => setSlug(e.target.value)}
-              placeholder="auto from name"
-              disabled={!isNew}
-            />
+            <Input value={slug} onChange={(e) => setSlug(e.target.value)} placeholder="auto from name" disabled={!isNew} />
           </label>
           <label className="block">
             <span className="text-sm text-muted">Code *</span>
             <Input value={code} onChange={(e) => setCode(e.target.value)} required placeholder="e.g. COSGROVE" />
           </label>
           <label className="block">
-            <span className="text-sm text-muted">Photo URL</span>
-            <Input value={photo} onChange={(e) => setPhoto(e.target.value)} />
+            <span className="text-sm text-muted">Tier *</span>
+            <select
+              className="mt-1 block w-full rounded-lg border border-white/10 bg-raised px-3 py-2 text-sm"
+              value={tier}
+              onChange={(e) => setTier(e.target.value as AmbassadorTier)}
+            >
+              <option value="fully_sponsored">Fully Sponsored Driver</option>
+              <option value="sponsored_driver">Brand Ambassador</option>
+              <option value="sponsored_customer">Sponsored Customer</option>
+            </select>
           </label>
         </div>
         <label className="block">
+          <span className="text-sm text-muted">Photo URL</span>
+          <Input value={photo} onChange={(e) => setPhoto(e.target.value)} />
+        </label>
+        <label className="block">
           <span className="text-sm text-muted">Bio</span>
-          <textarea
-            className="mt-1 block w-full rounded-lg border border-white/10 bg-raised px-3 py-2 text-sm"
-            rows={3}
-            value={bio}
-            onChange={(e) => setBio(e.target.value)}
-          />
+          <textarea className="mt-1 block w-full rounded-lg border border-white/10 bg-raised px-3 py-2 text-sm" rows={3} value={bio} onChange={(e) => setBio(e.target.value)} />
         </label>
         <div className="grid gap-4 sm:grid-cols-3">
           <label className="block">
@@ -219,11 +243,7 @@ function AmbassadorForm({ initial, onClose }: { initial: AmbassadorRow | null; o
           </label>
           <label className="block">
             <span className="text-sm text-muted">Age band</span>
-            <select
-              className="mt-1 block w-full rounded-lg border border-white/10 bg-raised px-3 py-2 text-sm"
-              value={ageBand}
-              onChange={(e) => setAgeBand(e.target.value)}
-            >
+            <select className="mt-1 block w-full rounded-lg border border-white/10 bg-raised px-3 py-2 text-sm" value={ageBand} onChange={(e) => setAgeBand(e.target.value)}>
               <option value="">Not set</option>
               <option value="U12">U12</option>
               <option value="12-15">12-15</option>
@@ -248,53 +268,19 @@ function AmbassadorForm({ initial, onClose }: { initial: AmbassadorRow | null; o
           <legend className="text-sm text-muted">Rig specs</legend>
           {rigSpecs.map((spec, i) => (
             <div key={i} className="flex gap-2 items-end">
-              <Input
-                className="flex-1"
-                value={spec.label}
-                placeholder="Label"
-                onChange={(e) => {
-                  const next = [...rigSpecs];
-                  next[i] = { ...spec, label: e.target.value };
-                  setRigSpecs(next);
-                }}
-              />
-              <Input
-                className="flex-[2]"
-                value={spec.value}
-                placeholder="Value"
-                onChange={(e) => {
-                  const next = [...rigSpecs];
-                  next[i] = { ...spec, value: e.target.value };
-                  setRigSpecs(next);
-                }}
-              />
-              <Button type="button" variant="ghost" size="sm" onClick={() => setRigSpecs(rigSpecs.filter((_, j) => j !== i))}>
-                X
-              </Button>
+              <Input className="flex-1" value={spec.label} placeholder="Label" onChange={(e) => { const next = [...rigSpecs]; next[i] = { ...spec, label: e.target.value }; setRigSpecs(next); }} />
+              <Input className="flex-[2]" value={spec.value} placeholder="Value" onChange={(e) => { const next = [...rigSpecs]; next[i] = { ...spec, value: e.target.value }; setRigSpecs(next); }} />
+              <Button type="button" variant="ghost" size="sm" onClick={() => setRigSpecs(rigSpecs.filter((_, j) => j !== i))}>X</Button>
             </div>
           ))}
-          <Button type="button" variant="outline" size="sm" onClick={() => setRigSpecs([...rigSpecs, { label: "", value: "" }])}>
-            Add spec
-          </Button>
+          <Button type="button" variant="outline" size="sm" onClick={() => setRigSpecs([...rigSpecs, { label: "", value: "" }])}>Add spec</Button>
         </fieldset>
 
         <div className="grid gap-4 sm:grid-cols-2">
-          <label className="block">
-            <span className="text-sm text-muted">Instagram URL</span>
-            <Input value={instagram} onChange={(e) => setInstagram(e.target.value)} />
-          </label>
-          <label className="block">
-            <span className="text-sm text-muted">TikTok URL</span>
-            <Input value={tiktok} onChange={(e) => setTiktok(e.target.value)} />
-          </label>
-          <label className="block">
-            <span className="text-sm text-muted">YouTube URL</span>
-            <Input value={youtube} onChange={(e) => setYoutube(e.target.value)} />
-          </label>
-          <label className="block">
-            <span className="text-sm text-muted">Facebook URL</span>
-            <Input value={facebook} onChange={(e) => setFacebook(e.target.value)} />
-          </label>
+          <label className="block"><span className="text-sm text-muted">Instagram URL</span><Input value={instagram} onChange={(e) => setInstagram(e.target.value)} /></label>
+          <label className="block"><span className="text-sm text-muted">TikTok URL</span><Input value={tiktok} onChange={(e) => setTiktok(e.target.value)} /></label>
+          <label className="block"><span className="text-sm text-muted">YouTube URL</span><Input value={youtube} onChange={(e) => setYoutube(e.target.value)} /></label>
+          <label className="block"><span className="text-sm text-muted">Facebook URL</span><Input value={facebook} onChange={(e) => setFacebook(e.target.value)} /></label>
         </div>
 
         <div className="grid gap-4 sm:grid-cols-3">
