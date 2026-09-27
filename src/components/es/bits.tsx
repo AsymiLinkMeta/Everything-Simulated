@@ -105,8 +105,8 @@ export function JsonLd({ data }: { data: unknown }) {
   );
 }
 
-export function Money({ cents, gst = false }: { cents: number; gst?: boolean }) {
-  if (!cents) {
+export function Money({ cents, gst = false }: { cents: number | null | undefined; gst?: boolean }) {
+  if (cents == null) {
     return <span className="text-muted">Quote</span>;
   }
   if (gst) {
