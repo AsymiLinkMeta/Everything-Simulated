@@ -11,7 +11,6 @@ export default defineConfig({
     alias: {
       "@": path.resolve(root, "src"),
       "@tanstack/react-router": path.resolve(root, "src/shims/tanstack-react-router.tsx"),
-      "@tanstack/react-start": path.resolve(root, "src/shims/tanstack-start.ts"),
     },
   },
   server: { host: true, port: 5173 },

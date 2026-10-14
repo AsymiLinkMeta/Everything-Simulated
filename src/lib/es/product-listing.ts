@@ -54,5 +54,5 @@ export async function generateProductListing(input: {
   if (!response.ok) throw new Error("Could not generate a listing");
   const body = (await response.json()) as { listing?: ProductListing; source?: "grok" | "draft" };
   if (!body.listing) throw new Error("Could not generate a listing");
-  return body;
+  return { listing: body.listing, source: body.source };
 }

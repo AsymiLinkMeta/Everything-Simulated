@@ -1,9 +1,10 @@
+import { SITE_ORIGIN } from "@/lib/site";
 import { BRAND, CITIES, GUIDES, PACKAGES } from "./catalog";
 import { livePackages } from "./prebuilds";
 import { getCachedProducts } from "./product-cache";
 import type { Guide, Product } from "./types";
 
-export const ORIGIN = "https://everythingsimulated.com.au";
+export const ORIGIN = SITE_ORIGIN;
 export const OG_IMAGE = `${ORIGIN}/og.jpg`;
 export const LOGO = `${ORIGIN}/Everything_Simulated_LOGO_W+R.png`;
 export const SAME_AS = [

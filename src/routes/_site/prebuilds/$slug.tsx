@@ -22,8 +22,12 @@ export const Route = createFileRoute("/_site/prebuilds/$slug")({
 });
 
 function PrebuildDetailPage() {
-  const { slug } = Route.useParams();
-  const prebuild = useQuery({ queryKey: ["prebuild", slug], queryFn: () => fetchPrebuildBySlug(slug) });
+  const { slug = "" } = Route.useParams();
+  const prebuild = useQuery({
+    queryKey: ["prebuild", slug],
+    queryFn: () => fetchPrebuildBySlug(slug),
+    enabled: slug.length > 0,
+  });
   const allPrebuilds = useQuery({ queryKey: ["prebuilds"], queryFn: fetchPublishedPrebuilds });
   const products = useQuery({ queryKey: ["products"], queryFn: () => fetchProducts() });
   const loadLines = useCart((s) => s.setLines);
