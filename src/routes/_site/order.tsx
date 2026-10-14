@@ -144,7 +144,6 @@ function TrackOrder() {
       const session = await startDepositCheckout({
         orderId: order.id,
         email: mail,
-        origin: window.location.origin,
       });
       window.location.href = session.url;
     } catch (err) {

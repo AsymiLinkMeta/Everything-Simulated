@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Logo } from "@/components/es/bits";
 import { pageHead } from "@/lib/es/seo";
+import { safeNext } from "@/lib/auth/safe-next";
 
 export const Route = createFileRoute("/login")({
   head: () =>
@@ -20,13 +21,6 @@ export const Route = createFileRoute("/login")({
   component: Login,
 });
 
-function safeNext(raw: string | null, staff: boolean) {
-  if (staff) return "/staff";
-  if (raw && (raw.startsWith("/app") || raw.startsWith("/staff") || raw.startsWith("/checkout") || raw.startsWith("/order"))) {
-    return raw;
-  }
-  return "/app";
-}
 
 function initialMode(): "in" | "up" | "reset" | "new" {
   try {
