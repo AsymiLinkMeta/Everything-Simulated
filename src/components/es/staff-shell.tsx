@@ -1,5 +1,5 @@
 import "./es-chrome";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { Link, Outlet, applyHeadPayload } from "@tanstack/react-router";
 import { Navigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
@@ -185,7 +185,9 @@ export function StaffShell() {
           </div>
         </header>
         <div className="es-wrap" style={{ paddingTop: 24, paddingBottom: 96 }}>
-          <Outlet />
+          <Suspense fallback={<div role="status" aria-live="polite" className="py-16 text-center text-sm text-muted">Loading…</div>}>
+            <Outlet />
+          </Suspense>
         </div>
       </div>
     </div>
