@@ -1,7 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
+import { withCors } from "../_shared/cors.ts";
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
@@ -52,7 +52,7 @@ function isDraft(value: unknown): value is PrebuildDraft {
   );
 }
 
-Deno.serve(async (req: Request) => {
+Deno.serve(withCors(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 200, headers: corsHeaders });
 
   try {
@@ -183,4 +183,4 @@ If the prompt is vague, make reasonable choices based on the available SKUs. Pre
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-});
+}));

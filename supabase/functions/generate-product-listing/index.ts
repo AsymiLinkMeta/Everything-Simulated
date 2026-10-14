@@ -1,7 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
+import { withCors } from "../_shared/cors.ts";
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
@@ -208,7 +208,7 @@ function isListing(value: unknown): value is Listing {
   );
 }
 
-Deno.serve(async (req: Request) => {
+Deno.serve(withCors(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 200, headers: corsHeaders });
 
   try {
@@ -456,4 +456,4 @@ If the source data is thin, still populate sku, brand, name, category, descripti
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-});
+}));

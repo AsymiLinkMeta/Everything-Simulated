@@ -16,14 +16,18 @@ verify_jwt = true
 [functions.billing-config]
 verify_jwt = false
 
+# Guest checkout: authorised by order ID + matching email via lookup_guest_order().
 [functions.create-checkout-session]
 verify_jwt = false
 
+# Stripe cannot send a Supabase JWT; the Stripe-Signature header is verified instead.
 [functions.stripe-webhook]
 verify_jwt = false
 
 [functions.refund-payment]
 verify_jwt = true
 
+# send-mail authenticates in code: a user JWT (checked with auth.getUser) or the
+# X-Internal-Secret header used by stripe-webhook. See supabase/functions/_shared/mail-auth.ts.
 [functions.send-mail]
 verify_jwt = false

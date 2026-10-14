@@ -1,7 +1,9 @@
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
+import { computeDeposit, parseDepositPercent } from "../_shared/deposit.ts";
+import { checkoutReturnUrls } from "../_shared/site.ts";
+import { withCors } from "../_shared/cors.ts";
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
@@ -13,16 +15,16 @@ function json(data: unknown, status = 200) {
   });
 }
 
-Deno.serve(async (req: Request) => {
+Deno.serve(withCors(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 200, headers: corsHeaders });
   try {
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY") ?? "";
     if (!stripeKey) return json({ error: "Card payments are not enabled yet." }, 503);
 
-    const body = (await req.json()) as { orderId?: string; email?: string; origin?: string; full?: boolean };
+    // `origin` from older clients is ignored: return URLs always use SITE_URL.
+    const body = (await req.json()) as { orderId?: string; email?: string; full?: boolean };
     const orderId = String(body.orderId ?? "").trim();
     const email = String(body.email ?? "").trim().toLowerCase();
-    const origin = String(body.origin ?? "https://everythingsimulated.com.au").replace(/\/$/, "");
     if (!orderId || !email.includes("@")) return json({ error: "Order ID and email are required." }, 400);
 
     const supabase = createClient(Deno.env.get("SUPABASE_URL") ?? "", Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "");
@@ -38,16 +40,18 @@ Deno.serve(async (req: Request) => {
     }
 
     const totalInc = Number(order.total_inc_gst) || 0;
-    const percent = Number(Deno.env.get("DEPOSIT_PERCENT") ?? "30") || 30;
-    const depositIncGst = body.full
-      ? totalInc
-      : Math.max(50000, Math.round((totalInc * percent) / 100));
-    const depositExGst = Math.round(depositIncGst / 1.1);
+    if (totalInc <= 0) return json({ error: "This order has no total yet. The workshop will invoice you." }, 400);
+    const { depositIncGst, depositExGst } = computeDeposit({
+      totalIncGstCents: totalInc,
+      percent: parseDepositPercent(Deno.env.get("DEPOSIT_PERCENT")),
+      full: Boolean(body.full),
+    });
+    const urls = checkoutReturnUrls(Deno.env.get("SITE_URL") ?? "", orderId, email);
 
     const params = new URLSearchParams();
     params.set("mode", "payment");
-    params.set("success_url", `${origin}/order?id=${encodeURIComponent(orderId)}&paid=1&email=${encodeURIComponent(email)}`);
-    params.set("cancel_url", `${origin}/order?id=${encodeURIComponent(orderId)}&cancelled=1&email=${encodeURIComponent(email)}`);
+    params.set("success_url", urls.success);
+    params.set("cancel_url", urls.cancel);
     params.set("client_reference_id", orderId);
     params.set("customer_email", email);
     params.set("line_items[0][quantity]", "1");
@@ -87,4 +91,4 @@ Deno.serve(async (req: Request) => {
   } catch (err) {
     return json({ error: err instanceof Error ? err.message : "Checkout failed" }, 500);
   }
-});
+}));

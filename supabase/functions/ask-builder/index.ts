@@ -1,5 +1,5 @@
+import { withCors } from "../_shared/cors.ts";
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
@@ -161,7 +161,7 @@ function buildUser(input: RequestBody) {
     .join("\n\n");
 }
 
-Deno.serve(async (req: Request) => {
+Deno.serve(withCors(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 200, headers: corsHeaders });
 
   try {
@@ -209,4 +209,4 @@ Deno.serve(async (req: Request) => {
   } catch {
     return json({ error: "Could not reach AI service" }, 500);
   }
-});
+}));
