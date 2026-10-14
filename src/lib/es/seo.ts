@@ -30,7 +30,8 @@ export type PageHeadOpts = {
 export function pageHead(opts: PageHeadOpts) {
   const url = abs(opts.path);
   const image = abs(opts.image || "/og.jpg");
-  const index = opts.index !== false;
+  // VITE_NOINDEX=true (staging, previews) forces noindex on every page.
+  const index = opts.index !== false && import.meta.env.VITE_NOINDEX !== "true";
   const robots = index
     ? "index,follow,max-image-preview:large,max-snippet:-1,max-video-preview:-1"
     : "noindex,nofollow";

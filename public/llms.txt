@@ -2,7 +2,7 @@
 
 > Gold Coast workshop that assembles simulator platforms and crate-freights them Australia-wide. Racing is the live catalogue (prebuilds, parts, compatibility checker). Aircraft, drones and training are consult-first platforms. Tickets stay in the customer app.
 
-Website: https://everythingsimulated.com.au
+Website: https://www.everythingsimulated.com.au
 Phone: 0404 619 056
 Email: hello@everythingsimulated.com.au
 Region: Gold Coast, Queensland, Australia
@@ -10,25 +10,25 @@ Currency: AUD, prices ex GST unless noted
 
 ## Platforms
 
-- Racing (live shop + checker): https://everythingsimulated.com.au/racing
-- Aircraft (helicopter, fixed-wing): https://everythingsimulated.com.au/aircraft
-- Drones: https://everythingsimulated.com.au/drones
-- Training (driver, industrial): https://everythingsimulated.com.au/training
-- Sponsored drivers: https://everythingsimulated.com.au/drivers
-- Partners: https://everythingsimulated.com.au/partners
+- Racing (live shop + checker): https://www.everythingsimulated.com.au/racing
+- Aircraft (helicopter, fixed-wing): https://www.everythingsimulated.com.au/aircraft
+- Drones: https://www.everythingsimulated.com.au/drones
+- Training (driver, industrial): https://www.everythingsimulated.com.au/training
+- Ambassadors (sponsored drivers): https://www.everythingsimulated.com.au/ambassadors
+- Partners: https://www.everythingsimulated.com.au/partners
 
 ## Racing (live catalogue)
 
 Turn-key Simagic / Trak Racer / Exodus / SIMRIG racing simulators, assembled and QA'd on the Gold Coast.
 
-- Starter — from $11,260 + GST — https://everythingsimulated.com.au/prebuilds/starter
-- Haptic — $18,999 + GST — https://everythingsimulated.com.au/prebuilds/haptic
-- Motion (SIMRIG SR2) — $28,999 + GST — https://everythingsimulated.com.au/prebuilds/motion
+- Starter — from $11,260 + GST — https://www.everythingsimulated.com.au/prebuilds/starter
+- Haptic — $18,999 + GST — https://www.everythingsimulated.com.au/prebuilds/haptic
+- Motion (SIMRIG SR2) — $28,999 + GST — https://www.everythingsimulated.com.au/prebuilds/motion
 
-Parts shop: https://everythingsimulated.com.au/shop
-Compatibility checker: https://everythingsimulated.com.au/compatibility
-Studio demo (Gold Coast): https://everythingsimulated.com.au/studio
-FAQs: https://everythingsimulated.com.au/faqs
+Parts shop: https://www.everythingsimulated.com.au/shop
+Compatibility checker: https://www.everythingsimulated.com.au/compatibility
+Studio demo (Gold Coast): https://www.everythingsimulated.com.au/studio
+FAQs: https://www.everythingsimulated.com.au/faqs
 
 ## Hard compatibility facts (do not override)
 
@@ -42,16 +42,16 @@ FAQs: https://everythingsimulated.com.au/faqs
 
 Every rig is assembled on the Gold Coast, photographed, then crate-freighted. Optional white-glove install in capital cities; SEQ install is standard. Lead time typically 3–6 weeks from deposit. 30% deposit (min $500), remainder on QA.
 
-Cities: Gold Coast, Brisbane, Sunshine Coast, Sydney, Melbourne, Perth, Adelaide, Canberra, Hobart, Darwin — https://everythingsimulated.com.au/au
+Cities: Gold Coast, Brisbane, Sunshine Coast, Sydney, Melbourne, Perth, Adelaide, Canberra, Hobart, Darwin — https://www.everythingsimulated.com.au/au
 
 ## Guides
 
-- How much a racing simulator costs in Australia: https://everythingsimulated.com.au/guides/how-much-does-a-racing-simulator-cost-australia
-- Motion vs haptic vs static: https://everythingsimulated.com.au/guides/motion-vs-haptic-vs-static
-- Simagic ecosystem: https://everythingsimulated.com.au/guides/simagic-ecosystem-australia
-- Junior drivers: https://everythingsimulated.com.au/guides/sim-racing-for-junior-drivers
-- Triple screen vs ultrawide: https://everythingsimulated.com.au/guides/triple-screen-vs-ultrawide-iracing
-- Australia-wide delivery: https://everythingsimulated.com.au/guides/australia-wide-delivery-and-install
+- How much a racing simulator costs in Australia: https://www.everythingsimulated.com.au/guides/how-much-does-a-racing-simulator-cost-australia
+- Motion vs haptic vs static: https://www.everythingsimulated.com.au/guides/motion-vs-haptic-vs-static
+- Simagic ecosystem: https://www.everythingsimulated.com.au/guides/simagic-ecosystem-australia
+- Junior drivers: https://www.everythingsimulated.com.au/guides/sim-racing-for-junior-drivers
+- Triple screen vs ultrawide: https://www.everythingsimulated.com.au/guides/triple-screen-vs-ultrawide-iracing
+- Australia-wide delivery: https://www.everythingsimulated.com.au/guides/australia-wide-delivery-and-install
 
 ## Do not invent
 
