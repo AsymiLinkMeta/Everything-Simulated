@@ -1,0 +1,15 @@
+/*
+  X-Content-Type-Options: nosniff
+  X-Frame-Options: DENY
+  Referrer-Policy: strict-origin-when-cross-origin
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(self)
+  Strict-Transport-Security: max-age=31536000; includeSubDomains
+
+# Hashed build assets never change.
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+/videos/*
+  Cache-Control: public, max-age=604800
+/rigs/*
+  Cache-Control: public, max-age=604800
