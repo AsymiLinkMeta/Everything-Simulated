@@ -1,4 +1,4 @@
-import { createFileRoute, Link, notFound, applyHeadPayload } from "@tanstack/react-router";
+import { createFileRoute, notFound, applyHeadPayload } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BookOpen, Boxes, Check, Package } from "lucide-react";
@@ -34,9 +34,10 @@ function ProductPage() {
   const gallery = item ? [item.image || productImage(item), ...(item.images ?? [])].filter(Boolean) : [];
   const uniqueGallery = [...new Set(gallery)];
   const [hero, setHero] = useState<string>("");
+  const firstImage = uniqueGallery[0];
 
   useEffect(() => {
-    if (uniqueGallery[0]) setHero(uniqueGallery[0]);
+    if (firstImage) setHero(firstImage);
     if (item) {
       applyHeadPayload(
         pageHead({
@@ -48,7 +49,9 @@ function ProductPage() {
         }),
       );
     }
-  }, [item?.sku, uniqueGallery[0]]);
+    // Keyed on SKU + lead image: re-run when the product changes, not on every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [item?.sku, firstImage]);
 
   if (products.isPending) {
     return (

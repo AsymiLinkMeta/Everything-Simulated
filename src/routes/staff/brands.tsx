@@ -3,7 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 import { Aperture, Eraser, Link2, Plus, Trash2, Upload, X } from "lucide-react";
-import { fetchBrands, staffCreateBrand, staffDeleteBrand, staffUpdateBrand } from "@/lib/es/brands";
+import { fetchBrands, staffCreateBrand, staffDeleteBrand } from "@/lib/es/brands";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 

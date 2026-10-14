@@ -8,7 +8,6 @@ import { fetchPrebuildBySlug, fetchPublishedPrebuilds } from "@/lib/es/prebuilds
 import { fetchProducts, getCachedProductMap } from "@/lib/es/product-cache";
 import { useCart } from "@/lib/es/cart-store";
 
-import type { PrebuildWithComponents } from "@/lib/es/prebuilds";
 
 export const Route = createFileRoute("/_site/prebuilds/$slug")({
   head: ({ params }) =>
