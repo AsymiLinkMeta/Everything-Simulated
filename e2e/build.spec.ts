@@ -1,0 +1,131 @@
+import { test, expect } from "./fixtures";
+import { exec, sql } from "./db";
+
+/** The step-by-step rig builder at /build. Every part, price, badge and layer comes from the local DB. */
+
+const steps = (page: import("@playwright/test").Page) => page.getByRole("navigation", { name: "Build steps" });
+const total = (page: import("@playwright/test").Page) => page.getByTestId("builder-total");
+
+test.describe("rig builder", () => {
+  test("nine numbered steps; Next moves on and focuses the step heading", async ({ page }) => {
+    await page.goto("/build");
+    const nav = steps(page);
+    await expect(nav.getByRole("button")).toHaveCount(9);
+    await expect(nav.getByRole("button", { name: /Chassis/ })).toHaveAttribute("aria-current", "step");
+    await page.getByRole("button", { name: /Skip: Wheelbase|Next: Wheelbase/ }).click();
+    await expect(nav.getByRole("button", { name: /Wheelbase/ })).toHaveAttribute("aria-current", "step");
+    await expect(page.getByRole("heading", { level: 2, name: "Wheelbase" })).toBeFocused();
+    await expect(page).toHaveURL(/step=wheelbase/);
+  });
+
+  test("picking a chassis updates the running total from quote_cart", async ({ page }) => {
+    await page.goto("/build?step=chassis");
+    await expect(total(page)).toContainText("0 parts");
+    await page.getByTestId("builder-card-tr120s").getByRole("button", { name: "Choose" }).click();
+    await expect(page.getByTestId("builder-card-tr120s")).toContainText("In your build");
+    await expect(total(page)).toContainText("1 part");
+    await expect(total(page)).toContainText(/\$\d/);
+    await expect(steps(page).getByRole("button", { name: /Chassis/ })).toContainText(/TR120S/i);
+  });
+
+  test("conflicts are explained on the card and blocked parts can't be chosen", async ({ page }) => {
+    const [rule] = sql<{ reason: string }>(`select reason from compatibility_rules where left_sku = 'sr2' and right_sku = 'tr120s' and severity = 'block'`);
+    test.skip(!rule, "no SR2/TR120S block rule seeded");
+    await page.goto("/build?step=chassis");
+    await page.getByTestId("builder-card-tr120s").getByRole("button", { name: "Choose" }).click();
+    await steps(page).getByRole("button", { name: /Motion/ }).click();
+    const card = page.getByTestId("builder-card-sr2");
+    await expect(card.getByTestId("builder-conflict")).toContainText(rule.reason);
+    await expect(card.getByTestId("builder-conflict")).toContainText("Won't work");
+    await expect(card.getByRole("button", { name: "Doesn't fit this build" })).toBeDisabled();
+  });
+
+  test("swapping a single-pick part replaces it", async ({ page }) => {
+    await page.goto("/build?step=chassis");
+    await page.getByTestId("builder-card-tr120s").getByRole("button", { name: "Choose" }).click();
+    await page.getByTestId("builder-card-xr1").getByRole("button", { name: "Swap to this" }).click();
+    await expect(page.getByTestId("builder-card-xr1")).toContainText("In your build");
+    await expect(page.getByTestId("builder-card-tr120s")).not.toContainText("In your build");
+    await expect(total(page)).toContainText("1 part");
+  });
+
+  test("start from a prebuild", async ({ page }) => {
+    const [pb] = sql<{ name: string; n: number }>(
+      `select p.name, count(c.*)::int n from prebuilds p join prebuild_components c on c.prebuild_id = p.id where p.status = 'published' group by p.id, p.name, p.sort_order order by p.sort_order limit 1`,
+    );
+    await page.goto("/build");
+    await page.getByRole("button", { name: pb.name, exact: true }).click();
+    await expect(page.getByRole("button", { name: pb.name, exact: true })).toHaveAttribute("aria-pressed", "true");
+    await expect(total(page)).toContainText(/\d+ parts/);
+    await expect(total(page)).toContainText("prebuild price");
+  });
+
+  test("a share link loads the build, and Share copies one", async ({ page, context }, info) => {
+    await page.goto("/build?b=xr1,alpha-15,not-a-real-sku");
+    await expect(total(page)).toContainText("2 parts");
+    await expect(page).not.toHaveURL(/b=/);
+    test.skip(info.project.name !== "desktop", "clipboard permission is desktop Chromium only");
+    await context.grantPermissions(["clipboard-read", "clipboard-write"]);
+    await total(page).getByRole("button", { name: "Copy share link" }).click();
+    const copied = await page.evaluate(() => navigator.clipboard.readText());
+    expect(copied).toMatch(/\/build\?b=xr1,alpha-15$/);
+  });
+
+  test("checkout goes through with a compatible build", async ({ page }) => {
+    await page.goto("/build?b=xr1,alpha-15,gt-neo");
+    await expect(total(page)).toContainText("3 parts");
+    await total(page).getByRole("link", { name: "Checkout" }).click();
+    await expect(page).toHaveURL(/\/checkout/);
+    await expect(page.getByText("Simagic Alpha 15Nm Wheelbase").first()).toBeVisible();
+  });
+
+  test("every control has an accessible name and tap targets are at least 44px", async ({ page }, info) => {
+    await page.goto("/build?step=wheelbase");
+    await expect(page.getByTestId("builder-card-alpha-15")).toBeVisible();
+    const bad = await page.evaluate(() =>
+      [...document.querySelectorAll("main button, main select, main a, [data-testid=builder-total] button, [data-testid=builder-total] a")]
+        .filter((el) => (el as HTMLElement).offsetParent !== null)
+        .filter((el) => {
+          const r = el.getBoundingClientRect();
+          const name = (el.getAttribute("aria-label") || el.textContent || "").trim() || (el.closest("label")?.textContent ?? "").trim();
+          return !name || (el.closest(".es-rb, [data-testid=builder-total]") && Math.min(r.height, r.width) < 43);
+        })
+        .map((el) => el.outerHTML.slice(0, 80)),
+    );
+    expect(bad, info.project.name).toEqual([]);
+  });
+});
+
+test.describe("rig builder data from staff", () => {
+  test.describe.configure({ mode: "serial" });
+  test.afterAll(() => {
+    exec(`update catalog_products set builder_badge = null where builder_badge is not null`);
+    exec(`delete from builder_layers`);
+  });
+
+  test("badges come from catalog_products.builder_badge", async ({ page }, info) => {
+    test.skip(info.project.name !== "desktop", "mutates shared catalogue rows");
+    exec(`update catalog_products set builder_badge = null where builder_badge is not null`);
+    await page.goto("/build?step=wheelbase");
+    await expect(page.getByTestId("builder-card-alpha-15")).toBeVisible();
+    await expect(page.getByTestId("builder-badge")).toHaveCount(0);
+    exec(`update catalog_products set builder_badge = 'most_popular' where sku = 'alpha-15'`);
+    await page.reload();
+    await expect(page.getByTestId("builder-card-alpha-15").getByTestId("builder-badge")).toHaveText("Most popular");
+    // Recommended sort puts badged parts first.
+    await expect(page.locator("[data-testid^=builder-card-]").first()).toHaveAttribute("data-testid", "builder-card-alpha-15");
+  });
+
+  test("preview: drawn fallback until staff add layer art", async ({ page }, info) => {
+    test.skip(info.project.name !== "desktop", "mutates shared layer rows");
+    exec(`delete from builder_layers`);
+    await page.goto("/build?b=xr1");
+    await expect(page.getByTestId("rig-preview")).toHaveAttribute("data-mode", "fallback");
+    await expect(page.locator('[data-part="chassis"]')).toHaveClass(/is-on/);
+    await expect(page.locator('[data-part="seat"]')).not.toHaveClass(/is-on/);
+    exec(`insert into builder_layers (category, image_url, z, label) values ('chassis', '/rigs/haptic.jpg', 0, 'Chassis')`);
+    await page.goto("/build?b=xr1");
+    await expect(page.getByTestId("rig-preview")).toHaveAttribute("data-mode", "layers");
+    await expect(page.getByTestId("rig-preview").locator("img")).toHaveCount(1);
+  });
+});

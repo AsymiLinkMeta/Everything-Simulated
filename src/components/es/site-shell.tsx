@@ -152,6 +152,7 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
             <ul>
               <FooterPrebuilds />
               <li><Link to="/shop">Parts shop</Link></li>
+              <li><Link to="/build">Rig builder</Link></li>
               <li><Link to="/compatibility">Compatibility checker</Link></li>
             </ul>
           </div>

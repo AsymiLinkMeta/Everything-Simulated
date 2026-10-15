@@ -3,7 +3,7 @@ import { test, expect, authFile, type Role } from "./fixtures";
 
 /** Every route in src/App.tsx, with the role that should be able to see it. */
 const PUBLIC = [
-  "/", "/racing", "/racing/checker", "/racing/prebuilds", "/racing/shop", "/compatibility", "/shop", "/shop/alpha-15",
+  "/", "/racing", "/racing/checker", "/racing/prebuilds", "/racing/shop", "/compatibility", "/build", "/shop", "/shop/alpha-15",
   "/prebuilds", "/prebuilds/starter", "/prebuilds/haptic", "/prebuilds/motion", "/builds", "/builds/haptic",
   "/aircraft", "/aircraft/flight", "/aircraft/helicopter", "/drones", "/training", "/training/driver", "/training/industrial",
   "/studio", "/events", "/catering", "/partners", "/guardian", "/ambassadors", "/ambassadors/carter-cosgrove-racing", "/drivers",

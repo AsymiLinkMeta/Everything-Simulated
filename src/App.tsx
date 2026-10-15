@@ -30,6 +30,7 @@ function PortalLoading() {
 const Shop = lazyRoute(() => import("@/routes/_site/shop/index"));
 const ShopSku = lazyRoute(() => import("@/routes/_site/shop/$sku"));
 const Compat = lazyRoute(() => import("@/routes/_site/compatibility"));
+const RigBuilder = lazyRoute(() => import("@/routes/_site/build"));
 const Studio = lazyRoute(() => import("@/routes/_site/studio"));
 const Events = lazyRoute(() => import("@/routes/_site/events"));
 const Guides = lazyRoute(() => import("@/routes/_site/guides/index"));
@@ -130,6 +131,7 @@ export default function App() {
       <Route path="/shop" element={<Page C={Shop} />} />
       <Route path="/shop/:sku" element={<Page C={ShopSku} />} />
       <Route path="/compatibility" element={<Page C={Compat} />} />
+      <Route path="/build" element={<Page C={RigBuilder} />} />
       <Route path="/studio" element={<Page C={Studio} />} />
       <Route path="/events" element={<Page C={Events} />} />
       <Route path="/catering" element={<Navigate to="/events" replace />} />
