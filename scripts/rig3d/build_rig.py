@@ -7,8 +7,8 @@ rig builder preview. Units are metres; the model is laid out in millimetres via 
 Axes: +X forward (the driver faces +X), +Y the driver's left, +Z up. Every part lives in a
 collection named after its preview layer (see LAYERS); rig parts hang off the "RigLift"
 empty so the motion layer can raise the whole frame by MOTION_LIFT.
-Proportions follow common 1350-1440 x 580-660 mm profile cockpits (e.g. Sim-Lab P1X Pro,
-Trak Racer TR160): 160x40 side rails, 120x40 wheel uprights, a 300 mm wheel.
+Proportions follow real 160 x 40 aluminium-profile cockpits (see docs/rig3d/REMODEL-PLAN.md). The model is
+generic and carries only Everything Simulated branding (make_brand_art.py).
 """
 import math
 import os
