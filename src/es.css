@@ -1854,3 +1854,4 @@ a.es-trust-item:hover .es-trust-value {
 @media (max-width: 479px) { .es-rb-icon span { display: none; } .es-rb-total-price { font-size: 1.05rem; } }
 body:has(.es-rb-total) .es-cookie-bar { bottom: calc(4.75rem + env(safe-area-inset-bottom)); }
 @media (prefers-reduced-motion: reduce) { .es-rb-part { transition: none; } }
+body:has(.es-rb-total) .es-to-top { bottom: calc(5.5rem + env(safe-area-inset-bottom)); }
