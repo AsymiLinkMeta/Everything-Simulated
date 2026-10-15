@@ -56,6 +56,7 @@ const IndustrialTraining = lazyRoute(() => import("@/routes/_site/training/indus
 const Drivers = lazyRoute(() => import("@/routes/_site/drivers"));
 const AmbassadorProfile = lazyRoute(() => import("@/routes/_site/ambassador-profile"));
 const Partners = lazyRoute(() => import("@/routes/_site/partners"));
+const Guardian = lazyRoute(() => import("@/routes/_site/guardian"));
 
 // /app and /staff are split into their own chunks: public visitors never download them.
 const AppOrders = lazyRoute(() => import("@/routes/app/orders"));
@@ -122,6 +123,7 @@ export default function App() {
       <Route path="/ambassadors/:slug" element={<Page C={AmbassadorProfile} />} />
       <Route path="/drivers" element={<Navigate to="/ambassadors" replace />} />
       <Route path="/partners" element={<Page C={Partners} />} />
+      <Route path="/guardian" element={<Page C={Guardian} />} />
       <Route path="/builds" element={<Navigate to="/prebuilds" replace />} />
       <Route path="/builds/:slug" element={<BuildsToPrebuilds />} />
       <Route path="/shop" element={<Page C={Shop} />} />

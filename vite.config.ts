@@ -3,7 +3,7 @@ import react from "@vitejs/plugin-react";
 import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { EMPTY_CATALOG, fetchSeoCatalog, renderLlms, renderSitemap, type SeoCatalog } from "./scripts/seo-files";
+import { EMPTY_CATALOG, fetchSeoCatalog, renderAmbassadorHtml, renderLlms, renderSitemap, type SeoCatalog } from "./scripts/seo-files";
 
 const root = path.dirname(fileURLToPath(import.meta.url));
 
@@ -84,8 +84,19 @@ function seoFiles(origin: string, supabaseUrl: string | undefined, anonKey: stri
       }
       fs.writeFileSync(path.join(outDir, "sitemap.xml"), renderSitemap(origin, data));
       fs.writeFileSync(path.join(outDir, "llms.txt"), renderLlms(origin, data));
+      // Ambassador profiles get their own HTML shell so shared links preview the driver (crawlers don't run JS).
+      const template = fs.readFileSync(path.join(outDir, "index.html"), "utf8");
+      let pages = 0;
+      for (const a of data.ambassadors) {
+        const html = renderAmbassadorHtml(template, origin, a);
+        if (!html) continue;
+        const dir = path.join(outDir, "ambassadors", a.slug);
+        fs.mkdirSync(dir, { recursive: true });
+        fs.writeFileSync(path.join(dir, "index.html"), html);
+        pages++;
+      }
       console.log(
-        `[es-seo-files] sitemap.xml + llms.txt: ${data.prebuilds.length} prebuilds, ${data.products.length} parts, ${data.ambassadors.length} ambassadors`,
+        `[es-seo-files] sitemap.xml + llms.txt: ${data.prebuilds.length} prebuilds, ${data.products.length} parts, ${data.ambassadors.length} ambassadors (${pages} profile pages)`,
       );
     },
   };

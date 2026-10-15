@@ -7,9 +7,16 @@ import {
   staffListAllAmbassadors,
   staffUpsertAmbassador,
   staffDeleteAmbassador,
-  TIER_LABELS,
-  ambassadorProfilePath,
+  staffFetchAmbassadorTerms,
+  staffFetchGuardians,
+  fetchTiers,
+  tierLabel,
+  ambassadorShareUrl,
 } from "@/lib/es/ambassadors";
+import { AmbassadorDashboardPanel, GuardianCard } from "@/components/es/ambassador-dashboard";
+import { DefaultRateWarning, PayoutsPanel, ProgrammeSettingsPanel, RateEditor, useProgrammeSettings } from "@/components/es/ambassador-staff";
+import { LoadError } from "@/components/es/bits";
+import { toast } from "sonner";
 import type { AmbassadorRow, AmbassadorSocial, AmbassadorTier, RigSpec } from "@/lib/es/ambassadors";
 import { QrCode } from "@/components/es/qr-code";
 
@@ -18,11 +25,39 @@ export const Route = createFileRoute("/staff/ambassadors")({
 });
 
 function StaffAmbassadors() {
+  const [tab, setTab] = useState<"people" | "payouts" | "settings">("people");
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-wrap gap-2" role="tablist" aria-label="Ambassador programme">
+        {([["people", "Ambassadors"], ["payouts", "Commissions & payouts"], ["settings", "Programme settings"]] as const).map(([k, label]) => (
+          <button
+            key={k}
+            type="button"
+            role="tab"
+            aria-selected={tab === k}
+            onClick={() => setTab(k)}
+            className={`min-h-9 rounded-md border px-3 text-sm transition-colors ${tab === k ? "border-esred bg-esred/15 text-paper" : "border-line text-muted hover:text-paper"}`}
+          >
+            {label}
+          </button>
+        ))}
+      </div>
+      {tab === "people" ? <AmbassadorList /> : tab === "payouts" ? <PayoutsPanel /> : <ProgrammeSettingsPanel />}
+    </div>
+  );
+}
+
+function AmbassadorList() {
   const qc = useQueryClient();
-  const { data: ambassadors, isPending } = useQuery({
+  const { data: ambassadors, isPending, isError, refetch } = useQuery({
     queryKey: ["staff-ambassadors"],
     queryFn: staffListAllAmbassadors,
   });
+  const tiers = useQuery({ queryKey: ["ambassador-tiers"], queryFn: fetchTiers });
+  const terms = useQuery({ queryKey: ["ambassador-terms"], queryFn: staffFetchAmbassadorTerms });
+  const guardians = useQuery({ queryKey: ["staff-guardians"], queryFn: staffFetchGuardians });
+  const settings = useProgrammeSettings();
+  const [openId, setOpenId] = useState<string | null>(null);
   const [editing, setEditing] = useState<AmbassadorRow | "new" | null>(null);
   const [qrSlug, setQrSlug] = useState<string | null>(null);
 
@@ -32,16 +67,19 @@ function StaffAmbassadors() {
       qc.invalidateQueries({ queryKey: ["staff-ambassadors"] });
       qc.invalidateQueries({ queryKey: ["ambassadors"] });
     },
+    onError: (err) => toast.error(/foreign key|violates/i.test((err as Error).message) ? "This ambassador has commissions, so they can't be deleted. Unpublish them instead." : (err as Error).message),
   });
 
   if (isPending) {
     return <div className="animate-pulse rounded-2xl bg-raised h-64" />;
   }
+  if (isError) return <LoadError what="ambassadors" onRetry={() => void refetch()} />;
 
   const rows = ambassadors ?? [];
 
   return (
     <div className="space-y-6">
+      <DefaultRateWarning settings={settings.data} />
       <div className="flex items-center justify-between">
         <div>
           <p className="es-kicker">Ambassadors</p>
@@ -65,12 +103,16 @@ function StaffAmbassadors() {
                 <div className="min-w-0">
                   <p className="font-medium truncate">{a.name}</p>
                   <p className="text-sm text-muted truncate">
-                    {a.code} · {TIER_LABELS[a.tier]} · {a.published ? "Published" : "Draft"}
+                    {a.code} · {tierLabel(tiers.data, a.tier)} · {a.published ? "Published" : "Draft"}
                     {a.userId ? " · Linked" : ""}
+                    {guardians.data?.[a.id]?.required ? ` · Guardian ${guardians.data[a.id].status}` : ""}
                   </p>
                 </div>
               </div>
               <div className="flex gap-2 shrink-0">
+                <Button variant="outline" size="sm" aria-expanded={openId === a.id} onClick={() => setOpenId(openId === a.id ? null : a.id)}>
+                  Programme
+                </Button>
                 <Button variant="outline" size="sm" onClick={() => setQrSlug(qrSlug === a.slug ? null : a.slug)}>
                   QR
                 </Button>
@@ -90,7 +132,25 @@ function StaffAmbassadors() {
             </div>
             {qrSlug === a.slug && (
               <div className="mt-3 pt-3 border-t border-white/10 flex justify-center">
-                <QrCode url={`${window.location.origin}${ambassadorProfilePath(a.slug)}`} size={180} />
+                <QrCode url={ambassadorShareUrl(a)} size={180} filename={`es-ambassador-${a.slug}`} label={`Referral QR code for ${a.name}`} />
+              </div>
+            )}
+            {openId === a.id && (
+              <div className="mt-3 space-y-4 border-t border-white/10 pt-3">
+                <RateEditor
+                  ambassadorId={a.id}
+                  rate={terms.data?.[a.id] ?? null}
+                  defaultRate={settings.data?.default_commission_rate}
+                />
+                {guardians.data?.[a.id]?.required ? (
+                  <GuardianCard
+                    staff
+                    ambassadorId={a.id}
+                    guardian={{ ...guardians.data[a.id], configured_method: settings.data?.guardian_method ?? "staff" }}
+                    onChanged={() => void qc.invalidateQueries({ queryKey: ["staff-ambassadors"] })}
+                  />
+                ) : null}
+                <AmbassadorDashboardPanel ambassadorId={a.id} staff />
               </div>
             )}
           </div>
@@ -109,6 +169,7 @@ function StaffAmbassadors() {
 
 function AmbassadorForm({ initial, onClose }: { initial: AmbassadorRow | null; onClose: () => void }) {
   const qc = useQueryClient();
+  const tiers = useQuery({ queryKey: ["ambassador-tiers"], queryFn: fetchTiers });
   const isNew = !initial;
 
   const [slug, setSlug] = useState(initial?.slug ?? "");
@@ -206,9 +267,10 @@ function AmbassadorForm({ initial, onClose }: { initial: AmbassadorRow | null; o
               value={tier}
               onChange={(e) => setTier(e.target.value as AmbassadorTier)}
             >
-              <option value="fully_sponsored">Fully Sponsored Driver</option>
-              <option value="sponsored_driver">Brand Ambassador</option>
-              <option value="sponsored_customer">Sponsored Customer</option>
+              {(tiers.data ?? []).map((t) => (
+                <option key={t.key} value={t.key}>{t.label}</option>
+              ))}
+              {tiers.data && !tiers.data.some((t) => t.key === tier) ? <option value={tier}>{tier}</option> : null}
             </select>
           </label>
         </div>

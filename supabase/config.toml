@@ -31,3 +31,6 @@ verify_jwt = true
 # X-Internal-Secret header used by stripe-webhook. See supabase/functions/_shared/mail-auth.ts.
 [functions.send-mail]
 verify_jwt = false
+
+[functions.guardian-consent]
+verify_jwt = true
