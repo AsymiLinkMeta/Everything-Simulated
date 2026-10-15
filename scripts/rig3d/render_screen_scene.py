@@ -206,44 +206,25 @@ for i in range(apex0 - 10, apex1 + 30, 1):
         q = c + n * 14.8
         bpy.ops.mesh.primitive_torus_add(major_radius=0.3, minor_radius=0.12, location=(q.x, q.y, 0.12 + k * 0.24), major_segments=20, minor_segments=8)
         bpy.context.active_object.data.materials.append(tyre)
-# ground beyond, and low hills on the horizon
-bpy.ops.mesh.primitive_plane_add(size=3000, location=(200, 0, -0.03))
+# ground beyond the verges: textured grass that fades out into the photographed meadow of the HDRI
+bpy.ops.mesh.primitive_circle_add(vertices=96, radius=260, fill_type="TRIFAN", location=(60, 0, -0.03))
 ground = bpy.context.active_object
-ground.data.materials.append(textured("Field", "leafy_grass", (1 / 3, 1 / 3, 1), tint=(0.26, 0.52, 0.15, 1), normal=0.6, coord="Object"))
-bm = bmesh.new()
-bmesh.ops.create_grid(bm, x_segments=160, y_segments=40, size=1)
-for v in bm.verts:
-    ang = v.co.x * math.pi * 0.9           # -0.9pi..0.9pi around the camera, open behind
-    rr = 380 + (v.co.y + 1) * 220
-    hgt = (math.sin(ang * 3.1 + 1.3) * 0.5 + math.sin(ang * 7.3) * 0.25 + math.sin(ang * 1.7 + 0.4) * 0.6 + 1.2) * 18 * (1 - abs(v.co.y) ** 2)
-    v.co = Vector((200 + math.cos(ang) * rr, math.sin(ang) * rr, max(0, hgt) - 2))
-hills = obj("Hills", bm, flat("Hills", (0.05, 0.09, 0.035), 0.9))
-for poly in hills.data.polygons:
-    poly.use_smooth = True
-# simple tree line: clustered dark ellipsoids along the infield and behind the fences
-tree_mats = [flat(f"Trees {k}", c, 0.85) for k, c in enumerate([(0.02, 0.045, 0.015), (0.03, 0.06, 0.02), (0.035, 0.05, 0.018), (0.018, 0.035, 0.014)])]
-import random
-random.seed(7)
-leaf = bpy.data.textures.new("Leafy", "CLOUDS"); leaf.noise_scale = 0.35; leaf.noise_depth = 3
-for k in range(260):
-    i = random.randrange(0, len(pts))
-    c, _, n = frame(i)
-    s = random.choice((1, -1))
-    q = c + n * (s * random.uniform(28, 120))
-    if q.x < 0:
-        continue
-    r = random.uniform(2.5, 5.0)
-    for j in range(random.randint(2, 4)):  # each tree a cluster of leafy clumps
-        off = Vector((random.uniform(-1, 1), random.uniform(-1, 1), random.uniform(0, 1.2))) * r * 0.6
-        rr = r * random.uniform(0.6, 0.9)
-        bpy.ops.mesh.primitive_ico_sphere_add(subdivisions=4, radius=rr, location=(q.x + off.x, q.y + off.y, r * 1.2 + off.z))
-        t = bpy.context.active_object
-        t.scale = (1, 1, random.uniform(1.0, 1.4))
-        t.data.materials.append(random.choice(tree_mats))
-        d = t.modifiers.new("Leaf", "DISPLACE")
-        d.texture = leaf; d.strength = 1.4; d.texture_coords = "GLOBAL"
-        for poly in t.data.polygons:
-            poly.use_smooth = True
+gm = textured("Field", "leafy_grass", (1 / 3, 1 / 3, 1), tint=(0.3, 0.5, 0.18, 1), normal=0.6, coord="Object")
+gnt = gm.node_tree
+out = gnt.nodes["Material Output"]
+bsdf = gnt.nodes["Principled BSDF"]
+tc = gnt.nodes.new("ShaderNodeTexCoord")
+ln = gnt.nodes.new("ShaderNodeVectorMath"); ln.operation = "LENGTH"
+gnt.links.new(tc.outputs["Object"], ln.inputs[0])
+fade = gnt.nodes.new("ShaderNodeMapRange")
+fade.inputs["From Min"].default_value = 60; fade.inputs["From Max"].default_value = 200
+gnt.links.new(ln.outputs["Value"], fade.inputs["Value"])
+tr = gnt.nodes.new("ShaderNodeBsdfTransparent")
+mix = gnt.nodes.new("ShaderNodeMixShader")
+gnt.links.new(fade.outputs["Result"], mix.inputs["Fac"])
+gnt.links.new(bsdf.outputs["BSDF"], mix.inputs[1]); gnt.links.new(tr.outputs["BSDF"], mix.inputs[2])
+gnt.links.new(mix.outputs["Shader"], out.inputs["Surface"])
+ground.data.materials.append(gm)
 
 # ---------------------------------------------------------------- generic GT car (no branding)
 def car(name, at_index, lateral, paint_rgb, stripe_rgb):
@@ -334,13 +315,14 @@ def car(name, at_index, lateral, paint_rgb, stripe_rgb):
 
 car("Car ahead", 82, -1.6, (0.85, 0.85, 0.86), (0.75, 0.0015, 0.0))
 car("Car far", 128, -3.0, (0.02, 0.06, 0.2), (0.8, 0.8, 0.8))
+car("Car behind", 51, 0.8, (0.75, 0.0015, 0.0), (0.85, 0.85, 0.85))
 
 # ---------------------------------------------------------------- sky, render
 world = bpy.data.worlds.new("Sky")
 world.use_nodes = True
 wn = world.node_tree
 env = wn.nodes.new("ShaderNodeTexEnvironment")
-env.image = img("kloofendal_48d_partly_cloudy_puresky_4k.hdr")
+env.image = img("meadow_2_8k.hdr")
 mpw = wn.nodes.new("ShaderNodeMapping")
 mpw.inputs["Rotation"].default_value = (0, 0, math.radians(200))
 tcw = wn.nodes.new("ShaderNodeTexCoord")
@@ -348,7 +330,7 @@ wn.links.new(tcw.outputs["Generated"], mpw.inputs["Vector"])
 wn.links.new(mpw.outputs["Vector"], env.inputs["Vector"])
 wn.links.new(env.outputs["Color"], wn.nodes["Background"].inputs["Color"])
 scene.world = world
-sun = bpy.data.lights.new("Sun", "SUN"); sun.energy = 4.5; sun.angle = math.radians(1.5); sun.color = (1.0, 0.95, 0.86)
+sun = bpy.data.lights.new("Sun", "SUN"); sun.energy = 2.0; sun.angle = math.radians(1.5); sun.color = (1.0, 0.95, 0.86)
 sun_o = bpy.data.objects.new("Sun", sun); scene.collection.objects.link(sun_o)
 sun_o.rotation_euler = (math.radians(50), 0, math.radians(140))
 world.mist_settings.start = 40
@@ -370,7 +352,7 @@ for nd in list(nt.nodes):
 rl = nt.nodes.new("CompositorNodeRLayers")
 haze = nt.nodes.new("CompositorNodeMixRGB")
 haze.inputs[2].default_value = (0.62, 0.68, 0.78, 1)
-pw = nt.nodes.new("CompositorNodeMath"); pw.operation = "MULTIPLY"; pw.inputs[1].default_value = 0.25
+pw = nt.nodes.new("CompositorNodeMath"); pw.operation = "MULTIPLY"; pw.inputs[1].default_value = 0.08
 nt.links.new(rl.outputs["Mist"], pw.inputs[0])
 nt.links.new(pw.outputs[0], haze.inputs["Fac"])
 nt.links.new(rl.outputs["Image"], haze.inputs[1])
@@ -393,17 +375,28 @@ scene.render.resolution_x, scene.render.resolution_y = 3072, 600
 scene.render.filepath = os.path.join(ART, "screen-pano.png")
 bpy.ops.render.render(write_still=True)
 
-chase_d = bpy.data.cameras.new("Chase")
-chase_d.lens = 32
-chase_d.clip_end = 2000
-chase = bpy.data.objects.new("Chase", chase_d)
-scene.collection.objects.link(chase)
-ci, ti, ni = frame(74)
-chase.location = (ci.x - ni.x * 1.8, ci.y - ni.y * 1.8, 2.3)
-tgt = bpy.data.objects["Car ahead"].location + Vector((0, 0, 0.6))
-chase.rotation_euler = (tgt - chase.location).to_track_quat("-Z", "Y").to_euler()
-scene.camera = chase
+# top screen: the rear-view mirror (a car close behind), flipped as a mirror shows it
+mir_d = bpy.data.cameras.new("Mirror")
+mir_d.lens = 22
+mir_d.clip_end = 2000
+mir = bpy.data.objects.new("Mirror", mir_d)
+scene.collection.objects.link(mir)
+mir.location = cam.location + Vector((0, 0, 0.15))
+tgt = bpy.data.objects["Car behind"].location + Vector((0, 0, 0.7))
+mir.rotation_euler = (tgt - mir.location).to_track_quat("-Z", "Y").to_euler()
+scene.camera = mir
 scene.render.resolution_x, scene.render.resolution_y = 1200, 700
-scene.render.filepath = os.path.join(ART, "screen-top.png")
+path = os.path.join(ART, "screen-top.png")
+scene.render.filepath = path
 bpy.ops.render.render(write_still=True)
+im = bpy.data.images.load(path)
+w, h = im.size
+px = list(im.pixels)
+flipped = []
+for y in range(h):
+    row = px[y * w * 4:(y + 1) * w * 4]
+    for x in range(w - 1, -1, -1):
+        flipped.extend(row[x * 4:x * 4 + 4])
+im.pixels = flipped
+im.save()
 print("screens done")
