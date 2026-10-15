@@ -15,3 +15,4 @@ e2e/.results/
 e2e/.report/
 local/.env.e2e
 deno.lock
+*.blend1
