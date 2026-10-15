@@ -998,8 +998,8 @@ profile("Stand lower bar", (ST_X, -ST_Y + 40, 140), (ST_X, ST_Y - 40, 140), 80, 
 decal("Brand stand", "brand-lockup.png", (ST_X - 20, 0, 140), (-1, 0, 0), (0, 0, 1), 380)
 layer("mount-top")
 for s, side in [(1, "L"), (-1, "R")]:
-    profile(f"Top post {side}", (ST_X - 40, s * 340, BAR_Z + 40), (ST_X - 40, s * 340, 1760), 40, 40, u=(1, 0, 0))
-profile("Top crossbar", (ST_X - 80, -360, 1640), (ST_X - 80, 360, 1640), 80, 40, u=(0, 0, 1))
+    profile(f"Top post {side}", (ST_X - 40, s * 400, BAR_Z + 40), (ST_X - 40, s * 400, 1780), 40, 40, u=(1, 0, 0))
+profile("Top crossbar", (ST_X - 40, -380, 1500), (ST_X - 40, 380, 1500), 80, 40, u=(0, 0, 1))
 layer("mount-sides")
 for s, side in [(1, "L"), (-1, "R")]:
     d = Vector((-math.sin(SIDE), s * math.cos(SIDE), 0))
@@ -1103,7 +1103,8 @@ for s, side in [(1, "L"), (-1, "R")]:
         curved_monitor(f"Dual screen {side}", seam, outer, SB, screen=screen_material(PANO, 1 / 2, 5 / 6))
 layer("screen-top")
 # a distinct, smaller panel on its own posts, centred over the centre screen and tilted down at the driver
-curved_monitor("Top screen", (CX + 20, 300, 0), (CX + 20, -300, 0), SB + SH + 28, 350, screen=screen_material(TOP), tilt=15)
+# same panel and the same 1000R curve as the others
+curved_monitor("Top screen", (CX - 20, SW / 2, 0), (CX - 20, -SW / 2, 0), SB + SH + 40, SH, screen=screen_material(TOP), tilt=10)
 
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
 for im in bpy.data.images:  # pack the brand and screen art; CC0 textures stay in the gitignored cache

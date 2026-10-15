@@ -11,7 +11,7 @@ import urllib.request
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 CACHE = os.path.join(ROOT, "assets", "rig3d", "cache")
 UA = {"User-Agent": "everything-simulated-rig-renders/1.0"}
-HDRIS = {"studio_small_09": "2k", "kloofendal_48d_partly_cloudy_puresky": "4k"}
+HDRIS = {"studio_small_09": "2k", "meadow_2": "8k"}
 TEXTURES = {
     "asphalt_track": ["Diffuse", "nor_gl", "Rough"],
     "leafy_grass": ["Diffuse", "nor_gl", "Rough"],
