@@ -34,6 +34,7 @@ ap.add_argument("--out", default="/tmp/rig")
 ap.add_argument("--samples", type=int, default=256)
 ap.add_argument("--width", type=int, default=1800)  # 2x the 900 px asset, downscaled when packing
 ap.add_argument("--only", default="")
+ap.add_argument("--force", action="store_true", help="re-render outputs that already exist")
 ap.add_argument("--az", type=float, default=30)
 ap.add_argument("--el", type=float, default=14)
 ap.add_argument("--dist", type=float, default=7.4)
@@ -265,6 +266,9 @@ def show_overlay(name, context_layers, lifted):
 
 
 def render(path):
+    if os.path.exists(path) and not args.force:  # resumable: a finished frame is never redone
+        print("skip", path, flush=True)
+        return
     r.filepath = path
     bpy.ops.render.render(write_still=True)
     print("wrote", path, flush=True)
