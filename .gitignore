@@ -16,3 +16,4 @@ e2e/.report/
 local/.env.e2e
 deno.lock
 *.blend1
+assets/rig3d/cache/

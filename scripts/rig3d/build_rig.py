@@ -95,76 +95,184 @@ def add_bump(m, scale, strength, kind="noise", detail=6.0, distance=0.0004):
     return m
 
 
+CACHE = os.path.join(ROOT, "assets", "rig3d", "cache")  # CC0 textures, scripts/rig3d/fetch_assets.py
+
+
+def cache_img(name, colour=False):
+    im = bpy.data.images.load(os.path.join(CACHE, name), check_existing=True)
+    if not colour:
+        im.colorspace_settings.name = "Non-Color"
+    return im
+
+
+def node(nt, kind, **inputs):
+    n = nt.nodes.new(kind)
+    for k, v in inputs.items():
+        n.inputs[k].default_value = v
+    return n
+
+
+def rough_variation(m, lo, hi, scale=40.0, scratch=0.0):
+    """Roughness that drifts between lo and hi over the part (handling marks, anodising variation),
+    plus optional fine directional scratches (stretched noise) that read in the highlights."""
+    nt = m.node_tree
+    b = nt.nodes["Principled BSDF"]
+    tc = nt.nodes.new("ShaderNodeTexCoord")
+    nz = node(nt, "ShaderNodeTexNoise", Scale=scale, Detail=5.0, Roughness=0.6)
+    nt.links.new(tc.outputs["Object"], nz.inputs["Vector"])
+    mr = node(nt, "ShaderNodeMapRange", **{"From Min": 0.3, "From Max": 0.7, "To Min": lo, "To Max": hi})
+    nt.links.new(nz.outputs["Fac"], mr.inputs["Value"])
+    out = mr.outputs["Result"]
+    if scratch:
+        mp = node(nt, "ShaderNodeMapping", Scale=(4000.0, 4000.0, 25.0))
+        nt.links.new(tc.outputs["Object"], mp.inputs["Vector"])
+        sc = node(nt, "ShaderNodeTexNoise", Scale=1.0, Detail=2.0)
+        nt.links.new(mp.outputs["Vector"], sc.inputs["Vector"])
+        st = node(nt, "ShaderNodeMapRange", **{"From Min": 0.62, "From Max": 0.7, "To Min": 0.0, "To Max": scratch})
+        nt.links.new(sc.outputs["Fac"], st.inputs["Value"])
+        add = node(nt, "ShaderNodeMath"); add.operation = "SUBTRACT"
+        nt.links.new(out, add.inputs[0]); nt.links.new(st.outputs["Result"], add.inputs[1])
+        out = add.outputs[0]
+    nt.links.new(out, b.inputs["Roughness"])
+    return m
+
+
+def carbon(name):
+    """2x2 twill carbon fibre: alternating bands of fibre under a deep clear coat."""
+    m = principled(name, (0.02, 0.02, 0.022), 0.0, 0.35, **{"Coat Weight": 1.0, "Coat Roughness": 0.04, "Anisotropic": 0.6})
+    nt = m.node_tree
+    b = nt.nodes["Principled BSDF"]
+    tc = nt.nodes.new("ShaderNodeTexCoord")
+    mp = node(nt, "ShaderNodeMapping", Scale=(260.0, 260.0, 260.0))
+    nt.links.new(tc.outputs["Object"], mp.inputs["Vector"])
+    ch = node(nt, "ShaderNodeTexChecker", Scale=1.0, Color1=(0.006, 0.006, 0.007, 1), Color2=(0.05, 0.05, 0.055, 1))
+    nt.links.new(mp.outputs["Vector"], ch.inputs["Vector"])
+    nt.links.new(ch.outputs["Color"], b.inputs["Base Color"])
+    rm = node(nt, "ShaderNodeMapRange", **{"To Min": 0.45, "To Max": 0.22})
+    nt.links.new(ch.outputs["Fac"], rm.inputs["Value"])
+    nt.links.new(rm.outputs["Result"], b.inputs["Roughness"])
+    return m
+
+
 MAT = {
-    # titanium-grey anodised extrusion, faint brushed variation
-    # black anodised extrusion: a dark metal with a satin sheen, so studio light picks out the edges
-    "alu": add_bump(principled("Black anodised aluminium", (0.03, 0.031, 0.035), 0.85, 0.28, **{"Anisotropic": 0.35, "Coat Weight": 0.25, "Coat Roughness": 0.2}), 900, 0.06),
-    "alu_bright": principled("Machined aluminium", (0.62, 0.63, 0.65), 1.0, 0.22),
-    "steel": add_bump(principled("Black powder coat", (0.025, 0.026, 0.03), 0.0, 0.55), 2500, 0.15),
-    "plastic": principled("Satin black plastic", (0.02, 0.02, 0.022), 0.0, 0.42),
+    # black anodised extrusion: dark satin metal, roughness drifting over each part, faint scratches
+    "alu": rough_variation(add_bump(principled("Black anodised aluminium", (0.024, 0.025, 0.028), 0.9, 0.32, **{"Anisotropic": 0.45, "Coat Weight": 0.12, "Coat Roughness": 0.25}), 900, 0.03), 0.27, 0.36, 8, 0.04),
+    "alu_bright": rough_variation(principled("Machined aluminium", (0.62, 0.63, 0.65), 1.0, 0.22, **{"Anisotropic": 0.7}), 0.16, 0.3, 50, 0.08),
+    # textured powder coat: orange-peel bump, satin
+    "steel": add_bump(principled("Black powder coat", (0.02, 0.021, 0.024), 0.0, 0.5), 450, 0.12, distance=0.0006),
+    "plastic": rough_variation(principled("Satin black plastic", (0.018, 0.018, 0.02), 0.0, 0.45), 0.38, 0.55, 25),
+    "cap": add_bump(principled("End cap", (0.012, 0.012, 0.013), 0.0, 0.6), 1600, 0.2),
+    "bolt": principled("Black oxide screw", (0.035, 0.036, 0.04), 0.85, 0.32),
     "gloss": principled("Gloss black", (0.012, 0.012, 0.014), 0.0, 0.12, **{"Coat Weight": 1.0}),
     "rubber": add_bump(principled("Rubber", (0.012, 0.012, 0.013), 0.0, 0.75), 1800, 0.25),
     # ES brand red #e10600 (--es-red), as linear RGB
-    "red": principled("ES red accent", (0.753, 0.0018, 0.0), 0.0, 0.32, **{"Coat Weight": 0.6, "Emission Color": (0.753, 0.0018, 0.0, 1), "Emission Strength": 0.1}),
+    "red": principled("ES red accent", (0.753, 0.0018, 0.0), 0.0, 0.32, **{"Coat Weight": 0.6}),
     "silver": principled("Polished foot", (0.8, 0.8, 0.82), 1.0, 0.15),
-    "red_anod": principled("ES red anodised", (0.753, 0.0018, 0.0), 1.0, 0.3),
-    "motor": principled("Motor housing", (0.05, 0.052, 0.058), 0.9, 0.28),
+    "red_anod": rough_variation(principled("ES red anodised", (0.62, 0.0015, 0.0), 1.0, 0.3, **{"Anisotropic": 0.4}), 0.24, 0.36, 40, 0.06),
+    "motor": rough_variation(principled("Motor housing", (0.04, 0.042, 0.047), 0.9, 0.3), 0.26, 0.4, 20),
+    "carbon": carbon("Carbon fibre"),
+    "cable": principled("Braided cable", (0.01, 0.01, 0.011), 0.0, 0.55, **{"Sheen Weight": 0.4}),
+    "lcd": principled("Wheel display", (0.0, 0.0, 0.0), 0.0, 0.1, **{"Emission Color": (0.2, 0.6, 1.0, 1), "Emission Strength": 1.5, "Coat Weight": 1.0}),
+    "spring": principled("Spring steel", (0.6, 0.6, 0.62), 1.0, 0.25),
 }
 
 
 def seat_material():
+    """Black suede-like fabric insert (CC0 fabric normal map) between grained leatherette bolsters,
+    with red stitching along the seam. UV: U across the seat (-1..1), V along it (0..1)."""
     m = bpy.data.materials.new("Seat fabric and leather")
     m.use_nodes = True
     nt = m.node_tree
     b = nt.nodes["Principled BSDF"]
-    b.inputs["Base Color"].default_value = (0.014, 0.014, 0.016, 1)
     uv = nt.nodes.new("ShaderNodeUVMap")
     sep = nt.nodes.new("ShaderNodeSeparateXYZ")
     nt.links.new(uv.outputs["UV"], sep.inputs["Vector"])
-    # |u| > 0.62 is the leather bolster, inside is the quilted fabric insert
     absu = nt.nodes.new("ShaderNodeMath"); absu.operation = "ABSOLUTE"
     nt.links.new(sep.outputs["X"], absu.inputs[0])
     mask = nt.nodes.new("ShaderNodeMath"); mask.operation = "GREATER_THAN"; mask.inputs[1].default_value = 0.62
     nt.links.new(absu.outputs[0], mask.inputs[0])
+    # fabric: tiled at ~6 cm (U spans ~0.5 m, V ~1.4 m)
+    mp = node(nt, "ShaderNodeMapping", Scale=(4.5, 24.0, 1.0))
+    nt.links.new(uv.outputs["UV"], mp.inputs["Vector"])
+    fn = nt.nodes.new("ShaderNodeTexImage"); fn.image = cache_img("fabric_pattern_07_nor_gl.jpg")
+    fr = nt.nodes.new("ShaderNodeTexImage"); fr.image = cache_img("fabric_pattern_07_Rough.jpg")
+    for t in (fn, fr):
+        nt.links.new(mp.outputs["Vector"], t.inputs["Vector"])
+    # leather grain: fine voronoi
+    vor = node(nt, "ShaderNodeTexVoronoi", Scale=900.0)
+    tc = nt.nodes.new("ShaderNodeTexCoord")
+    nt.links.new(tc.outputs["Object"], vor.inputs["Vector"])
+    leather_bump = node(nt, "ShaderNodeBump", Strength=0.25, Distance=0.0004)
+    nt.links.new(vor.outputs["Distance"], leather_bump.inputs["Height"])
+    fabric_nm = node(nt, "ShaderNodeNormalMap", Strength=1.2)
+    nt.links.new(fn.outputs["Color"], fabric_nm.inputs["Color"])
+    # quilted channels on the insert
+    wave = node(nt, "ShaderNodeTexWave", Scale=14.0)
+    wave.wave_type = "BANDS"; wave.bands_direction = "Y"
+    nt.links.new(uv.outputs["UV"], wave.inputs["Vector"])
+    quilt = node(nt, "ShaderNodeBump", Strength=0.3, Distance=0.003)
+    nt.links.new(wave.outputs["Fac"], quilt.inputs["Height"])
+    nt.links.new(fabric_nm.outputs["Normal"], quilt.inputs["Normal"])
+    nmix = nt.nodes.new("ShaderNodeMix"); nmix.data_type = "VECTOR"
+    nt.links.new(mask.outputs[0], nmix.inputs["Factor"])
+    nt.links.new(quilt.outputs["Normal"], nmix.inputs[4]); nt.links.new(leather_bump.outputs["Normal"], nmix.inputs[5])
+    nt.links.new(nmix.outputs[1], b.inputs["Normal"])
+    # roughness: fabric map (very matte) vs leatherette (satin)
+    fr_m = node(nt, "ShaderNodeMapRange", **{"To Min": 0.75, "To Max": 1.0})
+    nt.links.new(fr.outputs["Color"], fr_m.inputs["Value"])
     rough = nt.nodes.new("ShaderNodeMix"); rough.data_type = "FLOAT"
-    rough.inputs["A"].default_value = 0.92
-    rough.inputs["B"].default_value = 0.5
+    rough.inputs["B"].default_value = 0.42
     nt.links.new(mask.outputs[0], rough.inputs["Factor"])
+    nt.links.new(fr_m.outputs["Result"], rough.inputs["A"])
     nt.links.new(rough.outputs["Result"], b.inputs["Roughness"])
-    b.inputs["Sheen Weight"].default_value = 0.2
+    shm = nt.nodes.new("ShaderNodeMix"); shm.data_type = "FLOAT"
+    shm.inputs["A"].default_value = 0.08; shm.inputs["B"].default_value = 0.0
+    nt.links.new(mask.outputs[0], shm.inputs["Factor"])
+    nt.links.new(shm.outputs["Result"], b.inputs["Sheen Weight"])
+    b.inputs["Sheen Roughness"].default_value = 0.4
+    b.inputs["Specular IOR Level"].default_value = 0.25  # fabric scatters, it doesn't shine
     # red stitching just inside the bolster seam
     band = nt.nodes.new("ShaderNodeMath"); band.operation = "COMPARE"
-    band.inputs[1].default_value = 0.585; band.inputs[2].default_value = 0.006
+    band.inputs[1].default_value = 0.6; band.inputs[2].default_value = 0.005
     nt.links.new(absu.outputs[0], band.inputs[0])
     dash = nt.nodes.new("ShaderNodeMath"); dash.operation = "SINE"
-    vs = nt.nodes.new("ShaderNodeMath"); vs.operation = "MULTIPLY"; vs.inputs[1].default_value = 900
+    vs = nt.nodes.new("ShaderNodeMath"); vs.operation = "MULTIPLY"; vs.inputs[1].default_value = 1400
     nt.links.new(sep.outputs["Y"], vs.inputs[0]); nt.links.new(vs.outputs[0], dash.inputs[0])
-    dpos = nt.nodes.new("ShaderNodeMath"); dpos.operation = "GREATER_THAN"; dpos.inputs[1].default_value = 0.0
+    dpos = nt.nodes.new("ShaderNodeMath"); dpos.operation = "GREATER_THAN"; dpos.inputs[1].default_value = -0.2
     nt.links.new(dash.outputs[0], dpos.inputs[0])
     stitch = nt.nodes.new("ShaderNodeMath"); stitch.operation = "MULTIPLY"
     nt.links.new(band.outputs[0], stitch.inputs[0]); nt.links.new(dpos.outputs[0], stitch.inputs[1])
+    base = nt.nodes.new("ShaderNodeMix"); base.data_type = "RGBA"
+    base.inputs["A"].default_value = (0.011, 0.011, 0.012, 1)   # fabric, a touch lighter than the leather
+    base.inputs["B"].default_value = (0.008, 0.008, 0.009, 1)
+    nt.links.new(mask.outputs[0], base.inputs["Factor"])
     col = nt.nodes.new("ShaderNodeMix"); col.data_type = "RGBA"
-    col.inputs["A"].default_value = (0.014, 0.014, 0.016, 1)
-    col.inputs["B"].default_value = (0.6, 0.01, 0.005, 1)
+    col.inputs["B"].default_value = (0.6, 0.004, 0.002, 1)
+    nt.links.new(base.outputs["Result"], col.inputs["A"])
     nt.links.new(stitch.outputs[0], col.inputs["Factor"])
     nt.links.new(col.outputs["Result"], b.inputs["Base Color"])
-    # quilted channels on the insert, grain on the leather
-    wave = nt.nodes.new("ShaderNodeTexWave"); wave.inputs["Scale"].default_value = 14
-    wave.wave_type = "BANDS"; wave.bands_direction = "Y"
-    nt.links.new(uv.outputs["UV"], wave.inputs["Vector"])
-    noise = nt.nodes.new("ShaderNodeTexNoise"); noise.inputs["Scale"].default_value = 1500
-    hm = nt.nodes.new("ShaderNodeMix"); hm.data_type = "FLOAT"
-    nt.links.new(mask.outputs[0], hm.inputs["Factor"])
-    nt.links.new(wave.outputs["Fac"], hm.inputs["A"]); nt.links.new(noise.outputs["Fac"], hm.inputs["B"])
-    bump = nt.nodes.new("ShaderNodeBump"); bump.inputs["Strength"].default_value = 0.35
-    bump.inputs["Distance"].default_value = 0.003
-    nt.links.new(hm.outputs["Result"], bump.inputs["Height"])
-    nt.links.new(bump.outputs["Normal"], b.inputs["Normal"])
     return m
 
 
 MAT["seat"] = seat_material()
-MAT["shell"] = principled("Seat shell", (0.008, 0.008, 0.009), 0.0, 0.4, **{"Coat Weight": 0.35, "Coat Roughness": 0.3})
+def shell_material():
+    """The seat's back and sides: covered in the same black fabric as the insert (object-space
+    mapped), as on real fabric GT buckets."""
+    m = principled("Seat back fabric", (0.007, 0.007, 0.008), 0.0, 0.9, **{"Sheen Weight": 0.08, "Sheen Roughness": 0.5, "Specular IOR Level": 0.15})
+    nt = m.node_tree
+    b = nt.nodes["Principled BSDF"]
+    tc = nt.nodes.new("ShaderNodeTexCoord")
+    mp = node(nt, "ShaderNodeMapping", Scale=(16.0, 16.0, 16.0))
+    nt.links.new(tc.outputs["Object"], mp.inputs["Vector"])
+    t = nt.nodes.new("ShaderNodeTexImage"); t.image = cache_img("fabric_pattern_07_nor_gl.jpg"); t.projection = "BOX"; t.projection_blend = 0.3
+    nt.links.new(mp.outputs["Vector"], t.inputs["Vector"])
+    nm = node(nt, "ShaderNodeNormalMap", Strength=1.0)
+    nt.links.new(t.outputs["Color"], nm.inputs["Color"])
+    nt.links.new(nm.outputs["Normal"], b.inputs["Normal"])
+    return m
+
+
+MAT["shell"] = shell_material()
 
 
 ART = os.path.join(ROOT, "assets", "rig3d")
@@ -183,7 +291,8 @@ def screen_material(image, u0=0.0, u1=1.0):
     b = nt.nodes["Principled BSDF"]
     b.inputs["Base Color"].default_value = (0.004, 0.005, 0.007, 1)
     b.inputs["Roughness"].default_value = 0.45  # matte anti-glare panel
-    b.inputs["Coat Weight"].default_value = 0.0
+    b.inputs["Coat Weight"].default_value = 0.12  # faint reflection off the anti-glare film
+    b.inputs["Coat Roughness"].default_value = 0.12
     uv = nt.nodes.new("ShaderNodeUVMap")
     mp = nt.nodes.new("ShaderNodeMapping")
     mp.inputs["Location"].default_value = (u0, 0, 0)
@@ -196,8 +305,12 @@ def screen_material(image, u0=0.0, u1=1.0):
     tex.image = img
     tex.extension = "EXTEND"
     nt.links.new(mp.outputs["Vector"], tex.inputs["Vector"])
-    nt.links.new(tex.outputs["Color"], b.inputs["Emission Color"])
-    b.inputs["Emission Strength"].default_value = 3.0
+    gam = nt.nodes.new("ShaderNodeGamma"); gam.inputs["Gamma"].default_value = 1.35  # panel contrast
+    hs = nt.nodes.new("ShaderNodeHueSaturation"); hs.inputs["Saturation"].default_value = 1.35
+    nt.links.new(tex.outputs["Color"], hs.inputs["Color"])
+    nt.links.new(hs.outputs["Color"], gam.inputs["Color"])
+    nt.links.new(gam.outputs["Color"], b.inputs["Emission Color"])
+    b.inputs["Emission Strength"].default_value = 1.0
     SCREEN_IMG[key] = m
     return m
 
@@ -345,9 +458,28 @@ def extrude(name, section, p0, p1, u, mat, bevel=0.0006, caps=True, smooth=None)
     return mesh_obj(name, bm, mat, smooth_angle=smooth, bevel=bevel)
 
 
-def profile(name, p0, p1, w, h, u=(0, 0, 1), mat=None):
-    """T-slot extrusion w (along u) x h (along d x u) mm."""
-    return extrude(name, section_with_slots(w, h), p0, p1, u, mat or MAT["alu"], bevel=0.0012)
+def profile(name, p0, p1, w, h, u=(0, 0, 1), mat=None, caps=True):
+    """T-slot extrusion w (along u) x h (along d x u) mm, with moulded black end caps (2.5 mm) that
+    follow the slot outline, as on real profile cockpits."""
+    p0, p1 = Vector(p0), Vector(p1)
+    d = (p1 - p0).normalized()
+    sec = section_with_slots(w, h)
+    ob = extrude(name, sec, p0 + d * (2.5 if caps else 0), p1 - d * (2.5 if caps else 0), u, mat or MAT["alu"], bevel=0.0012)
+    if caps:
+        inset = [Vector((q.x * (w - 1.0) / w, q.y * (h - 1.0) / h)) for q in sec]
+        for k, (a, b) in enumerate(((p0, p0 + d * 2.5), (p1 - d * 2.5, p1))):
+            cap = extrude(f"{name} cap {k}", inset, a, b, u, MAT["cap"], bevel=0.0009)
+            cap.parent = ob.parent
+    return ob
+
+
+def bolt(name, c, normal, r=5.0, h=3.2, mat=None):
+    """Button-head socket screw: a domed head with a dark hex socket, sitting on a surface."""
+    n = Vector(normal).normalized()
+    c = Vector(c)
+    head = cylinder(name, tuple(c), tuple(c + n * h), r, mat or MAT["bolt"], segs=20, bevel=0.0012)
+    cylinder(name + " socket", tuple(c + n * (h - 0.6)), tuple(c + n * (h + 0.05)), r * 0.45, MAT["gloss"], segs=6, bevel=0, smooth=False)
+    return head
 
 
 def box(name, c, size, mat, bevel=0.0008, rot=None):
@@ -412,6 +544,44 @@ def rounded_rect(w, h, r, segs=6):
     return pts
 
 
+def tube_curve(name, pts_mm, r, mat, kind="POLY", res=24):
+    """A round tube along points (mm): smooth (NURBS) for cables, poly for springs."""
+    cu = bpy.data.curves.new(name, "CURVE")
+    cu.dimensions = "3D"
+    cu.bevel_depth = mm(r)
+    cu.bevel_resolution = 4
+    cu.use_fill_caps = True
+    sp = cu.splines.new(kind)
+    sp.points.add(len(pts_mm) - 1)
+    for p, q in zip(sp.points, pts_mm):
+        p.co = (*mm(*q), 1.0)
+    if kind == "NURBS":
+        sp.order_u = 4
+        sp.use_endpoint_u = True
+        sp.resolution_u = res
+    ob = bpy.data.objects.new(name, cu)
+    cu.materials.append(mat)
+    link(ob)
+    return ob
+
+
+def cable(name, pts_mm, r=3.0, ties=()):
+    ob = tube_curve(name, pts_mm, r, MAT["cable"], "NURBS")
+    for k, (c, axis) in enumerate(ties):  # cable ties at given points
+        torus(f"{name} tie {k}", c, axis, r + 1.2, 1.0, MAT["plastic"], 24, 6)
+    return ob
+
+
+def helix(name, a, b, R, turns, wire, mat):
+    a, b = Vector(a), Vector(b)
+    d = (b - a).normalized()
+    u = d.cross(Vector((0, 0, 1)) if abs(d.z) < 0.9 else Vector((1, 0, 0))).normalized()
+    v = d.cross(u)
+    n = int(turns * 24)
+    pts = [a + (b - a) * (i / n) + (u * math.cos(2 * math.pi * turns * i / n) + v * math.sin(2 * math.pi * turns * i / n)) * R for i in range(n + 1)]
+    return tube_curve(name, [tuple(p) for p in pts], wire, mat)
+
+
 # ============================================================================= MODEL
 # Proportions follow real 160 x 40 profile cockpits (see docs/rig3d/REMODEL-PLAN.md): a 660 x 1440 black
 # anodised base, side-mounted 160 x 40 wheel uprights, a 120 x 40 wheel deck channel with red side plates,
@@ -441,6 +611,12 @@ for s, side in [(1, "L"), (-1, "R")]:
         if dirx < 0:
             tri = list(reversed(tri))
         plate(f"Gusset {side}{x}", tri, (x, s * (UP_Y - 20) if s > 0 else s * (UP_Y + 20), RZ0 + 4), (1, 0, 0), (0, 0, 1), -40, MAT["alu"])
+    for x in (20, LEN - 20):  # cross members bolt through the rail ends
+        for zc in (RZ - 40, RZ + 40):
+            bolt(f"Rail bolt {side}{x}{zc}", (x, s * (RAIL_Y + 20), zc), (0, s, 0), r=6)
+    for xo in (-40, 40):  # upright foot bolts into the rail slot
+        for zc in (RZ0 + 60, RZ0 + 120):
+            bolt(f"Upright bolt {side}{xo}{zc}", ((UP_X0 + UP_X1) / 2 + xo, s * (UP_Y + 20), zc), (0, s, 0), r=6)
 for x, nm in ((20, "Rear cross"), (LEN - 20, "Front cross")):
     profile(nm, (x, -RAIL_Y + 20, RZ), (x, RAIL_Y - 20, RZ), 160, 40, u=(0, 0, 1))
     for zc in (RZ - 40, RZ + 40):
@@ -453,8 +629,18 @@ profile("Wheel deck channel", (DECK_X, -UP_Y + 20, DECK_Z), (DECK_X, UP_Y - 20, 
 for s, side in [(1, "L"), (-1, "R")]:
     plate(f"Deck side plate {side}", rounded_rect(220, 180, 14), (DECK_X, s * (UP_Y - 20), DECK_Z), (1, 0, 0), (0, 0, 1), 8 * s, MAT["red_anod"])
     for bx, bz in ((-70, -60), (0, -60), (70, -60), (-45, 50), (45, 50)):
-        cylinder(f"Deck bolt {side}{bx}{bz}", (DECK_X + bx, s * (UP_Y - 28), DECK_Z + bz), (DECK_X + bx, s * (UP_Y - 33), DECK_Z + bz), 6.5, MAT["gloss"], segs=16)
+        bolt(f"Deck bolt {side}{bx}{bz}", (DECK_X + bx, s * (UP_Y - 28), DECK_Z + bz), (0, -s, 0), r=6.5)
 plate("Wheel deck plate", rounded_rect(300, 260, 8), (DECK_X - 20, 0, DECK_Z + 20), (1, 0, 0), (0, 1, 0), 6, MAT["steel"])
+for bx in (-125, 125):
+    for by in (-105, 105):
+        bolt(f"Deck plate bolt {bx}{by}", (DECK_X - 20 + bx, by, DECK_Z + 26), (0, 0, 1), r=5)
+# cable run: motor power and USB down the near upright, along the rail to the back, tied off
+for k, (r, off) in enumerate(((4.2, 0), (2.6, 11))):
+    cable(f"Wheelbase cable {k}", [
+        (DECK_X + 80, -30 - off, DECK_Z + 60), (DECK_X + 150, -120 - off, DECK_Z + 10), (UP_X1 + 12, -(UP_Y - 48) - off, DECK_Z - 60),
+        (UP_X1 + 12, -(UP_Y - 48) - off, 420), (UP_X1 + 6, -(UP_Y - 48) - off, RZ1 + 30), (UP_X0 - 60, -(RAIL_Y - 30) - off, RZ1 + 8),
+        (400, -(RAIL_Y - 30) - off, RZ1 + 6), (90, -(RAIL_Y - 30) - off, RZ1 + 6), (40, -(RAIL_Y - 60) - off, RZ1 - 40), (10, -(RAIL_Y - 90) - off, 60)],
+        r=r, ties=[((UP_X1 + 12, -(UP_Y - 48) - 5, z), (0, 0, 1)) for z in (520, 680)] if k == 0 else ())
 
 # Parts drawn under the pedals and the seat (the far side and the front, from the preview camera); the
 # rest of the frame is drawn over them (see stack_order.py).
@@ -488,6 +674,10 @@ box("Motor clamp", tuple(MB0 + AX * 115 - Vector((0, 0, 70))), (160, 170, 24), M
 for k in range(8):  # cooling fins on the top
     a = MB0 + AX * (40 + k * 20) + Vector((0, 0, 72))
     box(f"Fin {k}", tuple(a), (6, 120, 8), MAT["motor"], bevel=0.001, rot=mrot)
+for k in range(9):  # heatsink fins down both flanks
+    for sy in (1, -1):
+        a = MB0 + AX * (30 + k * 20) + Vector((0, sy * 72, 8))
+        box(f"Side fin {k}{sy}", tuple(a), (5, 8, 100), MAT["motor"], bevel=0.0008, rot=mrot)
 box("Motor stripe", tuple(MB0 + AX * 190), (6, 142.5, 142.5), MAT["red"], bevel=0.003, rot=mrot)
 cylinder("Motor face", tuple(MB1), tuple(MB1 + AX * 8), 56, MAT["gloss"], segs=64)
 cylinder("Shaft hub", tuple(MB1 + AX * 8), tuple(MB1 + AX * 34), 30, MAT["alu_bright"], segs=40)
@@ -497,10 +687,15 @@ layer("wheel")
 WC = MB1 + AX * 80
 cylinder("Quick release", tuple(MB1 + AX * 34), tuple(WC - AX * 6), 28, MAT["alu_bright"], segs=40)
 cylinder("QR collar", tuple(MB1 + AX * 40), tuple(MB1 + AX * 50), 32, MAT["red_anod"], segs=40)
-torus("Rim", tuple(WC), AX, 150, 15.5, add_bump(principled("Grip", (0.02, 0.02, 0.021), 0.0, 0.6), 2500, 0.3), 128, 28)
+torus("Rim", tuple(WC), AX, 150, 15.5, add_bump(principled("Grip", (0.012, 0.012, 0.013), 0.0, 0.7, **{"Specular IOR Level": 0.25}), 2500, 0.3), 128, 28)
 wu = AX.cross(Vector((0, 0, 1))).normalized()
 wv = AX.cross(wu).normalized()
-plate("Wheel plate", rounded_rect(130, 85, 22), WC - AX * 4, wu, wv, -8, MAT["gloss"])
+plate("Wheel plate", rounded_rect(200, 110, 26), WC - AX * 4, wu, wv, -8, MAT["carbon"])
+plate("Wheel display", rounded_rect(70, 26, 3), WC - AX * 1.0 + wv * 28, wu, wv, -1.5, MAT["lcd"])
+for k, sx in enumerate((-70, 70)):  # rotary encoders
+    p = WC + wu * sx - wv * 22 - AX * 1
+    cylinder(f"Encoder {k}", tuple(p), tuple(p + AX * 9), 9, MAT["alu_bright"], segs=24)
+    cylinder(f"Encoder cap {k}", tuple(p + AX * 9), tuple(p + AX * 11), 7, MAT["red_anod"], segs=24)
 for ang in (180, 0, 270):
     dvec = wu * math.cos(math.radians(ang)) + wv * math.sin(math.radians(ang))
     side = AX.cross(dvec)
@@ -508,9 +703,10 @@ for ang in (180, 0, 270):
     b = WC + dvec * 138
     sec = rounded_rect(30, 7, 3, 3)
     extrude(f"Spoke {ang}", [Vector(p) for p in sec], tuple(a), tuple(b), side, MAT["alu_bright"], bevel=0.0005)
-for ang, col in ((30, "red"), (150, "red"), (60, "plastic"), (120, "plastic"), (300, "alu_bright"), (240, "alu_bright")):
+for ang, col, rr in ((15, "red", 62), (165, "red", 62), (35, "plastic", 58), (145, "plastic", 58), (-12, "plastic", 64), (192, "plastic", 64),
+                     (330, "alu_bright", 50), (210, "alu_bright", 50), (300, "plastic", 40), (240, "plastic", 40)):
     dvec = wu * math.cos(math.radians(ang)) + wv * math.sin(math.radians(ang))
-    p = WC + dvec * 38 - AX * 1
+    p = WC + dvec * rr - AX * 1
     cylinder(f"Button {ang}", tuple(p), tuple(p + AX * 6), 6.5, MAT[col], segs=24)
 for s in (1, -1):  # paddles behind the rim
     plate(f"Paddle {s}", rounded_rect(36, 90, 10), WC + wu * (s * 95) + AX * 10, wu, wv, -3, MAT["alu_bright"])
@@ -538,6 +734,13 @@ def pedal(name, y, arm, face_h, red):
     d = (tip - pivot).normalized()
     extrude(f"{name} arm", [Vector(p) for p in rounded_rect(20, 14, 3, 3)], tuple(pivot), tuple(tip), (0, 1, 0), MAT["alu_bright"], bevel=0.0004)
     plate(f"{name} face", rounded_rect(80, face_h, 12), tip - d * (face_h * 0.55), (0, 1, 0), d, 8, MAT["alu_bright"])
+    for k in (-1, 1):
+        bolt(f"{name} base bolt {k}", tuple(base + PU * (60 + 55 * k) + PN * 28 + Vector((0, 22, 0))), tuple(PN), r=4, h=2.5)
+    if not red:  # coil spring from the base to the arm (load-cell brake uses elastomers instead)
+        a = base + PU * 118 + PN * 28
+        b = pivot + d * (arm * 0.5)
+        helix(f"{name} spring", tuple(a), tuple(b), 13, 7, 2.0, MAT["spring"])
+        cylinder(f"{name} spring rod", tuple(a), tuple(b), 5, MAT["alu_bright"], segs=16)
     if red:
         a = base + PU * 125 + PN * 30
         b = pivot + d * (arm * 0.52)
@@ -550,6 +753,8 @@ def pedal(name, y, arm, face_h, red):
 pedal("Clutch", 125, 230, 105, False)
 pedal("Brake", 0, 235, 115, True)
 pedal("Throttle", -125, 255, 160, False)
+cable("Pedal cable", [tuple(P0 + PU * 150 + PN * 20 + Vector((0, -190, 0))), tuple(P0 + PU * 60 + PN * 10 + Vector((0, -240, 0))),
+                      (990, -(RAIL_Y - 30), RZ1 + 6), (600, -(RAIL_Y - 45), RZ1 + 6), (60, -(RAIL_Y - 45), RZ1 + 6), (15, -(RAIL_Y - 80), 70)], r=2.6)
 
 # ---- side mount, shifter, handbrake (driver's right, beside the cushion) -----------------------
 layer("sidemount")
@@ -678,6 +883,33 @@ _back = _c - _n * 90
 decal("Brand seat back", "brand-mark.png", (_back.x, 0, _back.y), (-_n.x, 0, -_n.y), (_t.x, 0, _t.y), 150, kind="stitch", segs=14, wrap_to=seat)
 _f = centre(0.9) + Vector((_n.x, _n.y)) * 60
 decal("Brand seat headrest", "brand-mark.png", (_f.x, 0, _f.y), (_n.x, 0, _n.y), (_t.x, 0, _t.y), 90, kind="stitch", segs=10, wrap_to=seat)
+
+# red piping along the crest of both side bolsters and round the headrest, laid on the finished shell
+from mathutils.bvhtree import BVHTree
+bpy.context.view_layer.update()
+_dg = bpy.context.evaluated_depsgraph_get()
+_ev = seat.evaluated_get(_dg)
+_tree = BVHTree.FromObject(_ev, _dg)
+for _side in (1, -1):
+    _path = []
+    for _i in range(2, NS - 1):
+        _s = _i / NS
+        _c = centre(_s)
+        _c2, _c1 = centre(min(1, _s + 0.01)), centre(max(0, _s - 0.01))
+        _tn = (_c2 - _c1).normalized()
+        _nr = Vector((_tn.y, -_tn.x))
+        if (_nr.y < 0 and _s < 0.3) or (_s >= 0.3 and _nr.x < 0):
+            _nr = -_nr
+        _hw = lerp_table(HALF_W, _s)
+        _bh = lerp_table(BOLSTER, _s)
+        _q = _c + _nr * (_bh * 0.97 + 60)
+        _origin = Vector((_q.x, _side * _hw * 0.84, _q.y)) / 1000.0
+        _dirn = Vector((-_nr.x, 0, -_nr.y))
+        _hit = _tree.ray_cast(_origin, _dirn, 0.5)
+        if _hit[0] is not None:
+            _path.append(tuple((_hit[0] + _hit[1] * 0.0025) * 1000.0))
+    if len(_path) > 4:
+        tube_curve(f"Seat piping {_side}", _path, 2.4, MAT["red"], "NURBS", res=8)
 
 # ---- VR headset on the headrest ---------------------------------------------------------
 layer("headset")
@@ -848,7 +1080,11 @@ layer("screen-top")
 curved_monitor("Top screen", (CX + 20, 300, 0), (CX + 20, -300, 0), SB + SH + 28, 350, screen=screen_material(TOP), tilt=15)
 
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
-bpy.ops.file.pack_all()
+for im in bpy.data.images:  # pack the brand and screen art; CC0 textures stay in the gitignored cache
+    if im.filepath and "cache" not in im.filepath and not im.packed_file:
+        im.pack()
+    elif im.filepath and "cache" in im.filepath:
+        im.filepath = bpy.path.relpath(im.filepath, start=os.path.dirname(OUT))
 bpy.context.preferences.filepaths.save_version = 0
 bpy.ops.wm.save_as_mainfile(filepath=OUT, compress=True)
 print("saved", OUT, sum(len(c.objects) for c in COLL.values()), "objects")
