@@ -18,19 +18,19 @@ SRC = sys.argv[1]
 ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 OUT = os.path.join(ROOT, "public", "builder-rig")
 MANIFEST = os.path.join(ROOT, "src", "components", "es", "rig-photo.ts")
-WIDTH = 900  # the preview is at most 380 CSS px wide on desktop: 900 covers 2x screens
+WIDTH = 900  # the preview is at most 440 CSS px wide on desktop: 900 covers 2x screens
 
 # Back-to-front order from scripts/rig3d/stack_order.py (ground and raised agree).
 ORDER = [
-    "motion", "mount", "chassis-back", "mount-sides", "mount-top", "pc", "pedals", "chassis",
-    "screen-center", "screen-sides", "screen-dual", "screen-top", "seat", "sidemount", "shifter",
-    "handbrake", "wheelbase", "wheel", "headset",
+    "mount", "mount-sides", "mount-top", "pc", "motion-back", "chassis-back", "pedals", "chassis",
+    "screen-center", "screen-sides", "screen-dual", "headset", "screen-top", "seat", "motion", "sidemount",
+    "shifter", "handbrake", "wheelbase", "wheel",
 ]
 RAISED = {"chassis-back", "chassis", "seat", "wheelbase", "wheel", "pedals", "sidemount", "shifter", "handbrake", "headset"}
 SHADOWS = ["shadow-rig", "shadow-rig--raised", "shadow-stand", "shadow-pc"]
 # What an empty build shows (rigPartStates with nothing picked): everything as a ghost except
 # the top screen and its frame extension, the dual screens and the raised frame.
-EMPTY = [n for n in ORDER if n not in ("motion", "mount-top", "screen-top", "screen-dual")]
+EMPTY = [n for n in ORDER if n not in ("motion", "motion-back", "mount-top", "screen-top", "screen-dual")]
 
 os.makedirs(OUT, exist_ok=True)
 for f in os.listdir(OUT):
@@ -43,7 +43,7 @@ def load(name):
 
 
 def save(img, name, quality):
-    small = img.resize((WIDTH, round(img.height * WIDTH / img.width)), Image.LANCZOS)
+    small = img if img.width == WIDTH else img.resize((WIDTH, round(img.height * WIDTH / img.width)), Image.LANCZOS)
     tmp = os.path.join(OUT, name + ".webp")
     small.save(tmp, "WEBP", quality=quality, method=6, alpha_quality=90)
     digest = hashlib.sha1(open(tmp, "rb").read()).hexdigest()[:8]

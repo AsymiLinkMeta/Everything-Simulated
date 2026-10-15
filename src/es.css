@@ -1781,6 +1781,9 @@ a.es-trust-item:hover .es-trust-value {
   .es-rb-grid { grid-template-columns: minmax(0, 1fr) 380px; }
   .es-rb-side { position: sticky; top: 6rem; align-self: start; }
 }
+@media (min-width: 1280px) {
+  .es-rb-grid { grid-template-columns: minmax(0, 1fr) 440px; }
+}
 .es-rb-title { margin: 0.25rem 0; font-size: 1.75rem; font-weight: 600; outline: none; }
 .es-rb-filters { display: flex; flex-wrap: wrap; gap: 0.75rem; margin: 1rem 0 1.25rem; }
 .es-rb-filters label { display: grid; gap: 0.25rem; font-size: 0.75rem; color: var(--es-muted); }
@@ -1822,7 +1825,14 @@ a.es-trust-item:hover .es-trust-value {
 .es-rb-nav { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.75rem; margin-top: 1.5rem; }
 
 .es-rb-side { display: grid; gap: 1rem; }
-.es-rb-preview { position: relative; margin: 0; overflow: hidden; border: 1px solid var(--es-line); border-radius: var(--es-radius); background: radial-gradient(ellipse at 45% 70%, rgba(225, 6, 0, 0.1), transparent 55%), radial-gradient(ellipse at 50% 40%, #15151b, #08080b 70%); }
+/* Dark studio: a soft lit floor under the rig and a faint backdrop falloff, so the black rig separates. */
+.es-rb-preview {
+  position: relative; margin: 0; overflow: hidden; border: 1px solid var(--es-line); border-radius: var(--es-radius);
+  background:
+    radial-gradient(ellipse 60% 22% at 50% 82%, rgba(255, 255, 255, 0.07), transparent 70%),
+    radial-gradient(ellipse 70% 40% at 50% 85%, rgba(225, 6, 0, 0.07), transparent 70%),
+    linear-gradient(180deg, #1a1a21 0%, #121218 55%, #0c0c10 100%);
+}
 .es-rp-stage { position: relative; width: 100%; }
 .es-rp-stage > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: contain; }
 .es-rp-layer.is-ghost { filter: grayscale(1) brightness(1.8); opacity: 0.13; transition: opacity 300ms ease; }

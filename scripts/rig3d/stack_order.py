@@ -29,7 +29,7 @@ for raised in (False, True):
     if raised:
         names = [n for n in maps if n.endswith("--raised")] + STAND
     else:
-        names = [n for n in maps if "--raised" not in n and n != "motion"]
+        names = [n for n in maps if "--raised" not in n and n not in ("motion", "motion-back")]
     front = {n: set() for n in names}
     print("\n== raised" if raised else "\n== ground")
     for a, b in itertools.combinations(names, 2):

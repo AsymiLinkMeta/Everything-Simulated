@@ -153,6 +153,7 @@ const PART_CATEGORIES: Record<string, string[]> = {
   sidemount: ["shifter", "handbrake"],
   pc: ["pc"],
   motion: ["motion"],
+  "motion-back": ["motion"],
   headset: ["headset"],
   mount: ["mount"],
   "mount-sides": ["mount"],

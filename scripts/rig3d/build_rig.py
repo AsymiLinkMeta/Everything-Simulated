@@ -34,7 +34,7 @@ scene = bpy.context.scene
 scene.unit_settings.system = "METRIC"
 
 LAYERS = [
-    "chassis-back", "chassis", "seat", "wheelbase", "wheel", "pedals", "sidemount", "shifter", "handbrake", "pc", "motion",
+    "chassis-back", "chassis", "seat", "wheelbase", "wheel", "pedals", "sidemount", "shifter", "handbrake", "pc", "motion-back", "motion",
     "headset", "mount", "mount-sides", "mount-top", "screen-center", "screen-sides", "screen-dual", "screen-top",
 ]
 RIG_LAYERS = {"chassis-back", "chassis", "seat", "wheelbase", "wheel", "pedals", "sidemount", "shifter", "handbrake", "headset"}
@@ -708,6 +708,7 @@ layer("motion")
 LZ = MOTION_LIFT * 1000
 for x in (110, LEN - 110):
     for s in (1, -1):
+        layer("motion-back" if s > 0 else "motion")  # the far-side pair draws behind the frame
         y = s * (RAIL_Y + 20 + 85)
         box(f"Actuator bracket {x}{s}", (x, s * (RAIL_Y + 20 + 10), RZ + LZ), (190, 20, 150), MAT["steel"], bevel=0.002)
         box(f"Actuator body {x}{s}", (x, y, RZ + LZ + 40), (170, 130, 300), MAT["plastic"], bevel=0.008)
@@ -717,6 +718,7 @@ for x in (110, LEN - 110):
         bottom = RZ + LZ + 40 - 150
         cylinder(f"Actuator piston {x}{s}", (x, y, 22), (x, y, bottom), 42, MAT["gloss"], segs=40)
         cylinder(f"Actuator foot {x}{s}", (x, y, 0), (x, y, 22), 62, MAT["silver"], segs=48)
+layer("motion-back")
 box("Motion controller", (720, 0, 40), (260, 220, 80), MAT["plastic"], bevel=0.004)
 
 # ---- freestanding display stand and curved screens -------------------------------------------
@@ -736,11 +738,10 @@ for s, side in [(1, "L"), (-1, "R")]:
 profile("Stand crossbar", (ST_X - 40, -ST_Y - 40, BAR_Z), (ST_X - 40, ST_Y + 40, BAR_Z), 80, 40, u=(0, 0, 1))
 profile("Stand lower bar", (ST_X, -ST_Y + 40, 140), (ST_X, ST_Y - 40, 140), 80, 40, u=(0, 0, 1))
 decal("Brand stand", "brand-lockup.png", (ST_X - 20, 0, 140), (-1, 0, 0), (0, 0, 1), 380)
-box("Centre VESA arm", ((CX + ST_X - 60) / 2 + 40, 0, BAR_Z), (ST_X - 60 - CX - 60, 60, 40), MAT["alu"], bevel=0.002)
 layer("mount-top")
 for s, side in [(1, "L"), (-1, "R")]:
-    profile(f"Top post {side}", (ST_X - 40, s * 260, BAR_Z + 40), (ST_X - 40, s * 260, 1760), 40, 40, u=(1, 0, 0))
-profile("Top crossbar", (ST_X - 80, -300, 1640), (ST_X - 80, 300, 1640), 80, 40, u=(0, 0, 1))
+    profile(f"Top post {side}", (ST_X - 40, s * 340, BAR_Z + 40), (ST_X - 40, s * 340, 1760), 40, 40, u=(1, 0, 0))
+profile("Top crossbar", (ST_X - 80, -360, 1640), (ST_X - 80, 360, 1640), 80, 40, u=(0, 0, 1))
 layer("mount-sides")
 for s, side in [(1, "L"), (-1, "R")]:
     h = Vector((ST_X - 60, s * (SW / 2 + 40), BAR_Z))

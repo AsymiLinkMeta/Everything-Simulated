@@ -225,7 +225,7 @@ elif args.mode == "layers":
     # floor shadows: the rig on the ground, the rig on the motion platform, the stand, the PC
     rig_ground = RIG_LAYERS
     jobs.append(("shadow-rig", rig_ground, False, True))
-    jobs.append(("shadow-rig@raised", rig_ground + ["motion"], True, True))
+    jobs.append(("shadow-rig@raised", rig_ground + ["motion", "motion-back"], True, True))
     jobs.append(("shadow-stand", ["mount", "mount-sides", "screen-center", "screen-sides"], False, True))
     jobs.append(("shadow-pc", ["pc"], False, True))
     for job in jobs:
@@ -258,7 +258,7 @@ elif args.mode == "depth":
     nt.links.new(rl.outputs["Image"], comp.inputs["Image"])
     for name in ALL if args.only != "chassis-objects" else []:
         for lifted in (False, True):
-            if lifted and name not in RIG_LAYERS + ["motion"]:
+            if lifted and name not in RIG_LAYERS + ["motion", "motion-back"]:
                 continue
             show([name], lifted=lifted)
             out.file_slots[0].path = f"depth-{name}{'--raised' if lifted else ''}-"

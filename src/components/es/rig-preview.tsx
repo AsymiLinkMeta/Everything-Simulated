@@ -40,7 +40,7 @@ export function RigPreview({ layers, picked, screens = 0 }: { layers: LayerRow[]
           <img src={file("ghost-empty")} alt="" className="es-rp-empty" data-part="ghost" />
         )}
         {layers.map((l) => (
-          <SiteImage key={`${l.category}-${l.sku ?? "default"}`} src={l.image_url} alt={l.label ?? ""} className="es-rb-layer" sizes="(min-width: 1024px) 380px, 100vw" />
+          <SiteImage key={`${l.category}-${l.sku ?? "default"}`} src={l.image_url} alt={l.label ?? ""} className="es-rb-layer" sizes="(min-width: 1280px) 440px, (min-width: 1024px) 380px, 100vw" />
         ))}
       </div>
       <figcaption className="es-rb-preview-note">{parts ? "Rendered preview. Parts appear as you pick them." : "Rendered preview. Pick parts and they appear here."}</figcaption>
