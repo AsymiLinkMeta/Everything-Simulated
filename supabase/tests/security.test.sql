@@ -238,4 +238,213 @@ EXCEPTION WHEN OTHERS THEN
   RAISE NOTICE 'ok - customers cannot record payments';
 END $$;
 
+-- ---- Ambassador programme (20261016090000_ambassador_program) ----
+RESET ROLE;
+INSERT INTO public.ambassadors (id, slug, name, code, published, age_band, user_id)
+VALUES ('00000000-0000-0000-0000-0000000000a1', 'sec-amb', 'Sec Ambassador', 'secamb', true, '18+', '00000000-0000-0000-0000-00000000000e');
+SELECT pg_temp.check((SELECT code FROM public.ambassadors WHERE slug = 'sec-amb') = 'SECAMB', 'ambassador codes are stored upper-case');
+SELECT pg_temp.check((SELECT default_commission_rate IS NULL FROM (SELECT public.ambassador_setting('default_commission_rate') #>> '{}' AS default_commission_rate) s),
+  'default commission rate is seeded as NULL (not set)');
+
+-- 22. Anon: clicks recorded through the RPC only, deduped per day, no raw identifiers or tables readable.
+SELECT pg_temp.as_anon();
+SELECT pg_temp.check((public.record_referral_click('secamb', 'visitor-abcdefghij-1', '/ambassadors/sec-amb?email=x@y.z', 'https://ig.example/p/1?u=2') ->> 'ok')::boolean,
+  'anon can record a referral click for a published code');
+SELECT public.record_referral_click('SECAMB', 'visitor-abcdefghij-1', '/', NULL);
+SELECT pg_temp.check((public.record_referral_click('NOPE-NOPE', 'visitor-abcdefghij-1', '/', NULL) ->> 'ok')::boolean = false,
+  'unknown codes are not recorded');
+DO $$
+BEGIN
+  PERFORM 1 FROM public.referral_clicks;
+  RAISE EXCEPTION 'FAILED: anon read referral_clicks';
+EXCEPTION WHEN insufficient_privilege THEN RAISE NOTICE 'ok - anon cannot read referral_clicks';
+END $$;
+DO $$
+BEGIN
+  INSERT INTO public.referral_clicks (ambassador_id, visitor_hash) VALUES ('00000000-0000-0000-0000-0000000000a1', 'x');
+  RAISE EXCEPTION 'FAILED: anon inserted a click directly';
+EXCEPTION WHEN insufficient_privilege THEN RAISE NOTICE 'ok - anon cannot insert clicks directly';
+END $$;
+DO $$
+BEGIN
+  PERFORM 1 FROM public.ambassador_settings;
+  RAISE EXCEPTION 'FAILED: anon read ambassador_settings';
+EXCEPTION WHEN insufficient_privilege THEN RAISE NOTICE 'ok - anon cannot read ambassador_settings';
+END $$;
+DO $$
+BEGIN
+  PERFORM user_id FROM public.ambassadors;
+  RAISE EXCEPTION 'FAILED: anon read ambassadors.user_id';
+EXCEPTION WHEN insufficient_privilege THEN RAISE NOTICE 'ok - anon cannot read ambassadors.user_id';
+END $$;
+DO $$
+BEGIN
+  PERFORM 1 FROM public.ambassador_guardians;
+  RAISE EXCEPTION 'FAILED: anon read guardians';
+EXCEPTION WHEN insufficient_privilege THEN RAISE NOTICE 'ok - anon cannot read ambassador_guardians';
+END $$;
+
+-- 23. A referred guest order is attributed; no commission until money arrives.
+DO $$
+DECLARE r jsonb;
+BEGIN
+  r := public.place_order('{"lines":[{"sku":"sec-priced","qty":1}],"email":"sec-ref@example.com","name":"Ref Guest","phone":"0400000000","address":"1 Test St","postcode":"4215","referral_code":"secamb"}');
+  PERFORM set_config('sec.ref_order', r ->> 'id', true);
+END $$;
+RESET ROLE;
+SELECT pg_temp.check((SELECT count(*) = 1 AND min(landing_path) = '/ambassadors/sec-amb' AND min(referrer_host) = 'ig.example' FROM public.referral_clicks
+                      WHERE ambassador_id = '00000000-0000-0000-0000-0000000000a1'),
+  'one click per visitor per day, path without query, referrer host only');
+SELECT pg_temp.check((SELECT referral_ambassador_id = '00000000-0000-0000-0000-0000000000a1' AND referral_source = 'checkout'
+                      FROM public.shop_orders WHERE id = current_setting('sec.ref_order')),
+  'checkout order is attributed to the ambassador');
+SELECT pg_temp.check((SELECT count(*) = 0 FROM public.ambassador_commissions WHERE order_id = current_setting('sec.ref_order')),
+  'no commission before the deposit');
+
+-- 24. Ambassador (customer "e") cannot change rates, settings, payouts or their own code/publish state.
+SELECT pg_temp.as_user('00000000-0000-0000-0000-00000000000e');
+DO $$
+BEGIN
+  PERFORM public.staff_set_ambassador_setting('default_commission_rate', '0.5');
+  RAISE EXCEPTION 'FAILED: ambassador changed the default rate';
+EXCEPTION WHEN OTHERS THEN
+  IF SQLERRM LIKE 'FAILED:%' THEN RAISE; END IF;
+  RAISE NOTICE 'ok - non-staff cannot change programme settings';
+END $$;
+DO $$
+BEGIN
+  PERFORM public.staff_set_ambassador_rate('00000000-0000-0000-0000-0000000000a1', 0.5);
+  RAISE EXCEPTION 'FAILED: ambassador set their own rate';
+EXCEPTION WHEN OTHERS THEN
+  IF SQLERRM LIKE 'FAILED:%' THEN RAISE; END IF;
+  RAISE NOTICE 'ok - non-staff cannot set rates';
+END $$;
+DO $$
+BEGIN
+  UPDATE public.ambassadors SET code = 'FREE-MONEY' WHERE id = '00000000-0000-0000-0000-0000000000a1';
+  IF (SELECT code FROM public.ambassadors WHERE id = '00000000-0000-0000-0000-0000000000a1') = 'FREE-MONEY' THEN
+    RAISE EXCEPTION 'FAILED: ambassador changed their own code';
+  END IF;
+  RAISE NOTICE 'ok - ambassador cannot change their code';
+EXCEPTION WHEN OTHERS THEN
+  IF SQLERRM LIKE 'FAILED:%' THEN RAISE; END IF;
+  RAISE NOTICE 'ok - ambassador cannot change their code (%)', SQLERRM;
+END $$;
+SELECT pg_temp.check((SELECT count(*) = 0 FROM public.ambassador_commissions), 'ambassadors cannot read commission rows directly');
+SELECT pg_temp.check((public.ambassador_dashboard() ->> 'clicks')::int = 1, 'ambassador dashboard shows their own clicks');
+DO $$
+BEGIN
+  PERFORM public.ambassador_dashboard('00000000-0000-0000-0000-0000000000a1'::uuid, 30) FROM public.ambassadors WHERE false;
+  PERFORM public.staff_commission_report();
+  RAISE EXCEPTION 'FAILED: non-staff ran the commission report';
+EXCEPTION WHEN OTHERS THEN
+  IF SQLERRM LIKE 'FAILED:%' THEN RAISE; END IF;
+  RAISE NOTICE 'ok - non-staff cannot run the commission report';
+END $$;
+
+-- 25. Commission lifecycle: pending (uncalculated) -> rate set -> approved -> paid.
+SELECT pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
+SELECT public.staff_record_payment(current_setting('sec.ref_order'), 30000, 'deposit');
+SELECT pg_temp.check((SELECT status = 'pending' AND amount_cents IS NULL AND basis_ex_gst = 100000 FROM public.ambassador_commissions
+                      WHERE order_id = current_setting('sec.ref_order')),
+  'deposit creates a pending commission with no amount while the rate is unset');
+SELECT public.staff_set_ambassador_setting('default_commission_rate', '0.05');
+SELECT pg_temp.check((SELECT amount_cents = 5000 FROM public.ambassador_commissions WHERE order_id = current_setting('sec.ref_order')),
+  'setting the default rate recalculates open commissions (5% of $1000 ex GST)');
+DO $$
+BEGIN
+  PERFORM public.staff_mark_payout('00000000-0000-0000-0000-0000000000a1',
+    array(SELECT id FROM public.ambassador_commissions WHERE order_id = current_setting('sec.ref_order')), 'EFT');
+  RAISE EXCEPTION 'FAILED: pending commission was paid out';
+EXCEPTION WHEN OTHERS THEN
+  IF SQLERRM LIKE 'FAILED:%' THEN RAISE; END IF;
+  RAISE NOTICE 'ok - pending commissions cannot be paid out';
+END $$;
+SELECT public.staff_record_payment(current_setting('sec.ref_order'),
+  (SELECT total_inc_gst - paid_cents FROM public.shop_orders WHERE id = current_setting('sec.ref_order')), 'balance');
+SELECT pg_temp.check((SELECT status = 'approved' FROM public.ambassador_commissions WHERE order_id = current_setting('sec.ref_order')),
+  'fully paid order approves the commission');
+SELECT public.staff_mark_payout('00000000-0000-0000-0000-0000000000a1',
+  array(SELECT id FROM public.ambassador_commissions WHERE order_id = current_setting('sec.ref_order')), 'EFT 1');
+SELECT pg_temp.check((SELECT status = 'paid' AND payout_id IS NOT NULL FROM public.ambassador_commissions WHERE order_id = current_setting('sec.ref_order')),
+  'payout marks the commission paid');
+
+-- 26. Self-referral is voided.
+RESET ROLE;
+INSERT INTO public.shop_orders (id, status, lines, total_ex_gst, total_inc_gst, shipping_name, user_id, referral_code)
+VALUES ('ESO-SEC-SELF', 'pending', '[{"sku":"sec-priced","qty":1}]', 100000, 110000, 'Self', '00000000-0000-0000-0000-00000000000e', 'SECAMB');
+SELECT pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
+SELECT public.staff_record_payment('ESO-SEC-SELF', 30000, 'deposit');
+SELECT pg_temp.check((SELECT status = 'void' FROM public.ambassador_commissions WHERE order_id = 'ESO-SEC-SELF'),
+  'self-referred orders earn no commission');
+
+-- 27. Minors: unpublished until a guardian approves; cannot opt themselves out; payouts held.
+UPDATE public.ambassadors SET age_band = '16-17' WHERE id = '00000000-0000-0000-0000-0000000000a1';
+SELECT pg_temp.check((SELECT NOT published FROM public.ambassadors WHERE id = '00000000-0000-0000-0000-0000000000a1'),
+  'marking a published profile as under-18 unpublishes it');
+DO $$
+BEGIN
+  UPDATE public.ambassadors SET published = true WHERE id = '00000000-0000-0000-0000-0000000000a1';
+  RAISE EXCEPTION 'FAILED: minor published without guardian approval';
+EXCEPTION WHEN OTHERS THEN
+  IF SQLERRM LIKE 'FAILED:%' THEN RAISE; END IF;
+  RAISE NOTICE 'ok - minor cannot be published without guardian approval';
+END $$;
+SELECT pg_temp.as_user('00000000-0000-0000-0000-00000000000e');
+DO $$
+BEGIN
+  PERFORM public.ambassador_self_update(p_age_band => '18+');
+  RAISE EXCEPTION 'FAILED: minor changed their age band to adult';
+EXCEPTION WHEN OTHERS THEN
+  IF SQLERRM LIKE 'FAILED:%' THEN RAISE; END IF;
+  RAISE NOTICE 'ok - a minor cannot switch themselves to adult';
+END $$;
+SELECT pg_temp.check((public.ambassador_set_guardian('00000000-0000-0000-0000-0000000000a1', 'Pat Parent', 'pat@example.com') ->> 'status') = 'pending',
+  'ambassador can name their guardian');
+DO $$
+BEGIN
+  PERFORM public.staff_guardian_signoff('00000000-0000-0000-0000-0000000000a1', 'self approved');
+  RAISE EXCEPTION 'FAILED: ambassador signed off their own guardian approval';
+EXCEPTION WHEN OTHERS THEN
+  IF SQLERRM LIKE 'FAILED:%' THEN RAISE; END IF;
+  RAISE NOTICE 'ok - only staff can sign off guardian approval';
+END $$;
+
+-- 28. Email method: token is service-role only, single use, and approves.
+SELECT pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
+SELECT public.staff_set_ambassador_setting('guardian_method', '"email"');
+DO $$
+BEGIN
+  PERFORM public.create_guardian_token('00000000-0000-0000-0000-0000000000a1');
+  RAISE EXCEPTION 'FAILED: staff session minted a guardian token';
+EXCEPTION WHEN insufficient_privilege THEN RAISE NOTICE 'ok - guardian tokens are minted by the service role only';
+END $$;
+RESET ROLE;
+SET LOCAL ROLE service_role;
+SELECT set_config('sec.gtoken', public.create_guardian_token('00000000-0000-0000-0000-0000000000a1') ->> 'token', true);
+RESET ROLE;
+SELECT pg_temp.check((SELECT token_hash IS NOT NULL AND token_hash <> current_setting('sec.gtoken') FROM public.ambassador_guardians
+                      WHERE ambassador_id = '00000000-0000-0000-0000-0000000000a1'),
+  'only a hash of the guardian token is stored');
+SELECT pg_temp.as_anon();
+SELECT pg_temp.check(public.guardian_link_info('not-a-real-token-000000000000') IS NULL, 'unknown guardian tokens reveal nothing');
+SELECT pg_temp.check((public.guardian_link_info(current_setting('sec.gtoken')) ->> 'guardian_name') = 'Pat Parent', 'guardian link shows who it is for');
+SELECT pg_temp.check((public.confirm_guardian_consent(current_setting('sec.gtoken'), true) ->> 'approved')::boolean, 'guardian can approve by link');
+DO $$
+BEGIN
+  PERFORM public.confirm_guardian_consent(current_setting('sec.gtoken'), false);
+  RAISE EXCEPTION 'FAILED: guardian token reused';
+EXCEPTION WHEN OTHERS THEN
+  IF SQLERRM LIKE 'FAILED:%' THEN RAISE; END IF;
+  RAISE NOTICE 'ok - guardian tokens are single use';
+END $$;
+RESET ROLE;
+SELECT pg_temp.check((SELECT status = 'approved' AND method = 'email' FROM public.ambassador_guardians WHERE ambassador_id = '00000000-0000-0000-0000-0000000000a1'),
+  'guardian approval recorded with the email method');
+SELECT pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
+UPDATE public.ambassadors SET published = true WHERE id = '00000000-0000-0000-0000-0000000000a1';
+SELECT pg_temp.check((SELECT published FROM public.ambassadors WHERE id = '00000000-0000-0000-0000-0000000000a1'),
+  'minor can be published once the guardian has approved');
+RESET ROLE;
+
 ROLLBACK;

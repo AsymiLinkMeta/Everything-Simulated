@@ -164,7 +164,8 @@ BEGIN
   IF NEW.code !~ '^[A-Z0-9-]{3,24}$' THEN
     RAISE EXCEPTION 'Ambassador codes are 3-24 letters, numbers or dashes' USING ERRCODE = 'check_violation';
   END IF;
-  IF TG_OP = 'UPDATE' AND current_user IN ('anon', 'authenticated') AND NOT public.is_staff() THEN
+  -- SECURITY DEFINER means current_user is the owner here, so key off the caller's JWT instead.
+  IF TG_OP = 'UPDATE' AND auth.uid() IS NOT NULL AND NOT public.is_staff() THEN
     IF NEW.code IS DISTINCT FROM OLD.code OR NEW.slug IS DISTINCT FROM OLD.slug
        OR NEW.published IS DISTINCT FROM OLD.published OR NEW.tier IS DISTINCT FROM OLD.tier
        OR NEW.user_id IS DISTINCT FROM OLD.user_id OR NEW.sort_order IS DISTINCT FROM OLD.sort_order THEN
@@ -732,3 +733,12 @@ BEGIN
 END $$;
 REVOKE ALL ON FUNCTION public.ambassador_dashboard(uuid, integer) FROM public;
 GRANT EXECUTE ON FUNCTION public.ambassador_dashboard(uuid, integer) TO authenticated;
+
+-- ---------------------------------------------------------------------------
+-- Defence in depth: RLS already limits these tables to staff, but guests get no
+-- privileges at all and signed-in users can only read (writes go through the
+-- RPCs above).
+REVOKE ALL ON public.referral_clicks, public.ambassador_settings, public.ambassador_guardians,
+              public.ambassador_terms, public.ambassador_commissions, public.ambassador_payouts FROM anon;
+REVOKE INSERT, UPDATE, DELETE, TRUNCATE ON public.ambassador_settings, public.ambassador_guardians,
+              public.ambassador_terms, public.ambassador_commissions, public.ambassador_payouts FROM authenticated;

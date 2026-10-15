@@ -11,10 +11,61 @@ import { BRAND, CITIES, GUIDES } from "../src/lib/es/content";
 export type SeoCatalog = {
   prebuilds: { slug: string; name: string; updated_at: string | null; image: string | null; price_ex_gst: number | null; purchasable: boolean }[];
   products: { sku: string; name: string; brand: string; updated_at: string | null }[];
-  ambassadors: { slug: string; updated_at: string | null }[];
+  ambassadors: SeoAmbassador[];
   blockRules: { left_sku: string; right_sku: string; reason: string }[];
   brands: string[];
 };
+
+export type SeoAmbassador = {
+  slug: string;
+  updated_at: string | null;
+  name?: string;
+  bio?: string | null;
+  photo?: string | null;
+  motorsport?: string | null;
+  series?: string | null;
+};
+
+const SAFE_SLUG = /^[a-z0-9][a-z0-9-]{0,80}$/;
+
+/**
+ * Static HTML shell for /ambassadors/<slug>: the built index.html with the
+ * profile's title, description, canonical and Open Graph tags, so link
+ * previews (which don't run JavaScript) show the driver rather than the home
+ * page. Returns null for slugs that aren't safe to use as a directory name.
+ */
+export function renderAmbassadorHtml(template: string, origin: string, a: SeoAmbassador): string | null {
+  if (!SAFE_SLUG.test(a.slug) || !a.name) return null;
+  const url = `${origin}/ambassadors/${a.slug}`;
+  const title = `${a.name} | Ambassador | Everything Simulated`;
+  const bio = (a.bio ?? "").replace(/\s+/g, " ").trim();
+  const about = [a.motorsport, a.series].filter(Boolean).join(", ");
+  const description = (bio || `${a.name}${about ? ` (${about})` : ""}, Everything Simulated ambassador. See their simulator and shop with their code.`).slice(0, 160);
+  let image = `${origin}/og.jpg`;
+  if (a.photo) {
+    try {
+      const u = new URL(a.photo, origin);
+      if (u.protocol === "https:" || u.origin === origin) image = u.href;
+    } catch {
+      /* keep the default image */
+    }
+  }
+  const set = (html: string, re: RegExp, value: string) => html.replace(re, (_m, pre: string, post: string) => `${pre}${esc(value)}${post}`);
+  let out = template;
+  out = out.replace(/<title>[^<]*<\/title>/, `<title>${esc(title)}</title>`);
+  out = set(out, /(<meta name="description" content=")[^"]*(")/, description);
+  out = set(out, /(<link rel="canonical" href=")[^"]*(")/, url);
+  out = out.replace(/(<link rel="alternate" hreflang="[^"]+" href=")[^"]*(")/g, (_m, pre: string, post: string) => `${pre}${esc(url)}${post}`);
+  out = set(out, /(<meta property="og:type" content=")[^"]*(")/, "profile");
+  out = set(out, /(<meta property="og:url" content=")[^"]*(")/, url);
+  out = set(out, /(<meta property="og:title" content=")[^"]*(")/, title);
+  out = set(out, /(<meta property="og:description" content=")[^"]*(")/, description);
+  out = set(out, /(<meta property="og:image" content=")[^"]*(")/, image);
+  out = set(out, /(<meta name="twitter:title" content=")[^"]*(")/, title);
+  out = set(out, /(<meta name="twitter:description" content=")[^"]*(")/, description);
+  out = set(out, /(<meta name="twitter:image" content=")[^"]*(")/, image);
+  return out;
+}
 
 /** Site structure. Product, prebuild and ambassador URLs are added from the database. */
 export const STATIC_ROUTES: { path: string; priority: string; changefreq?: string }[] = [
@@ -171,7 +222,7 @@ export async function fetchSeoCatalog(supabaseUrl: string, anonKey: string): Pro
     get<{ sku: string; name: string; brand: string; updated_at: string | null }[]>(
       "catalog_products?select=sku,name,brand,updated_at&listing_status=eq.published&order=sku",
     ),
-    get<{ slug: string; updated_at: string | null }[]>("ambassadors?select=slug,updated_at&published=eq.true&order=sort_order"),
+    get<SeoAmbassador[]>("ambassadors?select=slug,updated_at,name,bio,photo,motorsport,series&published=eq.true&order=sort_order"),
     get<{ left_sku: string; right_sku: string; reason: string }[]>(
       "compatibility_rules?select=left_sku,right_sku,reason&severity=eq.block&order=id",
     ),
