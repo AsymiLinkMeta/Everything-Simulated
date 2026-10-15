@@ -1,4 +1,4 @@
-import { supabase, supabaseAnonKey, supabaseUrl } from "@/lib/db";
+import { supabase } from "@/lib/db";
 import { BRAND, GUIDES, RULES } from "./catalog";
 import { getCachedProducts, getCachedProductMap, getLiveRules } from "./product-cache";
 import { checkCart } from "./checkCart";

@@ -1,3 +1,30 @@
+# Netlify-style redirects (also honoured by Cloudflare Pages). First match wins,
+# so specific rules come first and the SPA fallback is last.
+
+# Canonical host: the bare domain goes to www (matches the current live behaviour).
+https://everythingsimulated.com.au/*  https://www.everythingsimulated.com.au/:splat  301!
+
+# Legacy Wix URLs -> closest new page (see DEPLOY.md, "Wix cutover").
+/about                   /prebuilds  301
+/technology              /racing     301
+/blank                   /studio     301
+/blank-2                 /guides     301
+/book-online             /studio     301
+/blog                    /guides     301
+/blog/*                  /guides     301
+/post                    /guides     301
+/post/*                  /guides     301
+/terms-and-coniditions   /terms      301
+/privacy-policy          /privacy    301
+
+# Renamed routes (the SPA also redirects these client-side).
+/drivers                 /ambassadors        301
+/catering                /events             301
+/builds                  /prebuilds          301
+/builds/*                /prebuilds/:splat   301
+/racing/prebuilds        /prebuilds          301
+/racing/shop             /shop               301
+/racing/checker          /compatibility      301
+
+# SPA fallback (must stay last).
 /*    /index.html   200
-/builds    /prebuilds    301
-/builds/*  /prebuilds/:splat    301

@@ -1,4 +1,4 @@
-import { useEffect, type CSSProperties, type MouseEventHandler, type ReactNode } from "react";
+import { useEffect, type AnchorHTMLAttributes, type ComponentType } from "react";
 import {
   Link as RRLink,
   Navigate,
@@ -8,20 +8,19 @@ import {
   useParams,
 } from "react-router-dom";
 
+import { SITE_ORIGIN } from "@/lib/site";
+
 export { Outlet, Navigate, useLocation };
 
-type LinkProps = {
+type LinkProps = Omit<AnchorHTMLAttributes<HTMLAnchorElement>, "href"> & {
   to: string;
   params?: Record<string, string>;
-  className?: string;
-  style?: CSSProperties;
-  children?: ReactNode;
-  onClick?: MouseEventHandler;
+  /** TanStack-only props, accepted for source compatibility and ignored. */
   activeProps?: { className?: string };
   activeOptions?: { exact?: boolean };
 };
 
-export function Link({ to, params, className, style, children, ...rest }: LinkProps) {
+export function Link({ to, params, className, style, children, activeProps: _a, activeOptions: _o, ...rest }: LinkProps) {
   let path = String(to ?? "/");
   if (params) {
     for (const [k, v] of Object.entries(params)) {
@@ -67,7 +66,7 @@ function upsertLink(l: { rel?: string; href?: string; hreflang?: string; hrefLan
   el.href = l.href;
 }
 
-const PUBLIC_ORIGIN = "https://everythingsimulated.com.au";
+const PUBLIC_ORIGIN = SITE_ORIGIN;
 const PUBLIC_OG = `${PUBLIC_ORIGIN}/og.jpg`;
 
 export function applyHeadPayload(head: unknown) {
@@ -109,24 +108,28 @@ export function applyHeadPayload(head: unknown) {
   if (!(h.links ?? []).some((l) => l.rel === "canonical")) upsertLink({ rel: "canonical", href: url });
 }
 
+type RouteCtx = { params: Record<string, string> };
+
 export function createFileRoute(_path: string) {
-  return (opts: {
-    component?: React.ComponentType;
-    loader?: (ctx: { params: Record<string, string> }) => unknown;
-    head?: (ctx: { params: Record<string, string>; loaderData?: unknown }) => unknown;
-    notFoundComponent?: React.ComponentType;
+  return <TLoader = Record<string, string>>(opts: {
+    component?: ComponentType;
+    loader?: (ctx: RouteCtx) => TLoader;
+    head?: (ctx: RouteCtx & { loaderData?: TLoader }) => unknown;
+    notFoundComponent?: ComponentType;
   }) => {
     const Inner = opts.component;
+    const load = (params: Record<string, string>): TLoader =>
+      opts.loader ? opts.loader({ params }) : (params as unknown as TLoader);
     function RoutedPage() {
       const params = useParams() as Record<string, string>;
       const loc = useLocation();
       useEffect(() => {
         try {
-          const loaderData = opts.loader ? opts.loader({ params }) : params;
-          if (typeof opts.head === "function") applyHeadPayload(opts.head({ params, loaderData }));
+          if (typeof opts.head === "function") applyHeadPayload(opts.head({ params, loaderData: load(params) }));
         } catch {
           // loader may throw notFound; the page body handles it
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
       }, [loc.pathname, loc.search]);
       if (!Inner) return null;
       return <Inner />;
@@ -134,9 +137,9 @@ export function createFileRoute(_path: string) {
     return {
       ...opts,
       component: Inner ? RoutedPage : Inner,
-      useLoaderData: () => {
+      useLoaderData: (): TLoader => {
         const params = useParams() as Record<string, string>;
-        return opts.loader ? opts.loader({ params }) : params;
+        return load(params);
       },
       useParams,
     };

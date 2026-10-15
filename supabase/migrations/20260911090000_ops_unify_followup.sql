@@ -132,6 +132,9 @@ CREATE POLICY "staff_insert_orders" ON shop_orders FOR INSERT
 -- ---------------------------------------------------------------------------
 -- Order lookup (guest): email + order id, no table-wide SELECT
 -- ---------------------------------------------------------------------------
+-- Fresh-replay fix: an earlier migration created this with a different signature.
+DROP FUNCTION IF EXISTS public.lookup_guest_order(text, text);
+
 CREATE OR REPLACE FUNCTION public.lookup_guest_order(p_id text, p_email text)
 RETURNS jsonb
 LANGUAGE plpgsql

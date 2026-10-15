@@ -37,11 +37,8 @@ export async function fetchBillingConfig(): Promise<BillingConfig> {
   }
 }
 
-export async function startDepositCheckout(input: {
-  orderId: string;
-  email: string;
-  origin: string;
-}): Promise<CheckoutSession> {
+/** Return URLs are decided server-side from SITE_URL; the client cannot choose them. */
+export async function startDepositCheckout(input: { orderId: string; email: string }): Promise<CheckoutSession> {
   return fn<CheckoutSession>("create-checkout-session", input);
 }
 

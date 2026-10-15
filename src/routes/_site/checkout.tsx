@@ -147,7 +147,6 @@ function Checkout() {
         const session = await startDepositCheckout({
           orderId: id,
           email: mail,
-          origin: window.location.origin,
         });
         clear();
         window.location.href = session.url;

@@ -63,7 +63,7 @@ type DbRow = {
 };
 
 const SELECT_COLS = "slug, name, photo, bio, motorsport, series, class_name, team_status, base, age_band, crate, rig_note, rig_specs, code, social, published, sort_order, tier";
-const SELECT_COLS_FULL = "id, user_id, " + SELECT_COLS;
+const SELECT_COLS_FULL = `id, user_id, ${SELECT_COLS}` as const;
 
 function toAmbassador(row: DbRow): Ambassador {
   const social = (row.social && typeof row.social === "object" ? row.social : {}) as AmbassadorSocial;

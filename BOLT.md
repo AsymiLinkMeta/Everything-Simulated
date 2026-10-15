@@ -38,13 +38,15 @@ src/lib/es/product-cache.ts
 
 ## Supabase (required)
 
-1. Apply every file in `supabase/migrations/` (including `20260908190000_ops_hardening.sql`).
+1. Apply every file in `supabase/migrations/` in filename order (`supabase db push`). They replay cleanly on an empty project (`npm run test:db`).
 2. Deploy Edge Functions:
    - `generate-product-listing` (needs `XAI_API_KEY` for Grok copy; falls back to a local draft)
    - `discover-products` (reads official Shopify/HTML catalogues)
    - `ask-builder`
    - `create-staff-account` (needs `SUPABASE_SERVICE_ROLE_KEY`)
-3. Auth: email/password. Optional Google/X later — keep `GROK_PROVIDERS` empty until configured.
+   - `send-mail`, `create-checkout-session`, `stripe-webhook`, `refund-payment`, `billing-config`
+   - Secrets: see [docs/ENV.md](docs/ENV.md). At minimum `SITE_URL` and `ALLOWED_ORIGINS` (add the Bolt preview origin while developing), or browser calls get 403.
+3. Auth: email/password with **Confirm email on**. Create the first admin with `admin_bootstrap_emails` (docs/ENV.md). Optional Google/X later — keep `GROK_PROVIDERS` empty until configured.
 4. Do **not** use TanStack Start `createServerFn`. All staff/customer writes go through the Supabase client or these functions.
 
 ## Photos

@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useMemo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import {
@@ -111,7 +111,7 @@ function PrebuildsEditor() {
   const [saving, setSaving] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
-  const items = prebuilds.data ?? [];
+  const items = useMemo(() => prebuilds.data ?? [], [prebuilds.data]);
 
   const handleSave = useCallback(async () => {
     if (!editing) return;

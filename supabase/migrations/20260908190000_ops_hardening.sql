@@ -50,6 +50,9 @@ insert into public.compatibility_rules (id, left_sku, right_sku, severity, reaso
 on conflict (id) do nothing;
 
 -- Seed core SKUs so packages/checker work even on a fresh Bolt project
+-- Fresh-replay fix: seed rows have no author; 20260909095343 later makes this permanent.
+alter table public.catalog_products alter column created_by drop not null;
+
 insert into public.catalog_products (sku, brand, name, category, sell_ex_gst, stock_status, listing_status, lead_weeks_min, lead_weeks_max, description, notes, max_nm, payload_kg, weight_kg, mounts, qr, image, qty_on_hand)
 values
   ('tr120s','Trak Racer','TR120S V2 Chassis','chassis',0,'indent','published',3,6,'Trak Racer TR120S V2 chassis.','Starter Rig include.',15,180,null,array['tr_front_plate'],null,'/rigs/starter.jpg',0),

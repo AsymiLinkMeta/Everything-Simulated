@@ -47,6 +47,8 @@ export function AmbassadorProfile() {
         }),
       );
     }
+    // Re-apply head tags only when the profile identity changes, not on every refetch.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [ambassador?.slug]);
 
   if (isPending) {

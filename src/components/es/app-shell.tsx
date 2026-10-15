@@ -1,5 +1,5 @@
 import "./es-chrome";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { Link, Outlet, applyHeadPayload } from "@tanstack/react-router";
 import { Navigate, useLocation } from "react-router-dom";
 import { Calendar, Gauge, LayoutDashboard, LifeBuoy, Menu, MessageSquare, Package, Users, Wrench } from "lucide-react";
@@ -102,7 +102,9 @@ export function AppShell() {
         </div>
       </header>
       <div className="es-wrap" style={{ paddingTop: 24, paddingBottom: 112 }}>
-        <Outlet />
+        <Suspense fallback={<div role="status" aria-live="polite" className="py-16 text-center text-sm text-muted">Loading…</div>}>
+          <Outlet />
+        </Suspense>
       </div>
       <nav className="es-tabbar es-app-tabbar" aria-label="App">
         {TABS.map((t) => (

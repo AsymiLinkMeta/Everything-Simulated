@@ -57,6 +57,8 @@ function AmbassadorSelfEdit() {
     setYoutube(profile.social?.youtube ?? "");
     setFacebook(profile.social?.facebook ?? "");
     setRigSpecs(profile.rigSpecs ?? []);
+    // Seed the form once per profile; refetches must not overwrite unsaved edits.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [profile?.slug]);
 
   const save = useMutation({

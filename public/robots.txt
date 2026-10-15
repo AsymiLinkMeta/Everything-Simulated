@@ -58,5 +58,5 @@ Allow: /
 Disallow: /app
 Disallow: /staff
 
-Sitemap: https://everythingsimulated.com.au/sitemap.xml
-Host: https://everythingsimulated.com.au
+Sitemap: https://www.everythingsimulated.com.au/sitemap.xml
+Host: https://www.everythingsimulated.com.au

@@ -31,6 +31,9 @@ CREATE POLICY "staff_select_mail" ON mail_log FOR SELECT
     )
   );
 
+-- Fresh-replay fix: the return type grew (invoice/paid/refunded), so CREATE OR REPLACE alone fails.
+DROP FUNCTION IF EXISTS lookup_guest_order(text, text);
+
 CREATE OR REPLACE FUNCTION lookup_guest_order(p_order_id text, p_email text)
 RETURNS TABLE(
   id text,

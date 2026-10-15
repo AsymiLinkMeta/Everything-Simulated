@@ -1,7 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
+import { withCors } from "../_shared/cors.ts";
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
@@ -213,7 +213,7 @@ async function readPage(urlStr: string) {
   return { kind: products.length > 1 ? ("collection" as const) : ("product" as const), products };
 }
 
-Deno.serve(async (req: Request) => {
+Deno.serve(withCors(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 200, headers: corsHeaders });
   try {
     if (req.method !== "POST") return json({ error: "Method not allowed" }, 405);
@@ -247,4 +247,4 @@ Deno.serve(async (req: Request) => {
   } catch {
     return json({ error: "Could not read manufacturer catalogue" }, 500);
   }
-});
+}));

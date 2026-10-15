@@ -29,7 +29,7 @@ export function Home() {
     <SiteShell>
       <JsonLd data={graphLd(organizationLd(), websiteLd(), localBusinessLd(), faqLd(FAQS))} />
       <section className="es-hero">
-        <img src="/rigs/Everything_Simulated_Hero copy.jpg" alt="Driver using a triple-screen racing simulator" className="es-hero-img" />
+        <img src="/rigs/hero-poster.jpg" alt="Driver using a triple-screen racing simulator" className="es-hero-img" fetchPriority="high" width={1948} height={908} />
         <HeroVideo />
         <div className="es-hero-mask" />
         <div className="es-hero-copy">
@@ -222,26 +222,37 @@ function HeroVideo() {
   const [phase, setPhase] = useState<"playing" | "black" | "revealed">("playing");
 
   useEffect(() => {
+    // Respect reduced-motion: show the poster frame, skip the intro.
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+      setPhase("revealed");
+      return;
+    }
     const desktop = desktopRef.current;
     const mobile = mobileRef.current;
     const video = window.matchMedia("(max-width: 767px)").matches ? mobile : desktop;
     if (!video) return;
+    let timer = 0;
     const onEnded = () => {
       setPhase("black");
-      window.setTimeout(() => setPhase("revealed"), 1100);
+      timer = window.setTimeout(() => setPhase("revealed"), 1100);
     };
     video.addEventListener("ended", onEnded);
+    // Both videos are preload="none"; only the one for this viewport is fetched.
+    video.preload = "auto";
     video.play().catch(() => setPhase("revealed"));
-    return () => video.removeEventListener("ended", onEnded);
+    return () => {
+      video.removeEventListener("ended", onEnded);
+      window.clearTimeout(timer);
+    };
   }, []);
 
   return (
     <>
       <div className={`es-hero-video-wrap${phase === "revealed" ? " is-finished" : ""}`}>
-        <video ref={desktopRef} className="es-hero-video es-hero-video-desktop" muted playsInline preload="auto" poster="/rigs/Everything_Simulated_Hero copy.jpg">
+        <video ref={desktopRef} className="es-hero-video es-hero-video-desktop" muted playsInline preload="none" aria-hidden="true" poster="/rigs/hero-poster.jpg">
           <source src="/videos/hero-uw.mp4" type="video/mp4" />
         </video>
-        <video ref={mobileRef} className="es-hero-video es-hero-video-mobile" muted playsInline preload="auto" poster="/rigs/Everything_Simulated_Hero copy.jpg">
+        <video ref={mobileRef} className="es-hero-video es-hero-video-mobile" muted playsInline preload="none" aria-hidden="true" poster="/rigs/hero-poster.jpg">
           <source src="/videos/hero-mobile.mp4" type="video/mp4" />
         </video>
       </div>

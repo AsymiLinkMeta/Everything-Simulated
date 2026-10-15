@@ -1,10 +1,10 @@
+import { withCors } from "../_shared/cors.ts";
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
 
-Deno.serve((req: Request) => {
+Deno.serve(withCors((req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 200, headers: corsHeaders });
   const stripe = Boolean(Deno.env.get("STRIPE_SECRET_KEY"));
   const mail = Boolean(Deno.env.get("RESEND_API_KEY"));
@@ -12,4 +12,4 @@ Deno.serve((req: Request) => {
   return new Response(JSON.stringify({ stripe, mail, depositPercent }), {
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
-});
+}));

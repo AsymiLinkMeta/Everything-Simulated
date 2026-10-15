@@ -1,7 +1,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.45.4";
+import { withCors } from "../_shared/cors.ts";
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
   "Access-Control-Allow-Headers": "Content-Type, Authorization, X-Client-Info, Apikey",
 };
@@ -13,7 +13,7 @@ function json(data: unknown, status = 200) {
   });
 }
 
-Deno.serve(async (req: Request) => {
+Deno.serve(withCors(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 200, headers: corsHeaders });
   try {
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY") ?? "";
@@ -74,4 +74,4 @@ Deno.serve(async (req: Request) => {
   } catch (err) {
     return json({ error: err instanceof Error ? err.message : "Refund failed" }, 500);
   }
-});
+}));
