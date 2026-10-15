@@ -164,30 +164,43 @@ MAT["seat"] = seat_material()
 MAT["shell"] = principled("Seat shell", (0.012, 0.012, 0.014), 0.0, 0.32, **{"Coat Weight": 0.5, "Coat Roughness": 0.25})
 
 
-def screen_material():
-    m = bpy.data.materials.new("Screen")
+ART = os.path.join(ROOT, "assets", "rig3d")
+SCREEN_IMG = {}
+
+
+def screen_material(image, u0=0.0, u1=1.0):
+    """A lit panel showing part of a screen image (make_screen_art.py): u0..u1 of its width.
+    Emission carries the picture; a near-black glossy base keeps the studio reflections."""
+    key = (image, u0, u1)
+    if key in SCREEN_IMG:
+        return SCREEN_IMG[key]
+    m = bpy.data.materials.new(f"Screen {image} {u0:.3f}-{u1:.3f}")
     m.use_nodes = True
     nt = m.node_tree
     b = nt.nodes["Principled BSDF"]
     b.inputs["Base Color"].default_value = (0.004, 0.005, 0.007, 1)
-    b.inputs["Roughness"].default_value = 0.06
+    b.inputs["Roughness"].default_value = 0.08
+    b.inputs["Coat Weight"].default_value = 0.3
     uv = nt.nodes.new("ShaderNodeUVMap")
-    sep = nt.nodes.new("ShaderNodeSeparateXYZ")
-    nt.links.new(uv.outputs["UV"], sep.inputs["Vector"])
-    ramp = nt.nodes.new("ShaderNodeValToRGB")
-    ramp.color_ramp.elements[0].position = 0.0
-    ramp.color_ramp.elements[0].color = (0.16, 0.012, 0.006, 1)
-    ramp.color_ramp.elements[1].position = 1.0
-    ramp.color_ramp.elements[1].color = (0.012, 0.022, 0.05, 1)
-    mid = ramp.color_ramp.elements.new(0.45)
-    mid.color = (0.02, 0.03, 0.06, 1)
-    nt.links.new(sep.outputs["Y"], ramp.inputs["Fac"])
-    nt.links.new(ramp.outputs["Color"], b.inputs["Emission Color"])
-    b.inputs["Emission Strength"].default_value = 1.1
+    mp = nt.nodes.new("ShaderNodeMapping")
+    mp.inputs["Location"].default_value = (u0, 0, 0)
+    mp.inputs["Scale"].default_value = (u1 - u0, 1, 1)
+    nt.links.new(uv.outputs["UV"], mp.inputs["Vector"])
+    tex = nt.nodes.new("ShaderNodeTexImage")
+    path = os.path.join(ART, image)
+    img = bpy.data.images.get(image) or bpy.data.images.load(path)
+    img.name = image
+    tex.image = img
+    tex.extension = "EXTEND"
+    nt.links.new(mp.outputs["Vector"], tex.inputs["Vector"])
+    nt.links.new(tex.outputs["Color"], b.inputs["Emission Color"])
+    b.inputs["Emission Strength"].default_value = 2.2
+    SCREEN_IMG[key] = m
     return m
 
 
-MAT["screen"] = screen_material()
+PANO = "screen-pano.png"
+TOP = "screen-top.png"
 MAT["pc_glass"] = principled("Tinted glass", (0.02, 0.02, 0.025), 0.0, 0.03, **{"Transmission Weight": 1.0, "IOR": 1.5})
 MAT["glow"] = principled("Red glow", (0.0, 0.0, 0.0), 0.0, 0.5, **{"Emission Color": (1.0, 0.03, 0.01, 1), "Emission Strength": 3.0})
 
@@ -581,13 +594,20 @@ for i in range(4):
 
 # ---- motion actuators (under the frame when it is raised) ----------------------------------
 layer("motion")
-for x in (60, 1340):
+# four corner actuators, sized like common 3-4 DOF platforms (about 200 mm across), with a top
+# plate under each frame corner; their tops meet the raised frame
+for x in (90, 1310):
     for s in (1, -1):
-        base = Vector((x, s * RAIL_Y, 0))
-        cylinder(f"Actuator pad {x}{s}", tuple(base), tuple(base + Vector((0, 0, 18))), 84, MAT["rubber"], segs=48)
-        cylinder(f"Actuator {x}{s}", tuple(base + Vector((0, 0, 18))), tuple(base + Vector((0, 0, 118))), 70, MAT["motor"], segs=48)
-        cylinder(f"Actuator band {x}{s}", tuple(base + Vector((0, 0, 92))), tuple(base + Vector((0, 0, 102))), 71.5, MAT["red"], segs=48)
-        cylinder(f"Actuator rod {x}{s}", tuple(base + Vector((0, 0, 118))), tuple(base + Vector((0, 0, 150))), 34, MAT["alu_bright"], segs=32)
+        base = Vector((x, s * (RAIL_Y + 30), 0))
+        top = 22 + MOTION_LIFT * 1000 - 4
+        cylinder(f"Actuator pad {x}{s}", tuple(base), tuple(base + Vector((0, 0, 20))), 110, MAT["rubber"], segs=48)
+        cylinder(f"Actuator {x}{s}", tuple(base + Vector((0, 0, 20))), tuple(base + Vector((0, 0, top - 46))), 92, MAT["motor"], segs=48)
+        for k, zc in enumerate((48, 70, 92)):
+            cylinder(f"Actuator rib {x}{s}{k}", tuple(base + Vector((0, 0, zc))), tuple(base + Vector((0, 0, zc + 5))), 94.5, MAT["motor"], segs=48)
+        cylinder(f"Actuator band {x}{s}", tuple(base + Vector((0, 0, top - 70))), tuple(base + Vector((0, 0, top - 56))), 94, MAT["red"], segs=48)
+        cylinder(f"Actuator rod {x}{s}", tuple(base + Vector((0, 0, top - 46))), tuple(base + Vector((0, 0, top - 12))), 40, MAT["alu_bright"], segs=32)
+        box(f"Actuator top plate {x}{s}", tuple(base + Vector((0, -s * 30, top - 6))), (190, 200, 12), MAT["steel"], bevel=0.002)
+        box(f"Actuator glow {x}{s}", tuple(base + Vector((-60 if x < 700 else 60, 0, 34))), (4, 60, 6), MAT["glow"], bevel=0)
 box("Motion controller", (720, 0, 40), (260, 220, 80), MAT["plastic"], bevel=0.004)
 
 # ---- display stand and curved screens ----------------------------------------------------
@@ -619,7 +639,7 @@ BEZEL = 7
 CX = SX - 60
 
 
-def curved_monitor(name, p0, p1, bottom, height=SH):
+def curved_monitor(name, p0, p1, bottom, height=SH, screen=None):
     """Curved panel (1200R, concave toward the driver) between chord ends p0 -> p1 (driver's left -> right)."""
     p0, p1 = Vector(p0), Vector(p1)
     chord = p1 - p0
@@ -672,7 +692,7 @@ def curved_monitor(name, p0, p1, bottom, height=SH):
 
     strip(f"{name} body", 0, 1, bottom, bottom + height, 0, 18, MAT["plastic"])
     e = BEZEL / c
-    strip(f"{name} panel", e, 1 - e, bottom + BEZEL, bottom + height - BEZEL, 0.6, 0, MAT["screen"], uv=True)
+    strip(f"{name} panel", e, 1 - e, bottom + BEZEL, bottom + height - BEZEL, 0.6, 0, screen or screen_material(PANO, 1 / 3, 2 / 3), uv=True)
     back_c, _ = at(0.5)
     hub = back_c - facing * 18
     box(f"{name} housing", (hub.x - facing.x * 22, hub.y - facing.y * 22, bottom + height * 0.5), (44, 210, 170), MAT["plastic"], bevel=0.008,
@@ -687,9 +707,9 @@ for s, side in [(1, "L"), (-1, "R")]:
     hinge = Vector((CX, s * (SW / 2 + 4), 0))
     outer = hinge + d * SW
     if s > 0:
-        curved_monitor(f"Side screen {side}", outer, hinge, SB)
+        curved_monitor(f"Side screen {side}", outer, hinge, SB, screen=screen_material(PANO, 0, 1 / 3))
     else:
-        curved_monitor(f"Side screen {side}", hinge, outer, SB)
+        curved_monitor(f"Side screen {side}", hinge, outer, SB, screen=screen_material(PANO, 2 / 3, 1))
 layer("screen-dual")
 DUAL = math.radians(22)
 for s, side in [(1, "L"), (-1, "R")]:
@@ -697,13 +717,14 @@ for s, side in [(1, "L"), (-1, "R")]:
     seam = Vector((CX, s * 4, 0))
     outer = seam + d * SW
     if s > 0:
-        curved_monitor(f"Dual screen {side}", outer, seam, SB)
+        curved_monitor(f"Dual screen {side}", outer, seam, SB, screen=screen_material(PANO, 1 / 6, 1 / 2))
     else:
-        curved_monitor(f"Dual screen {side}", seam, outer, SB)
+        curved_monitor(f"Dual screen {side}", seam, outer, SB, screen=screen_material(PANO, 1 / 2, 5 / 6))
 layer("screen-top")
-curved_monitor("Top screen", (CX, 305, 0), (CX, -305, 0), 1268, 350)
+curved_monitor("Top screen", (CX, 305, 0), (CX, -305, 0), 1268, 350, screen=screen_material(TOP))
 
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
+bpy.ops.file.pack_all()
 bpy.context.preferences.filepaths.save_version = 0
 bpy.ops.wm.save_as_mainfile(filepath=OUT, compress=True)
 print("saved", OUT, sum(len(c.objects) for c in COLL.values()), "objects")

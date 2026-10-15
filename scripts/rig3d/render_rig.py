@@ -26,6 +26,12 @@ ap.add_argument("--out", default="/tmp/rig")
 ap.add_argument("--samples", type=int, default=160)
 ap.add_argument("--width", type=int, default=1200)
 ap.add_argument("--only", default="")
+ap.add_argument("--layers", default="", help="full mode: comma-separated layers instead of the fully loaded rig")
+ap.add_argument("--az", type=float, default=None)
+ap.add_argument("--el", type=float, default=None)
+ap.add_argument("--dist", type=float, default=None)
+ap.add_argument("--lens", type=float, default=None)
+ap.add_argument("--target", default="")
 args = ap.parse_args(argv)
 os.makedirs(args.out, exist_ok=True)
 
@@ -43,19 +49,51 @@ def mm(*v):
 
 
 # ----------------------------------------------------------------------------- camera
-TARGET = mm(920, -20, 820)
+TARGET = mm(*map(float, args.target.split(","))) if args.target else mm(920, -20, 820)
 # Rear three-quarter, raised: the screens face the driver, so this is the view in which they face
 # the viewer, and it looks over the seat at the wheel and pedals.
-AZ = math.radians(28)  # swung from straight behind toward the driver's right
-EL = math.radians(46)
-DIST = 6.9
+AZ = math.radians(28 if args.az is None else args.az)  # swung from straight behind toward the driver's right
+EL = math.radians(46 if args.el is None else args.el)
+DIST = 6.9 if args.dist is None else args.dist
 cam_data = bpy.data.cameras.new("Camera")
-cam_data.lens = 70
+cam_data.lens = 70 if args.lens is None else args.lens
 cam = bpy.data.objects.new("Camera", cam_data)
 scene.collection.objects.link(cam)
 cam.location = TARGET + Vector((-math.cos(AZ) * math.cos(EL), -math.sin(AZ) * math.cos(EL), math.sin(EL))) * DIST
 cam.rotation_euler = (TARGET - cam.location).to_track_quat("-Z", "Y").to_euler()
 scene.camera = cam
+
+ap_margin = 0.035  # frame margin, as a share of the frame
+
+
+def fit_camera():
+    """Tighten the frame around everything any layer can show (raised rig, top screen, PC):
+    keep the view direction, then set the lens and lens shift so that bounding box just fits."""
+    from bpy_extras.object_utils import world_to_camera_view
+    LIFT.location.z = MOTION_LIFT
+    bpy.context.view_layer.update()
+    dg = bpy.context.evaluated_depsgraph_get()
+    xs, ys = [], []
+    for c in COLL.values():
+        for ob in c.objects:
+            if ob.type != "MESH" or ob.hide_render:
+                continue
+            ev = ob.evaluated_get(dg)
+            for v in ev.data.vertices:
+                co = world_to_camera_view(scene, cam, ev.matrix_world @ v.co)
+                xs.append(co.x); ys.append(co.y)
+    LIFT.location.z = 0.0
+    x0, x1, y0, y1 = min(xs), max(xs), min(ys), max(ys)
+    # frame coordinates are 0..1 of the current frame; scale so the box fills it with a margin
+    sx = (x1 - x0) / (1 - 2 * ap_margin)
+    sy = (y1 - y0) / (1 - 2 * ap_margin)
+    k = max(sx, sy)
+    cam_data.lens /= k
+    # the shift is in units of the larger frame dimension (width here)
+    cam_data.shift_x = ((x0 + x1) / 2 - 0.5) / k
+    cam_data.shift_y = ((y0 + y1) / 2 - 0.5) / k * ASPECT
+    print(f"fit: lens {cam_data.lens:.1f} shift {cam_data.shift_x:.3f},{cam_data.shift_y:.3f} (box {x1-x0:.2f} x {y1-y0:.2f})", flush=True)
+
 
 # ----------------------------------------------------------------------------- studio lights
 def area(name, loc, size, energy, color=(1, 1, 1), shape="RECTANGLE", size_y=None, target=TARGET):
@@ -137,6 +175,9 @@ scene.view_settings.look = "AgX - Medium High Contrast"
 scene.render.threads_mode = "AUTO"
 
 
+fit_camera()
+
+
 def show(layers, lifted=False, floor_on=False, shadow_only=False):
     """Make only these layers visible. shadow_only keeps them out of camera rays (for the shadow passes)."""
     for name, c in COLL.items():
@@ -161,6 +202,8 @@ def render(path):
 FULL = [n for n in ALL if n not in ("screen-dual", "screen-center")]
 FULL = [n for n in ALL if n not in ("screen-dual",)]
 
+if args.layers:
+    FULL = args.layers.split(",")
 if args.mode == "full":
     show(FULL, lifted=True)
     render(os.path.join(args.out, "full.png"))
