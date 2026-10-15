@@ -143,3 +143,24 @@ test.describe("rig builder data from staff", () => {
     });
   });
 });
+
+test.describe("rig builder: archived prebuilds", () => {
+  // Adds its own archived and draft prebuilds (never published) so no other test sees a changed row.
+  test("only published prebuilds are offered as starting points and footer links", async ({ page }, info) => {
+    test.skip(info.project.name !== "desktop", "inserts shared rows; run once");
+    exec(`insert into prebuilds (slug, name, status, price_ex_gst) values
+      ('e2e-archived-rig', 'E2E Archived Rig', 'archived', 1000),
+      ('e2e-draft-rig', 'E2E Draft Rig', 'draft', 1000)
+      on conflict (slug) do update set status = excluded.status`);
+    const published = sql<{ name: string }>("select name from prebuilds where status = 'published' order by sort_order").map((r) => r.name);
+    await page.goto("/build");
+    const chips = page.locator(".es-rb-chip");
+    await expect(chips).toHaveText(published);
+    const footer = page.locator("footer");
+    await expect(footer.getByRole("link", { name: published[0], exact: true })).toBeVisible();
+    for (const name of ["E2E Archived Rig", "E2E Draft Rig"]) {
+      await expect(chips.filter({ hasText: name })).toHaveCount(0);
+      await expect(footer.getByRole("link", { name, exact: true })).toHaveCount(0);
+    }
+  });
+});
