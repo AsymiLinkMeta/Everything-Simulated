@@ -183,13 +183,22 @@ scene.render.threads_mode = "AUTO"
 fit_camera()
 
 
-def show(layers, lifted=False, floor_on=False, shadow_only=False):
+# Parts every real build has: in a layer pass they stay in the scene as unseen shadow casters, so a
+# layer rendered on its own picks up the shadows and occlusion it has in the full rig (otherwise the
+# stacked layers come out lighter than the single full render).
+CONTEXT = ["chassis-back", "chassis", "seat", "wheelbase", "wheel", "pedals", "mount"]
+
+
+def show(layers, lifted=False, floor_on=False, shadow_only=False, context=False):
     """Make only these layers visible. shadow_only keeps them out of camera rays (for the shadow passes)."""
     for name, c in COLL.items():
         on = name in layers
-        c.hide_render = not on
+        ctx = context and not on and name in CONTEXT
+        c.hide_render = not (on or ctx)
         for ob in c.objects:
-            ob.visible_camera = not shadow_only
+            ob.visible_camera = on and not shadow_only
+            ob.visible_glossy = on or not ctx
+            ob.visible_transmission = on or not ctx
     # The floor always bounces light onto the rig; the camera only sees it, as a shadow catcher,
     # in the shadow passes.
     floor.hide_render = False
@@ -219,7 +228,7 @@ elif args.mode == "layers":
     only = set(filter(None, args.only.split(",")))
     jobs = []
     for name in ALL:
-        jobs.append((name, [name], False))
+        jobs.append((name, [name], name in ("motion", "motion-back")))  # actuators only show under a raised frame
         if name in RIG_LAYERS:
             jobs.append((name + "@raised", [name], True))
     # floor shadows: the rig on the ground, the rig on the motion platform, the stand, the PC
@@ -236,7 +245,7 @@ elif args.mode == "layers":
         if shadow:
             show(layers, lifted=lifted, floor_on=True, shadow_only=True)
         else:
-            show(layers, lifted=lifted)
+            show(layers, lifted=lifted, context=True)
         render(os.path.join(args.out, name.replace("@", "--") + ".png"))
 
 elif args.mode == "depth":

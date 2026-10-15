@@ -7,6 +7,7 @@ const builds = {
   motion: `?b=xr1,sr2,alpha-15,gt-neo,p1000-haptic,touring-seat,quad-mount,aoc-32*3,seq-shifter,handbrake,pc-race`,
   single: `?b=${core},quad-mount,aoc-32`,
   dual: `?b=${core},quad-mount,aoc-32*2`,
+  triple: `?b=${core},quad-mount,aoc-32*3`,
   quad: `?b=${core},quad-mount,aoc-32*4,pc-race`,
   vr: `?b=${core},pro-x,pc-starter`,
 };
