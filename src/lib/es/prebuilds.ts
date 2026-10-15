@@ -166,6 +166,18 @@ async function loadPublishedPrebuilds(): Promise<PrebuildWithComponents[]> {
   return result;
 }
 
+/** Name and slug of each published prebuild, for nav links. Much lighter than the full list (no images). */
+export async function fetchPrebuildLinks(): Promise<{ slug: string; name: string }[]> {
+  if (prebuildCache) return prebuildCache.map((p) => ({ slug: p.slug, name: p.name }));
+  const { data, error } = await supabase
+    .from("prebuilds")
+    .select("slug, name")
+    .eq("status", "published")
+    .order("sort_order", { ascending: true });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as { slug: string; name: string }[];
+}
+
 export async function fetchFeaturedPrebuilds(): Promise<PrebuildWithComponents[]> {
   const all = await fetchPublishedPrebuilds();
   const featured = all.filter((p) => p.featured);

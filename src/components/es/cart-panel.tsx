@@ -3,7 +3,7 @@ import { Minus, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { toast } from "sonner";
-import { fetchPublishedPrebuilds, livePackages } from "@/lib/es/prebuilds";
+import { fetchPrebuildLinks, fetchPublishedPrebuilds, livePackages } from "@/lib/es/prebuilds";
 import { fetchProducts } from "@/lib/es/product-cache";
 import { useCart } from "@/lib/es/cart-store";
 import { saveQuote } from "@/lib/es/server";
@@ -19,7 +19,8 @@ export function CartPanel({ compact = false }: { compact?: boolean }) {
   useEffect(() => setReady(true), []);
   const { user } = useCurrentUserState();
   const catalog = useQuery({ queryKey: ["products"], queryFn: () => fetchProducts() });
-  const packs = useQuery({ queryKey: ["prebuilds"], queryFn: fetchPublishedPrebuilds });
+  // Only names for the buttons; the full prebuild list (with images) loads on click.
+  const packs = useQuery({ queryKey: ["prebuild-links"], queryFn: fetchPrebuildLinks });
   const lines = useCart((s) => s.lines);
   const driverWeightKg = useCart((s) => s.driverWeightKg);
   const postcode = useCart((s) => s.postcode);
@@ -64,7 +65,10 @@ export function CartPanel({ compact = false }: { compact?: boolean }) {
       {!compact ? (
         <div className="flex flex-wrap gap-2">
           {(packs.data?.length ? packs.data : livePackages()).map((p) => (
-            <Button key={p.slug} variant="outline" size="sm" onClick={() => loadPackage(p.slug)}>
+            <Button key={p.slug} variant="outline" size="sm" onClick={async () => {
+              if (!livePackages().some((x) => x.slug === p.slug)) await fetchPublishedPrebuilds().catch(() => {});
+              loadPackage(p.slug);
+            }}>
               Load {p.name}
             </Button>
           ))}

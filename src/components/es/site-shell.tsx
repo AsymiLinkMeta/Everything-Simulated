@@ -6,7 +6,7 @@ import { CookieDisclaimer, AuthSlot, Logo, StaffLoginLink } from "./bits";
 import { ReferralCapture } from "./referral-capture";
 import { useCart } from "@/lib/es/cart-store";
 import { useQuery } from "@tanstack/react-query";
-import { fetchPublishedPrebuilds } from "@/lib/es/prebuilds";
+import { fetchPrebuildLinks } from "@/lib/es/prebuilds";
 import { BRAND, CITIES } from "@/lib/es/catalog";
 
 const SIMULATORS = [
@@ -199,7 +199,7 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
 
 /** Footer prebuild links, from Supabase. Falls back to the prebuilds index while loading or on error. */
 function FooterPrebuilds() {
-  const prebuilds = useQuery({ queryKey: ["prebuilds"], queryFn: fetchPublishedPrebuilds });
+  const prebuilds = useQuery({ queryKey: ["prebuild-links"], queryFn: fetchPrebuildLinks });
   if (!prebuilds.data?.length) {
     return (
       <li>
