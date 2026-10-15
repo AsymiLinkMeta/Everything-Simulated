@@ -38,7 +38,7 @@ os.makedirs(args.out, exist_ok=True)
 scene = bpy.context.scene
 COLL = {c.name: c for c in bpy.data.collections}
 LIFT = bpy.data.objects["RigLift"]
-MOTION_LIFT = 0.15
+MOTION_LIFT = 0.07
 ASPECT = 0.82  # height / width of the preview frame
 RIG_LAYERS = ["chassis-back", "chassis", "seat", "wheelbase", "wheel", "pedals", "sidemount", "shifter", "handbrake", "headset"]
 ALL = list(COLL)
@@ -111,11 +111,16 @@ def area(name, loc, size, energy, color=(1, 1, 1), shape="RECTANGLE", size_y=Non
     return ob
 
 
-area("Key", Vector((-2.4, 2.2, 3.4)), 2.4, 420, size_y=1.6)
-area("Fill", Vector((-3.2, -3.0, 1.8)), 3.0, 70, (0.92, 0.95, 1.0))
-area("Rim cool", Vector((3.4, -2.2, 2.4)), 1.6, 160, (0.85, 0.9, 1.0))
-area("Rim red", Vector((3.0, 2.6, 1.2)), 1.8, 140, (1.0, 0.1, 0.05))
-area("Top", Vector((0.9, 0, 3.6)), 2.4, 220, size_y=1.6)
+# Product-photo studio for a black rig: a big soft key over the camera's shoulder, a broad top softbox,
+# and strong rim strips behind and beside the rig so black anodised edges separate from a dark page.
+CAM_DIR = (TARGET - cam.location).normalized()
+area("Key", cam.location + Vector((0.6, 1.6, 1.8)), 3.0, 900, size_y=2.0)
+area("Fill", cam.location + Vector((0.4, -1.2, -0.6)), 3.0, 160, (0.92, 0.95, 1.0))
+area("Top", Vector((0.9, 0, 3.4)), 3.2, 520, size_y=2.0)
+area("Rim L", Vector((2.6, 2.4, 2.0)), 0.5, 900, (0.9, 0.94, 1.0), size_y=3.0)
+area("Rim R", Vector((2.4, -2.6, 1.6)), 0.5, 700, (0.9, 0.94, 1.0), size_y=3.0)
+area("Rim back", Vector((-1.6, 1.8, 1.4)), 0.5, 500, (1.0, 0.92, 0.88), size_y=2.4)
+area("Rim red", Vector((3.2, 0.0, 0.5)), 1.6, 260, (1.0, 0.08, 0.04))
 world = bpy.data.worlds.new("Studio")
 world.use_nodes = True
 # a dim studio gradient (darker floor, soft lighter ceiling) so metals have something to reflect
@@ -125,9 +130,9 @@ geo = wn.nodes.new("ShaderNodeTexCoord")
 sep = wn.nodes.new("ShaderNodeSeparateXYZ")
 ramp = wn.nodes.new("ShaderNodeValToRGB")
 ramp.color_ramp.elements[0].position = 0.45
-ramp.color_ramp.elements[0].color = (0.006, 0.006, 0.007, 1)
+ramp.color_ramp.elements[0].color = (0.012, 0.012, 0.014, 1)
 ramp.color_ramp.elements[1].position = 0.9
-ramp.color_ramp.elements[1].color = (0.2, 0.2, 0.22, 1)
+ramp.color_ramp.elements[1].color = (0.42, 0.42, 0.45, 1)
 mapr = wn.nodes.new("ShaderNodeMapRange")
 mapr.inputs["From Min"].default_value = -1
 wn.links.new(geo.outputs["Generated"], sep.inputs["Vector"])

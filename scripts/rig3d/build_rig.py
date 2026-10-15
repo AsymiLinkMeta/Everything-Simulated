@@ -21,7 +21,7 @@ from mathutils import Matrix, Vector
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.abspath(os.path.join(HERE, "..", ".."))
 OUT = os.path.join(ROOT, "assets", "rig3d", "rig.blend")
-MOTION_LIFT = 0.15
+MOTION_LIFT = 0.07
 
 
 def mm(*v):
@@ -97,14 +97,16 @@ def add_bump(m, scale, strength, kind="noise", detail=6.0, distance=0.0004):
 
 MAT = {
     # titanium-grey anodised extrusion, faint brushed variation
-    "alu": add_bump(principled("Anodised aluminium", (0.20, 0.21, 0.23), 1.0, 0.33, **{"Anisotropic": 0.4}), 900, 0.08),
+    # black anodised extrusion: a dark metal with a satin sheen, so studio light picks out the edges
+    "alu": add_bump(principled("Black anodised aluminium", (0.045, 0.047, 0.052), 0.85, 0.3, **{"Anisotropic": 0.35, "Coat Weight": 0.25, "Coat Roughness": 0.2}), 900, 0.06),
     "alu_bright": principled("Machined aluminium", (0.62, 0.63, 0.65), 1.0, 0.22),
     "steel": add_bump(principled("Black powder coat", (0.025, 0.026, 0.03), 0.0, 0.55), 2500, 0.15),
     "plastic": principled("Satin black plastic", (0.02, 0.02, 0.022), 0.0, 0.42),
     "gloss": principled("Gloss black", (0.012, 0.012, 0.014), 0.0, 0.12, **{"Coat Weight": 1.0}),
     "rubber": add_bump(principled("Rubber", (0.012, 0.012, 0.013), 0.0, 0.75), 1800, 0.25),
-    "red": principled("Red accent", (0.62, 0.008, 0.004), 0.0, 0.32, **{"Coat Weight": 0.6}),
-    "red_anod": principled("Red anodised", (0.55, 0.01, 0.008), 1.0, 0.3),
+    "red": principled("Red accent", (0.75, 0.01, 0.006), 0.0, 0.32, **{"Coat Weight": 0.6, "Emission Color": (1.0, 0.02, 0.01, 1), "Emission Strength": 0.08}),
+    "silver": principled("Polished foot", (0.8, 0.8, 0.82), 1.0, 0.15),
+    "red_anod": principled("Red anodised", (0.7, 0.02, 0.015), 1.0, 0.3),
     "motor": principled("Motor housing", (0.05, 0.052, 0.058), 0.9, 0.28),
 }
 
@@ -276,7 +278,7 @@ def extrude(name, section, p0, p1, u, mat, bevel=0.0006, caps=True, smooth=None)
 
 def profile(name, p0, p1, w, h, u=(0, 0, 1), mat=None):
     """T-slot extrusion w (along u) x h (along d x u) mm."""
-    return extrude(name, section_with_slots(w, h), p0, p1, u, mat or MAT["alu"])
+    return extrude(name, section_with_slots(w, h), p0, p1, u, mat or MAT["alu"], bevel=0.0012)
 
 
 def box(name, c, size, mat, bevel=0.0008, rot=None):
@@ -342,139 +344,159 @@ def rounded_rect(w, h, r, segs=6):
 
 
 # ============================================================================= MODEL
-RAIL_Y = 270  # side rail centre line: a 580 mm wide frame
+# Proportions follow real 160 x 40 profile cockpits (see docs/rig3d/REMODEL-PLAN.md): a 660 x 1440 black
+# anodised base, side-mounted 160 x 40 wheel uprights, a 120 x 40 wheel deck channel with red side plates,
+# a slotted pedal plate low at the front, a reclined GT bucket, and a freestanding triple / quad stand.
+RAIL_Y = 310  # side rail centre line: rails 40 wide, 660 mm outer width
+LEN = 1440
+RZ0, RZ1 = 15, 175  # rails stand on edge, 160 tall, on 15 mm feet
+RZ = (RZ0 + RZ1) / 2
+UP_X0, UP_X1, UP_TOP = 860, 1020, 820
+UP_Y = RAIL_Y + 40  # uprights bolt to the outside of the rails
 
 # ---- chassis --------------------------------------------------------------------
 layer("chassis")
 for s, side in [(1, "L"), (-1, "R")]:
-    profile(f"Rail {side}", (0, s * RAIL_Y, 102), (1400, s * RAIL_Y, 102), 160, 40, u=(0, 0, 1))
-    for x in (40, 1360):
-        cylinder(f"Foot {side}{x}", (x, s * RAIL_Y, 0), (x, s * RAIL_Y, 22), 24, MAT["rubber"])
-    # red slot covers in the middle grooves of the outer face (a common profile-rig accent)
-    for zc in (82, 122):
-        box(f"Slot strip {side}{zc}", (700, s * (RAIL_Y + 20 - 2.2), zc), (1396, 3.5, 7), MAT["red"], bevel=0.0003)
-profile("Rear cross", (20, -RAIL_Y + 20, 62), (20, RAIL_Y - 20, 62), 80, 40, u=(0, 0, 1))
-profile("Front cross", (1380, -RAIL_Y + 20, 62), (1380, RAIL_Y - 20, 62), 80, 40, u=(0, 0, 1))
-for x in (270, 580):
-    profile(f"Seat cross {x}", (x, -RAIL_Y + 20, 162), (x, RAIL_Y - 20, 162), 40, 40, u=(0, 0, 1))
-UP_X0, UP_X1, UP_TOP = 880, 1000, 760
-for s, side in [(1, "L"), (-1, "R")]:
-    profile(f"Upright {side}", ((UP_X0 + UP_X1) / 2, s * RAIL_Y, 182), ((UP_X0 + UP_X1) / 2, s * RAIL_Y, UP_TOP), 120, 40, u=(1, 0, 0))
+    profile(f"Rail {side}", (0, s * RAIL_Y, RZ), (LEN, s * RAIL_Y, RZ), 160, 40, u=(0, 0, 1))
+    for x in (30, LEN - 30):
+        cylinder(f"Foot {side}{x}", (x, s * RAIL_Y, 0), (x, s * RAIL_Y, RZ0), 22, MAT["rubber"])
+    # red dust strips in the upper and lower slots of the outer face
+    for zc in (RZ - 40, RZ + 40):
+        box(f"Slot strip {side}{zc}", (LEN / 2, s * (RAIL_Y + 20 - 2.2), zc), (LEN - 8, 3.5, 7), MAT["red"], bevel=0.0003)
+    # uprights, side-mounted, with corner brackets fore and aft
+    profile(f"Upright {side}", ((UP_X0 + UP_X1) / 2, s * UP_Y, RZ0), ((UP_X0 + UP_X1) / 2, s * UP_Y, UP_TOP), 160, 40, u=(1, 0, 0))
+    for zc in (300, 500, 700):
+        box(f"Upright strip {side}{zc}", ((UP_X0 + UP_X1) / 2, s * (UP_Y + 20 - 2.2), zc), (7, 3.5, 160), MAT["red"], bevel=0.0003)
     for x, dirx in ((UP_X0, -1), (UP_X1, 1)):
-        tri = [(0, 0), (130 * dirx, 0), (0, 130)]
+        tri = [(0, 0), (190 * dirx, 0), (0, 300)]
         if dirx < 0:
             tri = list(reversed(tri))
-        plate(f"Gusset {side}{x}", tri, (x, s * RAIL_Y - 16, 182), (1, 0, 0), (0, 0, 1), 32, MAT["alu"])
-# front-mount cross bar across the tops of the uprights (keeps the pedals in view below it)
-profile("Wheel deck beam", (UP_X0 + 20, -RAIL_Y + 20, UP_TOP - 30), (UP_X0 + 20, RAIL_Y - 20, UP_TOP - 30), 40, 60, u=(1, 0, 0))
+        plate(f"Gusset {side}{x}", tri, (x, s * (UP_Y - 20) if s > 0 else s * (UP_Y + 20), RZ0 + 4), (1, 0, 0), (0, 0, 1), -40, MAT["alu"])
+for x, nm in ((20, "Rear cross"), (LEN - 20, "Front cross")):
+    profile(nm, (x, -RAIL_Y + 20, RZ), (x, RAIL_Y - 20, RZ), 160, 40, u=(0, 0, 1))
+    for zc in (RZ - 40, RZ + 40):
+        box(f"{nm} strip {zc}", (x + (22.2 if x > 700 else -22.2), 0, zc), (3.5, 2 * RAIL_Y - 50, 7), MAT["red"], bevel=0.0003)
+for x in (300, 600):
+    profile(f"Seat cross {x}", (x, -RAIL_Y + 20, RZ1 - 20), (x, RAIL_Y - 20, RZ1 - 20), 40, 80, u=(0, 0, 1))
+# wheel deck: a 120 x 40 channel across the uprights on red anodised side plates
+DECK_X, DECK_Z = 940, 780
+profile("Wheel deck channel", (DECK_X, -UP_Y + 20, DECK_Z), (DECK_X, UP_Y - 20, DECK_Z), 120, 40, u=(1, 0, 0))
+for s, side in [(1, "L"), (-1, "R")]:
+    trap = [(-110, -90), (110, -90), (80, 90), (-80, 90)]
+    plate(f"Deck side plate {side}", trap, (DECK_X, s * (UP_Y - 20), DECK_Z), (1, 0, 0), (0, 0, 1), 8 * s, MAT["red_anod"])
+    for bx, bz in ((-70, -60), (0, -60), (70, -60), (-45, 50), (45, 50)):
+        cylinder(f"Deck bolt {side}{bx}{bz}", (DECK_X + bx, s * (UP_Y - 28), DECK_Z + bz), (DECK_X + bx, s * (UP_Y - 33), DECK_Z + bz), 6.5, MAT["gloss"], segs=16)
+plate("Wheel deck plate", rounded_rect(300, 260, 8), (DECK_X - 20, 0, DECK_Z + 20), (1, 0, 0), (0, 1, 0), 6, MAT["steel"])
 
-# Frame parts the pedals sit in front of (from the preview camera) go to their own layer, drawn
-# under the pedals; the rest of the frame is drawn over them (see stack_order.py).
-for nm in ("Rail L", "Front cross", "Foot L1360", "Slot strip L82", "Slot strip L122", "Seat cross 270", "Seat cross 580", "Upright L", "Gusset L880"):
+# Parts drawn under the pedals and the seat (the far side and the front, from the preview camera); the
+# rest of the frame is drawn over them (see stack_order.py).
+BACK = ["Rail L", "Front cross", "Foot L30", f"Foot L{LEN - 30}", "Upright L", "Gusset L860", "Gusset L1020", "Seat cross 300", "Seat cross 600",
+        "Wheel deck channel", "Deck side plate L", "Rear cross"]
+BACK += [o.name for o in COLL["chassis"].objects if o.name.startswith(("Slot strip L", "Upright strip L", "Front cross strip", "Rear cross strip", "Deck bolt L"))]
+for nm in BACK:
     ob = bpy.data.objects[nm]
     COLL["chassis"].objects.unlink(ob)
     COLL["chassis-back"].objects.link(ob)
 
-# ---- wheelbase on a front mount ------------------------------------------------------
+# ---- wheelbase: generic direct-drive motor on the deck, tilted up toward the driver --------------
 layer("wheelbase")
-TILT = math.radians(14)
-AX = Vector((-math.cos(TILT), 0, -math.sin(TILT)))  # from the mount toward the driver
-PLATE = Vector((UP_X0 - 4, 0, 690))
-plate("Front mount plate", rounded_rect(190, 200, 10), PLATE + Vector((0, 0, -10)), (0, 1, 0), (0, 0, 1), 10, MAT["steel"])
-MB0 = PLATE + AX * 2
-MB1 = PLATE + AX * 215
-box("Motor flange", tuple(MB0 + AX * 9), (18, 160, 160), MAT["plastic"], rot=Matrix.Rotation(TILT, 4, "Y"))
-cylinder("Motor body", tuple(MB0 + AX * 18), tuple(MB1), 74, MAT["motor"], segs=64)
-for k in range(10):  # cooling ribs
-    a = MB0 + AX * (40 + k * 14)
-    cylinder(f"Rib {k}", tuple(a), tuple(a + AX * 5), 76.5, MAT["motor"], segs=64)
-cylinder("Motor ring", tuple(MB0 + AX * 192), tuple(MB0 + AX * 204), 75.5, MAT["red"], segs=64)
-cylinder("Motor cap", tuple(MB1), tuple(MB1 + AX * 6), 66, MAT["gloss"], segs=64)
-cylinder("Shaft hub", tuple(MB1 + AX * 6), tuple(MB1 + AX * 30), 32, MAT["alu_bright"], segs=40)
+TILT = math.radians(12)
+AX = Vector((-math.cos(TILT), 0, math.sin(TILT)))  # from the motor's front toward the driver
+MB0 = Vector((DECK_X + 70, 0, DECK_Z + 26 + 78))
+MB1 = MB0 + AX * 230
+mrot = Matrix.Rotation(-TILT, 4, "Y")
+box("Motor body", tuple(MB0 + AX * 115), (230, 140, 140), MAT["motor"], bevel=0.012, rot=mrot)
+box("Motor clamp", tuple(MB0 + AX * 115 - Vector((0, 0, 70))), (160, 170, 24), MAT["plastic"], bevel=0.003)
+for k in range(8):  # cooling fins on the top
+    a = MB0 + AX * (40 + k * 20) + Vector((0, 0, 72))
+    box(f"Fin {k}", tuple(a), (6, 120, 8), MAT["motor"], bevel=0.001, rot=mrot)
+box("Motor stripe", tuple(MB0 + AX * 190), (6, 142.5, 142.5), MAT["red"], bevel=0.003, rot=mrot)
+cylinder("Motor face", tuple(MB1), tuple(MB1 + AX * 8), 56, MAT["gloss"], segs=64)
+cylinder("Shaft hub", tuple(MB1 + AX * 8), tuple(MB1 + AX * 34), 30, MAT["alu_bright"], segs=40)
 
 # ---- wheel: 300 mm round rim, three spokes, quick release, paddles ---------------------
 layer("wheel")
-WC = MB1 + AX * 72
-cylinder("Quick release", tuple(MB1 + AX * 30), tuple(WC - AX * 6), 30, MAT["alu_bright"], segs=40)
-cylinder("QR collar", tuple(MB1 + AX * 38), tuple(MB1 + AX * 48), 34, MAT["red_anod"], segs=40)
-torus("Rim", tuple(WC), AX, 150, 15.5, add_bump(principled("Grip", (0.015, 0.015, 0.016), 0.0, 0.62), 2500, 0.3), 128, 28)
+WC = MB1 + AX * 80
+cylinder("Quick release", tuple(MB1 + AX * 34), tuple(WC - AX * 6), 28, MAT["alu_bright"], segs=40)
+cylinder("QR collar", tuple(MB1 + AX * 40), tuple(MB1 + AX * 50), 32, MAT["red_anod"], segs=40)
+torus("Rim", tuple(WC), AX, 150, 15.5, add_bump(principled("Grip", (0.02, 0.02, 0.021), 0.0, 0.6), 2500, 0.3), 128, 28)
 wu = AX.cross(Vector((0, 0, 1))).normalized()
 wv = AX.cross(wu).normalized()
-plate("Wheel plate", rounded_rect(120, 80, 22), WC - AX * 4, wu, wv, -8, MAT["gloss"])
+plate("Wheel plate", rounded_rect(130, 85, 22), WC - AX * 4, wu, wv, -8, MAT["gloss"])
 for ang in (180, 0, 270):
     dvec = wu * math.cos(math.radians(ang)) + wv * math.sin(math.radians(ang))
     side = AX.cross(dvec)
-    a = WC + dvec * 48
+    a = WC + dvec * 50
     b = WC + dvec * 138
     sec = rounded_rect(30, 7, 3, 3)
     extrude(f"Spoke {ang}", [Vector(p) for p in sec], tuple(a), tuple(b), side, MAT["alu_bright"], bevel=0.0005)
 for ang, col in ((30, "red"), (150, "red"), (60, "plastic"), (120, "plastic"), (300, "alu_bright"), (240, "alu_bright")):
     dvec = wu * math.cos(math.radians(ang)) + wv * math.sin(math.radians(ang))
-    p = WC + dvec * 36 - AX * 1
+    p = WC + dvec * 38 - AX * 1
     cylinder(f"Button {ang}", tuple(p), tuple(p + AX * 6), 6.5, MAT[col], segs=24)
 for s in (1, -1):  # paddles behind the rim
-    plate(f"Paddle {s}", rounded_rect(36, 90, 10), WC + wu * (s * 95) + AX * 10 - wv * 0, wu, wv, -3, MAT["alu_bright"])
+    plate(f"Paddle {s}", rounded_rect(36, 90, 10), WC + wu * (s * 95) + AX * 10, wu, wv, -3, MAT["alu_bright"])
 
-# ---- pedal deck with three pedals ---------------------------------------------------------
+# ---- pedals: slotted plate low at the front, 18 deg, heel rest, three pedals ---------------------
 layer("pedals")
-PA = math.radians(36)
-PU = Vector((math.cos(PA), 0, math.sin(PA)))  # up the deck, toward the front
-PN = Vector((-math.sin(PA), 0, math.cos(PA)))  # deck normal, toward the driver
-P0 = Vector((1110, 0, 200))
-deck_out = rounded_rect(440, 330, 12)
-plate("Pedal deck", [(y, x + 165) for (y, x) in deck_out], P0, (0, 1, 0), PU, -6, MAT["steel"])
-profile("Deck bar", (1100, -RAIL_Y + 20, 162), (1100, RAIL_Y - 20, 162), 40, 40, u=(0, 0, 1), mat=MAT["alu"])
-for s in (1, -1):
-    profile(f"Deck post {s}", (1340, s * 150, 182), (1340, s * 150, 392), 30, 30, u=(1, 0, 0), mat=MAT["alu"])
+PA = math.radians(18)
+PU = Vector((math.cos(PA), 0, math.sin(PA)))  # up the plate, toward the front
+PN = Vector((-math.sin(PA), 0, math.cos(PA)))  # plate normal, toward the driver
+P0 = Vector((1000, 0, 120))
+plate("Pedal plate", [(y, x + 210) for (y, x) in rounded_rect(560, 420, 10)], P0, (0, 1, 0), PU, -6, MAT["steel"])
+for k, yy in enumerate((-180, -90, 90, 180)):  # mounting slots
+    box(f"Plate slot {k}", tuple(P0 + PU * 230 + Vector((0, yy, 0)) + PN * 0.6), (300, 9, 1), MAT["gloss"], bevel=0, rot=Matrix.Rotation(-PA, 4, "Y"))
+plate("Heel rest", rounded_rect(560, 70, 8), P0 + PU * 4, (0, 1, 0), PN, 6, MAT["steel"])
+for s in (1, -1):  # side brackets from the plate to the rails
+    plate(f"Pedal bracket {s}", [(0, 0), (420, 0), (420, 150), (0, 40)], (1000, s * (RAIL_Y - 26), 60), (1, 0, 0), (0, 0, 1), 6 * s, MAT["steel"])
 
 
 def pedal(name, y, arm, face_h, red):
-    base = P0 + PU * 40 + Vector((0, y, 0))
-    box(f"{name} base", tuple(base + PU * 60 + PN * 14), (120, 56, 28), MAT["plastic"], rot=Matrix.Rotation(-PA, 4, "Y"))
+    base = P0 + PU * 150 + Vector((0, y, 0))
+    box(f"{name} base", tuple(base + PU * 60 + PN * 14), (150, 62, 28), MAT["plastic"], rot=Matrix.Rotation(-PA, 4, "Y"))
     pivot = base + PU * 18 + PN * 30
-    tip = pivot + PU * (arm * 0.55) + PN * (arm * 0.83)
+    tip = pivot + PU * (arm * 0.42) + PN * (arm * 0.9)
     d = (tip - pivot).normalized()
-    extrude(f"{name} arm", [Vector(p) for p in rounded_rect(18, 14, 3, 3)], tuple(pivot), tuple(tip), (0, 1, 0), MAT["alu_bright"], bevel=0.0004)
-    n = d.cross(Vector((0, 1, 0))).normalized()
-    plate(f"{name} face", rounded_rect(78, face_h, 12), tip - d * (face_h * 0.55), (0, 1, 0), d, 8, MAT["alu_bright"])
+    extrude(f"{name} arm", [Vector(p) for p in rounded_rect(20, 14, 3, 3)], tuple(pivot), tuple(tip), (0, 1, 0), MAT["alu_bright"], bevel=0.0004)
+    plate(f"{name} face", rounded_rect(80, face_h, 12), tip - d * (face_h * 0.55), (0, 1, 0), d, 8, MAT["alu_bright"])
     if red:
-        a = base + PU * 115 + PN * 30
+        a = base + PU * 125 + PN * 30
         b = pivot + d * (arm * 0.52)
         for k in range(4):
             t0 = a + (b - a) * (k / 4.0)
             t1 = a + (b - a) * ((k + 0.8) / 4.0)
-            cylinder(f"{name} elastomer {k}", tuple(t0), tuple(t1), 15, MAT["red"], segs=32)
-    return n
+            cylinder(f"{name} elastomer {k}", tuple(t0), tuple(t1), 16, MAT["red"], segs=32)
 
 
-pedal("Clutch", 135, 220, 100, False)
-pedal("Brake", 0, 225, 110, True)
-pedal("Throttle", -128, 250, 150, False)
+pedal("Clutch", 125, 230, 105, False)
+pedal("Brake", 0, 235, 115, True)
+pedal("Throttle", -125, 255, 160, False)
 
-# ---- side mount, shifter, handbrake (driver's right) -----------------------------------------
+# ---- side mount, shifter, handbrake (driver's right, beside the cushion) -----------------------
 layer("sidemount")
-SM_Y = -RAIL_Y - 100
-profile("Side arm", (620, -RAIL_Y - 20, 140), (620, SM_Y - 20, 140), 40, 40, u=(0, 0, 1))
-profile("Side post", (620, SM_Y, 160), (620, SM_Y, 470), 40, 40, u=(1, 0, 0))
-plate("Side plate", rounded_rect(200, 90, 8), (610, SM_Y, 470), (1, 0, 0), (0, 1, 0), 8, MAT["steel"])
+SM_X = 700
+SM_Y = -RAIL_Y - 150
+profile("Side arm", (SM_X, -RAIL_Y - 20, RZ + 20), (SM_X, -RAIL_Y - 260, RZ + 20), 80, 40, u=(0, 0, 1))
+profile("Side post", (SM_X, SM_Y, RZ + 60), (SM_X, SM_Y, 470), 40, 40, u=(1, 0, 0))
+box("Side bracket", (SM_X - 10, SM_Y, 495), (220, 150, 50), MAT["steel"], bevel=0.003)
 layer("shifter")
-box("Shifter body", (655, SM_Y, 505), (90, 60, 62), MAT["plastic"])
-cylinder("Shifter boot", (655, SM_Y, 536), (655, SM_Y, 552), 18, MAT["rubber"])
-cylinder("Shifter lever", (655, SM_Y, 552), (640, SM_Y, 690), 6.5, MAT["alu_bright"], segs=24)
-cylinder("Shifter knob", (639, SM_Y, 688), (637, SM_Y, 730), 21, MAT["gloss"], segs=40)
-cylinder("Knob ring", (639, SM_Y, 698), (639, SM_Y, 706), 21.6, MAT["red_anod"], segs=40)
+box("Shifter body", (SM_X + 40, SM_Y, 545), (90, 60, 50), MAT["plastic"])
+cylinder("Shifter boot", (SM_X + 40, SM_Y, 570), (SM_X + 40, SM_Y, 584), 18, MAT["rubber"])
+cylinder("Shifter lever", (SM_X + 40, SM_Y, 584), (SM_X + 25, SM_Y, 690), 6.5, MAT["alu_bright"], segs=24)
+cylinder("Shifter knob", (SM_X + 24, SM_Y, 688), (SM_X + 22, SM_Y, 730), 21, MAT["gloss"], segs=40)
+cylinder("Knob ring", (SM_X + 24, SM_Y, 698), (SM_X + 24, SM_Y, 706), 21.6, MAT["red_anod"], segs=40)
 layer("handbrake")
-box("Handbrake body", (560, SM_Y, 515), (80, 50, 80), MAT["plastic"])
-cylinder("Handbrake lever", (560, SM_Y, 540), (470, SM_Y, 800), 9, MAT["alu_bright"], segs=24)
-cylinder("Handbrake grip", (478, SM_Y, 778), (452, SM_Y, 860), 17, MAT["rubber"], segs=32)
-cylinder("Handbrake cap", (452, SM_Y, 860), (450, SM_Y, 870), 17.5, MAT["red_anod"], segs=32)
+box("Handbrake body", (SM_X - 60, SM_Y, 560), (80, 50, 80), MAT["plastic"])
+cylinder("Handbrake lever", (SM_X - 60, SM_Y, 580), (SM_X - 130, SM_Y, 780), 9, MAT["alu_bright"], segs=24)
+cylinder("Handbrake grip", (SM_X - 124, SM_Y, 762), (SM_X - 150, SM_Y, 840), 17, MAT["rubber"], segs=32)
+cylinder("Handbrake cap", (SM_X - 150, SM_Y, 840), (SM_X - 152, SM_Y, 850), 17.5, MAT["red_anod"], segs=32)
 
-# ---- bucket seat on a slider -------------------------------------------------------------
+# ---- GT bucket seat on brackets and a slider, reclined 25 deg ---------------------------------
 layer("seat")
 for s in (1, -1):
-    box(f"Slider rail {s}", (430, s * 170, 197), (460, 34, 26), MAT["alu_bright"])
-    plate(f"Seat bracket {s}", [(0, 0), (280, 0), (250, 120), (30, 120)], (290, s * 262, 205), (1, 0, 0), (0, 0, 1), 6 * s, MAT["steel"])
-box("Slider bar", (585, 0, 200), (30, 300, 12), MAT["alu_bright"])
+    box(f"Slider rail {s}", (460, s * 160, RZ1 + 13), (440, 34, 26), MAT["alu_bright"])
+    plate(f"Seat bracket {s}", [(0, 0), (330, 0), (300, 150), (40, 170)], (300, s * 268, RZ1 + 26), (1, 0, 0), (0, 0, 1), 6 * s, MAT["steel"])
+box("Slider bar", (640, 0, RZ1 + 18), (30, 300, 12), MAT["alu_bright"])
 
 
 def lerp_table(tab, s):
@@ -486,10 +508,10 @@ def lerp_table(tab, s):
     return tab[-1][1]
 
 
-# sitting-surface centre line (x, z) from the cushion front, down into the seat and up the back
-CENTRE = [(650, 335), (560, 300), (430, 268), (320, 262), (255, 300), (215, 430), (180, 600), (150, 760), (128, 880), (115, 1000)]
-HALF_W = [(0, 235), (0.25, 245), (0.45, 245), (0.62, 262), (0.8, 250), (0.88, 160), (0.94, 165), (1.0, 150)]
-BOLSTER = [(0, 70), (0.2, 95), (0.42, 85), (0.55, 140), (0.75, 120), (0.86, 70), (0.93, 55), (1.0, 45)]
+# sitting-surface centre line (x, z) from the cushion front, down into the seat and up the reclined back
+CENTRE = [(690, 350), (610, 318), (500, 292), (410, 284), (350, 305), (318, 400), (275, 520), (220, 660), (165, 800), (110, 930), (62, 1050)]
+HALF_W = [(0, 250), (0.25, 255), (0.45, 255), (0.62, 272), (0.8, 262), (0.88, 175), (0.94, 180), (1.0, 165)]
+BOLSTER = [(0, 80), (0.2, 105), (0.42, 95), (0.55, 150), (0.75, 130), (0.86, 75), (0.93, 60), (1.0, 50)]
 
 
 def centre(s):
@@ -501,7 +523,6 @@ def centre(s):
         if L[i] <= target <= L[i + 1]:
             t = (target - L[i]) / (L[i + 1] - L[i])
             a, b = Vector(CENTRE[i]), Vector(CENTRE[i + 1])
-            # Catmull-Rom for a smooth line
             p0 = Vector(CENTRE[max(i - 1, 0)])
             p3 = Vector(CENTRE[min(i + 2, len(CENTRE) - 1)])
             t2, t3 = t * t, t * t * t
@@ -509,7 +530,7 @@ def centre(s):
     return Vector(CENTRE[-1])
 
 
-NS, NT = 44, 28
+NS, NT = 48, 28
 bm = bmesh.new()
 uv_layer = bm.loops.layers.uv.new("UVMap")
 grid = []
@@ -519,7 +540,7 @@ for i in range(NS + 1):
     c2 = centre(min(1, s + 0.01)) if s < 1 else c
     c1 = centre(max(0, s - 0.01))
     tan = (c2 - c1).normalized()
-    nrm = Vector((tan.y, -tan.x))  # toward the occupant (up / forward)
+    nrm = Vector((tan.y, -tan.x))
     if nrm.y < 0 and s < 0.3:
         nrm = -nrm
     if s >= 0.3 and nrm.x < 0:
@@ -530,7 +551,6 @@ for i in range(NS + 1):
     for j in range(NT + 1):
         t = -1 + 2 * j / NT
         at = abs(t)
-        # U-shaped section: flat insert, rising bolster, rolled outer edge
         rise = 0.0 if at < 0.55 else ((at - 0.55) / 0.4) ** 1.6
         rise = min(rise, 1.0)
         if at > 0.95:
@@ -550,7 +570,7 @@ seat.data.materials.append(MAT["shell"])
 for p in seat.data.polygons:
     p.use_smooth = True
 sol = seat.modifiers.new("Shell", "SOLIDIFY")
-sol.thickness = -0.032
+sol.thickness = -0.036
 sol.offset = 1
 sol.material_offset = 1
 sol.material_offset_rim = 1
@@ -558,11 +578,9 @@ sol.use_even_offset = True
 sub = seat.modifiers.new("Smooth", "SUBSURF")
 sub.levels = 2
 sub.render_levels = 2
-# harness slots through the back, and a hip slot
-cutter_mat = MAT["plastic"]
-for i, (y, z, w, h) in enumerate([(-80, 860, 32, 70), (80, 860, 32, 70)]):
-    c = centre(0.85)
-    cut = box(f"Slot cutter {i}", (c.x - 10, y, z), (200, w, h), cutter_mat, bevel=0)
+for i, (y, sv, w, h) in enumerate([(-85, 0.86, 34, 75), (85, 0.86, 34, 75)]):
+    c = centre(sv)
+    cut = box(f"Slot cutter {i}", (c.x - 10, y, c.y), (220, w, h), MAT["plastic"], bevel=0)
     cut.hide_render = True
     cut.display_type = "WIRE"
     cut.hide_viewport = True
@@ -572,7 +590,7 @@ for i, (y, z, w, h) in enumerate([(-80, 860, 32, 70), (80, 860, 32, 70)]):
 
 # ---- VR headset on the headrest ---------------------------------------------------------
 layer("headset")
-hc = centre(1.0) + Vector((40, 70))
+hc = centre(1.0) + Vector((50, 60))
 box("Visor", (hc.x + 35, 0, hc.y), (95, 175, 92), MAT["gloss"], bevel=0.02)
 box("Face pad", (hc.x - 18, 0, hc.y), (22, 160, 80), MAT["rubber"], bevel=0.008)
 torus("Strap", (hc.x - 40, 0, hc.y + 8), (0, 0.25, 1), 88, 9, MAT["plastic"], 64, 12)
@@ -592,55 +610,57 @@ for z in (120, 260, 400):
 for i in range(4):
     cylinder(f"PC foot {i}", (100 + 400 * (i % 2), PCY - 90 + 180 * (i // 2), 0), (100 + 400 * (i % 2), PCY - 90 + 180 * (i // 2), 10), 14, MAT["rubber"])
 
-# ---- motion actuators (under the frame when it is raised) ----------------------------------
+# ---- motion: four corner actuators bolted outboard of the rails (modelled in the raised pose) -----
 layer("motion")
-# four corner actuators, sized like common 3-4 DOF platforms (about 200 mm across), with a top
-# plate under each frame corner; their tops meet the raised frame
-for x in (90, 1310):
+LZ = MOTION_LIFT * 1000
+for x in (110, LEN - 110):
     for s in (1, -1):
-        base = Vector((x, s * (RAIL_Y + 30), 0))
-        top = 22 + MOTION_LIFT * 1000 - 4
-        cylinder(f"Actuator pad {x}{s}", tuple(base), tuple(base + Vector((0, 0, 20))), 110, MAT["rubber"], segs=48)
-        cylinder(f"Actuator {x}{s}", tuple(base + Vector((0, 0, 20))), tuple(base + Vector((0, 0, top - 46))), 92, MAT["motor"], segs=48)
-        for k, zc in enumerate((48, 70, 92)):
-            cylinder(f"Actuator rib {x}{s}{k}", tuple(base + Vector((0, 0, zc))), tuple(base + Vector((0, 0, zc + 5))), 94.5, MAT["motor"], segs=48)
-        cylinder(f"Actuator band {x}{s}", tuple(base + Vector((0, 0, top - 70))), tuple(base + Vector((0, 0, top - 56))), 94, MAT["red"], segs=48)
-        cylinder(f"Actuator rod {x}{s}", tuple(base + Vector((0, 0, top - 46))), tuple(base + Vector((0, 0, top - 12))), 40, MAT["alu_bright"], segs=32)
-        box(f"Actuator top plate {x}{s}", tuple(base + Vector((0, -s * 30, top - 6))), (190, 200, 12), MAT["steel"], bevel=0.002)
-        box(f"Actuator glow {x}{s}", tuple(base + Vector((-60 if x < 700 else 60, 0, 34))), (4, 60, 6), MAT["glow"], bevel=0)
+        y = s * (RAIL_Y + 20 + 85)
+        box(f"Actuator bracket {x}{s}", (x, s * (RAIL_Y + 20 + 10), RZ + LZ), (190, 20, 150), MAT["steel"], bevel=0.002)
+        box(f"Actuator body {x}{s}", (x, y, RZ + LZ + 40), (170, 130, 300), MAT["plastic"], bevel=0.008)
+        for k in range(5):  # vents on the outer face
+            box(f"Actuator vent {x}{s}{k}", (x, y + s * 65.5, RZ + LZ + 100 + k * 18), (110, 1.5, 6), MAT["gloss"], bevel=0)
+        box(f"Actuator band {x}{s}", (x, y + s * 65.6, RZ + LZ - 60), (170, 1.5, 10), MAT["red"], bevel=0)
+        bottom = RZ + LZ + 40 - 150
+        cylinder(f"Actuator piston {x}{s}", (x, y, 22), (x, y, bottom), 42, MAT["gloss"], segs=40)
+        cylinder(f"Actuator foot {x}{s}", (x, y, 0), (x, y, 22), 62, MAT["silver"], segs=48)
 box("Motion controller", (720, 0, 40), (260, 220, 80), MAT["plastic"], bevel=0.004)
 
-# ---- display stand and curved screens ----------------------------------------------------
-SX = 1760
-SB = 820
-SW = 720
-SH = 420
-SIDE = math.radians(58)
+# ---- freestanding display stand and curved screens -------------------------------------------
+ST_X = 1520      # stand posts
+ST_Y = 600
+BAR_Z = 1040     # crossbar centre
+SB = 840         # screen bottom
+SW, SH = 720, 420
+SIDE = math.radians(55)
+CX = 1400        # chord line of the centre screen
 layer("mount")
 for s, side in [(1, "L"), (-1, "R")]:
-    profile(f"Stand foot {side}", (1520, s * 310, 20), (1990, s * 310, 20), 40, 40, u=(0, 0, 1))
-    profile(f"Stand upright {side}", (SX + 60, s * 310, 40), (SX + 60, s * 310, 1270), 40, 40, u=(1, 0, 0))
-    for zc in (0,):
-        cylinder(f"Stand foot pad {side}", (1530, s * 310, 0), (1530, s * 310, 6), 18, MAT["rubber"])
-profile("Stand crossbar", (SX + 60, -380, 1000), (SX + 60, 380, 1000), 40, 40, u=(0, 0, 1))
-profile("Stand lower bar", (SX + 60, -290, 60), (SX + 60, 290, 60), 40, 40, u=(0, 0, 1))
+    profile(f"Stand foot {side}", (1180, s * ST_Y, 20), (1780, s * ST_Y, 20), 40, 80, u=(0, 0, 1))
+    for x in (1190, 1770):
+        cylinder(f"Stand foot pad {side}{x}", (x, s * ST_Y, 0), (x, s * ST_Y, 4), 22, MAT["rubber"])
+    profile(f"Stand post {side}", (ST_X, s * ST_Y, 40), (ST_X, s * ST_Y, BAR_Z + 40), 40, 80, u=(1, 0, 0))
+profile("Stand crossbar", (ST_X - 40, -ST_Y - 40, BAR_Z), (ST_X - 40, ST_Y + 40, BAR_Z), 80, 40, u=(0, 0, 1))
+profile("Stand lower bar", (ST_X, -ST_Y + 40, 120), (ST_X, ST_Y - 40, 120), 40, 40, u=(0, 0, 1))
+box("Centre VESA arm", ((CX + ST_X - 60) / 2 + 40, 0, BAR_Z), (ST_X - 60 - CX - 60, 60, 40), MAT["alu"], bevel=0.002)
 layer("mount-top")
 for s, side in [(1, "L"), (-1, "R")]:
-    profile(f"Top extension {side}", (SX + 60, s * 310, 1270), (SX + 60, s * 310, 1700), 40, 40, u=(1, 0, 0))
-profile("Top crossbar", (SX + 60, -330, 1440), (SX + 60, 330, 1440), 40, 40, u=(0, 0, 1))
+    profile(f"Top post {side}", (ST_X - 40, s * 260, BAR_Z + 40), (ST_X - 40, s * 260, 1760), 40, 40, u=(1, 0, 0))
+profile("Top crossbar", (ST_X - 80, -300, 1640), (ST_X - 80, 300, 1640), 80, 40, u=(0, 0, 1))
 layer("mount-sides")
 for s, side in [(1, "L"), (-1, "R")]:
-    h = Vector((SX + 60, s * 380, 1000))
+    h = Vector((ST_X - 60, s * (SW / 2 + 40), BAR_Z))
     d = Vector((-math.sin(SIDE), s * math.cos(SIDE), 0))
     profile(f"Side arm {side}", tuple(h), tuple(h + d * 520), 40, 40, u=(0, 0, 1))
+    box(f"Side hinge {side}", tuple(h), (60, 60, 90), MAT["alu"], bevel=0.003)
 
-R_CURVE = 1200
+R_CURVE = 1000
 BEZEL = 7
-CX = SX - 60
 
 
-def curved_monitor(name, p0, p1, bottom, height=SH, screen=None):
-    """Curved panel (1200R, concave toward the driver) between chord ends p0 -> p1 (driver's left -> right)."""
+def curved_monitor(name, p0, p1, bottom, height=SH, screen=None, tilt=0.0):
+    """Curved panel (1000R, concave toward the driver) between chord ends p0 -> p1 (driver's left -> right).
+    tilt (deg) leans the top toward the driver about the panel's horizontal centre line."""
     p0, p1 = Vector(p0), Vector(p1)
     chord = p1 - p0
     c = chord.length
@@ -649,6 +669,7 @@ def curved_monitor(name, p0, p1, bottom, height=SH, screen=None):
     mid = (p0 + p1) / 2
     phi = math.asin(c / 2 / R_CURVE)
     N = 48
+    made = []
 
     def at(t, inset=0.0):
         a = -phi + 2 * phi * t
@@ -688,15 +709,21 @@ def curved_monitor(name, p0, p1, bottom, height=SH, screen=None):
         ob = mesh_obj(nm, bm, mat, bevel=0.001 if depth else None)
         for p in ob.data.polygons:
             p.use_smooth = True
+        made.append(ob)
         return ob
 
-    strip(f"{name} body", 0, 1, bottom, bottom + height, 0, 18, MAT["plastic"])
+    strip(f"{name} body", 0, 1, bottom, bottom + height, 0, 16, MAT["gloss"])
     e = BEZEL / c
     strip(f"{name} panel", e, 1 - e, bottom + BEZEL, bottom + height - BEZEL, 0.6, 0, screen or screen_material(PANO, 1 / 3, 2 / 3), uv=True)
     back_c, _ = at(0.5)
-    hub = back_c - facing * 18
-    box(f"{name} housing", (hub.x - facing.x * 22, hub.y - facing.y * 22, bottom + height * 0.5), (44, 210, 170), MAT["plastic"], bevel=0.008,
-        rot=Matrix.Rotation(math.atan2(along.y, along.x) + math.pi / 2, 4, "Z"))
+    hub = back_c - facing * 16
+    made.append(box(f"{name} housing", (hub.x - facing.x * 30, hub.y - facing.y * 30, bottom + height * 0.5), (60, 240, 200), MAT["plastic"], bevel=0.012,
+                    rot=Matrix.Rotation(math.atan2(along.y, along.x) + math.pi / 2, 4, "Z")))
+    if tilt:
+        pivot = mm(mid.x, mid.y, bottom + height / 2)
+        M = Matrix.Translation(pivot) @ Matrix.Rotation(math.radians(-tilt), 4, "Y") @ Matrix.Translation(-pivot)
+        for ob in made:
+            ob.data.transform(M)
 
 
 layer("screen-center")
@@ -721,7 +748,8 @@ for s, side in [(1, "L"), (-1, "R")]:
     else:
         curved_monitor(f"Dual screen {side}", seam, outer, SB, screen=screen_material(PANO, 1 / 2, 5 / 6))
 layer("screen-top")
-curved_monitor("Top screen", (CX, 305, 0), (CX, -305, 0), 1268, 350, screen=screen_material(TOP))
+# a distinct, smaller panel on its own posts, centred over the centre screen and tilted down at the driver
+curved_monitor("Top screen", (CX + 20, 300, 0), (CX + 20, -300, 0), SB + SH + 28, 350, screen=screen_material(TOP), tilt=15)
 
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
 bpy.ops.file.pack_all()
