@@ -44,8 +44,8 @@ def write(img, name, ext, **kw):
 
 def save(img, name, alpha):
     img = small(img)
-    w, ws = write(img, name, "webp", format="WEBP", quality=84 if not alpha else 86, method=6, alpha_quality=90)
-    a, as_ = write(img, name, "avif", format="AVIF", quality=62 if not alpha else 70, speed=4)
+    w, ws = write(img, name, "webp", format="WEBP", quality=90 if not alpha else 88, method=6, alpha_quality=90)
+    a, as_ = write(img, name, "avif", format="AVIF", quality=80 if not alpha else 80, speed=4)
     return {"webp": w, "avif": a}, {"webp": ws, "avif": as_}
 
 

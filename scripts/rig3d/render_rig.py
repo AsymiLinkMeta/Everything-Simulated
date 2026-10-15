@@ -245,6 +245,7 @@ def show_frame(layers, lifted):
     for name, c in COLL.items():
         c.hide_render = name not in layers
     cyc.is_shadow_catcher = False
+    r.use_border = False
     r.film_transparent = False
     r.image_settings.color_mode = "RGB"
     LIFT.location.z = MOTION_LIFT if lifted else 0.0
@@ -260,6 +261,27 @@ def show_overlay(name, context_layers, lifted):
         ob.is_holdout = True
         ob.visible_shadow = ob.visible_diffuse = ob.visible_glossy = ob.visible_transmission = False
     cyc.is_shadow_catcher = True
+    # only render the add-on's own region (plus room for its floor shadow): the rest is transparent
+    from bpy_extras.object_utils import world_to_camera_view
+    bpy.context.view_layer.update()
+    dg = bpy.context.evaluated_depsgraph_get()
+    xs, ys = [], []
+    for ob in objects([name]):
+        if ob.type not in ("MESH", "CURVE"):
+            continue
+        ev = ob.evaluated_get(dg)
+        me = ev.to_mesh()
+        for v in me.vertices:
+            w = ev.matrix_world @ v.co
+            for p in (w, Vector((w.x, w.y, 0.0))):  # the part and its footprint on the floor
+                co = world_to_camera_view(scene, cam, p)
+                xs.append(co.x); ys.append(co.y)
+        ev.to_mesh_clear()
+    pad = 0.06
+    r.use_border = True
+    r.use_crop_to_border = False
+    r.border_min_x, r.border_max_x = max(0, min(xs) - pad), min(1, max(xs) + pad)
+    r.border_min_y, r.border_max_y = max(0, min(ys) - pad), min(1, max(ys) + pad)
     r.film_transparent = True
     r.image_settings.color_mode = "RGBA"
     LIFT.location.z = MOTION_LIFT if lifted else 0.0
