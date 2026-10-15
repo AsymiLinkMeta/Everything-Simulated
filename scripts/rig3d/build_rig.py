@@ -171,7 +171,7 @@ MAT = {
     "red_anod": rough_variation(principled("ES red anodised", (0.62, 0.0015, 0.0), 1.0, 0.3, **{"Anisotropic": 0.4}), 0.24, 0.36, 40, 0.06),
     "motor": rough_variation(principled("Motor housing", (0.04, 0.042, 0.047), 0.9, 0.3), 0.26, 0.4, 20),
     "carbon": carbon("Carbon fibre"),
-    "cable": principled("Braided cable", (0.01, 0.01, 0.011), 0.0, 0.55, **{"Sheen Weight": 0.4}),
+    "cable": add_bump(principled("Braided cable", (0.012, 0.012, 0.013), 0.0, 0.6, **{"Sheen Weight": 0.5, "Specular IOR Level": 0.3}), 2600, 0.5, distance=0.0005),
     "lcd": principled("Wheel display", (0.0, 0.0, 0.0), 0.0, 0.1, **{"Emission Color": (0.2, 0.6, 1.0, 1), "Emission Strength": 1.5, "Coat Weight": 1.0}),
     "spring": principled("Spring steel", (0.6, 0.6, 0.62), 1.0, 0.25),
 }
@@ -688,7 +688,23 @@ layer("wheel")
 WC = MB1 + AX * 80
 cylinder("Quick release", tuple(MB1 + AX * 34), tuple(WC - AX * 6), 28, MAT["alu_bright"], segs=40)
 cylinder("QR collar", tuple(MB1 + AX * 40), tuple(MB1 + AX * 50), 32, MAT["red_anod"], segs=40)
-torus("Rim", tuple(WC), AX, 150, 15.5, add_bump(principled("Grip", (0.012, 0.012, 0.013), 0.0, 0.7, **{"Specular IOR Level": 0.25}), 2500, 0.3), 128, 28)
+def suede(name):
+    """Alcantara-style grip: very matte, a soft sheen, fine nap from a CC0 fabric normal map."""
+    m = principled(name, (0.011, 0.011, 0.012), 0.0, 0.95, **{"Specular IOR Level": 0.15, "Sheen Weight": 0.5, "Sheen Roughness": 0.3})
+    nt = m.node_tree
+    tc = nt.nodes.new("ShaderNodeTexCoord")
+    mp = node(nt, "ShaderNodeMapping", Scale=(60.0, 60.0, 60.0))
+    nt.links.new(tc.outputs["Object"], mp.inputs["Vector"])
+    t = nt.nodes.new("ShaderNodeTexImage"); t.image = cache_img("denim_fabric_nor_gl.jpg"); t.projection = "BOX"; t.projection_blend = 0.4
+    nt.links.new(mp.outputs["Vector"], t.inputs["Vector"])
+    nm = node(nt, "ShaderNodeNormalMap", Strength=0.6)
+    nt.links.new(t.outputs["Color"], nm.inputs["Color"])
+    nt.links.new(nm.outputs["Normal"], nt.nodes["Principled BSDF"].inputs["Normal"])
+    return m
+
+
+# round-section rim (31 mm grip) in suede, with a red centre marker at 12 o'clock
+torus("Rim", tuple(WC), AX, 150, 15.5, suede("Suede grip"), 160, 32)
 wu = AX.cross(Vector((0, 0, 1))).normalized()
 wv = AX.cross(wu).normalized()
 plate("Wheel plate", rounded_rect(200, 110, 26), WC - AX * 4, wu, wv, -8, MAT["carbon"])
@@ -709,6 +725,8 @@ for ang, col, rr in ((15, "red", 62), (165, "red", 62), (35, "plastic", 58), (14
     dvec = wu * math.cos(math.radians(ang)) + wv * math.sin(math.radians(ang))
     p = WC + dvec * rr - AX * 1
     cylinder(f"Button {ang}", tuple(p), tuple(p + AX * 6), 6.5, MAT[col], segs=24)
+_up = wv if wv.z > 0 else -wv
+cylinder("Rim marker", tuple(WC + _up * 150 - wu * 7), tuple(WC + _up * 150 + wu * 7), 16.3, MAT["red"], segs=32)
 for s in (1, -1):  # paddles behind the rim
     plate(f"Paddle {s}", rounded_rect(36, 90, 10), WC + wu * (s * 95) + AX * 10, wu, wv, -3, MAT["alu_bright"])
 
@@ -728,34 +746,66 @@ for s in (1, -1):  # side brackets from the plate to the rails
 
 
 def pedal(name, y, arm, face_h, red):
+    """Load-cell style pedal: a slim base rail, twin pivot cheeks with a steel axle, twin machined arm
+    plates up to a slotted face plate, and a spring-over-damper (or, for the brake, an elastomer stack
+    over a load cell) from the front of the rail to the back of the arm."""
+    Y = Vector((0, 1, 0))
+    rot = Matrix.Rotation(-PA, 4, "Y")
     base = P0 + PU * 150 + Vector((0, y, 0))
-    box(f"{name} base", tuple(base + PU * 60 + PN * 14), (150, 62, 28), MAT["plastic"], rot=Matrix.Rotation(-PA, 4, "Y"))
-    pivot = base + PU * 18 + PN * 30
+    box(f"{name} rail", tuple(base + PU * 70 + PN * 7), (180, 46, 8), MAT["alu"], bevel=0.0015, rot=rot)
+    for k in (-1, 1):
+        bolt(f"{name} rail bolt {k}", tuple(base + PU * (70 + 70 * k) + PN * 11), tuple(PN), r=4, h=2.4)
+    pivot = base + PU * 22 + PN * 34
+    for sy in (-1, 1):  # pivot cheeks
+        cheek = [(0, -6), (52, -6), (14, 40), (-12, 40), (-16, 20)]
+        plate(f"{name} cheek {sy}", cheek, base + PU * 4 + PN * 8 + Y * (sy * 21 - 2.5), PU, PN, 5, MAT["red_anod"], bevel=0.0008)
+    cylinder(f"{name} axle", tuple(pivot - Y * 27), tuple(pivot + Y * 27), 5.5, MAT["alu_bright"], segs=24)
+    for sy in (-1, 1):
+        cylinder(f"{name} axle nut {sy}", tuple(pivot + Y * (sy * 26)), tuple(pivot + Y * (sy * 30)), 7, MAT["bolt"], segs=6, smooth=False)
     tip = pivot + PU * (arm * 0.42) + PN * (arm * 0.9)
     d = (tip - pivot).normalized()
-    extrude(f"{name} arm", [Vector(p) for p in rounded_rect(20, 14, 3, 3)], tuple(pivot), tuple(tip), (0, 1, 0), MAT["alu_bright"], bevel=0.0004)
-    plate(f"{name} face", rounded_rect(80, face_h, 12), tip - d * (face_h * 0.55), (0, 1, 0), d, 8, MAT["alu_bright"])
-    for k in (-1, 1):
-        bolt(f"{name} base bolt {k}", tuple(base + PU * (60 + 55 * k) + PN * 28 + Vector((0, 22, 0))), tuple(PN), r=4, h=2.5)
-    if not red:  # coil spring from the base to the arm (load-cell brake uses elastomers instead)
-        a = base + PU * 118 + PN * 28
-        b = pivot + d * (arm * 0.5)
-        helix(f"{name} spring", tuple(a), tuple(b), 13, 7, 2.0, MAT["spring"])
-        cylinder(f"{name} spring rod", tuple(a), tuple(b), 5, MAT["alu_bright"], segs=16)
+    e = Y.cross(d).normalized()
+    L = (tip - pivot).length
+    arm_outline = [(0, -17)] + [(L * 0.55, -13), (L, -10), (L, 10), (L * 0.55, 13), (0, 17)] + [(-14, 9), (-17, 0), (-14, -9)]
+    for sy in (-1, 1):  # twin arm plates
+        plate(f"{name} arm {sy}", arm_outline, pivot + Y * (sy * 13 - 2.5), d, e, 5, MAT["alu_bright"], bevel=0.0007)
+    for f in (0.35, 0.75):  # spacers between the plates
+        q = pivot + d * (L * f)
+        cylinder(f"{name} spacer {f}", tuple(q - Y * 11), tuple(q + Y * 11), 4.5, MAT["bolt"], segs=16)
+    face_c = tip - d * (face_h * 0.45)
+    plate(f"{name} face", rounded_rect(84, face_h, 14), face_c - Y * 0 + e * 6, Y, d, 7, MAT["alu_bright"])
+    for k in range(4 if face_h > 120 else 3):  # grip slots across the face
+        q = face_c + e * 13.2 + d * (-face_h * 0.3 + k * 22)
+        box(f"{name} face slot {k}", tuple(q), (6, 56, 1.2), MAT["gloss"], bevel=0, rot=Matrix.Rotation(math.atan2(-d.z, d.x), 4, "Y"))
+    # spring / damper or elastomers + load cell, from the front of the rail to the back of the arm
+    mount_a = base + PU * 150 + PN * 18
+    mount_b = pivot + d * (L * 0.5) + e * 14
+    cylinder(f"{name} lower eye", tuple(mount_a - Y * 9), tuple(mount_a + Y * 9), 6, MAT["alu"], segs=20)
+    cylinder(f"{name} upper eye", tuple(mount_b - Y * 9), tuple(mount_b + Y * 9), 6, MAT["alu"], segs=20)
+    ax = (mount_b - mount_a).normalized()
     if red:
-        a = base + PU * 125 + PN * 30
-        b = pivot + d * (arm * 0.52)
-        for k in range(4):
-            t0 = a + (b - a) * (k / 4.0)
-            t1 = a + (b - a) * ((k + 0.8) / 4.0)
-            cylinder(f"{name} elastomer {k}", tuple(t0), tuple(t1), 16, MAT["red"], segs=32)
+        cell0 = mount_a + ax * 8
+        cell1 = mount_a + ax * 42
+        cylinder(f"{name} load cell", tuple(cell0), tuple(cell1), 12, MAT["alu_bright"], segs=32)
+        cable(f"{name} load cell lead", [tuple(cell0 + ax * 15 + Vector((0, 12, 0))), tuple(cell0 + Vector((0, 30, -10))), tuple(base + PU * 120 + PN * 12 + Y * 30)], r=1.4)
+        n = 4
+        for k in range(n):
+            t0 = cell1 + (mount_b - cell1) * (k / n) + ax * 1.5
+            t1 = cell1 + (mount_b - cell1) * ((k + 0.82) / n)
+            cylinder(f"{name} elastomer {k}", tuple(t0), tuple(t1), 15, MAT["red"], segs=32)
+        cylinder(f"{name} rod", tuple(cell1), tuple(mount_b), 4, MAT["alu_bright"], segs=16)
+    else:
+        cylinder(f"{name} damper", tuple(mount_a + ax * 6), tuple(mount_a + (mount_b - mount_a) * 0.55), 8, MAT["alu"], segs=24)
+        cylinder(f"{name} rod", tuple(mount_a), tuple(mount_b), 4, MAT["alu_bright"], segs=16)
+        helix(f"{name} spring", tuple(mount_a + ax * 10), tuple(mount_b - ax * 8), 13, 7, 1.9, MAT["spring"])
 
 
 pedal("Clutch", 125, 230, 105, False)
 pedal("Brake", 0, 235, 115, True)
 pedal("Throttle", -125, 255, 160, False)
 cable("Pedal cable", [tuple(P0 + PU * 150 + PN * 20 + Vector((0, -190, 0))), tuple(P0 + PU * 60 + PN * 10 + Vector((0, -240, 0))),
-                      (990, -(RAIL_Y - 30), RZ1 + 6), (600, -(RAIL_Y - 45), RZ1 + 6), (60, -(RAIL_Y - 45), RZ1 + 6), (15, -(RAIL_Y - 80), 70)], r=2.6)
+                      (990, -(RAIL_Y - 30), RZ1 + 6), (600, -(RAIL_Y - 45), RZ1 + 6), (60, -(RAIL_Y - 45), RZ1 + 6), (15, -(RAIL_Y - 80), 70)], r=2.6,
+      ties=[((x, -(RAIL_Y - 45), RZ1 + 6), (1, 0, 0)) for x in (800, 450, 150)])
 
 # ---- side mount, shifter, handbrake (driver's right, beside the cushion) -----------------------
 layer("sidemount")
@@ -795,8 +845,13 @@ def lerp_table(tab, s):
 
 # sitting-surface centre line (x, z) from the cushion front, down into the seat and up the reclined back
 CENTRE = [(690, 350), (610, 318), (500, 292), (410, 284), (350, 305), (318, 400), (275, 520), (220, 660), (165, 800), (110, 930), (62, 1050)]
-HALF_W = [(0, 250), (0.25, 255), (0.45, 255), (0.62, 272), (0.8, 262), (0.88, 175), (0.94, 180), (1.0, 165)]
-BOLSTER = [(0, 80), (0.2, 105), (0.42, 95), (0.55, 150), (0.75, 130), (0.86, 75), (0.93, 60), (1.0, 50)]
+# GT bucket, sculpted as one closed shell: per station along the centre line, a cross-section with the
+# sitting surface (pan / backrest between rising side bolsters) at the front, a rounded rim, and a convex
+# shell behind. Stations: thigh bolsters at the cushion front, lumbar, flared shoulder wings, a neck
+# waist with harness slots, and the headrest.
+HALF_W = [(0, 238), (0.12, 262), (0.3, 250), (0.45, 245), (0.6, 262), (0.72, 288), (0.8, 280), (0.86, 182), (0.92, 176), (1.0, 160)]
+BOLSTER = [(0, 70), (0.1, 128), (0.22, 116), (0.33, 70), (0.45, 108), (0.62, 140), (0.74, 168), (0.82, 118), (0.87, 58), (0.94, 52), (1.0, 42)]
+THICK = [(0, 60), (0.2, 92), (0.35, 102), (0.5, 116), (0.75, 106), (0.9, 86), (1.0, 72)]
 
 
 def centre(s):
@@ -815,102 +870,99 @@ def centre(s):
     return Vector(CENTRE[-1])
 
 
-NS, NT = 48, 28
-bm = bmesh.new()
-uv_layer = bm.loops.layers.uv.new("UVMap")
-grid = []
-for i in range(NS + 1):
-    s = i / NS
+def smooth01(x):
+    x = max(0.0, min(1.0, x))
+    return x * x * (3 - 2 * x)
+
+
+def station(s):
     c = centre(s)
     c2 = centre(min(1, s + 0.01)) if s < 1 else c
     c1 = centre(max(0, s - 0.01))
     tan = (c2 - c1).normalized()
     nrm = Vector((tan.y, -tan.x))
-    if nrm.y < 0 and s < 0.3:
+    if (nrm.y < 0 and s < 0.3) or (s >= 0.3 and nrm.x < 0):
         nrm = -nrm
-    if s >= 0.3 and nrm.x < 0:
-        nrm = -nrm
-    hw = lerp_table(HALF_W, s)
-    bh = lerp_table(BOLSTER, s)
-    row = []
+    return c, tan, nrm
+
+
+NS, NT, MB = 72, 40, 28
+bm = bmesh.new()
+uv_layer = bm.loops.layers.uv.new("UVMap")
+rings, rims = [], {1: [], -1: []}
+for i in range(NS + 1):
+    s = i / NS
+    c, tan, nrm = station(s)
+    hw, bh, tc = lerp_table(HALF_W, s), lerp_table(BOLSTER, s), lerp_table(THICK, s)
+    pts = []  # (y, n, kind, uv)
     for j in range(NT + 1):
         t = -1 + 2 * j / NT
-        at = abs(t)
-        rise = 0.0 if at < 0.55 else ((at - 0.55) / 0.4) ** 1.6
-        rise = min(rise, 1.0)
-        if at > 0.95:
-            rise = 1.0 - ((at - 0.95) / 0.05) ** 2 * 0.35
-        y = t * hw * (1.0 - 0.06 * rise)
-        off = bh * rise
-        pt2 = c + nrm * off
-        row.append((bm.verts.new(mm(pt2.x, y, pt2.y)), (t, s)))
-    grid.append(row)
+        rise = smooth01((abs(t) - 0.42) / 0.5) ** 1.15
+        pts.append((t * hw * (1 - 0.08 * rise), bh * rise, "front", (t, s)))
+    wb = hw * 0.92 + 14
+    for k in range(MB + 1):
+        ph = math.pi * k / MB
+        cs, sn = math.cos(ph), math.sin(ph)
+        y = wb * math.copysign(abs(cs) ** 0.55, cs)
+        n = (bh - 24) * abs(cs) ** 3 - tc * sn ** 0.8
+        pts.append((y, n, "back", (0, s)))
+    # round off the cushion front and the headrest top
+    sc = 1 - 0.38 * smooth01((s - 0.955) / 0.045) - 0.3 * smooth01((0.035 - s) / 0.035)
+    my = sum(p[0] for p in pts) / len(pts)
+    mn = sum(p[1] for p in pts) / len(pts)
+    ring = []
+    for y, n, kind, uv in pts:
+        y2, n2 = my + (y - my) * sc, mn + (n - mn) * sc
+        q = c + nrm * n2
+        ring.append((bm.verts.new(mm(q.x, y2, q.y)), kind, uv))
+    rings.append(ring)
+    for side, jj in ((1, NT), (-1, 0)):
+        y, n = pts[jj][0], pts[jj][1]
+        y2, n2 = my + (y - my) * sc, mn + (n - mn) * sc
+        q = c + nrm * (n2 + 1.5)
+        rims[side].append((q.x, y2 + side * 2.0, q.y))
+M = len(rings[0])
 for i in range(NS):
-    for j in range(NT):
-        f = bm.faces.new((grid[i][j][0], grid[i][j + 1][0], grid[i + 1][j + 1][0], grid[i + 1][j][0]))
-        for loop, (ii, jj) in zip(f.loops, ((i, j), (i, j + 1), (i + 1, j + 1), (i + 1, j))):
-            loop[uv_layer].uv = grid[ii][jj][1]
+    for j in range(M):
+        jn = (j + 1) % M
+        f = bm.faces.new((rings[i][j][0], rings[i][jn][0], rings[i + 1][jn][0], rings[i + 1][j][0]))
+        front = rings[i][j][1] == "front" and rings[i][jn][1] == "front"
+        f.material_index = 0 if front else 1
+        for loop, (ii, kk) in zip(f.loops, ((i, j), (i, jn), (i + 1, jn), (i + 1, j))):
+            loop[uv_layer].uv = rings[ii][kk][2]
+for idx, out_sign in ((0, -1), (NS, 1)):  # domed end caps
+    ring = rings[idx]
+    cen = sum((v[0].co for v in ring), Vector()) / M
+    _, tan, _ = station(idx / NS)
+    hub = bm.verts.new(cen + Vector((tan.x, 0, tan.y)) * (out_sign * 0.006))
+    for j in range(M):
+        f = bm.faces.new((ring[j][0], ring[(j + 1) % M][0], hub))
+        f.material_index = 1
+bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
 seat = mesh_obj("Seat shell", bm, MAT["seat"])
 seat.data.materials.append(MAT["shell"])
 for p in seat.data.polygons:
     p.use_smooth = True
-sol = seat.modifiers.new("Shell", "SOLIDIFY")
-sol.thickness = -0.036
-sol.offset = 1
-sol.material_offset = 1
-sol.material_offset_rim = 1
-sol.use_even_offset = False
-sol.use_quality_normals = True
-sub = seat.modifiers.new("Smooth", "SUBSURF")
-sub.levels = 2
-sub.render_levels = 2
-for i, (y, sv, w, h) in enumerate([(-85, 0.86, 34, 75), (85, 0.86, 34, 75)]):
+for i, (y, sv, w, h) in enumerate([(-85, 0.865, 34, 72), (85, 0.865, 34, 72)]):  # harness slots
     c = centre(sv)
-    cut = box(f"Slot cutter {i}", (c.x - 10, y, c.y), (220, w, h), MAT["plastic"], bevel=0)
+    cut = box(f"Slot cutter {i}", (c.x - 10, y, c.y), (260, w, h), MAT["plastic"], bevel=0)
     cut.hide_render = True
     cut.display_type = "WIRE"
     cut.hide_viewport = True
     b = seat.modifiers.new(f"Slot {i}", "BOOLEAN")
     b.object = cut
     b.operation = "DIFFERENCE"
+# ES red piping along the rim of both bolsters, shoulder wings and headrest
+for side in (1, -1):
+    tube_curve(f"Seat piping {side}", rims[side][1:-1], 2.6, MAT["red"], "NURBS", res=6)
 
-_c = centre(0.8)
-_c2, _c1 = centre(0.81), centre(0.79)
-_t = (_c2 - _c1).normalized()
-_n = Vector((_t.y, -_t.x))
-if _n.x < 0:
-    _n = -_n
-_back = _c - _n * 90
+_c, _t, _n = station(0.78)
+_back = _c - _n * (lerp_table(THICK, 0.78) + 12)
 decal("Brand seat back", "brand-mark.png", (_back.x, 0, _back.y), (-_n.x, 0, -_n.y), (_t.x, 0, _t.y), 150, kind="stitch", segs=14, wrap_to=seat)
-_f = centre(0.9) + Vector((_n.x, _n.y)) * 60
-decal("Brand seat headrest", "brand-mark.png", (_f.x, 0, _f.y), (_n.x, 0, _n.y), (_t.x, 0, _t.y), 90, kind="stitch", segs=10, wrap_to=seat)
-
-# red piping along the crest of both side bolsters and round the headrest, laid on the finished shell
-from mathutils.bvhtree import BVHTree
-bpy.context.view_layer.update()
-_dg = bpy.context.evaluated_depsgraph_get()
-_ev = seat.evaluated_get(_dg)
-_tree = BVHTree.FromObject(_ev, _dg)
-for _side in (1, -1):
-    _path = []
-    for _i in range(2, NS - 1):
-        _s = _i / NS
-        _c = centre(_s)
-        _c2, _c1 = centre(min(1, _s + 0.01)), centre(max(0, _s - 0.01))
-        _tn = (_c2 - _c1).normalized()
-        _nr = Vector((_tn.y, -_tn.x))
-        if (_nr.y < 0 and _s < 0.3) or (_s >= 0.3 and _nr.x < 0):
-            _nr = -_nr
-        _hw = lerp_table(HALF_W, _s)
-        _bh = lerp_table(BOLSTER, _s)
-        _q = _c + _nr * (_bh * 0.97 + 60)
-        _origin = Vector((_q.x, _side * _hw * 0.84, _q.y)) / 1000.0
-        _dirn = Vector((-_nr.x, 0, -_nr.y))
-        _hit = _tree.ray_cast(_origin, _dirn, 0.5)
-        if _hit[0] is not None:
-            _path.append(tuple((_hit[0] + _hit[1] * 0.0025) * 1000.0))
-    if len(_path) > 4:
-        tube_curve(f"Seat piping {_side}", _path, 2.4, MAT["red"], "NURBS", res=8)
+_f = centre(0.92) + _n * 60
+_c9, _t9, _n9 = station(0.92)
+_f = _c9 + _n9 * 55
+decal("Brand seat headrest", "brand-mark.png", (_f.x, 0, _f.y), (_n9.x, 0, _n9.y), (_t9.x, 0, _t9.y), 80, kind="stitch", segs=10, wrap_to=seat)
 
 # ---- VR headset on the headrest ---------------------------------------------------------
 layer("headset")
