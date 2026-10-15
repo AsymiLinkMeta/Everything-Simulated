@@ -13,7 +13,9 @@
     "test:watch": "vitest",
     "check:functions": "cd supabase/functions && deno check */index.ts",
     "test:db": "bash scripts/db-test.sh",
-    "ci": "npm run typecheck && npm run lint && npm run test && npm run build"
+    "ci": "npm run typecheck && npm run lint && npm run test && npm run build",
+    "e2e": "playwright test",
+    "e2e:report": "playwright show-report e2e/.report"
   },
   "dependencies": {
     "@radix-ui/react-slot": "^1.2.4",
@@ -30,7 +32,9 @@
     "zustand": "^5.0.0"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@eslint/js": "^9.39.5",
+    "@playwright/test": "1.59",
     "@types/react": "^18.3.12",
     "@types/react-dom": "^18.3.1",
     "@vitejs/plugin-react": "^5.2.0",

@@ -86,7 +86,7 @@ export function StaffShell() {
           <Shield className="mx-auto size-6 text-muted" />
           <h1>Staff only</h1>
           <p className="text-muted">
-            This portal is for workshop, sales and admin. The first signed-in account becomes admin.
+            This portal is for workshop, sales and admin staff. Ask an admin to add you on the Team page.
           </p>
           <Link to="/app" className="es-btn" style={{ marginTop: 16 }}>
             Back to customer app

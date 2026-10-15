@@ -168,7 +168,7 @@ function OmsHome() {
       {orders.isPending ? (
         <p className="text-sm text-muted">Loading orders…</p>
       ) : view === "board" ? (
-        <div className="es-board">
+        <div className="es-board" tabIndex={0} role="region" aria-label="Order pipeline">
           {ORDER_STATUSES.filter((s) => s !== "cancelled").map((col) => {
             const items = filtered.filter((o) => o.status === col);
             return (

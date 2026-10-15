@@ -14,6 +14,8 @@
   --es-red: #e10600;
   --es-red-bright: #ff1410;
   --es-red-dim: #b00500;
+  /* Brand red lifted for small text on dark surfaces (WCAG AA 4.5:1 on ink/panel). */
+  --es-red-text: #ff3b30;
   --es-red-glow: rgba(225, 6, 0, 0.35);
   --es-light: #ffffff;
   --es-light-ink: #050507;
@@ -484,7 +486,7 @@ img {
   font-size: 0.75rem;
   letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--es-red);
+  color: var(--es-red-text);
   font-weight: 600;
 }
 

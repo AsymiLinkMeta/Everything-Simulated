@@ -479,8 +479,9 @@ function BrandsAdmin() {
                         variant="ghost"
                         onClick={() => handleDelete(b.id, b.name)}
                         className="text-muted hover:text-esred"
+                        aria-label={`Delete brand ${b.name}`}
                       >
-                        <Trash2 className="size-4" />
+                        <Trash2 className="size-4" aria-hidden="true" />
                       </Button>
                     </td>
                   </tr>

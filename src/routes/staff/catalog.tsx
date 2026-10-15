@@ -910,8 +910,9 @@ function Catalog() {
                           variant="ghost"
                           onClick={() => handleDelete(p.id, p.sku)}
                           className="text-muted hover:text-esred"
+                          aria-label={`Delete ${p.sku}`}
                         >
-                          <Trash2 className="size-4" />
+                          <Trash2 className="size-4" aria-hidden="true" />
                         </Button>
                       </div>
                     </td>
@@ -949,6 +950,8 @@ function Catalog() {
                   <td>
                     <Input
                       className="max-w-28"
+                      aria-label={`Override price for ${p.sku} (AUD ex GST)`}
+                      inputMode="decimal"
                       placeholder={map[p.sku] ? String((map[p.sku] ?? 0) / 100) : ""}
                       value={priceDraft[p.sku] ?? ""}
                       onChange={(e) => setPriceDraft((d) => ({ ...d, [p.sku]: e.target.value }))}
