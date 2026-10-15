@@ -17,8 +17,8 @@ INSERT INTO prebuilds (slug, name, kicker, blurb, price_ex_gst, image, featured,
 SELECT 'motion', 'Motion Racing Simulator', 'Flagship', 'SR2 motion on Exodus XR1.', 2899900, '/rigs/motion.jpg', false, 'published'
 WHERE NOT EXISTS (SELECT 1 FROM prebuilds WHERE slug = 'motion');
 
-DELETE FROM prebuild_components
-WHERE prebuild_id IN (SELECT id FROM prebuilds WHERE slug IN ('starter', 'haptic', 'motion'));
+-- Seed BOMs only for prebuilds that have none, so staff-edited component
+-- lists (e.g. the live starter rig) are never overwritten.
 
 INSERT INTO prebuild_components (prebuild_id, sku, qty, sort_order)
 SELECT p.id, x.sku, x.qty, x.sort_order
@@ -61,7 +61,8 @@ JOIN (VALUES
   ('motion','iracing-12',1,12),
   ('motion','pc-race',1,13),
   ('motion','sr2',1,14)
-) AS x(slug, sku, qty, sort_order) ON x.slug = p.slug;
+) AS x(slug, sku, qty, sort_order) ON x.slug = p.slug
+WHERE NOT EXISTS (SELECT 1 FROM prebuild_components pc WHERE pc.prebuild_id = p.id);
 
 DROP POLICY IF EXISTS "staff_update_bookings" ON bookings;
 CREATE POLICY "staff_update_bookings" ON bookings FOR UPDATE
