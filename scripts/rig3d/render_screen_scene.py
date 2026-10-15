@@ -348,7 +348,7 @@ wn.links.new(tcw.outputs["Generated"], mpw.inputs["Vector"])
 wn.links.new(mpw.outputs["Vector"], env.inputs["Vector"])
 wn.links.new(env.outputs["Color"], wn.nodes["Background"].inputs["Color"])
 scene.world = world
-sun = bpy.data.lights.new("Sun", "SUN"); sun.energy = 3.2; sun.angle = math.radians(1.5); sun.color = (1.0, 0.95, 0.86)
+sun = bpy.data.lights.new("Sun", "SUN"); sun.energy = 4.5; sun.angle = math.radians(1.5); sun.color = (1.0, 0.95, 0.86)
 sun_o = bpy.data.objects.new("Sun", sun); scene.collection.objects.link(sun_o)
 sun_o.rotation_euler = (math.radians(50), 0, math.radians(140))
 world.mist_settings.start = 40
@@ -361,7 +361,7 @@ scene.cycles.samples = SAMPLES
 scene.cycles.use_denoising = True
 scene.cycles.max_bounces = 4
 scene.view_settings.view_transform = "AgX"
-scene.view_settings.look = "AgX - Base Contrast"
+scene.view_settings.look = "AgX - Punchy"
 scene.view_layers[0].use_pass_mist = True
 scene.use_nodes = True
 nt = scene.node_tree
@@ -370,7 +370,7 @@ for nd in list(nt.nodes):
 rl = nt.nodes.new("CompositorNodeRLayers")
 haze = nt.nodes.new("CompositorNodeMixRGB")
 haze.inputs[2].default_value = (0.62, 0.68, 0.78, 1)
-pw = nt.nodes.new("CompositorNodeMath"); pw.operation = "MULTIPLY"; pw.inputs[1].default_value = 0.55
+pw = nt.nodes.new("CompositorNodeMath"); pw.operation = "MULTIPLY"; pw.inputs[1].default_value = 0.25
 nt.links.new(rl.outputs["Mist"], pw.inputs[0])
 nt.links.new(pw.outputs[0], haze.inputs["Fac"])
 nt.links.new(rl.outputs["Image"], haze.inputs[1])

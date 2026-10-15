@@ -291,8 +291,9 @@ def screen_material(image, u0=0.0, u1=1.0):
     b = nt.nodes["Principled BSDF"]
     b.inputs["Base Color"].default_value = (0.004, 0.005, 0.007, 1)
     b.inputs["Roughness"].default_value = 0.45  # matte anti-glare panel
-    b.inputs["Coat Weight"].default_value = 0.12  # faint reflection off the anti-glare film
-    b.inputs["Coat Roughness"].default_value = 0.12
+    b.inputs["Coat Weight"].default_value = 0.06  # faint reflection off the anti-glare film
+    b.inputs["Coat Roughness"].default_value = 0.08
+    b.inputs["Specular IOR Level"].default_value = 0.08  # matte film: no milky glare over the picture
     uv = nt.nodes.new("ShaderNodeUVMap")
     mp = nt.nodes.new("ShaderNodeMapping")
     mp.inputs["Location"].default_value = (u0, 0, 0)
@@ -310,7 +311,7 @@ def screen_material(image, u0=0.0, u1=1.0):
     nt.links.new(tex.outputs["Color"], hs.inputs["Color"])
     nt.links.new(hs.outputs["Color"], gam.inputs["Color"])
     nt.links.new(gam.outputs["Color"], b.inputs["Emission Color"])
-    b.inputs["Emission Strength"].default_value = 1.0
+    b.inputs["Emission Strength"].default_value = 1.3
     SCREEN_IMG[key] = m
     return m
 
