@@ -114,9 +114,9 @@ def area(name, loc, size, energy, color=(1, 1, 1), shape="RECTANGLE", size_y=Non
 # Product-photo studio for a black rig: a big soft key over the camera's shoulder, a broad top softbox,
 # and strong rim strips behind and beside the rig so black anodised edges separate from a dark page.
 CAM_DIR = (TARGET - cam.location).normalized()
-area("Key", cam.location + Vector((0.6, 1.6, 1.8)), 3.0, 220, size_y=2.0)
+area("Key", cam.location + Vector((0.6, 1.6, 1.8)), 3.0, 170, size_y=2.0)
 area("Fill", cam.location + Vector((0.4, -1.2, -0.6)), 3.0, 40, (0.92, 0.95, 1.0))
-area("Top", Vector((0.9, 0, 3.4)), 3.2, 170, size_y=2.0)
+area("Top", Vector((0.9, 0, 3.4)), 3.2, 130, size_y=2.0)
 area("Rim L", Vector((2.6, 2.4, 2.0)), 0.5, 380, (0.9, 0.94, 1.0), size_y=3.0)
 area("Rim R", Vector((2.4, -2.6, 1.6)), 0.5, 300, (0.9, 0.94, 1.0), size_y=3.0)
 area("Rim back", Vector((-1.6, 1.8, 1.4)), 0.5, 200, (1.0, 0.92, 0.88), size_y=2.4)

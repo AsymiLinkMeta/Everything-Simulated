@@ -98,7 +98,7 @@ def add_bump(m, scale, strength, kind="noise", detail=6.0, distance=0.0004):
 MAT = {
     # titanium-grey anodised extrusion, faint brushed variation
     # black anodised extrusion: a dark metal with a satin sheen, so studio light picks out the edges
-    "alu": add_bump(principled("Black anodised aluminium", (0.045, 0.047, 0.052), 0.85, 0.3, **{"Anisotropic": 0.35, "Coat Weight": 0.25, "Coat Roughness": 0.2}), 900, 0.06),
+    "alu": add_bump(principled("Black anodised aluminium", (0.03, 0.031, 0.035), 0.85, 0.28, **{"Anisotropic": 0.35, "Coat Weight": 0.25, "Coat Roughness": 0.2}), 900, 0.06),
     "alu_bright": principled("Machined aluminium", (0.62, 0.63, 0.65), 1.0, 0.22),
     "steel": add_bump(principled("Black powder coat", (0.025, 0.026, 0.03), 0.0, 0.55), 2500, 0.15),
     "plastic": principled("Satin black plastic", (0.02, 0.02, 0.022), 0.0, 0.42),
@@ -127,11 +127,11 @@ def seat_material():
     mask = nt.nodes.new("ShaderNodeMath"); mask.operation = "GREATER_THAN"; mask.inputs[1].default_value = 0.62
     nt.links.new(absu.outputs[0], mask.inputs[0])
     rough = nt.nodes.new("ShaderNodeMix"); rough.data_type = "FLOAT"
-    rough.inputs["A"].default_value = 0.85
+    rough.inputs["A"].default_value = 0.92
     rough.inputs["B"].default_value = 0.5
     nt.links.new(mask.outputs[0], rough.inputs["Factor"])
     nt.links.new(rough.outputs["Result"], b.inputs["Roughness"])
-    b.inputs["Sheen Weight"].default_value = 0.6
+    b.inputs["Sheen Weight"].default_value = 0.2
     # red stitching just inside the bolster seam
     band = nt.nodes.new("ShaderNodeMath"); band.operation = "COMPARE"
     band.inputs[1].default_value = 0.585; band.inputs[2].default_value = 0.006
@@ -164,7 +164,7 @@ def seat_material():
 
 
 MAT["seat"] = seat_material()
-MAT["shell"] = principled("Seat shell", (0.012, 0.012, 0.014), 0.0, 0.32, **{"Coat Weight": 0.5, "Coat Roughness": 0.25})
+MAT["shell"] = principled("Seat shell", (0.008, 0.008, 0.009), 0.0, 0.4, **{"Coat Weight": 0.35, "Coat Roughness": 0.3})
 
 
 ART = os.path.join(ROOT, "assets", "rig3d")
