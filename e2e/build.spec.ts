@@ -149,6 +149,22 @@ test.describe("rig builder data from staff", () => {
     await expect(preview.locator('[data-part="chassis"]')).toHaveAttribute("src", /chassis--raised\.[0-9a-f]+\.webp$/);
   });
 
+  test("preview: screens match the monitor count exactly; a fourth adds the separate top screen", async ({ page }, info) => {
+    test.skip(info.project.name !== "desktop", "reads shared layer rows");
+    exec(`delete from builder_layers`);
+    const preview = page.getByTestId("rig-preview");
+    const shown = async () => (await preview.locator('[data-part^="screen-"]').evaluateAll((els) => els.map((e) => e.getAttribute("data-part")))).sort();
+    await page.goto("/build?b=xr1,quad-mount,aoc-32");
+    await expect.poll(shown).toEqual(["screen-center"]);
+    await page.goto("/build?b=xr1,quad-mount,aoc-32*2");
+    await expect.poll(shown).toEqual(["screen-dual"]);
+    await page.goto("/build?b=xr1,quad-mount,aoc-32*3");
+    await expect.poll(shown).toEqual(["screen-center", "screen-sides"]);
+    await page.goto("/build?b=xr1,quad-mount,aoc-32*4");
+    await expect.poll(shown).toEqual(["screen-center", "screen-sides", "screen-top"]);
+    await expect(preview.locator('[data-part="mount-top"]')).toHaveAttribute("data-state", "on");
+  });
+
   test("preview: an empty build shows one ghosted render, and it loads", async ({ page }) => {
     await page.goto("/build");
     const ghost = page.getByTestId("rig-preview").locator('[data-part="ghost"]');
