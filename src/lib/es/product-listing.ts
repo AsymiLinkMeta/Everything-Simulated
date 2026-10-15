@@ -1,6 +1,9 @@
 import { supabase, supabaseAnonKey, supabaseUrl } from "@/lib/db";
 import type { DiscoveredProduct } from "./discover";
 
+/** Why the function fell back to a page-scraped draft instead of an AI listing. */
+export type ListingDraftReason = "no_key" | "model_error" | "unparseable";
+
 export type ProductListing = {
   sku: string;
   brand: string;
@@ -52,7 +55,11 @@ export async function generateProductListing(input: {
     body: JSON.stringify(input),
   });
   if (!response.ok) throw new Error("Could not generate a listing");
-  const body = (await response.json()) as { listing?: ProductListing; source?: "grok" | "draft" };
+  const body = (await response.json()) as {
+    listing?: ProductListing;
+    source?: "grok" | "draft";
+    reason?: ListingDraftReason;
+  };
   if (!body.listing) throw new Error("Could not generate a listing");
-  return { listing: body.listing, source: body.source };
+  return { listing: body.listing, source: body.source, reason: body.reason };
 }

@@ -11,8 +11,8 @@ import { PageHero, PhoneStrip } from "@/components/es/section-page";
 export const Route = createFileRoute("/_site/shop/")({
   head: () =>
     pageHead({
-      title: "Sim Racing Parts & Components Australia | Simagic, Trak Racer, Exodus",
-      description: "Shop Simagic wheelbases, Trak Racer and Exodus chassis, SIMRIG motion platforms, AOC triple screens and race PCs. Gold Coast stocked, compatibility verified and shipped Australia-wide.",
+      title: "Sim Racing Parts & Components Australia | Everything Simulated",
+      description: "Shop direct-drive wheelbases, chassis, pedals, motion platforms, triple screens and race PCs. Gold Coast stocked, compatibility verified and shipped Australia-wide.",
       path: "/shop",
     }),
   component: Shop,

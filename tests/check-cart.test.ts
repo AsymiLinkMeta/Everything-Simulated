@@ -4,8 +4,10 @@ import { describe, expect, it, vi } from "vitest";
 vi.mock("@/lib/db", () => ({ supabase: {}, supabaseUrl: "", supabaseAnonKey: "" }));
 
 import { checkCart } from "@/lib/es/checkCart";
-import { RULES } from "@/lib/es/catalog";
-import { PRODUCTS } from "./fixtures";
+import { setFreightConfig } from "@/lib/es/freight";
+import { FREIGHT_CONFIG, PRODUCTS, RULES } from "./fixtures";
+
+setFreightConfig(FREIGHT_CONFIG);
 
 const GOLD_COAST = "4217"; // local zone: no freight unless motion is in the build
 

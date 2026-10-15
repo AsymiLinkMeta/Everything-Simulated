@@ -1,18 +1,17 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { JsonLd, Money } from "@/components/es/bits";
+import { JsonLd, LoadError, Money } from "@/components/es/bits";
 import { ImageCards, MediaSplit, PageHero, PhoneStrip } from "@/components/es/section-page";
 import { pageHead, breadcrumbLd, itemListLd } from "@/lib/es/seo";
 import { RACING_TOOLS } from "@/lib/es/platforms";
-import { fetchFeaturedPrebuilds, livePackages } from "@/lib/es/prebuilds";
-import { PACKAGES } from "@/lib/es/catalog";
+import { fetchFeaturedPrebuilds } from "@/lib/es/prebuilds";
 
 export const Route = createFileRoute("/_site/racing")({
   head: () =>
     pageHead({
       title: "Turn-Key Racing Simulators Australia | Motion, Haptic & Triple Screen | Everything Simulated",
       description:
-        "Gold Coast assembled turn-key racing simulators with motion, haptic feedback and triple-plus-auxiliary screens. Simagic, Trak Racer, Exodus and Dynamix — compatibility checked and shipped Australia-wide.",
+        "Gold Coast assembled turn-key racing simulators with motion, haptic feedback and triple-plus-auxiliary screens. Compatibility checked and shipped Australia-wide.",
       path: "/racing",
     }),
   component: RacingHub,
@@ -31,16 +30,8 @@ const TOOL_IMAGES: Record<string, string> = {
 
 function RacingHub() {
   const featured = useQuery({ queryKey: ["featured-prebuilds"], queryFn: fetchFeaturedPrebuilds });
-  const packs = featured.data?.length
-    ? featured.data.map((p) => ({ slug: p.slug, name: p.name, blurb: p.blurb, image: p.image, price: p.price_ex_gst, kicker: p.kicker }))
-    : (livePackages().length ? livePackages() : PACKAGES).map((p) => ({
-        slug: p.slug,
-        name: p.name,
-        blurb: p.blurb,
-        image: p.image,
-        price: p.priceExGst,
-        kicker: p.kicker,
-      }));
+  const packs = featured.data ?? [];
+  const spotlight = packs.find((p) => p.purchasable) ?? packs[0];
 
   return (
     <div>
@@ -73,6 +64,21 @@ function RacingHub() {
       <div className="es-body">
         <p className="es-kicker es-kicker-telemetry">Grid</p>
         <h2 className="es-display mt-2 text-5xl">Prebuilt Packages</h2>
+        {featured.isPending ? (
+          <div className="es-pack-grid mt-8" aria-busy="true" aria-label="Loading prebuilds">
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="aspect-square animate-pulse rounded-xl bg-raised" />
+            ))}
+          </div>
+        ) : featured.isError ? (
+          <div className="mt-8">
+            <LoadError what="the prebuilds" onRetry={() => void featured.refetch()} />
+          </div>
+        ) : packs.length === 0 ? (
+          <p className="mt-8 text-muted">
+            No prebuilds are listed right now. <Link to="/shop" className="text-paper underline">Spec one from parts</Link>.
+          </p>
+        ) : (
         <div className="es-pack-grid mt-8">
           {packs.slice(0, 3).map((p) => (
             <Link key={p.slug} to="/prebuilds/$slug" params={{ slug: p.slug }} className="es-pack-tile">
@@ -84,24 +90,29 @@ function RacingHub() {
                 <h3>{p.name}</h3>
                 <p className="mt-2 text-sm text-muted">{p.blurb}</p>
                 <p className="mt-3">
-                  <Money cents={p.price} gst />
+                  {p.purchasable ? <Money cents={p.effective_price_ex_gst} gst /> : "Enquire for price"}
                 </p>
               </div>
             </Link>
           ))}
         </div>
+        )}
       </div>
 
-      <section className="es-body pt-0">
-        <MediaSplit
-          image="/rigs/haptic.jpg"
-          kicker="Featured"
-          title="Haptic Racing Simulator"
-          lead="Our most popular build. Exodus XR1 chassis, Simagic Alpha 15Nm wheelbase, hydraulic P1000 pedals, four screens."
-        >
-          <Link to="/prebuilds/haptic" className="es-btn">Order this crate</Link>
-        </MediaSplit>
-      </section>
+      {spotlight ? (
+        <section className="es-body pt-0">
+          <MediaSplit
+            image={spotlight.image || "/rigs/haptic.jpg"}
+            kicker={spotlight.kicker || "Featured"}
+            title={spotlight.name}
+            lead={spotlight.blurb || spotlight.description}
+          >
+            <Link to="/prebuilds/$slug" params={{ slug: spotlight.slug }} className="es-btn">
+              {spotlight.purchasable ? "Order this crate" : "Enquire about this build"}
+            </Link>
+          </MediaSplit>
+        </section>
+      ) : null}
 
       <div className="es-body pt-0">
         <p className="es-kicker es-kicker-telemetry">Garage</p>

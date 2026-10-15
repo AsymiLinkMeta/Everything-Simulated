@@ -6,6 +6,11 @@
 [build.environment]
   NODE_VERSION = "22"
 
+# Production builds fail rather than ship a sitemap.xml / llms.txt without the
+# catalogue (they are generated from Supabase at build time; see vite.config.ts).
+[context.production.environment]
+  SEO_REQUIRE_DB = "true"
+
 # Deploy previews and branch deploys must never be indexed.
 [context.deploy-preview.environment]
   VITE_NOINDEX = "true"

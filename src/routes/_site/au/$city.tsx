@@ -4,6 +4,7 @@ import { CITIES, cityBySlug } from "@/lib/es/catalog";
 import { livePackages } from "@/lib/es/prebuilds";
 import { breadcrumbLd, faqLd, FAQS, localBusinessLd, pageHead } from "@/lib/es/seo";
 import { PageHero } from "@/components/es/section-page";
+import { useLiveCopy } from "@/lib/es/live-copy";
 
 export const Route = createFileRoute("/_site/au/$city")({
   loader: ({ params }) => {
@@ -15,7 +16,7 @@ export const Route = createFileRoute("/_site/au/$city")({
     if (!loaderData) return {};
     return pageHead({
       title: `Racing Simulators ${loaderData.name} ${loaderData.state} | Buy & Deliver | Everything Simulated`,
-      description: `Turn-key racing simulators assembled on the Gold Coast and delivered to ${loaderData.name}. ${loaderData.note} Starter, Haptic and Motion packages featuring Simagic and SIMRIG.`,
+      description: `Turn-key racing simulators assembled on the Gold Coast and delivered to ${loaderData.name}. ${loaderData.note} Static, haptic and full-motion prebuilds.`,
       path: `/au/${loaderData.slug}`,
     });
   },
@@ -24,10 +25,12 @@ export const Route = createFileRoute("/_site/au/$city")({
 
 function CityPage() {
   const city = Route.useLoaderData();
+  const { fill } = useLiveCopy();
+  const faqs = FAQS.map((f) => ({ q: f.q, a: fill(f.a) }));
   return (
     <div>
       <JsonLd data={localBusinessLd(city.name)} />
-      <JsonLd data={faqLd(FAQS)} />
+      <JsonLd data={faqLd(faqs)} />
       <JsonLd data={breadcrumbLd([{ name: "Home", path: "/" }, { name: "Australia", path: "/au" }, { name: city.name, path: `/au/${city.slug}` }])} />
       <PageHero
         kicker={`${city.state} · Australia-wide`}

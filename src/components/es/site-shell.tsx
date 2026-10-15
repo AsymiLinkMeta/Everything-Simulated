@@ -5,8 +5,9 @@ import { useEffect, useState } from "react";
 import { CookieDisclaimer, AuthSlot, Logo, StaffLoginLink } from "./bits";
 import { ReferralCapture } from "./referral-capture";
 import { useCart } from "@/lib/es/cart-store";
-import { livePackages } from "@/lib/es/prebuilds";
-import { BRAND, CITIES, PACKAGES } from "@/lib/es/catalog";
+import { useQuery } from "@tanstack/react-query";
+import { fetchPublishedPrebuilds } from "@/lib/es/prebuilds";
+import { BRAND, CITIES } from "@/lib/es/catalog";
 
 const SIMULATORS = [
   { to: "/racing", label: "Racing", hint: "Motion, haptic, triples — live catalogue" },
@@ -153,11 +154,7 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
           <div className="es-footer-col">
             <p className="es-kicker">Racing tools</p>
             <ul>
-              {(livePackages().length ? livePackages() : PACKAGES).map((p) => (
-                <li key={p.slug}>
-                  <Link to="/prebuilds/$slug" params={{ slug: p.slug }}>{p.name}</Link>
-                </li>
-              ))}
+              <FooterPrebuilds />
               <li><Link to="/shop">Parts shop</Link></li>
               <li><Link to="/compatibility">Compatibility checker</Link></li>
             </ul>
@@ -197,5 +194,26 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
       </footer>
       <CookieDisclaimer />
     </div>
+  );
+}
+
+/** Footer prebuild links, from Supabase. Falls back to the prebuilds index while loading or on error. */
+function FooterPrebuilds() {
+  const prebuilds = useQuery({ queryKey: ["prebuilds"], queryFn: fetchPublishedPrebuilds });
+  if (!prebuilds.data?.length) {
+    return (
+      <li>
+        <Link to="/prebuilds">Prebuilt rigs</Link>
+      </li>
+    );
+  }
+  return (
+    <>
+      {prebuilds.data.map((p) => (
+        <li key={p.slug}>
+          <Link to="/prebuilds/$slug" params={{ slug: p.slug }}>{p.name}</Link>
+        </li>
+      ))}
+    </>
   );
 }

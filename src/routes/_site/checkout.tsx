@@ -6,11 +6,11 @@ import { toast } from "sonner";
 import { useCart } from "@/lib/es/cart-store";
 import { fetchProducts } from "@/lib/es/product-cache";
 import { placeGuestOrder, placeOrder } from "@/lib/es/server";
-import { quoteFreight } from "@/lib/es/freight";
+import { useServerQuote } from "@/lib/es/pricing";
 import { fetchBillingConfig, notifyOrder, startDepositCheckout } from "@/lib/es/billing";
 import { fetchAmbassadors, getCachedAmbassadorByCode } from "@/lib/es/ambassadors";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
-import { aud, gstInclusive } from "@/lib/utils";
+import { aud, audExact } from "@/lib/utils";
 import { pageHead } from "@/lib/es/seo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,20 +32,24 @@ function Checkout() {
   useEffect(() => setReady(true), []);
 
   const { user } = useCurrentUserState();
-  const catalog = useQuery({ queryKey: ["products"], queryFn: () => fetchProducts() });
+  useQuery({ queryKey: ["products"], queryFn: () => fetchProducts() });
   const billing = useQuery({ queryKey: ["billing-config"], queryFn: fetchBillingConfig });
   const lines = useCart((s) => s.lines);
   const driverWeightKg = useCart((s) => s.driverWeightKg);
   const postcode = useCart((s) => s.postcode);
   const quoteId = useCart((s) => s.quoteId);
+  const prebuildSlug = useCart((s) => s.prebuildSlug);
   const referralCode = useCart((s) => s.referralCode);
   const setReferralCode = useCart((s) => s.setReferralCode);
   const setPostcode = useCart((s) => s.setPostcode);
   const clear = useCart((s) => s.clear);
   useQuery({ queryKey: ["ambassadors"], queryFn: fetchAmbassadors });
   const referredBy = referralCode ? getCachedAmbassadorByCode(referralCode) : undefined;
-  const result = useCart((s) => s.result)();
-  const freight = quoteFreight({ postcode, lines });
+  // What will actually be charged, priced by quote_cart() in the database.
+  const quote = useServerQuote({ lines, postcode, prebuild: prebuildSlug, driverWeightKg });
+  const q = quote.data;
+  const blocks = (q?.issues ?? []).filter((i) => i.severity === "block");
+  const canOrder = Boolean(q?.ok) && !quote.isFetching;
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -63,8 +67,8 @@ function Checkout() {
 
   const stripeOn = Boolean(billing.data?.stripe);
   const depositPercent = billing.data?.depositPercent ?? 30;
-  const totalInc = gstInclusive(result.totalExGst + result.freightExGst);
-  const depositInc = Math.max(50000, Math.round((totalInc * depositPercent) / 100));
+  const totalInc = q?.total_inc_gst ?? 0;
+  const depositInc = Math.min(totalInc, Math.max(50000, Math.round((totalInc * depositPercent) / 100)));
 
   if (!ready) {
     return <div className="mx-auto max-w-3xl animate-pulse py-20" />;
@@ -109,8 +113,8 @@ function Checkout() {
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!result.ok) {
-      toast.error("Please fix the compatibility issues in your build before checking out.");
+    if (!q?.ok) {
+      toast.error(blocks[0]?.message ?? "Please fix the issues in your build before checking out.");
       return;
     }
     const mail = email.trim();
@@ -121,22 +125,21 @@ function Checkout() {
     }
     setPlacing(true);
     try {
-      const stamped = [
-        notes.trim(),
-        referralCode
-          ? `Ambassador code: ${referralCode}${referredBy ? ` (${referredBy.name})` : ""}`
-          : "",
-      ]
-        .filter(Boolean)
-        .join("\n");
-      let id: string;
-      if (user) {
-        const res = await placeOrder({ lines, postcode, driverWeightKg, notes: stamped, name: fullName, phone, address, quoteId: quoteId ?? undefined });
-        id = res.id;
-      } else {
-        const res = await placeGuestOrder({ lines, postcode, driverWeightKg, name: fullName, email: mail, phone, notes: stamped, address });
-        id = res.id;
-      }
+      const order = {
+        lines,
+        postcode,
+        driverWeightKg,
+        notes: notes.trim(),
+        name: fullName,
+        phone,
+        address,
+        prebuild: prebuildSlug,
+        referralCode: referralCode || undefined,
+      };
+      const res = user
+        ? await placeOrder({ ...order, quoteId: quoteId ?? undefined })
+        : await placeGuestOrder({ ...order, email: mail });
+      const id = res.id;
       void notifyOrder({ orderId: id, kind: "placed", email: mail });
       try {
         sessionStorage.setItem("es-track-email", mail);
@@ -180,61 +183,85 @@ function Checkout() {
           <div className="es-card space-y-4 p-5">
             <div className="flex items-center justify-between">
               <h2 className="font-medium">Order summary</h2>
-              <CheckPills result={result} />
+              {q && <CheckPills result={{ ok: q.ok, issues: q.issues, totalExGst: q.items_ex_gst, totalIncGst: q.total_inc_gst, freightExGst: q.freight_ex_gst, leadWeeks: q.lead_weeks }} />}
             </div>
 
-            <ul className="space-y-2 border-t border-line pt-3">
-              {lines.map((line) => {
-                const item = catalog.data?.find((p) => p.sku === line.sku);
-                return (
-                  <li key={line.sku} className="flex justify-between gap-3 text-sm">
-                    <span className="min-w-0 truncate">
-                      <LineName sku={line.sku} />
-                      {line.qty > 1 && <span className="ml-1 text-muted">x{line.qty}</span>}
-                    </span>
-                    <span className="shrink-0 tabular-nums text-muted">
-                      {item ? aud(item.sellExGst * line.qty) : "—"}
-                    </span>
-                  </li>
-                );
-              })}
-            </ul>
-
-            <div className="space-y-1 border-t border-line pt-3">
-              <div className="flex justify-between text-sm">
-                <span className="text-muted">Subtotal (ex GST)</span>
-                <span className="tabular-nums">{aud(result.totalExGst)}</span>
-              </div>
-              <div className="flex justify-between text-sm">
-                <span className="text-muted">Freight — {freight.zone}</span>
-                <span className="tabular-nums">{aud(result.freightExGst)}</span>
-              </div>
-              <ul className="space-y-0.5 text-xs text-muted">
-                {freight.breakdown.map((row) => (
-                  <li key={row.label} className="flex justify-between gap-3">
-                    <span>{row.label}</span>
-                    <span className="tabular-nums">{aud(row.cents)}</span>
-                  </li>
+            {quote.isPending ? (
+              <div className="space-y-2 border-t border-line pt-3" aria-busy="true" aria-label="Pricing your build">
+                {lines.map((l) => (
+                  <div key={l.sku} className="h-4 animate-pulse rounded bg-raised" />
                 ))}
-                <li>
-                  {freight.kg} kg · {freight.crates} crate{freight.crates === 1 ? "" : "s"} from 4215
-                </li>
-              </ul>
-              <div className="flex justify-between pt-2 text-lg font-medium">
-                <span>Total inc GST</span>
-                <span className="tabular-nums">{aud(totalInc)}</span>
+                <div className="h-6 w-1/2 animate-pulse rounded bg-raised" />
               </div>
-              {stripeOn ? (
-                <p className="text-xs text-muted">
-                  Deposit due today {aud(depositInc)} inc GST ({depositPercent}%, minimum $500).
-                </p>
-              ) : null}
-              {result.leadWeeks[1] > 0 && (
-                <p className="text-xs text-muted">
-                  Estimated lead time {result.leadWeeks[0]}–{result.leadWeeks[1]} weeks
-                </p>
-              )}
-            </div>
+            ) : quote.isError && !q ? (
+              <div role="alert" className="space-y-2 border-t border-line pt-3 text-sm">
+                <p>We couldn't price this build right now.</p>
+                <Button type="button" size="sm" variant="outline" onClick={() => void quote.refetch()}>
+                  Try again
+                </Button>
+              </div>
+            ) : q ? (
+              <>
+                {q.mode === "package" && (
+                  <p className="border-t border-line pt-3 text-sm">
+                    Package price {aud(q.package_ex_gst ?? 0)} + GST, parts included.
+                  </p>
+                )}
+                <ul className="space-y-2 border-t border-line pt-3" aria-live="polite">
+                  {q.lines.map((line) => (
+                    <li key={line.sku} className="flex justify-between gap-3 text-sm">
+                      <span className="min-w-0 truncate">
+                        <LineName sku={line.sku} />
+                        {line.qty > 1 && <span className="ml-1 text-muted">x{line.qty}</span>}
+                      </span>
+                      <span className="shrink-0 tabular-nums text-muted">
+                        {line.included ? "Included" : line.unit_ex_gst > 0 ? aud(line.line_ex_gst) : "Enquire"}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+
+                <div className="space-y-1 border-t border-line pt-3">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted">Subtotal (ex GST)</span>
+                    <span className="tabular-nums">{aud(q.items_ex_gst)}</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted">Freight: {q.freight.zone}</span>
+                    <span className="tabular-nums">{aud(q.freight_ex_gst)}</span>
+                  </div>
+                  <ul className="space-y-0.5 text-xs text-muted">
+                    {q.freight.breakdown.map((row) => (
+                      <li key={row.label} className="flex justify-between gap-3">
+                        <span>{row.label}</span>
+                        <span className="tabular-nums">{aud(row.cents)}</span>
+                      </li>
+                    ))}
+                    <li>
+                      {q.freight.kg} kg · {q.freight.crates} crate{q.freight.crates === 1 ? "" : "s"} from the Gold Coast
+                    </li>
+                  </ul>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted">GST</span>
+                    <span className="tabular-nums">{aud(q.gst_cents)}</span>
+                  </div>
+                  <div className="flex justify-between pt-2 text-lg font-medium">
+                    <span>Total inc GST</span>
+                    <span className="tabular-nums" data-testid="checkout-total">{aud(q.total_inc_gst)}</span>
+                  </div>
+                  {stripeOn ? (
+                    <p className="text-xs text-muted">
+                      Deposit due today {audExact(depositInc)} inc GST ({depositPercent}%, minimum $500).
+                    </p>
+                  ) : null}
+                  {q.lead_weeks[1] > 0 && (
+                    <p className="text-xs text-muted">
+                      Estimated lead time {q.lead_weeks[0]}–{q.lead_weeks[1]} weeks
+                    </p>
+                  )}
+                </div>
+              </>
+            ) : null}
 
             <Button variant="outline" size="sm" asChild className="w-full">
               <Link to="/shop">Edit cart</Link>
@@ -321,12 +348,18 @@ function Checkout() {
             </label>
           </div>
 
-          {!result.ok && (
-            <div className="rounded-lg border border-red-500/30 bg-red-500/5 px-4 py-3 text-sm text-red-300">
-              Your build has compatibility issues that need to be resolved before you can check out.
-              <Link to="/shop" className="ml-1 underline">
-                Go back and fix them.
-              </Link>
+          {blocks.length > 0 && (
+            <div role="alert" className="rounded-lg border border-red-500/30 bg-red-500/5 px-4 py-3 text-sm text-red-300">
+              <ul className="list-disc space-y-1 pl-4">
+                {blocks.map((b) => (
+                  <li key={b.code + (b.sku ?? "")}>{b.message}</li>
+                ))}
+              </ul>
+              <p className="mt-2">
+                <Link to="/shop" className="underline">Edit your build</Link>
+                {" or "}
+                <Link to="/contact" className="underline">send it to us as an enquiry</Link>.
+              </p>
             </div>
           )}
 
@@ -334,13 +367,13 @@ function Checkout() {
             <label className="flex items-start gap-3 rounded-lg border border-line px-4 py-3 text-sm">
               <input type="checkbox" className="mt-1" checked={payNow} onChange={(e) => setPayNow(e.target.checked)} />
               <span>
-                Pay {depositPercent}% deposit now ({aud(depositInc)} inc GST). Uncheck to request the crate and invoice later.
+                Pay {depositPercent}% deposit now ({audExact(depositInc)} inc GST). Uncheck to request the crate and invoice later.
               </span>
             </label>
           ) : null}
 
-          <Button type="submit" disabled={placing || !result.ok} className="w-full text-base py-3">
-            {placing ? "Working…" : stripeOn && payNow ? `Pay ${aud(depositInc)} deposit` : "Request this build"}
+          <Button type="submit" disabled={placing || !canOrder} className="w-full text-base py-3">
+            {placing ? "Working…" : stripeOn && payNow ? `Pay ${audExact(depositInc)} deposit` : "Request this build"}
           </Button>
 
           <p className="text-center text-xs text-muted">

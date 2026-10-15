@@ -60,6 +60,7 @@ type DraftPrebuild = {
   featured: boolean;
   sort_order: number;
   status: string;
+  enquiry_only: boolean;
   components: DraftComponent[];
 };
 
@@ -78,6 +79,7 @@ function emptyDraft(): DraftPrebuild {
     featured: false,
     sort_order: 0,
     status: "draft",
+    enquiry_only: false,
     components: [],
   };
 }
@@ -98,6 +100,7 @@ function prebuildToDraft(p: PrebuildWithComponents): DraftPrebuild {
     featured: p.featured,
     sort_order: p.sort_order,
     status: p.status,
+    enquiry_only: Boolean(p.enquiry_only),
     components: p.components.map((c) => ({ sku: c.sku, qty: c.qty })),
   };
 }
@@ -136,6 +139,7 @@ function PrebuildsEditor() {
         featured: editing.featured,
         sort_order: editing.sort_order,
         status: editing.status,
+        enquiry_only: editing.enquiry_only,
       });
       if (editing.components.length || editing.id) {
         await staffSetPrebuildComponents(result.id, editing.components.filter((c) => c.sku));
@@ -264,7 +268,11 @@ function PrebuildsEditor() {
                 </div>
                 <div className="flex items-center gap-3 text-xs text-muted">
                   <span>{p.kicker || "No label"}</span>
-                  <span><Money cents={p.price_ex_gst} gst /></span>
+                  <span title={p.price_ex_gst > 0 ? "Package price" : "Derived from priced parts"}>
+                    {p.enquiry_only ? "Enquiry only" : <Money cents={p.effective_price_ex_gst} gst />}
+                    {!p.enquiry_only && p.price_ex_gst <= 0 && p.effective_price_ex_gst ? " (from parts)" : ""}
+                  </span>
+                  {p.status === "archived" && p.archived_reason ? <span>Archived: {p.archived_reason}</span> : null}
                   <span>{p.components.length} component{p.components.length !== 1 ? "s" : ""}</span>
                 </div>
               </div>
@@ -553,7 +561,17 @@ function PrebuildForm({
               value={draft.price_ex_gst}
               onChange={(e) => set("price_ex_gst", Number(e.target.value) || 0)}
             />
-            <span className="text-xs">{aud(draft.price_ex_gst)} + GST</span>
+            <span className="text-xs">
+              {draft.price_ex_gst > 0 ? `${aud(draft.price_ex_gst)} + GST` : "0 = charge the sum of the parts"}
+            </span>
+          </label>
+          <label className="flex items-center gap-2 text-sm text-muted">
+            <input
+              type="checkbox"
+              checked={draft.enquiry_only}
+              onChange={(e) => set("enquiry_only", e.target.checked)}
+            />
+            Enquiry only (no online checkout)
           </label>
           <label className="space-y-1 text-sm text-muted">
             Status

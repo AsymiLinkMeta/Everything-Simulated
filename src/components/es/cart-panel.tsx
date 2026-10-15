@@ -7,9 +7,9 @@ import { fetchPublishedPrebuilds, livePackages } from "@/lib/es/prebuilds";
 import { fetchProducts } from "@/lib/es/product-cache";
 import { useCart } from "@/lib/es/cart-store";
 import { saveQuote } from "@/lib/es/server";
-import { freightLabel } from "@/lib/es/freight";
+import { useServerQuote } from "@/lib/es/pricing";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
-import { aud, gstInclusive } from "@/lib/utils";
+import { aud } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CheckPills, IssueList, LineName } from "./bits";
@@ -31,6 +31,9 @@ export function CartPanel({ compact = false }: { compact?: boolean }) {
   const setPostcode = useCart((s) => s.setPostcode);
   const clear = useCart((s) => s.clear);
   const result = useCart((s) => s.result)();
+  const prebuildSlug = useCart((s) => s.prebuildSlug);
+  // Totals come from quote_cart() so the cart shows what checkout will charge.
+  const quote = useServerQuote({ lines, postcode, prebuild: prebuildSlug, driverWeightKg }, { enabled: ready && lines.length > 0 });
 
   async function onSave() {
     if (!user) {
@@ -137,12 +140,33 @@ export function CartPanel({ compact = false }: { compact?: boolean }) {
           <Input value={postcode} onChange={(e) => setPostcode(e.target.value)} />
         </label>
       </div>
-      <div>
-        <p className="text-xl font-medium tabular-nums">{aud(result.totalExGst)} + GST</p>
-        <p className="text-sm text-muted">{aud(gstInclusive(result.totalExGst + result.freightExGst))} inc GST with freight</p>
-        <p className="mt-1 text-xs text-muted">
-          Crate {aud(result.freightExGst)} — {freightLabel(postcode, lines)}
-        </p>
+      <div aria-live="polite" data-testid="cart-total">
+        {!lines.length ? (
+          <p className="text-sm text-muted">Add parts or load a prebuild to see a price.</p>
+        ) : quote.isError ? (
+          <p className="text-sm text-red-300">
+            Couldn't price this cart.{" "}
+            <button type="button" className="underline" onClick={() => quote.refetch()}>
+              Try again
+            </button>
+          </p>
+        ) : !quote.data ? (
+          <div className="space-y-2" aria-label="Pricing your cart">
+            <div className="h-6 w-40 animate-pulse rounded bg-raised" />
+            <div className="h-4 w-56 animate-pulse rounded bg-raised" />
+          </div>
+        ) : (
+          <>
+            <p className="text-xl font-medium tabular-nums">{aud(quote.data.items_ex_gst)} + GST</p>
+            <p className="text-sm text-muted">{aud(quote.data.total_inc_gst)} inc GST with freight</p>
+            <p className="mt-1 text-xs text-muted">
+              Crate {aud(quote.data.freight_ex_gst)} — {quote.data.freight.label}
+            </p>
+            {quote.data.mode === "package" ? (
+              <p className="mt-1 text-xs text-muted">Package price applied.</p>
+            ) : null}
+          </>
+        )}
       </div>
       <div className="flex flex-col gap-2">
         <Button asChild>

@@ -1,5 +1,4 @@
 import { supabase } from "@/lib/db";
-import { RULES } from "./catalog";
 import { setLiveRules } from "./product-cache";
 import type { CompatibilityRule, Severity } from "./types";
 
@@ -8,11 +7,8 @@ export async function fetchRules(): Promise<CompatibilityRule[]> {
     .from("compatibility_rules")
     .select("id, left_sku, right_sku, severity, reason, adapter_sku")
     .order("id");
-  if (error || !data?.length) {
-    setLiveRules(RULES);
-    return RULES;
-  }
-  const rules = data.map((row) => ({
+  if (error) throw new Error(error.message);
+  const rules = (data ?? []).map((row) => ({
     id: String(row.id),
     left: String(row.left_sku),
     right: String(row.right_sku),

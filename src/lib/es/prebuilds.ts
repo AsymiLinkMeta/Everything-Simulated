@@ -1,6 +1,5 @@
 import { supabase, supabaseUrl, supabaseAnonKey } from "@/lib/db";
 import type { PackageSpec, StaffRole } from "./types";
-import { PACKAGES } from "./catalog";
 
 export type AIPrebuildDraft = {
   name: string;
@@ -72,6 +71,9 @@ export type Prebuild = {
   featured: boolean;
   sort_order: number;
   status: string;
+  enquiry_only?: boolean;
+  archived_at?: string | null;
+  archived_reason?: string | null;
   created_by: string | null;
   created_at: string;
   updated_at: string;
@@ -85,7 +87,12 @@ export type PrebuildComponent = {
   sort_order: number;
 };
 
-export type PrebuildWithComponents = Prebuild & { components: PrebuildComponent[] };
+export type PrebuildWithComponents = Prebuild & {
+  components: PrebuildComponent[];
+  /** From the prebuild_prices view: package price, or the sum of priced parts. null = enquire. */
+  effective_price_ex_gst: number | null;
+  purchasable: boolean;
+};
 
 let prebuildCache: PrebuildWithComponents[] | null = null;
 
@@ -99,41 +106,12 @@ export function resolvePrebuildSlug(slug: string) {
   return SLUG_ALIASES[slug] || slug;
 }
 
-export function packageToPrebuild(p: PackageSpec): PrebuildWithComponents {
-  return {
-    id: `pack-${p.slug}`,
-    slug: p.slug,
-    name: p.name,
-    kicker: p.kicker,
-    blurb: p.blurb,
-    description: p.blurb,
-    image: p.image,
-    price_ex_gst: p.priceExGst,
-    highlights: p.highlights ?? [],
-    specs: {},
-    capabilities: [],
-    featured: Boolean(p.popular),
-    sort_order: 0,
-    status: "published",
-    created_by: null,
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString(),
-    components: p.lines.map((l, i) => ({
-      id: `${p.slug}-${l.sku}`,
-      prebuild_id: `pack-${p.slug}`,
-      sku: l.sku,
-      qty: l.qty,
-      sort_order: i,
-    })),
-  };
-}
+type PriceRow = { id: string; price_ex_gst: number | null; purchasable: boolean };
 
-function catalogFallback(): PrebuildWithComponents[] {
-  return PACKAGES.map(packageToPrebuild);
-}
-
-function shapePrebuild(prebuild: Prebuild, comps: PrebuildComponent[]): PrebuildWithComponents {
+function shapePrebuild(prebuild: Prebuild, comps: PrebuildComponent[], price?: PriceRow): PrebuildWithComponents {
   return {
+    effective_price_ex_gst: price?.price_ex_gst ?? null,
+    purchasable: Boolean(price?.purchasable),
     ...prebuild,
     highlights: Array.isArray(prebuild.highlights) ? prebuild.highlights : [],
     specs: prebuild.specs && typeof prebuild.specs === "object" && !Array.isArray(prebuild.specs) ? prebuild.specs : {},
@@ -142,50 +120,37 @@ function shapePrebuild(prebuild: Prebuild, comps: PrebuildComponent[]): Prebuild
   };
 }
 
-export async function fetchPublishedPrebuilds(): Promise<PrebuildWithComponents[]> {
-  try {
-    const { data, error } = await supabase
-      .from("prebuilds")
-      .select("*")
-      .eq("status", "published")
-      .order("sort_order", { ascending: true });
-    if (error) throw new Error(error.message);
-    const prebuilds = (data ?? []) as Prebuild[];
-    if (!prebuilds.length) {
-      const fallback = catalogFallback();
-      prebuildCache = fallback;
-      return fallback;
-    }
-
-    const ids = prebuilds.map((p) => p.id);
-    const { data: comps } = await supabase
-      .from("prebuild_components")
-      .select("*")
-      .in("prebuild_id", ids)
-      .order("sort_order", { ascending: true });
-
-    const compMap = new Map<string, PrebuildComponent[]>();
-    for (const c of (comps ?? []) as PrebuildComponent[]) {
-      const list = compMap.get(c.prebuild_id) ?? [];
-      list.push(c);
-      compMap.set(c.prebuild_id, list);
-    }
-
-    const result = prebuilds.map((p) => {
-      const shaped = shapePrebuild(p, compMap.get(p.id) ?? []);
-      if (!shaped.components.length) {
-        const pack = PACKAGES.find((pkg) => pkg.slug === resolvePrebuildSlug(p.slug));
-        if (pack) shaped.components = packageToPrebuild(pack).components;
-      }
-      return shaped;
-    });
-    prebuildCache = result;
-    return result;
-  } catch {
-    const fallback = catalogFallback();
-    prebuildCache = fallback;
-    return fallback;
+async function loadComponentsAndPrices(ids: string[]) {
+  if (!ids.length) return { comps: new Map<string, PrebuildComponent[]>(), prices: new Map<string, PriceRow>() };
+  const [compsRes, pricesRes] = await Promise.all([
+    supabase.from("prebuild_components").select("*").in("prebuild_id", ids).order("sort_order", { ascending: true }),
+    supabase.from("prebuild_prices").select("id, price_ex_gst, purchasable").in("id", ids),
+  ]);
+  if (compsRes.error) throw new Error(compsRes.error.message);
+  if (pricesRes.error) throw new Error(pricesRes.error.message);
+  const comps = new Map<string, PrebuildComponent[]>();
+  for (const c of (compsRes.data ?? []) as PrebuildComponent[]) {
+    const list = comps.get(c.prebuild_id) ?? [];
+    list.push(c);
+    comps.set(c.prebuild_id, list);
   }
+  const prices = new Map(((pricesRes.data ?? []) as PriceRow[]).map((p) => [p.id, p]));
+  return { comps, prices };
+}
+
+/** Published prebuilds from the database. Throws on error so pages can show an error state. */
+export async function fetchPublishedPrebuilds(): Promise<PrebuildWithComponents[]> {
+  const { data, error } = await supabase
+    .from("prebuilds")
+    .select("*")
+    .eq("status", "published")
+    .order("sort_order", { ascending: true });
+  if (error) throw new Error(error.message);
+  const prebuilds = (data ?? []) as Prebuild[];
+  const { comps, prices } = await loadComponentsAndPrices(prebuilds.map((p) => p.id));
+  const result = prebuilds.map((p) => shapePrebuild(p, comps.get(p.id) ?? [], prices.get(p.id)));
+  prebuildCache = result;
+  return result;
 }
 
 export async function fetchFeaturedPrebuilds(): Promise<PrebuildWithComponents[]> {
@@ -196,36 +161,19 @@ export async function fetchFeaturedPrebuilds(): Promise<PrebuildWithComponents[]
 
 export async function fetchPrebuildBySlug(slug: string): Promise<PrebuildWithComponents | null> {
   const wanted = resolvePrebuildSlug(slug);
-  try {
-    const { data, error } = await supabase
-      .from("prebuilds")
-      .select("*")
-      .in("slug", [...new Set([slug, wanted])])
-      .eq("status", "published")
-      .limit(1)
-      .maybeSingle();
-    if (error) throw new Error(error.message);
-    if (data) {
-      const prebuild = data as Prebuild;
-      const { data: comps } = await supabase
-        .from("prebuild_components")
-        .select("*")
-        .eq("prebuild_id", prebuild.id)
-        .order("sort_order", { ascending: true });
-      const shaped = shapePrebuild(prebuild, (comps ?? []) as PrebuildComponent[]);
-      if (!shaped.components.length) {
-        const pack = PACKAGES.find((p) => p.slug === wanted);
-        if (pack) shaped.components = packageToPrebuild(pack).components;
-      }
-      return shaped;
-    }
-  } catch {
-    // fall through to catalogue crates
-  }
-  const pack = PACKAGES.find((p) => p.slug === wanted || p.slug === slug);
-  return pack ? packageToPrebuild(pack) : null;
+  const { data, error } = await supabase
+    .from("prebuilds")
+    .select("*")
+    .in("slug", [...new Set([slug, wanted])])
+    .eq("status", "published")
+    .limit(1)
+    .maybeSingle();
+  if (error) throw new Error(error.message);
+  if (!data) return null;
+  const prebuild = data as Prebuild;
+  const { comps, prices } = await loadComponentsAndPrices([prebuild.id]);
+  return shapePrebuild(prebuild, comps.get(prebuild.id) ?? [], prices.get(prebuild.id));
 }
-
 
 // ---- Staff ----
 
@@ -241,27 +189,8 @@ export async function staffListPrebuilds(): Promise<PrebuildWithComponents[]> {
   const prebuilds = (data ?? []) as Prebuild[];
   if (!prebuilds.length) return [];
 
-  const ids = prebuilds.map((p) => p.id);
-  const { data: comps } = await supabase
-    .from("prebuild_components")
-    .select("*")
-    .in("prebuild_id", ids)
-    .order("sort_order", { ascending: true });
-
-  const compMap = new Map<string, PrebuildComponent[]>();
-  for (const c of (comps ?? []) as PrebuildComponent[]) {
-    const list = compMap.get(c.prebuild_id) ?? [];
-    list.push(c);
-    compMap.set(c.prebuild_id, list);
-  }
-
-  return prebuilds.map((p) => ({
-    ...p,
-    highlights: Array.isArray(p.highlights) ? p.highlights : [],
-    specs: (p.specs && typeof p.specs === "object" && !Array.isArray(p.specs)) ? p.specs : {},
-    capabilities: Array.isArray(p.capabilities) ? p.capabilities : [],
-    components: compMap.get(p.id) ?? [],
-  }));
+  const { comps, prices } = await loadComponentsAndPrices(prebuilds.map((p) => p.id));
+  return prebuilds.map((p) => shapePrebuild(p, comps.get(p.id) ?? [], prices.get(p.id)));
 }
 
 export async function staffSavePrebuild(input: {
@@ -279,6 +208,7 @@ export async function staffSavePrebuild(input: {
   featured?: boolean;
   sort_order?: number;
   status?: string;
+  enquiry_only?: boolean;
 }) {
   const user = await getCurrentUser();
   await requireStaff(user.id);
@@ -297,6 +227,7 @@ export async function staffSavePrebuild(input: {
     featured: input.featured ?? false,
     sort_order: input.sort_order ?? 0,
     status: input.status ?? "draft",
+    enquiry_only: input.enquiry_only ?? false,
     updated_at: new Date().toISOString(),
     created_by: user.id,
   };
@@ -378,7 +309,7 @@ export function prebuildToPackage(p: PrebuildWithComponents): PackageSpec {
     slug: p.slug,
     name: p.name,
     kicker: p.kicker,
-    priceExGst: p.price_ex_gst,
+    priceExGst: p.effective_price_ex_gst ?? 0,
     blurb: p.blurb,
     image: p.image || "/rigs/starter.jpg",
     lines: p.components.map((c) => ({ sku: c.sku, qty: c.qty })),
@@ -387,11 +318,9 @@ export function prebuildToPackage(p: PrebuildWithComponents): PackageSpec {
   };
 }
 
-/** Published prebuilds as package specs, falling back to the three classic crates. */
+/** Published prebuilds (already loaded) as package specs. Empty until fetchPublishedPrebuilds has run. */
 export function livePackages(): PackageSpec[] {
-  const live = getCachedPrebuilds();
-  if (live.length) return live.map(prebuildToPackage);
-  return PACKAGES;
+  return getCachedPrebuilds().map(prebuildToPackage);
 }
 
 export async function hydratePrebuilds(): Promise<PrebuildWithComponents[]> {

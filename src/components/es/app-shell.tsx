@@ -6,6 +6,7 @@ import { Calendar, Gauge, LayoutDashboard, LifeBuoy, Menu, MessageSquare, Packag
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { useQuery } from "@tanstack/react-query";
 import { getProfile } from "@/lib/es/server";
+import { fetchMyAmbassadorProfile } from "@/lib/es/ambassadors";
 import { pageHead } from "@/lib/es/seo";
 import { AuthSlot, Logo } from "./bits";
 
@@ -29,6 +30,13 @@ export function AppShell() {
     queryFn: () => getProfile(),
     enabled: Boolean(user),
   });
+  // The Ambassador tab is only for people who have an ambassador profile (BUG-13).
+  const ambassador = useQuery({
+    queryKey: ["my-ambassador"],
+    queryFn: fetchMyAmbassadorProfile,
+    enabled: Boolean(user),
+  });
+  const tabs = TABS.filter((t) => t.to !== "/app/ambassador" || Boolean(ambassador.data));
 
   useEffect(() => {
     applyHeadPayload(
@@ -55,7 +63,7 @@ export function AppShell() {
         <Logo compact />
         <p style={{ margin: 0, fontSize: 14, fontWeight: 500 }}>Build app</p>
         <nav className="es-nav" aria-label="App">
-          {TABS.map((t) => (
+          {tabs.map((t) => (
             <Link
               key={t.to}
               to={t.to}
@@ -86,7 +94,7 @@ export function AppShell() {
           </button>
           {menuOpen ? (
             <nav className="es-app-hamburger-menu" aria-label="App navigation" onClick={() => setMenuOpen(false)}>
-              {TABS.map((t) => (
+              {tabs.map((t) => (
                 <Link
                   key={t.to}
                   to={t.to}
@@ -107,7 +115,7 @@ export function AppShell() {
         </Suspense>
       </div>
       <nav className="es-tabbar es-app-tabbar" aria-label="App">
-        {TABS.map((t) => (
+        {tabs.map((t) => (
           <Link
             key={t.to}
             to={t.to}

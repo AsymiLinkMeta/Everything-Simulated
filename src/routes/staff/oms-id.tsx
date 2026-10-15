@@ -18,6 +18,7 @@ import { aud } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input, Textarea } from "@/components/ui/input";
 import { StaffAsk } from "@/components/es/staff-ask";
+import { RecordPayment } from "@/components/es/record-payment";
 
 export const Route = createFileRoute("/staff/oms/$id")({
   component: OmsOrder,
@@ -80,8 +81,8 @@ function OmsOrder() {
                 await staffSetOrderStatus(o.id, s as OrderStatus);
                 await qc.invalidateQueries({ queryKey: ["oms-order", id] });
                 await qc.invalidateQueries({ queryKey: ["oms-orders"] });
-              } catch {
-                toast.error("Could not update status");
+              } catch (err) {
+                toast.error(err instanceof Error ? err.message : "Could not update status");
               }
             }}
           >
@@ -98,7 +99,7 @@ function OmsOrder() {
           </Button>
         </div>
         <p className="text-sm">
-          {o.invoice_number ?? "Issue by marking paid."} · Everything Simulated · {o.shipping_name ?? "Customer"}
+          {o.invoice_number ?? "Issued when the first payment is recorded."} · Everything Simulated · {o.shipping_name ?? "Customer"}
         </p>
         <p className="text-sm tabular-nums">
           {aud(o.total_ex_gst)} ex GST · {aud(o.total_inc_gst)} inc GST (10%)
@@ -107,6 +108,16 @@ function OmsOrder() {
         </p>
         <p className="text-xs text-muted">Australian tax invoice. Crate freight from the Gold Coast.</p>
         <div className="flex flex-wrap gap-2">
+          {o.status !== "cancelled" ? (
+            <RecordPayment
+              orderId={o.id}
+              balanceCents={o.total_inc_gst - (o.refunded_cents ?? 0) - (o.paid_cents ?? 0)}
+              onDone={async () => {
+                await qc.invalidateQueries({ queryKey: ["oms-order", id] });
+                await qc.invalidateQueries({ queryKey: ["oms-orders"] });
+              }}
+            />
+          ) : null}
           <Button
             size="sm"
             variant="outline"

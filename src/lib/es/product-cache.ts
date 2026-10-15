@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/db";
-import { RULES } from "./catalog";
+import { setFreightConfig, type FreightConfig } from "./freight";
 import type { CompatibilityRule, ListingStatus, Product, ProductCategory, Severity, StockStatus } from "./types";
 
 type DbRow = {
@@ -29,6 +29,7 @@ type DbRow = {
   assembly_manual_url: string | null;
   specs: Record<string, string> | null;
   compare: string | null;
+  enquiry_only?: boolean | null;
 };
 
 function asImages(raw: unknown, fallback?: string | null): string[] {
@@ -64,6 +65,9 @@ function toProduct(row: DbRow): Product {
     assemblyManualUrl: row.assembly_manual_url ?? undefined,
     specs: row.specs ?? undefined,
     compare: row.compare || undefined,
+    basePriceExGst: row.sell_ex_gst,
+    enquiryOnly: Boolean(row.enquiry_only),
+    purchasable: false,
   };
 }
 
@@ -82,8 +86,9 @@ let cache: Product[] | null = null;
 let rulesCache: CompatibilityRule[] | null = null;
 let fetchPromise: Promise<Product[]> | null = null;
 
+/** Compatibility rules from the database. Empty until the catalogue has loaded. */
 export function getLiveRules(): CompatibilityRule[] {
-  return rulesCache ?? RULES;
+  return rulesCache ?? [];
 }
 
 export function setLiveRules(next: CompatibilityRule[]) {
@@ -95,39 +100,46 @@ export async function fetchProducts(opts?: { includeDrafts?: boolean }): Promise
   if (fetchPromise && !opts?.includeDrafts) return fetchPromise;
 
   const run = (async () => {
-    const [{ data, error }, rulesRes, overridesRes] = await Promise.all([
+    const [productsRes, rulesRes, pricesRes, zonesRes, settingsRes] = await Promise.all([
       supabase
         .from("catalog_products")
         .select(
-          "sku, brand, name, category, sell_ex_gst, cost_ex_gst, stock_status, listing_status, qty_on_hand, lead_weeks_min, lead_weeks_max, description, notes, max_nm, payload_kg, weight_kg, mounts, qr, image, image_url, images, whats_included, mount_compatibility, assembly_manual_url, specs, compare",
+          "sku, brand, name, category, sell_ex_gst, cost_ex_gst, stock_status, listing_status, qty_on_hand, lead_weeks_min, lead_weeks_max, description, notes, max_nm, payload_kg, weight_kg, mounts, qr, image, image_url, images, whats_included, mount_compatibility, assembly_manual_url, specs, compare, enquiry_only",
         )
         .order("sku"),
       supabase.from("compatibility_rules").select("id, left_sku, right_sku, severity, reason, adapter_sku"),
-      supabase.from("product_overrides").select("sku, sell_ex_gst"),
+      supabase.from("catalog_prices").select("sku, price_ex_gst, override_ex_gst, purchasable"),
+      supabase.from("freight_zones").select("id, name, ranges, base_cents, per_kg_cents, sort_order, is_fallback").order("sort_order"),
+      supabase.from("pricing_settings").select("key, value"),
     ]);
-
-    if (rulesRes.data?.length) {
-      rulesCache = rulesRes.data.map((row) => toRule(row as Record<string, unknown>)).filter((r) => r.left && r.right);
-    } else {
-      rulesCache = RULES;
+    const failed = productsRes.error ?? pricesRes.error ?? rulesRes.error;
+    if (failed) {
+      fetchPromise = null;
+      throw new Error(`Could not load the catalogue: ${failed.message}`);
     }
 
-    const overrides = Object.fromEntries((overridesRes.data ?? []).map((o) => [o.sku, o.sell_ex_gst]));
-
-    const rows = (data as DbRow[] | null) ?? [];
-    if (error || !rows.length) {
-      cache = [];
-      return cache;
+    rulesCache = (rulesRes.data ?? []).map((row) => toRule(row as Record<string, unknown>)).filter((r) => r.left && r.right);
+    if (!zonesRes.error && !settingsRes.error) {
+      setFreightConfig({
+        zones: (zonesRes.data ?? []) as FreightConfig["zones"],
+        settings: Object.fromEntries((settingsRes.data ?? []).map((r) => [r.key, r.value])),
+      });
     }
 
-    const products = rows.map((row) => {
+    const prices = new Map((pricesRes.data ?? []).map((p) => [p.sku as string, p]));
+    const products = ((productsRes.data as DbRow[] | null) ?? []).map((row) => {
       const product = toProduct(row);
-      if (overrides[product.sku] != null) product.sellExGst = overrides[product.sku];
+      const price = prices.get(product.sku);
+      if (price) {
+        product.sellExGst = Number(price.price_ex_gst) || 0;
+        product.overrideExGst = price.override_ex_gst == null ? undefined : Number(price.override_ex_gst);
+        product.purchasable = Boolean(price.purchasable);
+      }
       return product;
     });
 
     const published = products.filter((p) => (p.listingStatus ?? "published") === "published");
-    cache = published.length ? published : products;
+    cache = published;
     return opts?.includeDrafts ? products : cache;
   })();
 
@@ -160,7 +172,6 @@ export function productImage(p: Product): string {
   if (p.image) return p.image;
   if (p.images?.[0]) return p.images[0];
   if (p.category === "motion") return "/rigs/motion.jpg";
-  if (p.category === "chassis") return p.sku === "tr120s" ? "/rigs/starter.jpg" : "/rigs/haptic.jpg";
-  if (p.category === "pc" || p.category === "monitor" || p.category === "mount") return "/rigs/haptic.jpg";
+  if (p.category === "chassis" || p.category === "pc" || p.category === "monitor" || p.category === "mount") return "/rigs/haptic.jpg";
   return "/rigs/starter.jpg";
 }

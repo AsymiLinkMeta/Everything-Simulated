@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/db";
 import { getCachedProducts } from "./product-cache";
-import { checkCart } from "./checkCart";
+import { rpcMessage, type ServerQuote } from "./pricing";
 import { notifyOrder, refundOrder } from "./billing";
 import type { CartLine } from "./types";
 
@@ -72,6 +72,10 @@ export type ShopOrder = {
   refunded_cents?: number;
   stripe_payment_intent?: string | null;
   deposit_ex_gst?: number;
+  items_ex_gst?: number | null;
+  freight_ex_gst?: number | null;
+  referral_code?: string | null;
+  prebuild_slug?: string | null;
 };
 
 function asTags(raw: unknown): string[] {
@@ -91,20 +95,6 @@ function asLines(raw: unknown): CartLine[] {
   return raw
     .map((l) => ({ sku: String((l as CartLine).sku ?? ""), qty: Math.max(0, Number((l as CartLine).qty) || 0) }))
     .filter((l) => l.sku && l.qty > 0);
-}
-
-async function adjustStock(lines: CartLine[], sign: 1 | -1) {
-  for (const line of lines) {
-    const { data } = await supabase
-      .from("catalog_products")
-      .select("qty_on_hand, stock_status")
-      .eq("sku", line.sku)
-      .maybeSingle();
-    if (!data) continue;
-    const next = Math.max(0, Number(data.qty_on_hand ?? 0) + sign * line.qty);
-    const stock_status = next <= 0 && data.stock_status === "stock" ? "indent" : data.stock_status;
-    await supabase.from("catalog_products").update({ qty_on_hand: next, stock_status }).eq("sku", line.sku);
-  }
 }
 
 function shapeContact(row: Record<string, unknown>): CrmContact {
@@ -318,48 +308,25 @@ export async function staffCreateOrder(input: {
     lines = asLines(q?.lines);
   }
   if (!lines.length) throw new Error("Order needs at least one line");
-  const result = checkCart({ lines });
-  const { data: contact } = await supabase.from("crm_contacts").select("*").eq("id", input.contactId).maybeSingle();
-  if (!contact) throw new Error("Pick a customer");
-  const id = `ESO-${Date.now().toString(36).toUpperCase()}`;
-  const status: OrderStatus = "pending";
-  const { error } = await supabase.from("shop_orders").insert({
-    id,
-    contact_id: input.contactId,
-    user_id: contact.user_id,
-    quote_id: input.quoteId ?? null,
-    status,
-    lines,
-    total_ex_gst: result.totalExGst,
-    total_inc_gst: result.totalIncGst,
-    shipping_name: contact.display_name,
-    shipping_address: contact.address,
-    postcode: contact.postcode,
-    notes: input.notes ?? "",
-    invoice_number: null,
+  // Priced in the database from catalogue prices, like every other order.
+  const { data, error } = await supabase.rpc("staff_create_order", {
+    p_contact: input.contactId,
+    p_lines: lines,
+    p_quote: input.quoteId ?? null,
+    p_notes: input.notes ?? "",
   });
-  if (error) throw new Error(error.message);
-  await supabase.from("jobs").insert({
-    user_id: contact.user_id,
-    quote_id: input.quoteId ?? null,
-    order_id: id,
-    stage: "enquiry",
-    notes: `OMS order ${id}`,
-  });
-  await supabase.from("crm_contacts").update({ crm_stage: "quoted" }).eq("id", input.contactId);
-  if (input.quoteId) {
-    await supabase.from("quotes").update({ status: "won", updated_at: new Date().toISOString() }).eq("id", input.quoteId);
-  }
-  if (result.ok) {
+  if (error) throw new Error(rpcMessage(error));
+  const res = data as { id: string; quote: ServerQuote };
+  if (res.quote?.ok) {
     void supabase.rpc("record_agent_memory", {
       p_kind: "won_bom",
-      p_title: `OMS ${id}`,
+      p_title: `OMS ${res.id}`,
       p_body: lines.map((l) => `${l.qty}× ${l.sku}`).join(", "),
-      p_payload: { orderId: id, lines, totalExGst: result.totalExGst },
+      p_payload: { orderId: res.id, lines, totalExGst: res.quote.total_ex_gst },
       p_source: "staff",
     });
   }
-  return { id, result };
+  return { id: res.id, quote: res.quote };
 }
 
 export async function staffConvertQuote(quoteId: string) {
@@ -434,54 +401,44 @@ export async function staffMarkAlertRead(id: string) {
   return { ok: true };
 }
 
+/**
+ * Order status changes go through staff_set_order_status(), which enforces the
+ * flow (paid needs a payment, packing needs paid, delivered needs shipped) and
+ * moves stock atomically, once. Shipping goes through staffAssignTracking.
+ */
 export async function staffSetOrderStatus(id: string, status: OrderStatus) {
-  const actor = await requireStaffId();
-  const { data: current } = await supabase
-    .from("shop_orders")
-    .select("status, packed_at, lines, contact_id")
-    .eq("id", id)
-    .maybeSingle();
-  if (!current) throw new Error("Order not found");
-  const patch: Record<string, unknown> = { status, updated_at: new Date().toISOString() };
-  if (status === "packing") patch.packed_at = new Date().toISOString();
-  if (status === "shipped") patch.shipped_at = new Date().toISOString();
-  if (status === "delivered") patch.delivered_at = new Date().toISOString();
-  if (status === "paid") patch.invoice_number = `ESI-${Date.now().toString(36).toUpperCase()}`;
-  const { error } = await supabase.from("shop_orders").update(patch).eq("id", id);
-  if (error) throw new Error(error.message);
-
-  const lines = asLines(current.lines);
-  const wasPicked = Boolean(current.packed_at) || current.status === "packing" || current.status === "shipped";
-  const willPick = status === "packing" || status === "shipped" || status === "delivered";
-  if (!wasPicked && willPick) await adjustStock(lines, -1);
-  if (wasPicked && (status === "cancelled" || status === "pending")) await adjustStock(lines, 1);
-
-  if (status === "delivered" && current.contact_id) {
-    await supabase.from("crm_contacts").update({ crm_stage: "active" }).eq("id", current.contact_id);
+  await requireStaffId();
+  if (status === "shipped") {
+    await staffAssignTracking(id);
+    return { ok: true };
   }
-  if (status === "paid") void notifyOrder({ orderId: id, kind: "paid" });
-  void actor;
+  const { data, error } = await supabase.rpc("staff_set_order_status", { p_order: id, p_status: status });
+  if (error) throw new Error(rpcMessage(error));
+  if (status === "paid" && !(data as { unchanged?: boolean })?.unchanged) void notifyOrder({ orderId: id, kind: "paid" });
   return { ok: true };
 }
 
+/** Record money received outside Stripe (bank transfer, cash, balance on QA). Issues the invoice number on the first payment. */
+export async function staffRecordPayment(id: string, cents: number, note = "") {
+  await requireStaffId();
+  if (!Number.isFinite(cents) || cents <= 0) throw new Error("Enter an amount above $0");
+  const { data, error } = await supabase.rpc("staff_record_payment", { p_order: id, p_cents: Math.round(cents), p_note: note });
+  if (error) throw new Error(rpcMessage(error));
+  const res = data as { status: string; paid_cents: number; balance_cents: number; invoice_number: string | null };
+  void notifyOrder({ orderId: id, kind: "paid" });
+  return res;
+}
+
+/** Ship a paid or packing order. Generates a tracking number if none is given. */
 export async function staffAssignTracking(id: string, tracking?: string, carrier?: string) {
   await requireStaffId();
-  const number =
-    tracking?.trim() ||
-    `ES${new Date().toISOString().slice(2, 10).replaceAll("-", "")}${Math.random().toString(36).slice(2, 6).toUpperCase()}AU`;
-  const { data: current } = await supabase.from("shop_orders").select("status").eq("id", id).maybeSingle();
-  const next = current?.status === "pending" || current?.status === "paid" ? "shipped" : current?.status;
-  const { error } = await supabase
-    .from("shop_orders")
-    .update({
-      tracking_number: number,
-      carrier: carrier?.trim() || "ES Crate Freight",
-      status: next,
-      shipped_at: new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", id);
-  if (error) throw new Error(error.message);
+  const { data, error } = await supabase.rpc("staff_ship_order", {
+    p_order: id,
+    p_tracking: tracking?.trim() || null,
+    p_carrier: carrier?.trim() || null,
+  });
+  if (error) throw new Error(rpcMessage(error));
+  const number = (data as { tracking: string }).tracking;
   void notifyOrder({ orderId: id, kind: "tracking", extra: { tracking: number } });
   return { tracking: number };
 }
@@ -504,39 +461,30 @@ export async function staffUpdateOrderShipping(
   patch: { shipping_name?: string; shipping_address?: string; postcode?: string; notes?: string; lines?: CartLine[] },
 ) {
   await requireStaffId();
-  const update: Record<string, unknown> = {
-    shipping_name: patch.shipping_name,
-    shipping_address: patch.shipping_address,
-    postcode: patch.postcode,
-    notes: patch.notes,
-    updated_at: new Date().toISOString(),
-  };
-  if (patch.lines) {
-    const result = checkCart({ lines: patch.lines });
-    update.lines = patch.lines;
-    update.total_ex_gst = result.totalExGst;
-    update.total_inc_gst = result.totalIncGst;
-  }
-  const { error } = await supabase.from("shop_orders").update(update).eq("id", id);
+  const { error } = await supabase
+    .from("shop_orders")
+    .update({
+      shipping_name: patch.shipping_name,
+      shipping_address: patch.shipping_address,
+      postcode: patch.postcode,
+      notes: patch.notes,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
   if (error) throw new Error(error.message);
+  if (patch.lines) {
+    // Repriced from the catalogue in the database; refused once the order is packed.
+    const { error: linesErr } = await supabase.rpc("staff_update_order_lines", { p_order: id, p_lines: patch.lines });
+    if (linesErr) throw new Error(rpcMessage(linesErr));
+  }
   return { ok: true };
 }
 
 export async function staffReturnOrder(id: string, reason: string) {
   await requireStaffId();
   if (!reason.trim()) throw new Error("Return reason required");
-  const { data: current } = await supabase.from("shop_orders").select("status, packed_at, lines").eq("id", id).maybeSingle();
-  const { error } = await supabase
-    .from("shop_orders")
-    .update({
-      status: "cancelled",
-      return_reason: reason.trim(),
-      updated_at: new Date().toISOString(),
-    })
-    .eq("id", id);
-  if (error) throw new Error(error.message);
-  const wasPicked = Boolean(current?.packed_at) || current?.status === "packing" || current?.status === "shipped";
-  if (wasPicked) await adjustStock(asLines(current?.lines), 1);
+  const { error } = await supabase.rpc("staff_return_order", { p_order: id, p_reason: reason.trim() });
+  if (error) throw new Error(rpcMessage(error));
   return { ok: true };
 }
 

@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { JsonLd, Money } from "@/components/es/bits";
+import { JsonLd, LoadError, Money } from "@/components/es/bits";
 import { itemListLd, pageHead } from "@/lib/es/seo";
 import { fetchPublishedPrebuilds } from "@/lib/es/prebuilds";
 import type { PrebuildWithComponents } from "@/lib/es/prebuilds";
@@ -32,6 +32,8 @@ function PrebuildsPage() {
       <div className="es-body">
         {prebuilds.isPending ? (
           <div className="es-pack-grid">{[1, 2, 3].map((i) => <div key={i} className="aspect-square animate-pulse bg-raised" />)}</div>
+        ) : prebuilds.isError ? (
+          <LoadError what="the prebuilds" onRetry={() => void prebuilds.refetch()} />
         ) : items.length === 0 ? (
           <p className="text-muted">No prebuilt rigs available right now.</p>
         ) : (
@@ -58,7 +60,9 @@ function PrebuildCard({ prebuild }: { prebuild: PrebuildWithComponents }) {
       <div className="es-pack-tile-meta">
         <h3>{prebuild.name}</h3>
         <p className="mt-2 text-sm text-muted">{prebuild.blurb}</p>
-        <p className="mt-3 text-lg font-medium"><Money cents={prebuild.price_ex_gst} gst /></p>
+        <p className="mt-3 text-lg font-medium">
+          {prebuild.purchasable ? <Money cents={prebuild.effective_price_ex_gst} gst /> : "Enquire for price"}
+        </p>
       </div>
     </Link>
   );

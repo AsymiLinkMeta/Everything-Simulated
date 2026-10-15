@@ -46,6 +46,13 @@ export type Product = {
   assemblyManualUrl?: string;
   specs?: Record<string, string>;
   compare?: string;
+  /** catalog_products.sell_ex_gst before any override. sellExGst is the effective price. */
+  basePriceExGst?: number;
+  overrideExGst?: number;
+  /** Sold by enquiry only: no add-to-cart. */
+  enquiryOnly?: boolean;
+  /** Published, priced above $0 and not enquiry-only. */
+  purchasable?: boolean;
 };
 
 export type CartLine = { sku: string; qty: number };

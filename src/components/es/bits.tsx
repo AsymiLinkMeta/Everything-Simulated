@@ -106,8 +106,8 @@ export function JsonLd({ data }: { data: unknown }) {
 }
 
 export function Money({ cents, gst = false }: { cents: number | null | undefined; gst?: boolean }) {
-  if (cents == null) {
-    return <span className="text-muted">Quote</span>;
+  if (cents == null || cents <= 0) {
+    return <span className="text-muted">Enquire for price</span>;
   }
   if (gst) {
     return (
@@ -117,6 +117,20 @@ export function Money({ cents, gst = false }: { cents: number | null | undefined
     );
   }
   return <span className="tabular-nums">{aud(cents)}</span>;
+}
+
+/** Error state for a failed load, with a retry button. */
+export function LoadError({ what, onRetry }: { what: string; onRetry?: () => void }) {
+  return (
+    <div role="alert" className="es-card space-y-3 p-5 text-sm">
+      <p>We couldn't load {what}. Check your connection and try again.</p>
+      {onRetry ? (
+        <button type="button" onClick={onRetry} className="rounded-lg border border-line px-3 py-1.5 hover:bg-raised">
+          Try again
+        </button>
+      ) : null}
+    </div>
+  );
 }
 
 export function IncGst({ cents }: { cents: number }) {
@@ -328,34 +342,37 @@ export function PackageCard({ pack }: { pack: PackageSpec }) {
 export function ProductTile({ item }: { item: Product }) {
   const add = useCart((s) => s.add);
   const inCart = useCart((s) => s.lines.some((l) => l.sku === item.sku));
+  const buyable = item.purchasable ?? item.sellExGst > 0;
   return (
     <Link to="/shop/$sku" params={{ sku: item.sku }} className="es-card group overflow-hidden">
       <div className="relative aspect-video bg-raised">
-        <img src={productImage(item)} alt={item.name} className="size-full object-cover opacity-90" />
+        <img src={productImage(item)} alt={item.name} className="size-full object-cover opacity-90" loading="lazy" decoding="async" />
         {item.stock === "indent" ? (
           <span className="absolute left-3 top-3 rounded-md bg-ink/80 px-2 py-1 text-[11px] uppercase tracking-wide text-muted">
             Indent
           </span>
         ) : null}
-        <button
-          type="button"
-          aria-label={`Add ${item.name} to cart`}
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            add(item.sku);
-            toast.success(inCart && !UNIQUE_CATEGORIES.has(item.category) ? "Quantity updated" : "Added to build");
-          }}
-          className="absolute bottom-2 right-2 z-10 grid size-11 place-items-center rounded-full bg-paper text-ink shadow-lg transition-all duration-200 hover:scale-105"
-        >
-          {inCart ? <Check className="size-4" /> : <Plus className="size-4" />}
-        </button>
+        {buyable ? (
+          <button
+            type="button"
+            aria-label={`Add ${item.name} to cart`}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              add(item.sku);
+              toast.success(inCart && !UNIQUE_CATEGORIES.has(item.category) ? "Quantity updated" : "Added to build");
+            }}
+            className="absolute bottom-2 right-2 z-10 grid size-11 place-items-center rounded-full bg-paper text-ink shadow-lg transition-all duration-200 hover:scale-105"
+          >
+            {inCart ? <Check className="size-4" /> : <Plus className="size-4" />}
+          </button>
+        ) : null}
       </div>
       <div className="space-y-1 p-4">
         <p className="es-kicker">{item.brand}</p>
         <h3 className="font-medium">{item.name}</h3>
         <p className="text-sm text-muted">
-          <Money cents={item.sellExGst} gst />
+          {buyable ? <Money cents={item.sellExGst} gst /> : "Enquire for price"}
         </p>
       </div>
     </Link>
