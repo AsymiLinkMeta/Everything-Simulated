@@ -14,7 +14,7 @@ export function RigPreview({ layers, picked, screens = 0 }: { layers: LayerRow[]
   const overridden = new Set(layers.map((l) => l.category));
   const states = rigPartStates(picked, screens, overridden);
   const raised = states.motion === "on";
-  const anyOn = Object.values(states).some((s) => s === "on");
+  const anyOn = picked.size > 0;
   const parts = picked.size;
   const shadows = [
     states.chassis === "on" ? (raised ? "shadow-rig--raised" : "shadow-rig") : null,
@@ -37,7 +37,7 @@ export function RigPreview({ layers, picked, screens = 0 }: { layers: LayerRow[]
             })}
           </>
         ) : (
-          <img src={file("ghost-empty")} alt="" className="es-rp-empty" data-part="ghost" fetchPriority="high" />
+          <img src={file("ghost-empty")} alt="" className="es-rp-empty" data-part="ghost" />
         )}
         {layers.map((l) => (
           <SiteImage key={`${l.category}-${l.sku ?? "default"}`} src={l.image_url} alt={l.label ?? ""} className="es-rb-layer" sizes="(min-width: 1024px) 380px, 100vw" />
