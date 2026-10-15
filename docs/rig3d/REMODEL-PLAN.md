@@ -1,5 +1,7 @@
 # Rig preview remodel plan (generic profile rig, real proportions)
 
+> Rendering has since moved from per-part layers to full-frame studio photos per build: see [PIPELINE.md](PIPELINE.md).
+
 References: Trak Racer TR160 V5 / TR120S / TR80S cockpits, TR-One wheel and pedal mounts, freestanding triple and
 quad (triple + top) stands, and the D-BOX corner-actuator motion bundle. The images and notes are on the box in
 /workspace/rig-ref/trakracer/ (not committed, because they are a third party's product photos). The model stays

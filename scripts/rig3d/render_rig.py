@@ -135,7 +135,7 @@ C = Vector((TARGET.x, TARGET.y, 0))
 # big soft key high over the camera's left shoulder, fill low on the right, broad top softbox,
 # and long strip lights behind both sides that draw bright edges down the black extrusions
 area("Key", C - H * 3.2 + SIDE * 2.6 + Vector((0, 0, 3.4)), 2.4, 1100, (1.0, 0.98, 0.95), size_y=1.6)
-area("Fill", C - H * 3.6 - SIDE * 2.8 + Vector((0, 0, 1.2)), 3.0, 260, (0.95, 0.97, 1.0), size_y=2.0)
+area("Fill", C - H * 3.6 - SIDE * 2.8 + Vector((0, 0, 1.8)), 3.0, 220, (0.95, 0.97, 1.0), size_y=2.0)
 area("Top", C + Vector((0, 0, 3.6)), 3.0, 450, size_y=2.0, spread=60)
 area("Strip L", C + H * 1.0 + SIDE * 2.6 + Vector((0, 0, 1.4)), 0.35, 520, (0.92, 0.95, 1.0), size_y=2.8)
 area("Strip R", C + H * 0.6 - SIDE * 2.8 + Vector((0, 0, 1.4)), 0.35, 520, (0.92, 0.95, 1.0), size_y=2.8)
@@ -181,9 +181,10 @@ cm = bpy.data.materials.new("Charcoal sweep")
 cm.use_nodes = True
 cb = cm.node_tree.nodes["Principled BSDF"]
 cb.inputs["Base Color"].default_value = (0.006, 0.0062, 0.007, 1)
-cb.inputs["Roughness"].default_value = 0.42
-cb.inputs["Coat Weight"].default_value = 0.15   # a soft, blurred floor reflection
-cb.inputs["Coat Roughness"].default_value = 0.16
+cb.inputs["Roughness"].default_value = 0.6
+cb.inputs["Specular IOR Level"].default_value = 0.2
+cb.inputs["Coat Weight"].default_value = 0.1   # a soft, blurred floor reflection
+cb.inputs["Coat Roughness"].default_value = 0.22
 me.materials.append(cm)
 
 # ----------------------------------------------------------------------------- render settings
@@ -289,6 +290,6 @@ elif args.mode in ("overlays", "full"):
             show_overlay(name, ctx, lifted)
             render(os.path.join(args.out, f"overlay-{key}.png"))
     if args.mode == "full":  # the reference: everything in one render, to check overlays against
-        show_frame(FRAMES["s4m1"] + OVERLAYS, True)
-        render(os.path.join(args.out, "full-s4m1-all.png"))
+        show_frame(FRAMES["s3m1"] + OVERLAYS, True)
+        render(os.path.join(args.out, "full-s3m1-all.png"))
 print("render done", flush=True)

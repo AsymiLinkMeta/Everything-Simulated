@@ -160,7 +160,7 @@ MAT = {
     "alu_bright": rough_variation(principled("Machined aluminium", (0.62, 0.63, 0.65), 1.0, 0.22, **{"Anisotropic": 0.7}), 0.16, 0.3, 50, 0.08),
     # textured powder coat: orange-peel bump, satin
     "steel": add_bump(principled("Black powder coat", (0.02, 0.021, 0.024), 0.0, 0.5), 450, 0.12, distance=0.0006),
-    "plastic": rough_variation(principled("Satin black plastic", (0.018, 0.018, 0.02), 0.0, 0.45), 0.38, 0.55, 25),
+    "plastic": rough_variation(principled("Satin black plastic", (0.014, 0.014, 0.016), 0.0, 0.45, **{"Specular IOR Level": 0.3}), 0.4, 0.55, 25),
     "cap": add_bump(principled("End cap", (0.012, 0.012, 0.013), 0.0, 0.6), 1600, 0.2),
     "bolt": principled("Black oxide screw", (0.035, 0.036, 0.04), 0.85, 0.32),
     "gloss": principled("Gloss black", (0.012, 0.012, 0.014), 0.0, 0.12, **{"Coat Weight": 1.0}),
@@ -385,7 +385,7 @@ def decal(name, image, centre_mm, normal, up, width, kind="print", segs=1, wrap_
 
 PANO = "screen-pano.png"
 TOP = "screen-top.png"
-MAT["pc_glass"] = principled("Tinted glass", (0.02, 0.02, 0.025), 0.0, 0.03, **{"Transmission Weight": 1.0, "IOR": 1.5})
+MAT["pc_glass"] = principled("Tinted glass", (0.45, 0.45, 0.48), 0.0, 0.02, **{"Transmission Weight": 1.0, "IOR": 1.5})
 MAT["glow"] = principled("Red glow", (0.0, 0.0, 0.0), 0.0, 0.5, **{"Emission Color": (1.0, 0.03, 0.01, 1), "Emission Strength": 3.0})
 
 
@@ -914,7 +914,8 @@ for _side in (1, -1):
 # ---- VR headset on the headrest ---------------------------------------------------------
 layer("headset")
 hc = centre(1.0) + Vector((50, 60))
-box("Visor", (hc.x + 35, 0, hc.y), (95, 175, 92), MAT["gloss"], bevel=0.02)
+box("Visor", (hc.x + 35, 0, hc.y), (95, 175, 92), MAT["plastic"], bevel=0.025)
+box("Visor front", (hc.x + 84, 0, hc.y), (4, 160, 78), MAT["gloss"], bevel=0.012)
 box("Face pad", (hc.x - 18, 0, hc.y), (22, 160, 80), MAT["rubber"], bevel=0.008)
 torus("Strap", (hc.x - 40, 0, hc.y + 8), (0, 0.25, 1), 88, 9, MAT["plastic"], 64, 12)
 box("Visor stripe", (hc.x + 83, 0, hc.y - 20), (2, 120, 4), MAT["red"], bevel=0.0005)
@@ -923,17 +924,40 @@ box("Visor stripe", (hc.x + 83, 0, hc.y - 20), (2, 120, 4), MAT["red"], bevel=0.
 layer("pc")
 PCY = RAIL_Y + 330
 PCX = 650
-box("Case", (PCX, PCY, 245), (470, 220, 490), MAT["plastic"], bevel=0.004)
-box("Glass", (PCX, PCY - 112, 250), (440, 4, 450), MAT["pc_glass"], bevel=0.001)
-box("GPU", (PCX, PCY - 40, 220), (300, 60, 120), MAT["steel"])
-box("GPU glow", (PCX, PCY - 72, 168), (300, 2, 4), MAT["glow"], bevel=0)
-cylinder("CPU cooler", (PCX + 60, PCY - 20, 360), (PCX + 60, PCY - 90, 360), 55, MAT["plastic"])
-torus("Fan ring", (PCX + 60, PCY - 92, 360), (0, 1, 0), 52, 3, MAT["glow"], 64, 8)
-for z in (100, 230, 360):
-    torus(f"Rear fan {z}", (PCX - 236, PCY, z), (1, 0, 0), 55, 2.5, MAT["glow"], 64, 8)
-decal("Brand PC", "brand-mark.png", (PCX - 235, PCY, 452), (-1, 0, 0), (0, 0, 1), 52)
+# mid-tower: aluminium frame, mesh front (toward the back of the rig, facing the camera), tinted
+# tempered-glass side showing a dark build: motherboard, a triple-fan GPU, tower cooler, RAM, PSU shroud
+CW, CD, CH = 470, 230, 490  # depth (x), width (y), height
+GY = PCY - CD / 2           # glass side
+box("Case frame top", (PCX, PCY, CH - 6), (CW, CD, 12), MAT["alu"], bevel=0.003)
+box("Case frame bottom", (PCX, PCY, 16), (CW, CD, 12), MAT["alu"], bevel=0.003)
+for xx in (PCX - CW / 2 + 6, PCX + CW / 2 - 6):
+    for yy in (GY + 6, PCY + CD / 2 - 6):
+        box(f"Case pillar {xx}{yy}", (xx, yy, CH / 2 + 5), (12, 12, CH - 22), MAT["alu"], bevel=0.002)
+box("Case back panel", (PCX, PCY + CD / 2 - 3, CH / 2 + 5), (CW - 12, 6, CH - 22), MAT["steel"], bevel=0.001)
+box("Case rear panel", (PCX + CW / 2 - 4, PCY, CH / 2 + 5), (6, CD - 12, CH - 22), MAT["steel"], bevel=0.001)
+box("Front mesh", (PCX - CW / 2 + 4, PCY, CH / 2 + 5), (5, CD - 14, CH - 24), add_bump(principled("Mesh grille", (0.01, 0.01, 0.011), 0.6, 0.5), 2200, 0.6, distance=0.001), bevel=0.001)
+cylinder("Power button", (PCX - CW / 2 + 1, PCY + 60, CH - 30), (PCX - CW / 2 - 3, PCY + 60, CH - 30), 7, MAT["alu_bright"], segs=24)
+box("Glass", (PCX, GY + 2, CH / 2 + 5), (CW - 16, 4, CH - 26), MAT["pc_glass"], bevel=0.001)
+box("Motherboard", (PCX + 40, PCY + CD / 2 - 12, 300), (305, 4, 300), principled("PCB", (0.012, 0.013, 0.014), 0.2, 0.45), bevel=0)
+for k in range(4):
+    box(f"RAM {k}", (PCX + 20 + k * 11, PCY + CD / 2 - 32, 360), (6, 36, 135), MAT["alu"], bevel=0.0005)
+box("Cooler tower", (PCX + 110, PCY + 20, 370), (60, 130, 150), MAT["motor"], bevel=0.002)
+box("Cooler fan", (PCX + 75, PCY + 20, 370), (26, 130, 130), MAT["plastic"], bevel=0.004)
+box("GPU", (PCX + 20, PCY - 10, 235), (320, 150, 62), MAT["plastic"], bevel=0.004)
+box("GPU backplate", (PCX + 20, PCY - 10, 268), (320, 150, 4), MAT["alu"], bevel=0.0008)
+for k in range(3):
+    cylinder(f"GPU fan {k}", (PCX - 85 + k * 100, PCY - 10, 202), (PCX - 85 + k * 100, PCY - 10, 203.5), 44, MAT["gloss"], segs=40)
+box("GPU light bar", (PCX + 20, GY + 20, 235), (300, 2, 3), principled("White LED", (0.0, 0.0, 0.0), 0.0, 0.5, **{"Emission Color": (0.9, 0.95, 1.0, 1), "Emission Strength": 12.0}), bevel=0)
+box("PSU shroud", (PCX, PCY, 70), (CW - 20, CD - 20, 95), MAT["steel"], bevel=0.002)
+decal("Brand PSU shroud", "brand-lockup.png", (PCX, GY + 10, 70), (0, -1, 0), (0, 0, 1), 200)
+box("Case light", (PCX, GY + 12, CH - 22), (CW - 30, 3, 3), principled("Soft white LED", (0.0, 0.0, 0.0), 0.0, 0.5, **{"Emission Color": (0.9, 0.95, 1.0, 1), "Emission Strength": 10.0}), bevel=0)
+decal("Brand PC", "brand-mark.png", (PCX - CW / 2 - 1, PCY, CH - 70), (-1, 0, 0), (0, 0, 1), 52)
+# turn the case so its glass side faces back along the rig, toward the camera
+_M = Matrix.Translation(mm(PCX, PCY, 0)) @ Matrix.Rotation(math.radians(-90), 4, "Z") @ Matrix.Translation(-mm(PCX, PCY, 0))
+for _ob in COLL["pc"].objects:
+    _ob.data.transform(_M)
 for i in range(4):
-    cylinder(f"PC foot {i}", (PCX - 200 + 400 * (i % 2), PCY - 90 + 180 * (i // 2), 0), (PCX - 200 + 400 * (i % 2), PCY - 90 + 180 * (i // 2), 10), 14, MAT["rubber"])
+    cylinder(f"PC foot {i}", (PCX - 90 + 180 * (i % 2), PCY - 200 + 400 * (i // 2), 0), (PCX - 90 + 180 * (i % 2), PCY - 200 + 400 * (i // 2), 10), 14, MAT["rubber"])
 
 # ---- motion: four corner actuators bolted outboard of the rails (modelled in the raised pose) -----
 layer("motion")
@@ -943,9 +967,10 @@ for x in (110, LEN - 110):
         layer("motion-back" if s > 0 else "motion")  # the far-side pair draws behind the frame
         y = s * (RAIL_Y + 20 + 85)
         box(f"Actuator bracket {x}{s}", (x, s * (RAIL_Y + 20 + 10), RZ + LZ), (190, 20, 150), MAT["steel"], bevel=0.002)
-        box(f"Actuator body {x}{s}", (x, y, RZ + LZ + 40), (170, 130, 300), MAT["plastic"], bevel=0.008)
-        for k in range(5):  # vents on the outer face
-            box(f"Actuator vent {x}{s}{k}", (x, y + s * 65.5, RZ + LZ + 100 + k * 18), (110, 1.5, 6), MAT["gloss"], bevel=0)
+        box(f"Actuator body {x}{s}", (x, y, RZ + LZ + 40), (170, 130, 300), MAT["motor"], bevel=0.006)
+        for k in range(7):  # heatsink ribs on the outer face
+            box(f"Actuator rib {x}{s}{k}", (x - 60 + k * 20, y + s * 67, RZ + LZ + 60), (6, 6, 220), MAT["motor"], bevel=0.0008)
+        box(f"Actuator cap {x}{s}", (x, y, RZ + LZ + 194), (176, 136, 12), MAT["plastic"], bevel=0.003)
         box(f"Actuator band {x}{s}", (x, y + s * 65.6, RZ + LZ - 60), (170, 1.5, 10), MAT["red"], bevel=0)
         bottom = RZ + LZ + 40 - 150
         cylinder(f"Actuator piston {x}{s}", (x, y, 22), (x, y, bottom), 42, MAT["gloss"], segs=40)
