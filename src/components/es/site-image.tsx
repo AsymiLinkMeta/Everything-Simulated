@@ -1,4 +1,6 @@
-import type { ImgHTMLAttributes } from "react";
+import { useEffect, useRef, useState, type ImgHTMLAttributes, type ReactNode } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { fetchPrebuildImage } from "@/lib/es/prebuilds";
 
 /**
  * Responsive image for the bundled /rigs/*.jpg photos: serves WebP at 640/1024/1600 px
@@ -40,4 +42,58 @@ export function SiteImage({ src, priority = false, sizes = "100vw", alt = "", ..
       {img}
     </picture>
   );
+}
+
+/**
+ * A prebuild's photo. List queries leave the image out (it can be a large inline data URI),
+ * so when `imageDeferred` is set this fetches it once the frame is near the viewport.
+ */
+export function PrebuildPhoto({
+  prebuild,
+  fallback,
+  placeholder,
+  ...rest
+}: Omit<Props, "src"> & {
+  prebuild: { id?: string; image?: string | null; imageDeferred?: boolean };
+  /** Shown when the prebuild has no image at all. */
+  fallback?: string;
+  /** Rendered when there is nothing to show (no image and no fallback). */
+  placeholder?: ReactNode;
+}) {
+  const deferred = Boolean(prebuild.imageDeferred && !prebuild.image && prebuild.id);
+  const ref = useRef<HTMLSpanElement>(null);
+  const [near, setNear] = useState(!deferred || Boolean(rest.priority));
+  useEffect(() => {
+    if (near || !ref.current) return;
+    if (typeof IntersectionObserver === "undefined") return setNear(true);
+    const io = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) {
+        setNear(true);
+        io.disconnect();
+      }
+    }, { rootMargin: "400px" });
+    io.observe(ref.current);
+    return () => io.disconnect();
+  }, [near]);
+  const q = useQuery({
+    queryKey: ["prebuild-image", prebuild.id],
+    queryFn: () => fetchPrebuildImage(prebuild.id!),
+    enabled: deferred && near,
+    staleTime: Infinity,
+  });
+  const src = prebuild.image || (deferred ? q.data : "") || (deferred && !q.isSuccess ? "" : fallback || "");
+  if (!src) return deferred && !q.isSuccess ? <span ref={ref} className="block size-full bg-raised" aria-hidden="true" /> : <>{placeholder ?? null}</>;
+  return <SiteImage src={src} {...rest} />;
+}
+
+/** The prebuild's image, fetching it if the list left it out. "" until known. */
+export function usePrebuildImage(prebuild: { id?: string; image?: string | null; imageDeferred?: boolean } | null | undefined): string {
+  const deferred = Boolean(prebuild?.imageDeferred && !prebuild.image && prebuild.id);
+  const q = useQuery({
+    queryKey: ["prebuild-image", prebuild?.id],
+    queryFn: () => fetchPrebuildImage(prebuild!.id!),
+    enabled: deferred,
+    staleTime: Infinity,
+  });
+  return prebuild?.image || (deferred ? q.data ?? "" : "");
 }

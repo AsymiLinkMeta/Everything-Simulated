@@ -31,7 +31,7 @@ const fnEnv: Record<string, string> = {
   SUPABASE_ANON_KEY: env.ANON_KEY,
   SUPABASE_SERVICE_ROLE_KEY: env.SERVICE_ROLE_KEY,
   SITE_URL: SITE,
-  ALLOWED_ORIGINS: `${SITE},http://127.0.0.1:5173,http://localhost:4173,http://127.0.0.1:4173`,
+  ALLOWED_ORIGINS: [SITE, "http://127.0.0.1:5173", "http://localhost:4173", "http://127.0.0.1:4173", ...(Deno.env.get("EXTRA_ALLOWED_ORIGINS") ?? "").split(",")].filter(Boolean).join(","),
   INTERNAL_FUNCTION_SECRET: "local-internal-secret",
   STRIPE_SECRET_KEY: "sk_test_local_mock",
   STRIPE_WEBHOOK_SECRET: WEBHOOK_SECRET,

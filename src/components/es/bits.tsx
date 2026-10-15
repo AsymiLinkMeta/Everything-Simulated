@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { SiteImage } from "@/components/es/site-image";
+import { PrebuildPhoto } from "@/components/es/site-image";
 import { toast } from "sonner";
 import { ArrowLeft, Plus, X, Wrench, Loader2, Check } from "lucide-react";
 import "../../es.css";
@@ -321,7 +321,7 @@ export function PackageCard({ pack }: { pack: PackageSpec }) {
   return (
     <Link to="/prebuilds/$slug" params={{ slug: pack.slug }} className="es-card group flex flex-col overflow-hidden">
       <div className="relative aspect-video overflow-hidden">
-        <SiteImage src={pack.image} alt={pack.name} className="size-full object-cover transition-transform duration-300 group-hover:scale-105" sizes="(min-width: 1024px) 33vw, 100vw" />
+        <PrebuildPhoto prebuild={pack} fallback="/rigs/starter.jpg" alt={pack.name} className="size-full object-cover transition-transform duration-300 group-hover:scale-105" sizes="(min-width: 1024px) 33vw, 100vw" />
         <span className="es-kicker" style={{ position: "absolute", left: 16, top: 16, background: "rgba(7,7,8,0.8)", padding: "4px 8px", borderRadius: 8 }}>
           {pack.kicker}
         </span>

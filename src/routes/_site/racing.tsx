@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { SiteImage } from "@/components/es/site-image";
+import { PrebuildPhoto, usePrebuildImage } from "@/components/es/site-image";
 import { useQuery } from "@tanstack/react-query";
 import { JsonLd, LoadError, Money } from "@/components/es/bits";
 import { ImageCards, MediaSplit, PageHero, PhoneStrip } from "@/components/es/section-page";
@@ -33,6 +33,7 @@ function RacingHub() {
   const featured = useQuery({ queryKey: ["featured-prebuilds"], queryFn: fetchFeaturedPrebuilds });
   const packs = featured.data ?? [];
   const spotlight = packs.find((p) => p.purchasable) ?? packs[0];
+  const spotlightImage = usePrebuildImage(spotlight);
 
   return (
     <div>
@@ -84,7 +85,7 @@ function RacingHub() {
           {packs.slice(0, 3).map((p) => (
             <Link key={p.slug} to="/prebuilds/$slug" params={{ slug: p.slug }} className="es-pack-tile">
               <div className="es-pack-tile-frame">
-                {p.image ? <SiteImage src={p.image} alt={p.name} sizes="(min-width: 1024px) 33vw, 100vw" /> : null}
+                <PrebuildPhoto prebuild={p} alt={p.name} sizes="(min-width: 1024px) 33vw, 100vw" />
               </div>
               <div className="es-pack-tile-meta">
                 <p className="es-kicker">{p.kicker}</p>
@@ -103,7 +104,7 @@ function RacingHub() {
       {spotlight ? (
         <section className="es-body pt-0">
           <MediaSplit
-            image={spotlight.image || "/rigs/haptic.jpg"}
+            image={spotlightImage || "/rigs/haptic.jpg"}
             kicker={spotlight.kicker || "Featured"}
             title={spotlight.name}
             lead={spotlight.blurb || spotlight.description}

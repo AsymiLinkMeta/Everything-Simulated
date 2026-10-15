@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { SiteImage } from "@/components/es/site-image";
+import { PrebuildPhoto } from "@/components/es/site-image";
 import { useQuery } from "@tanstack/react-query";
 import { JsonLd, LoadError, Money } from "@/components/es/bits";
 import { itemListLd, pageHead } from "@/lib/es/seo";
@@ -56,7 +56,7 @@ function PrebuildCard({ prebuild }: { prebuild: PrebuildWithComponents }) {
   return (
     <Link to="/prebuilds/$slug" params={{ slug: prebuild.slug }} className="es-pack-tile">
       <div className="es-pack-tile-frame">
-        {prebuild.image ? <SiteImage src={prebuild.image} alt={prebuild.name} sizes="(min-width: 1024px) 33vw, 100vw" /> : <div className="grid size-full place-items-center bg-raised text-muted">No image</div>}
+        <PrebuildPhoto prebuild={prebuild} alt={prebuild.name} sizes="(min-width: 1024px) 33vw, 100vw" placeholder={<div className="grid size-full place-items-center bg-raised text-muted">No image</div>} />
       </div>
       <div className="es-pack-tile-meta">
         <h3>{prebuild.name}</h3>

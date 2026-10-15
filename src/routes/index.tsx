@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { SiteImage } from "@/components/es/site-image";
+import { SiteImage, PrebuildPhoto } from "@/components/es/site-image";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, MapPin } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -191,15 +191,16 @@ function FeaturedPrebuilds() {
         </p>
       ) : (
         <div className="es-pack-grid">
-          {items.map((p, i) => (
+          {items.map((p) => (
             <div key={p.id} className="group">
-              <Link to="/prebuilds/$slug" params={{ slug: p.slug }} className="es-pack-tile">
+              <Link to="/prebuilds/$slug" params={{ slug: p.slug }} className="es-pack-tile" aria-label={p.name}>
                 <div className="es-pack-tile-frame">
-                  {p.image ? (
-                    <SiteImage src={p.image} alt={p.name} sizes="(min-width: 1024px) 33vw, 100vw" />
-                  ) : (
-                    <div className="grid size-full place-items-center bg-raised text-muted">No image</div>
-                  )}
+                  <PrebuildPhoto
+                    prebuild={p}
+                    alt={p.name}
+                    sizes="(min-width: 1024px) 33vw, 100vw"
+                    placeholder={<div className="grid size-full place-items-center bg-raised text-muted">No image</div>}
+                  />
                 </div>
               </Link>
               <div className="es-pack-tile-meta">
@@ -267,10 +268,10 @@ function HeroVideo() {
   return (
     <>
       <div className={`es-hero-video-wrap${phase === "revealed" ? " is-finished" : ""}`}>
-        <video ref={desktopRef} className="es-hero-video es-hero-video-desktop" muted playsInline preload="none" aria-hidden="true" poster="/rigs/hero-poster-1600.webp">
+        <video ref={desktopRef} className="es-hero-video es-hero-video-desktop" muted playsInline preload="none" aria-hidden="true">
           <source src="/videos/hero-uw.mp4" type="video/mp4" />
         </video>
-        <video ref={mobileRef} className="es-hero-video es-hero-video-mobile" muted playsInline preload="none" aria-hidden="true" poster="/rigs/hero-poster-1600.webp">
+        <video ref={mobileRef} className="es-hero-video es-hero-video-mobile" muted playsInline preload="none" aria-hidden="true">
           <source src="/videos/hero-mobile.mp4" type="video/mp4" />
         </video>
       </div>
