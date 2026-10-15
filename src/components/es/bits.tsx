@@ -55,7 +55,7 @@ export function AuthSlot() {
 
 export function StaffLoginLink() {
   return (
-    <a href="/login?portal=staff" className="es-footer-login" aria-label="Staff login">
+    <a href="/login?portal=staff" className="es-footer-login">
       Staff / Admin Login
     </a>
   );
@@ -81,7 +81,7 @@ export function CookieDisclaimer() {
       <button
         type="button"
         className="es-cookie-close"
-        aria-label="Dismiss cookie notice"
+        aria-label="OK, dismiss cookie notice"
         onClick={() => {
           try {
             localStorage.setItem(COOKIE_KEY, "1");

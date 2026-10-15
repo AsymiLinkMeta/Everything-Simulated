@@ -177,7 +177,7 @@ function FeaturedPrebuilds() {
         </Link>
       </div>
       {featured.isPending ? (
-        <div className="es-pack-grid" aria-busy="true" aria-label="Loading prebuilds">
+        <div className="es-pack-grid" role="status" aria-busy="true" aria-label="Loading prebuilds">
           {[0, 1, 2].map((i) => (
             <div key={i} className="aspect-square animate-pulse rounded-xl bg-raised" />
           ))}
@@ -328,7 +328,7 @@ function BrandBanner() {
           {items.length > 0 ? `${listNames(items.map((b) => b.name))} on the racing line. ` : ""}
           Every simulator is compatibility-checked, assembled and quality-tested on the Gold Coast.
         </p>
-        <div className="es-brand-marquee mt-8" aria-label="Brands we spec">
+        <div className="es-brand-marquee mt-8" role="region" aria-label="Brands we spec">
           <div className="es-brand-track">
             {Array.from({ length: 3 }, (_, setIndex) =>
               items.map((brand, index) => (
