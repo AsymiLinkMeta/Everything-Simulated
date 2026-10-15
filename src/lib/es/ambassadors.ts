@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/db";
+import { publicCopy } from "./placeholder-copy";
 import { livePackages, resolvePrebuildSlug } from "./prebuilds";
 import type { PackageSpec } from "./types";
 
@@ -81,7 +82,7 @@ function toAmbassador(row: DbRow): Ambassador {
     slug: row.slug,
     name: row.name,
     photo: row.photo ?? undefined,
-    bio: row.bio ?? "",
+    bio: publicCopy(row.bio),
     motorsport: row.motorsport ?? undefined,
     series: row.series ?? undefined,
     className: row.class_name ?? undefined,
@@ -89,7 +90,7 @@ function toAmbassador(row: DbRow): Ambassador {
     base: row.base ?? undefined,
     ageBand: (row.age_band as AgeBand) ?? undefined,
     crate: row.crate ?? undefined,
-    rigNote: row.rig_note ?? undefined,
+    rigNote: publicCopy(row.rig_note) || undefined,
     rigSpecs: rigSpecs.length ? rigSpecs : undefined,
     code: row.code,
     social: Object.values(social).some(Boolean) ? social : undefined,

@@ -10,9 +10,9 @@ const buttonVariants = cva(
       variant: {
         primary: "bg-esred text-paper hover:bg-esred/90",
         paper: "es-btn-paper bg-paper text-ink hover:bg-paper/90",
-        ghost: "text-paper hover:bg-raised",
-        outline: "border border-line bg-transparent text-paper hover:bg-raised",
-        subtle: "bg-raised text-paper hover:bg-line",
+        ghost: "es-btn-text text-paper hover:bg-raised",
+        outline: "es-btn-ghost border border-line bg-transparent text-paper hover:bg-raised",
+        subtle: "es-btn-subtle bg-raised text-paper hover:bg-line",
       },
       size: {
         default: "min-h-11 px-4",

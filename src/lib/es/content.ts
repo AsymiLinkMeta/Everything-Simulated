@@ -48,7 +48,7 @@ export const GUIDES: Guide[] = [
     body: [
       "We spec Simagic as the control ecosystem across every package: Alpha EVO 12Nm on Starter, Alpha 15Nm on Haptic and Motion, GT NEO wheel, P1000 pedals.",
       "QR is Simagic native. Mixing foreign rims needs an adapter we will not silently assume — the checker will warn.",
-      "Hydraulic P1000 with haptics is indent stock. Plan 3–5 weeks. Firmware lives in SimPro Manager on the included Windows 11 Pro PC.",
+      "Hydraulic P1000 with haptics is made to order. Plan 3–5 weeks. Firmware lives in SimPro Manager on the included Windows 11 Pro PC.",
       "We are a Simagic stockist assembling complete systems, not a parts catalogue. Compatibility is enforced in the build app before a deposit is taken.",
     ],
   },

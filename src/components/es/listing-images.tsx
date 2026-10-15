@@ -4,8 +4,10 @@ import { toast } from "@/lib/toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MAX_LISTING_IMAGES, sanitizeListingImages, uniqueImages } from "@/lib/es/listing-images";
+import { uploadProductImage } from "@/lib/es/product-images";
 
-export async function compressListingImage(file: File): Promise<string> {
+/** Resize to at most 1600 px and re-encode (WebP, or JPEG where WebP isn't supported). */
+export async function compressListingImage(file: File): Promise<Blob> {
   if (!file.type.startsWith("image/")) throw new Error("Choose a photo (JPEG, PNG or WebP)");
   if (file.size > 12 * 1024 * 1024) throw new Error("Photo must be under 12 MB");
   const bitmap = await createImageBitmap(file);
@@ -23,31 +25,25 @@ export async function compressListingImage(file: File): Promise<string> {
   }
   ctx.drawImage(bitmap, 0, 0, w, h);
   bitmap.close();
-  const keepAlpha = file.type === "image/png" || file.type === "image/webp" || file.type === "image/gif";
-  if (keepAlpha) {
-    let data = canvas.toDataURL("image/webp", 0.84);
-    if (data.startsWith("data:image/webp") && data.length <= 520_000) return data;
-    data = canvas.toDataURL("image/png");
-    if (data.length <= 520_000) return data;
-  }
-  let q = 0.82;
-  let data = canvas.toDataURL("image/jpeg", q);
-  while (data.length > 420_000 && q > 0.48) {
-    q -= 0.1;
-    data = canvas.toDataURL("image/jpeg", q);
-  }
-  if (data.length > 520_000) throw new Error("Photo is still too large after compression");
-  return data;
+  const encode = (type: string, q: number) => new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, type, q));
+  let blob = await encode("image/webp", 0.84);
+  if (!blob || blob.type !== "image/webp") blob = await encode("image/jpeg", 0.82);
+  if (!blob) throw new Error("Could not compress that photo");
+  if (blob.size > 5 * 1024 * 1024) throw new Error("Photo is still too large after compression");
+  return blob;
 }
 
 export function ListingImages({
   images,
   onChange,
   disabled,
+  folder,
 }: {
   images: string[];
   onChange: (next: string[]) => void;
   disabled?: boolean;
+  /** Storage folder for uploads, usually the SKU. */
+  folder?: string;
 }) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [url, setUrl] = useState("");
@@ -78,12 +74,12 @@ export function ListingImages({
     try {
       const added: string[] = [];
       for (const file of list) {
-        added.push(await compressListingImage(file));
+        added.push(await uploadProductImage(await compressListingImage(file), folder));
       }
       setShots(uniqueImages([...shots, ...added]));
       toast.success(added.length === 1 ? "Photo added" : `${added.length} photos added`);
     } catch (err) {
-      toast.error(err instanceof Error ? err.message : "Could not add photo");
+      toast.error(err instanceof Error ? err.message : "Could not upload photo");
     } finally {
       setBusy(false);
       if (inputRef.current) inputRef.current.value = "";
@@ -156,7 +152,7 @@ export function ListingImages({
             onDrop={onDrop}
           >
             <ImagePlus className="size-4" />
-            <span>{busy ? "Compressing…" : over ? "Drop photos" : "Drop photos here"}</span>
+            <span>{busy ? "Uploading…" : over ? "Drop photos" : "Drop photos here"}</span>
             <span className="text-xs">or click to browse · original photo, no restyle</span>
             <input
               ref={inputRef}

@@ -122,7 +122,7 @@ export function AmbassadorProfile() {
       <PageHero
         kicker={[ambassador.motorsport, ambassador.series, ambassador.className].filter(Boolean).join(" · ") || "Ambassador"}
         title={ambassador.name}
-        lead={ambassador.bio}
+        lead={ambassador.bio || undefined}
         image={ambassador.photo || crate?.image || "/rigs/haptic.jpg"}
         tone="race"
       >
@@ -131,8 +131,8 @@ export function AmbassadorProfile() {
         </div>
         <div className="mt-8 flex flex-wrap gap-3">
           {crate || ambassador.crate ? <OrderRigButton ambassador={ambassador} /> : null}
-          <Link to={ambassadorLink(ambassador.code, ambassador.slug)} className="es-btn es-btn-paper">
-            Code {ambassador.code}
+          <Link to={ambassadorLink(ambassador.code, ambassador.slug)} className="es-btn es-btn-ghost">
+            Use code {ambassador.code}
           </Link>
           <button
             type="button"
@@ -189,19 +189,16 @@ export function AmbassadorProfile() {
             {crate ? (
               <div className="es-ambassador-actions">
                 <OrderRigButton ambassador={ambassador} />
-                <OrderRigButton ambassador={ambassador} checkout>
-                  Checkout this crate
-                </OrderRigButton>
               </div>
             ) : null}
           </div>
         </div>
 
         <CtaStrip
-          title={`${ambassador.base || "Gold Coast"} · ${ambassador.code}`}
+          title={[ambassador.base, `Code ${ambassador.code}`].filter(Boolean).join(" · ")}
           lead="Using their link or code attributes the order to this ambassador. The price does not change."
         >
-          <Link to="/ambassadors" className="es-btn es-btn-paper">
+          <Link to="/ambassadors" className="es-btn es-btn-ghost">
             All ambassadors
           </Link>
           <Link to="/studio" className="es-btn es-btn-ghost">

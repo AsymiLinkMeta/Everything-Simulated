@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 # Local Supabase-compatible stack for development and e2e tests (no docker compose needed).
-#   local/stack.sh up     start db, auth (GoTrue), rest (PostgREST), mail (Mailpit)
+#   local/stack.sh up     start db, auth (GoTrue), rest (PostgREST), storage, mail (Mailpit)
 #   local/stack.sh reset  wipe the db volume and start again
 #   local/stack.sh down   stop and remove everything
-# Ports: Postgres 54322, GoTrue 54331, PostgREST 54332, Mailpit UI/API 54324.
+# Ports: Postgres 54322, GoTrue 54331, PostgREST 54332, Storage 54333, Mailpit UI/API 54324.
 # The API gateway (local/gateway.ts) serves all of it at http://localhost:54321.
 set -euo pipefail
 cd "$(dirname "$0")"
@@ -11,8 +11,8 @@ source ./stack.env
 P=es-local
 case "${1:-up}" in
   down|reset)
-    docker rm -f $P-db $P-auth $P-rest $P-mail >/dev/null 2>&1 || true
-    docker volume rm $P-db >/dev/null 2>&1 || true
+    docker rm -f $P-db $P-auth $P-rest $P-storage $P-mail >/dev/null 2>&1 || true
+    docker volume rm $P-db $P-storage >/dev/null 2>&1 || true
     [[ "${1}" == down ]] && { exit 0; } ;;
 esac
 # Container-to-container DNS is unreliable on some Docker hosts (this box included), so the
@@ -52,7 +52,7 @@ for _ in $(seq 1 90); do
 done; echo; sleep 4
 # The bare image leaves service-role passwords unset; GoTrue and PostgREST log in with these.
 PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U supabase_admin -d postgres -qc \
-  "alter role authenticator with password 'postgres'; alter role supabase_auth_admin with password 'postgres';" >/dev/null
+  "alter role authenticator with password 'postgres'; alter role supabase_auth_admin with password 'postgres'; alter role supabase_storage_admin with password 'postgres';" >/dev/null
 run mail -p 54324:8025 -p 54325:1025 public.ecr.aws/supabase/mailpit:v1.31.3
 run auth --network host --restart on-failure \
   -e GOTRUE_API_HOST=0.0.0.0 -e GOTRUE_API_PORT=54331 -e API_EXTERNAL_URL=http://localhost:54321/auth/v1 \
@@ -69,4 +69,18 @@ run rest --network host --restart on-failure \
   -e PGRST_DB_URI=postgres://authenticator:postgres@127.0.0.1:54322/postgres -e PGRST_DB_SCHEMAS=public \
   -e PGRST_DB_ANON_ROLE=anon -e PGRST_JWT_SECRET="$JWT_SECRET" -e PGRST_DB_USE_LEGACY_GUCS=false -e PGRST_SERVER_PORT=54332 \
   public.ecr.aws/supabase/postgrest:v16.4
+# Storage API (file backend). It creates the storage schema on first start, so wait for
+# storage.buckets before migrations run (the product-images bucket migration needs it).
+run storage --network host --restart on-failure -v $P-storage:/var/lib/storage \
+  -e SERVER_PORT=54333 -e SERVER_HOST=127.0.0.1 -e ANON_KEY="$ANON_KEY" -e SERVICE_KEY="$SERVICE_ROLE_KEY" \
+  -e AUTH_JWT_SECRET="$JWT_SECRET" -e PGRST_JWT_SECRET="$JWT_SECRET" \
+  -e DATABASE_URL=postgres://supabase_storage_admin:postgres@127.0.0.1:54322/postgres -e DB_INSTALL_ROLES=false \
+  -e STORAGE_BACKEND=file -e FILE_STORAGE_BACKEND_PATH=/var/lib/storage -e TENANT_ID=stub -e REGION=local -e GLOBAL_S3_BUCKET=stub \
+  -e FILE_SIZE_LIMIT=52428800 \
+  public.ecr.aws/supabase/storage-api:v1.79.36
+echo -n "waiting for storage"
+for _ in $(seq 1 60); do
+  if PGPASSWORD=postgres psql -h 127.0.0.1 -p 54322 -U postgres -qtAc "select to_regclass('storage.buckets') is not null" 2>/dev/null | grep -q t; then break; fi
+  echo -n .; sleep 2
+done; echo
 echo "stack up"

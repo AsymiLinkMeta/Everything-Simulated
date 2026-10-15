@@ -494,4 +494,53 @@ RESET ROLE;
 SELECT pg_temp.check((SELECT cost_ex_gst = 62000 FROM public.catalog_products WHERE sku = 'sec-priced'),
   'staff can still write cost prices');
 
+-- ---- Trust-bar site settings (20261018090000_site_settings_and_product_images) ----
+RESET ROLE;
+SELECT pg_temp.as_anon();
+DO $$
+BEGIN
+  INSERT INTO public.site_settings (key, value) VALUES ('trust_warranty', 'forged');
+  RAISE EXCEPTION 'FAILED: anon wrote site_settings';
+EXCEPTION WHEN insufficient_privilege THEN RAISE NOTICE 'ok - anon cannot write site settings';
+END $$;
+SELECT pg_temp.as_user('00000000-0000-0000-0000-00000000000e');
+DO $$
+BEGIN
+  INSERT INTO public.site_settings (key, value) VALUES ('trust_warranty', 'forged');
+  RAISE EXCEPTION 'FAILED: customer wrote site_settings';
+EXCEPTION WHEN insufficient_privilege THEN RAISE NOTICE 'ok - customers cannot write site settings';
+END $$;
+SELECT pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
+INSERT INTO public.site_settings (key, value) VALUES ('trust_google_rating', ' 4.9 ');
+SELECT pg_temp.check((SELECT value = '4.9' AND updated_by = '00000000-0000-0000-0000-00000000000b' FROM public.site_settings WHERE key = 'trust_google_rating'),
+  'admin writes a trimmed setting stamped with who changed it');
+DO $$
+BEGIN
+  INSERT INTO public.site_settings (key, value) VALUES ('trust_google_rating_2', '5');
+  RAISE EXCEPTION 'FAILED: unknown settings key accepted';
+EXCEPTION WHEN check_violation THEN RAISE NOTICE 'ok - unknown settings keys are refused';
+END $$;
+DO $$
+BEGIN
+  UPDATE public.site_settings SET value = '9.9' WHERE key = 'trust_google_rating';
+  RAISE EXCEPTION 'FAILED: rating 9.9 accepted';
+EXCEPTION WHEN check_violation THEN RAISE NOTICE 'ok - ratings outside 0-5 are refused';
+END $$;
+DO $$
+BEGIN
+  INSERT INTO public.site_settings (key, value) VALUES ('trust_google_reviews_url', 'javascript:alert(1)');
+  RAISE EXCEPTION 'FAILED: non-https review link accepted';
+EXCEPTION WHEN check_violation THEN RAISE NOTICE 'ok - review links must be https';
+END $$;
+SELECT pg_temp.as_anon();
+SELECT pg_temp.check((SELECT count(*) = 1 FROM public.site_settings WHERE key = 'trust_google_rating'), 'anon reads site settings');
+DO $$
+BEGIN
+  DELETE FROM public.site_settings;
+  IF EXISTS (SELECT 1 FROM public.site_settings) THEN RAISE NOTICE 'ok - anon cannot delete site settings';
+  ELSE RAISE EXCEPTION 'FAILED: anon deleted site_settings'; END IF;
+EXCEPTION WHEN insufficient_privilege THEN RAISE NOTICE 'ok - anon cannot delete site settings';
+END $$;
+RESET ROLE;
+
 ROLLBACK;

@@ -20,6 +20,7 @@ import {
   Wrench,
   Link2,
   Megaphone,
+  Settings,
 } from "lucide-react";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { getProfile } from "@/lib/es/server";
@@ -42,6 +43,7 @@ const TABS = [
   { to: "/staff/bookings", label: "Bookings", icon: Calendar },
   { to: "/staff/team", label: "Team", icon: Users },
   { to: "/staff/ambassadors", label: "Ambassadors", icon: Megaphone },
+  { to: "/staff/site", label: "Site", icon: Settings },
 ] as const;
 
 export function StaffShell() {

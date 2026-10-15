@@ -720,18 +720,20 @@ img {
   transform: translateY(0);
 }
 
+/* Secondary action next to a red primary: outlined so only one button shouts. */
 .es-btn-paper {
-  background: linear-gradient(180deg, #ffffff 0%, #f0f0f2 100%);
-  color: var(--es-ink);
-  border: 1px solid #ffffff;
-  box-shadow: 0 2px 12px rgba(255,255,255,0.1);
+  background: rgba(255, 255, 255, 0.04);
+  color: var(--es-paper);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  box-shadow: none;
 }
+.es-btn-paper::before { display: none; }
 
 .es-btn-paper:hover {
-  background: linear-gradient(180deg, var(--es-red-bright) 0%, var(--es-red) 100%);
+  background: rgba(255, 255, 255, 0.1);
   color: var(--es-paper);
-  border-color: var(--es-red);
-  box-shadow: var(--es-red-glow-shadow-lg);
+  border-color: #ffffff;
+  box-shadow: none;
 }
 
 .es-btn-ghost {
@@ -744,6 +746,36 @@ img {
   color: var(--es-red);
   border-color: var(--es-red);
   box-shadow: var(--es-red-glow-shadow);
+}
+
+/* Secondary and tertiary buttons: one red primary per view, everything else quiet. */
+.es-btn-ghost,
+.es-btn-subtle,
+.es-btn-text {
+  box-shadow: none;
+}
+.es-btn-ghost::before,
+.es-btn-subtle::before,
+.es-btn-text::before {
+  display: none;
+}
+.es-btn-subtle {
+  background: var(--es-raised, #18181c);
+  color: var(--es-paper);
+  border: 1px solid var(--es-line);
+}
+.es-btn-subtle:hover {
+  border-color: var(--es-paper);
+  box-shadow: none;
+}
+.es-btn-text {
+  background: transparent;
+  color: var(--es-paper);
+  border: 0;
+}
+.es-btn-text:hover {
+  color: var(--es-red);
+  box-shadow: none;
 }
 
 /* ---- app / staff chrome ---- */
@@ -1564,4 +1596,155 @@ select.es-input {
   font-size: 1.25rem;
   border-radius: var(--es-radius-sm);
   box-shadow: var(--es-red-glow-shadow);
+}
+
+/* ---- sticky mobile buy bar (product + prebuild pages) ---- */
+.es-sticky-buy {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 45;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 1rem calc(0.6rem + env(safe-area-inset-bottom));
+  background: rgba(7, 7, 8, 0.96);
+  border-top: 1px solid var(--es-line);
+  backdrop-filter: blur(8px);
+}
+.es-sticky-buy-spacer {
+  height: calc(4.5rem + env(safe-area-inset-bottom));
+}
+.es-sticky-buy-action {
+  min-height: 44px;
+  padding: 0 1rem;
+  white-space: nowrap;
+}
+.es-sticky-buy-cart {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  flex-shrink: 0;
+  border: 1px solid var(--es-line);
+  border-radius: var(--es-radius);
+  color: var(--es-paper);
+}
+.es-sticky-buy-cart .es-cart-count {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+}
+@media (min-width: 768px) {
+  .es-sticky-buy,
+  .es-sticky-buy-spacer {
+    display: none;
+  }
+}
+
+/* ---- product photo placeholder (no stock imagery for products) ---- */
+.es-photo-coming {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  width: 100%;
+  height: 100%;
+  min-height: 7rem;
+  color: var(--es-muted, #9a9aa6);
+  background:
+    repeating-linear-gradient(135deg, rgba(255, 255, 255, 0.025) 0 10px, transparent 10px 20px),
+    var(--es-raised);
+  text-align: center;
+}
+.es-photo-coming-text {
+  font-size: 0.75rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.es-photo-coming-label {
+  font-size: 0.7rem;
+  opacity: 0.7;
+}
+
+/* ---- trust bar (values from site_settings; hidden when unset) ---- */
+.es-trust-bar {
+  border-bottom: 1px solid var(--es-line);
+  background: var(--es-panel, #0d0d11);
+}
+.es-trust-bar ul {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem 2rem;
+  max-width: 72rem;
+  margin: 0 auto;
+  padding: 0.9rem 1rem;
+  list-style: none;
+}
+.es-trust-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 44px;
+  color: var(--es-paper);
+  text-decoration: none;
+  font-size: 0.85rem;
+}
+a.es-trust-item:hover .es-trust-value {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.es-trust-label {
+  display: block;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--es-muted);
+}
+.es-trust-value {
+  display: block;
+  font-weight: 500;
+}
+@media (max-width: 639px) {
+  .es-trust-bar ul {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.25rem 1rem;
+  }
+}
+
+/* ---- contact: tap-to-call / email ---- */
+.es-contact-action {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  min-height: 64px;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--es-line);
+  border-radius: var(--es-radius);
+  background: var(--es-panel);
+  color: var(--es-paper);
+  text-decoration: none;
+  transition: border-color 160ms ease;
+}
+.es-contact-action:hover,
+.es-contact-action:focus-visible {
+  border-color: var(--es-red);
+}
+
+/* Mobile: the cookie notice sits above the sticky buy bar rather than covering it. */
+@media (max-width: 767.98px) {
+  body:has(.es-sticky-buy) .es-cookie-bar {
+    bottom: calc(4.5rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* Return-to-top button: clear of the bottom bars. */
+.es-to-top { bottom: calc(1rem + env(safe-area-inset-bottom)); }
+@media (max-width: 767.98px) {
+  body:has(.es-sticky-buy) .es-to-top { bottom: calc(5.25rem + env(safe-area-inset-bottom)); }
 }

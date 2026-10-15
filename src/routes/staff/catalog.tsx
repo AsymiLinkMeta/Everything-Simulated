@@ -526,7 +526,7 @@ function Catalog() {
             </label>
             <div className="space-y-2 sm:col-span-2">
               <span className="text-xs text-muted">Product photos</span>
-              <ListingImages images={draftImages} onChange={setDraftImages} disabled={generating} />
+              <ListingImages images={draftImages} onChange={setDraftImages} disabled={generating} folder="drafts" />
             </div>
             <div className="sm:col-span-2">
               <Button onClick={handleGenerate} disabled={generating}>
@@ -705,6 +705,7 @@ function Catalog() {
                     }))
                   }
                   disabled={saving}
+                  folder={editListing.sku}
                 />
               </div>
               <label className="space-y-1 sm:col-span-2">

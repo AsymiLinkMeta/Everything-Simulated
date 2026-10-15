@@ -208,10 +208,13 @@ export async function fetchPrebuildLinks(): Promise<{ slug: string; name: string
   return (data ?? []) as { slug: string; name: string }[];
 }
 
+/** Home page order: every published prebuild, featured ones first, otherwise by sort order. */
+export function orderForHome<T extends { featured?: boolean | null }>(all: T[]): T[] {
+  return [...all.filter((p) => p.featured), ...all.filter((p) => !p.featured)];
+}
+
 export async function fetchFeaturedPrebuilds(): Promise<PrebuildWithComponents[]> {
-  const all = await fetchPublishedPrebuilds();
-  const featured = all.filter((p) => p.featured);
-  return featured.length ? featured : all;
+  return orderForHome(await fetchPublishedPrebuilds());
 }
 
 export async function fetchPrebuildBySlug(slug: string): Promise<PrebuildWithComponents | null> {

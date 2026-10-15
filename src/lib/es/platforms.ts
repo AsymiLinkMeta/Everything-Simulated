@@ -57,7 +57,7 @@ export const RACING_TOOLS: PlatformLink[] = [
   { to: "/prebuilds", label: "Prebuilds", hint: "Starter, Haptic and Motion crates — triples plus an aux screen on the upper two." },
   { to: "/shop", label: "Parts shop", hint: "The SKUs we actually bolt on. Not a warehouse catalogue." },
   { to: "/compatibility", label: "Checker", hint: "Torque, payload, QR and mounts. Chat cannot override a block." },
-  { to: "/app/build", label: "Spec a crate", hint: "Customer app — walk the same steps the workshop uses." },
+  { to: "/app/build", label: "Spec a build", hint: "Customer app — walk the same steps the workshop uses." },
   { to: "/app/chat", label: "Build expert", hint: "AI copilot that only explains the checker JSON." },
   { to: "/studio", label: "Studio demo", hint: "Try before you buy on the Gold Coast. Call the workshop to book." },
   { to: "/guides", label: "Guides", hint: "Cost, motion vs haptic, juniors, triples, delivery." },

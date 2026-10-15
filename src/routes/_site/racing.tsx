@@ -59,7 +59,7 @@ function RacingHub() {
         tone="race"
       >
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          <Link to="/prebuilds" className="es-btn">Sit a crate</Link>
+          <Link to="/prebuilds" className="es-btn">See the prebuilt rigs</Link>
           <Link to="/shop" className="es-btn es-btn-paper">Parts shop</Link>
         </div>
       </PageHero>
@@ -111,7 +111,7 @@ function RacingHub() {
             lead={spotlight.blurb || spotlight.description}
           >
             <Link to="/prebuilds/$slug" params={{ slug: spotlight.slug }} className="es-btn">
-              {spotlight.purchasable ? "Order this crate" : "Enquire about this build"}
+              {spotlight.purchasable ? "Order this build" : "Enquire about this build"}
             </Link>
           </MediaSplit>
         </section>

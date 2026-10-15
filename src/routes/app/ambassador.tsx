@@ -118,7 +118,7 @@ function AmbassadorSelfEdit() {
           {profile.published ? " · Published" : " · Not public yet"}
         </p>
         <div className="mt-3 flex flex-wrap gap-3 text-sm">
-          <a href={ambassadorProfilePath(profile.slug)} className="text-accent hover:underline">
+          <a href={ambassadorProfilePath(profile.slug)} className="text-paper underline underline-offset-4 hover:text-esred">
             View public profile
           </a>
         </div>

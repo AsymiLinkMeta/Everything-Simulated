@@ -51,7 +51,7 @@ function AppBuild() {
     <div className="min-w-0 space-y-6">
       <div>
         <p className="es-kicker">Builder</p>
-        <h1 className="mt-2 text-3xl font-medium">Spec a crate</h1>
+        <h1 className="mt-2 text-3xl font-medium">Spec a build</h1>
         <p className="mt-2 max-w-xl text-sm text-muted">
           Walk the same steps the workshop uses. Saved to this browser, and to your account when you quote.
         </p>
@@ -103,7 +103,7 @@ function AppBuild() {
         {aiError ? <p className="mt-4 text-sm text-red-400">{aiError}</p> : null}
       </div>
 
-      <div className="grid min-w-0 gap-8 lg:grid-cols-[1fr_340px]">
+      <div className="grid min-w-0 grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,1fr)_340px]">
         <BuildStudio />
         <CartPanel />
       </div>

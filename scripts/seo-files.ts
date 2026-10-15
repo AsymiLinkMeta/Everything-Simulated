@@ -7,6 +7,7 @@
  * src/lib/es/content.ts. Used by the es-seo-files plugin in vite.config.ts.
  */
 import { BRAND, CITIES, GUIDES } from "../src/lib/es/content";
+import { publicCopy } from "../src/lib/es/placeholder-copy";
 
 export type SeoCatalog = {
   prebuilds: { slug: string; name: string; updated_at: string | null; image: string | null; price_ex_gst: number | null; purchasable: boolean; price_source?: "package" | "parts" | null }[];
@@ -38,7 +39,7 @@ export function renderAmbassadorHtml(template: string, origin: string, a: SeoAmb
   if (!SAFE_SLUG.test(a.slug) || !a.name) return null;
   const url = `${origin}/ambassadors/${a.slug}`;
   const title = `${a.name} | Ambassador | Everything Simulated`;
-  const bio = (a.bio ?? "").replace(/\s+/g, " ").trim();
+  const bio = publicCopy(a.bio).replace(/\s+/g, " ").trim();
   const about = [a.motorsport, a.series].filter(Boolean).join(", ");
   const description = (bio || `${a.name}${about ? ` (${about})` : ""}, Everything Simulated ambassador. See their simulator and shop with their code.`).slice(0, 160);
   let image = `${origin}/og.jpg`;

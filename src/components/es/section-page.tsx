@@ -112,7 +112,7 @@ export function PageHero({
 }: {
   kicker: string;
   title: string;
-  lead: string;
+  lead?: string;
   image?: string;
   tone?: "race" | "adventure";
   children?: ReactNode;
@@ -131,7 +131,7 @@ export function PageHero({
         </div>
         <p className="es-kicker es-kicker-telemetry">{kicker}</p>
         <h1>{title}</h1>
-        <p className="es-lead">{lead}</p>
+        {lead ? <p className="es-lead">{lead}</p> : null}
         {children}
       </div>
     </header>
@@ -174,7 +174,7 @@ export function CtaStrip({
 
 export function PhoneStrip({
   title = "Talk to the workshop.",
-  lead = "Gold Coast demos, crate questions and event enquiries.",
+  lead = "Gold Coast demos, build and delivery questions, and event enquiries.",
 }: {
   title?: string;
   lead?: string;

@@ -1,4 +1,5 @@
 import { STAGE_IMAGES } from "@/lib/es/stage-images";
+import { TrustBar } from "@/components/es/trust-bar";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteImage, PrebuildPhoto } from "@/components/es/site-image";
 import { useQuery } from "@tanstack/react-query";
@@ -45,19 +46,22 @@ export function Home() {
           <h1>Australia's Turn-Key Simulator Workshop</h1>
           <p className="lead">
             Racing simulators ship now — motion, haptic, triple screens and an auxiliary display.
-            Aircraft, drone and training platforms are specced on the same Gold Coast floor.
-            Every build is assembled, tested and photographed before it leaves.
+            <span className="es-hero-more">
+              {" "}Aircraft, drone and training platforms are specced on the same Gold Coast floor.
+              Every build is assembled, tested and photographed before it leaves.
+            </span>
           </p>
           <div className="es-hero-actions">
             <Link to="/racing" className="es-btn">
               Enter the garage <ArrowRight className="size-4" />
             </Link>
-            <Link to="/studio" className="es-btn es-btn-paper">
+            <Link to="/studio" className="es-btn es-btn-ghost">
               Book a studio demo
             </Link>
           </div>
         </div>
       </section>
+      <TrustBar />
 
       {racing ? (
         <Link to={racing.to} className="es-chapter">

@@ -30,7 +30,7 @@ function AppHome() {
           {user?.displayName ? `Hello, ${user.displayName}` : "Your build"}
         </h1>
         <p className="mt-2 text-sm text-muted">
-          Quotes, crates, workshop jobs and messages — saved to this account.
+          Quotes, orders, workshop jobs and messages — saved to this account.
         </p>
       </div>
       <div className="grid gap-3 sm:grid-cols-3">
@@ -79,7 +79,7 @@ function AppHome() {
               </li>
             ))
           ) : (
-            <li className="text-sm text-muted">No crates yet. Spec a build and request a deposit.</li>
+            <li className="text-sm text-muted">No orders yet. Spec a build and request a deposit.</li>
           )}
         </ul>
       </section>

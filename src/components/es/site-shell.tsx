@@ -2,7 +2,7 @@ import "./es-chrome";
 import { Link, Outlet, useLocation } from "@tanstack/react-router";
 import { ChevronDown, Facebook, Instagram, Phone, ShoppingCart } from "lucide-react";
 import { useEffect, useState } from "react";
-import { CookieDisclaimer, AuthSlot, Logo, StaffLoginLink } from "./bits";
+import { CookieDisclaimer, AuthSlot, Logo } from "./bits";
 import { ReferralCapture } from "./referral-capture";
 import { useCart } from "@/lib/es/cart-store";
 import { useQuery } from "@tanstack/react-query";
@@ -121,10 +121,10 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
         <div className="es-footer-grid">
           <div className="es-footer-col">
             <Logo />
-            <p>Gold Coast simulator workshop. Try before you buy. Racing, aircraft, drones and training. Crate freight Australia-wide.</p>
+            <p>Gold Coast simulator workshop. Try before you buy. Racing, aircraft, drones and training. Delivered Australia-wide.</p>
             <p>Gold Coast, Queensland, Australia</p>
-            <p>{BRAND.phone}</p>
-            <p>{BRAND.email}</p>
+            <p><a href={`tel:${BRAND.phone.replace(/\s/g, "")}`}>{BRAND.phone}</a></p>
+            <p><a href={`mailto:${BRAND.email}`}>{BRAND.email}</a></p>
             <div className="flex items-center gap-3" style={{ marginTop: 16 }}>
               <a href="https://www.facebook.com/EverythingSimulated/" target="_blank" rel="noopener noreferrer" aria-label="Everything Simulated on Facebook" className="es-social-link">
                 <Facebook className="size-5" />
@@ -133,10 +133,6 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
                 <Instagram className="size-5" />
               </a>
             </div>
-            <p className="es-kicker" style={{ marginTop: 16 }}>Staff / Admin</p>
-            <p>
-              <StaffLoginLink />
-            </p>
           </div>
           <div className="es-footer-col">
             <p className="es-kicker">Simulators</p>

@@ -5,6 +5,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { stagePreloadScript } from "./src/lib/es/stage-images";
 import { routePreload } from "./scripts/route-preload";
+import { spaRedirects } from "./scripts/spa-redirects";
 import { EMPTY_CATALOG, fetchSeoCatalog, renderAmbassadorHtml, renderLlms, renderSitemap, type SeoCatalog } from "./scripts/seo-files";
 
 const root = path.dirname(fileURLToPath(import.meta.url));
@@ -118,7 +119,7 @@ export default defineConfig(({ mode }) => {
   const origin = normaliseOrigin(env.VITE_SITE_URL);
   const noindex = env.VITE_NOINDEX === "true";
   return {
-    plugins: [react(), siteHost(origin, noindex), routePreload(root), seoFiles(origin, env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY)],
+    plugins: [react(), siteHost(origin, noindex), routePreload(root), spaRedirects(root), seoFiles(origin, env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY)],
     resolve: {
       alias: {
         "@": path.resolve(root, "src"),

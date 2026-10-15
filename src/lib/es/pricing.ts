@@ -73,7 +73,7 @@ export function useServerQuote(input: QuoteInput, opts?: { enabled?: boolean }) 
     w: input.driverWeightKg ?? null,
   } satisfies QuoteKey);
   const debounced = useDebounced(key, 250);
-  return useQuery({
+  const query = useQuery({
     queryKey: ["quote_cart", debounced],
     queryFn: () => {
       const k = JSON.parse(debounced) as QuoteKey;
@@ -89,6 +89,9 @@ export function useServerQuote(input: QuoteInput, opts?: { enabled?: boolean }) 
     staleTime: 30_000,
     retry: 1,
   });
+  // True while the cart has changed but its new price hasn't been fetched yet (debounce or request in flight),
+  // so callers never let the customer pay a figure that's about to change.
+  return Object.assign(query, { isSettling: key !== debounced || query.isFetching || query.isPlaceholderData });
 }
 
 /** Turn a Postgres error from place_order / staff RPCs into a sentence for a toast. */

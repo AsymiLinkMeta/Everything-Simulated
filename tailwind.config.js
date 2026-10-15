@@ -7,6 +7,9 @@ export default {
         ink: "#050507",
         panel: "#0d0d12",
         raised: "#14141b",
+        // Form fields and message bubbles (bg-surface was used before it existed, so textareas fell back to white).
+        surface: "#101017",
+        accent: "#e10600",
         gloss: "#1c1c26",
         paper: "#ffffff",
         muted: "#c8c8d0",
