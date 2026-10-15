@@ -84,7 +84,7 @@ a_img = bg.copy(); a_img.alpha_composite(full)
 b_img = bg.copy(); b_img.alpha_composite(stack)
 diff = ImageChops.difference(a_img.convert("RGB"), b_img.convert("RGB")).convert("L")
 mean = ImageStat.Stat(diff).mean[0]
-bad = sum(1 for v in diff.getdata() if v > 40)
+bad = sum(diff.point(lambda v: 1 if v > 40 else 0).histogram()[1:])
 print(f"composite vs full: mean diff {mean:.2f}/255, pixels off by >40: {bad} of {diff.width * diff.height}")
 diff.point(lambda v: min(255, v * 4)).save(os.path.join(SRC, "composite-diff.png"))
 b_img.convert("RGB").save(os.path.join(SRC, "composite.png"))

@@ -116,18 +116,18 @@ test.describe("rig builder data from staff", () => {
     await expect(page.locator("[data-testid^=builder-card-]").first()).toHaveAttribute("data-testid", "builder-card-alpha-15");
   });
 
-  test("preview: drawn fallback until staff add layer art", async ({ page }, info) => {
+  test("preview: rendered layers until staff add layer art", async ({ page }, info) => {
     test.skip(info.project.name !== "desktop", "mutates shared layer rows");
     exec(`delete from builder_layers`);
     await page.goto("/build?b=xr1");
-    await expect(page.getByTestId("rig-preview")).toHaveAttribute("data-mode", "fallback");
+    await expect(page.getByTestId("rig-preview")).toHaveAttribute("data-mode", "rendered");
     const preview = page.getByTestId("rig-preview");
     await expect(preview.locator('[data-part="chassis"]').first()).toHaveAttribute("data-state", "on");
     await expect(preview.locator('[data-part="seat"]').first()).toHaveAttribute("data-state", "ghost");
     exec(`insert into builder_layers (category, image_url, z, label) values ('chassis', '/rigs/haptic.jpg', 0, 'Chassis')`);
     await page.goto("/build?b=xr1");
     await expect(preview).toHaveAttribute("data-mode", "layers");
-    await expect(preview.locator("img")).toHaveCount(1);
+    await expect(preview.locator("img.es-rb-layer")).toHaveCount(1);
     // The staff image replaces the drawn chassis; the rest of the drawing stays.
     await expect(preview.locator('[data-part="chassis"]')).toHaveCount(0);
     await expect(preview.locator('[data-part="seat"]').first()).toHaveAttribute("data-state", "ghost");
@@ -144,6 +144,26 @@ test.describe("rig builder data from staff", () => {
     }
     await expect(preview.locator('[data-part="screen-top"]')).toHaveCount(0);
     await expect(preview.locator('[data-part="wheel"]').first()).toHaveAttribute("data-state", "ghost");
+    // the frame sits on the platform: its raised render is used
+    await expect(preview).toHaveAttribute("data-raised", "true");
+    await expect(preview.locator('[data-part="chassis"]')).toHaveAttribute("src", /chassis--raised\.[0-9a-f]+\.webp$/);
+  });
+
+  test("preview: an empty build shows one ghosted render, and it loads", async ({ page }) => {
+    await page.goto("/build");
+    const ghost = page.getByTestId("rig-preview").locator('[data-part="ghost"]');
+    await expect(ghost).toHaveCount(1);
+    await expect.poll(() => ghost.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth)).toBeGreaterThan(0);
+    await expect(page.getByTestId("rig-preview").locator(".es-rp-layer")).toHaveCount(0);
+  });
+
+  test("preview: on phones it leads the step, on desktop it sits in the side panel", async ({ page }, info) => {
+    await page.goto("/build?b=xr1");
+    const preview = page.getByTestId("rig-preview");
+    const heading = page.getByRole("heading", { level: 2, name: "Chassis" });
+    const [p, h] = await Promise.all([preview.boundingBox(), heading.boundingBox()]);
+    if (info.project.name === "mobile") expect(p!.y).toBeLessThan(h!.y);
+    else expect(await preview.evaluate((el) => !!el.closest("aside"))).toBe(true);
   });
 
   test.describe("staff", () => {

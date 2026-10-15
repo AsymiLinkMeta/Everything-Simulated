@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { BUILDER_STEPS, rigPartStates, badgeLabel, decodeBuild, encodeBuild, filterAndSort, layerStack, newIssues, stepForCategory, withPick } from "@/lib/es/builder-core";
 import type { Product } from "@/lib/es/types";
-import { RIG_GROUPS } from "@/components/es/rig-art";
+import { RIG_PHOTO_FILES, RIG_PHOTO_ORDER } from "@/components/es/rig-photo";
 
 const P = (sku: string, category: string, extra: Partial<Product> = {}): Product =>
   ({ sku, brand: "B", name: sku.toUpperCase(), category, sellExGst: 1000, stock: "stock", leadWeeks: [1, 2], ...extra }) as Product;
@@ -82,9 +82,13 @@ describe("preview layers", () => {
 
 describe("drawn rig preview", () => {
   const cats = (...c: string[]) => new Set(c);
-  it("knows every drawn part", () => {
+  it("knows every rendered layer, and every layer has its files", () => {
     const states = rigPartStates(cats(), 0);
-    for (const g of RIG_GROUPS) expect(states[g.part], g.part).toBeDefined();
+    for (const part of RIG_PHOTO_ORDER) {
+      expect(states[part], part).toBeDefined();
+      expect(RIG_PHOTO_FILES[part], part).toMatch(/\.webp$/);
+    }
+    for (const extra of ["ghost-empty", "shadow-rig", "shadow-rig--raised", "shadow-stand", "shadow-pc"]) expect(RIG_PHOTO_FILES[extra], extra).toBeDefined();
   });
   it("empty build: the whole rig is a ghost, triple screens included", () => {
     const s = rigPartStates(cats(), 0);

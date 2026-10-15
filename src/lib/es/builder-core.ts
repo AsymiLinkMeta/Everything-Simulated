@@ -143,6 +143,7 @@ export type RigPartState = "on" | "ghost" | "off";
 /** Which builder categories light up each drawn part. */
 const PART_CATEGORIES: Record<string, string[]> = {
   chassis: ["chassis"],
+  "chassis-back": ["chassis"],
   seat: ["seat"],
   wheelbase: ["wheelbase"],
   wheel: ["wheel"],

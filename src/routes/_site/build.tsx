@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useEffect, useId, useMemo, useRef, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState, useSyncExternalStore } from "react";
 import { useSearchParams } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { AlertTriangle, Check, ChevronLeft, ChevronRight, Link2, Save, X } from "lucide-react";
@@ -56,6 +56,20 @@ function qrLabel(qr: string) {
   return `${base.replace(/\b\w/g, (c) => c.toUpperCase())} QR`.trim();
 }
 
+const DESKTOP = "(min-width: 1024px)";
+/** True on the two-column layout, where the preview sits in the sticky side panel; on phones it leads the step. */
+function useDesktopLayout() {
+  return useSyncExternalStore(
+    (cb) => {
+      const mq = window.matchMedia(DESKTOP);
+      mq.addEventListener("change", cb);
+      return () => mq.removeEventListener("change", cb);
+    },
+    () => window.matchMedia(DESKTOP).matches,
+    () => true,
+  );
+}
+
 function RigBuilder() {
   const [params, setParams] = useSearchParams();
   const products = useQuery({ queryKey: ["products"], queryFn: () => fetchProducts() });
@@ -99,6 +113,7 @@ function RigBuilder() {
   const map = useMemo(() => Object.fromEntries((products.data ?? []).map((p) => [p.sku, p])), [products.data]);
   const picked = useMemo(() => lines.map((l) => map[l.sku]).filter(Boolean) as Product[], [lines, map]);
   const pickedCats = useMemo(() => new Set(picked.map((p) => p.category as string)), [picked]);
+  const desktop = useDesktopLayout();
   const screens = useMemo(() => lines.reduce((n, l) => n + (map[l.sku]?.category === "monitor" ? l.qty || 1 : 0), 0), [lines, map]);
   const result = useMemo(() => checkCart({ lines, products: map, driverWeightKg, postcode }), [lines, map, driverWeightKg, postcode]);
   const quote = useServerQuote({ lines, postcode, prebuild: prebuildSlug, driverWeightKg }, { enabled: lines.length > 0 });
@@ -161,6 +176,7 @@ function RigBuilder() {
   const blocked = result.issues.some((i) => i.severity === "block") || (q ? !q.ok : false);
   const total = q?.total_inc_gst ?? null;
 
+  const preview = <RigPreview layers={layerStack(picked, builder.data?.layers ?? [])} picked={pickedCats} screens={screens} />;
   return (
     <div>
       <JsonLd data={breadcrumbLd([{ name: "Home", path: "/" }, { name: "Rig builder", path: "/build" }])} />
@@ -206,6 +222,7 @@ function RigBuilder() {
         </nav>
 
         <div className="es-rb-grid">
+          {desktop ? null : preview}
           <section className="min-w-0" aria-labelledby={`${ids}-step`}>
             <div className="es-rb-head">
               <p className="es-kicker">
@@ -349,7 +366,7 @@ function RigBuilder() {
           </section>
 
           <aside className="es-rb-side" aria-label="Your build">
-            <RigPreview layers={layerStack(picked, builder.data?.layers ?? [])} picked={pickedCats} screens={screens} />
+            {desktop ? preview : null}
             <div className="es-rb-summary">
               <p className="es-kicker">Your build</p>
               {picked.length ? (

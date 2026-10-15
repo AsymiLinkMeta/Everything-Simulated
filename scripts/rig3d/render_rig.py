@@ -103,7 +103,11 @@ scene.world = world
 bpy.ops.mesh.primitive_plane_add(size=12, location=(0.8, 0, 0))
 floor = bpy.context.active_object
 floor.name = "Floor"
-floor.is_shadow_catcher = True
+floor_mat = bpy.data.materials.new("Studio floor")
+floor_mat.use_nodes = True
+floor_mat.node_tree.nodes["Principled BSDF"].inputs["Base Color"].default_value = (0.4, 0.4, 0.42, 1)
+floor_mat.node_tree.nodes["Principled BSDF"].inputs["Roughness"].default_value = 0.45
+floor.data.materials.append(floor_mat)
 for c in floor.users_collection:
     c.objects.unlink(floor)
 scene.collection.objects.link(floor)
@@ -140,7 +144,11 @@ def show(layers, lifted=False, floor_on=False, shadow_only=False):
         c.hide_render = not on
         for ob in c.objects:
             ob.visible_camera = not shadow_only
-    floor.hide_render = not floor_on
+    # The floor always bounces light onto the rig; the camera only sees it, as a shadow catcher,
+    # in the shadow passes.
+    floor.hide_render = False
+    floor.is_shadow_catcher = floor_on
+    floor.visible_camera = floor_on
     LIFT.location.z = MOTION_LIFT if lifted else 0.0
 
 
