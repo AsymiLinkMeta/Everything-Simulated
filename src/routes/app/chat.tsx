@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { listChat, saveQuote } from "@/lib/es/server";
 import { createTicket } from "@/lib/es/inbox";
 import { rateAgent, runBuildAgent, type AgentTurn } from "@/lib/es/agent";

@@ -135,8 +135,8 @@ export default defineConfig(({ mode }) => {
             if (id.includes("@supabase")) return "vendor-supabase";
             if (/node_modules\/(react|react-dom|scheduler|react-router|react-router-dom|@remix-run)\//.test(id)) return "vendor-react";
             if (id.includes("@tanstack")) return "vendor-query";
-            // Only used by lazily loaded screens (QR codes): leave them in their own async chunks.
-            if (/node_modules\/(qrcode|dijkstrajs|pngjs|encode-utf8)\//.test(id)) return undefined;
+            // Loaded on demand (QR codes, toasts): leave them in their own async chunks.
+            if (/node_modules\/(qrcode|dijkstrajs|pngjs|encode-utf8|sonner)\//.test(id)) return undefined;
             return "vendor";
           },
         },

@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { CartPanel } from "@/components/es/cart-panel";
 import { BuildStudio } from "@/components/es/build-studio";
 import { Button } from "@/components/ui/button";

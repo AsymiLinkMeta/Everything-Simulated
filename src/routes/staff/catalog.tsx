@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Boxes, Search, Sparkles, Trash2, WandSparkles, X } from "lucide-react";
 import { ListingImages } from "@/components/es/listing-images";
 import { fetchProducts, invalidateProductCache } from "@/lib/es/product-cache";

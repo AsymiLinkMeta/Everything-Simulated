@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Handshake } from "lucide-react";
 import {
   CRM_SOURCES,

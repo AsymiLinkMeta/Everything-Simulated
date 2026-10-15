@@ -16,7 +16,7 @@ import {
 import { AmbassadorDashboardPanel, GuardianCard } from "@/components/es/ambassador-dashboard";
 import { DefaultRateWarning, PayoutsPanel, ProgrammeSettingsPanel, RateEditor, useProgrammeSettings } from "@/components/es/ambassador-staff";
 import { LoadError } from "@/components/es/bits";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import type { AmbassadorRow, AmbassadorSocial, AmbassadorTier, RigSpec } from "@/lib/es/ambassadors";
 import { QrCode } from "@/components/es/qr-code";
 

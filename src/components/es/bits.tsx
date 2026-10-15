@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { PrebuildPhoto } from "@/components/es/site-image";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { ArrowLeft, Plus, X, Wrench, Loader2, Check } from "lucide-react";
 import "../../es.css";
 import { Link } from "@tanstack/react-router";
@@ -11,7 +11,6 @@ import type { CheckIssue, CheckResult, PackageSpec, Product, CartLine } from "@/
 import { product, productImage, getCachedProductMap } from "@/lib/es/product-cache";
 import { useCart } from "@/lib/es/cart-store";
 import { UNIQUE_CATEGORIES } from "@/lib/es/checkCart";
-import { askBuilder } from "@/lib/es/server";
 import { cn } from "@/lib/utils";
 
 export function BackButton({ label = "Back" }: { label?: string }) {
@@ -196,6 +195,8 @@ function IssueRow({ issue }: { issue: CheckIssue }) {
   async function handleFix() {
     setFixing(true);
     try {
+      // Loaded on demand: server.ts pulls in the build agent, which no first paint needs.
+      const { askBuilder } = await import("@/lib/es/server");
       const res = await askBuilder({
         message: `Fix this compatibility issue: ${issue.message}. Suggest the minimal cart change needed.`,
         lines,

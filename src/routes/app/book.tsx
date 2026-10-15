@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { listMyBookings, requestBooking } from "@/lib/es/server";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/input";

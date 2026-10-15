@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { fetchPrebuildLinks, fetchPublishedPrebuilds, livePackages } from "@/lib/es/prebuilds";
 import { fetchProducts } from "@/lib/es/product-cache";
 import { useCart } from "@/lib/es/cart-store";
