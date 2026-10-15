@@ -200,6 +200,15 @@ function StaffInbox() {
                 ))}
               </div>
               <div className="space-y-3">
+                {thread.isPending ? <p className="text-sm text-muted">Loading messages…</p> : null}
+                {thread.isError ? <p className="text-sm text-red-300">Could not load this thread.</p> : null}
+                {/* The customer's opening message lives on the ticket; show it if the thread doesn't have it. */}
+                {thread.data && !thread.data.some((m) => m.author_role === "customer" && m.body === active.body) && active.body ? (
+                  <div className="rounded-lg bg-surface px-4 py-3 text-sm">
+                    <p className="text-xs text-muted">customer · {new Date(active.created_at).toLocaleString("en-AU")}</p>
+                    <p className="mt-1 whitespace-pre-wrap">{active.body}</p>
+                  </div>
+                ) : null}
                 {(thread.data ?? []).map((m) => (
                   <div
                     key={m.id}

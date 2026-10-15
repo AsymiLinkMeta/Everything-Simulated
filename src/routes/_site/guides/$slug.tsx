@@ -3,6 +3,7 @@ import { BackButton, JsonLd } from "@/components/es/bits";
 import { guideBySlug, GUIDES } from "@/lib/es/catalog";
 import { articleLd, breadcrumbLd, pageHead } from "@/lib/es/seo";
 import { PageHero } from "@/components/es/section-page";
+import { useLiveCopy } from "@/lib/es/live-copy";
 
 export const Route = createFileRoute("/_site/guides/$slug")({
   loader: ({ params }) => {
@@ -24,16 +25,17 @@ export const Route = createFileRoute("/_site/guides/$slug")({
 
 function GuidePage() {
   const guide = Route.useLoaderData();
+  const { fill } = useLiveCopy();
   return (
     <article>
       <JsonLd data={breadcrumbLd([{ name: "Home", path: "/" }, { name: "Guides", path: "/guides" }, { name: guide.title, path: `/guides/${guide.slug}` }])} />
-      <JsonLd data={articleLd(guide)} />
+      <JsonLd data={articleLd({ ...guide, body: guide.body.map(fill) })} />
       <PageHero kicker="Guide" title={guide.title} lead={guide.description} image="/rigs/haptic.jpg" />
       <div className="es-body mx-auto max-w-2xl">
         <BackButton />
         <div className="space-y-5 text-base leading-relaxed">
           {guide.body.map((p) => (
-            <p key={p} className="text-muted">{p}</p>
+            <p key={p} className="text-muted">{fill(p)}</p>
           ))}
         </div>
         <div className="mt-12 border-t border-line pt-8">

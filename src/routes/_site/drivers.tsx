@@ -13,6 +13,7 @@ import {
 } from "@/lib/es/ambassadors";
 import type { Ambassador, AmbassadorTier } from "@/lib/es/ambassadors";
 import { breadcrumbLd, pageHead } from "@/lib/es/seo";
+import { fetchPublishedPrebuilds } from "@/lib/es/prebuilds";
 
 export const Route = createFileRoute("/_site/drivers")({
   head: () =>
@@ -38,6 +39,8 @@ function groupByTier(ambassadors: Ambassador[]): { tier: AmbassadorTier; label: 
 
 export function AmbassadorsPage() {
   const { data: ambassadors, isPending } = useQuery({ queryKey: ["ambassadors"], queryFn: fetchAmbassadors });
+  // crateForAmbassador reads the prebuild cache; load it so the rig links resolve.
+  useQuery({ queryKey: ["prebuilds"], queryFn: fetchPublishedPrebuilds });
 
   if (isPending) {
     return (

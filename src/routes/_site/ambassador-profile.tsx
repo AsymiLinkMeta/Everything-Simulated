@@ -16,6 +16,7 @@ import {
   TIER_LABELS,
 } from "@/lib/es/ambassadors";
 import { breadcrumbLd, pageHead } from "@/lib/es/seo";
+import { fetchPublishedPrebuilds } from "@/lib/es/prebuilds";
 
 export const Route = createFileRoute("/_site/ambassador-profile")({
   head: () =>
@@ -30,6 +31,8 @@ export const Route = createFileRoute("/_site/ambassador-profile")({
 export function AmbassadorProfile() {
   const { slug } = useParams();
   const { data, isPending } = useQuery({ queryKey: ["ambassadors"], queryFn: fetchAmbassadors });
+  // crateForAmbassador reads the prebuild cache; load it so the rig links resolve.
+  useQuery({ queryKey: ["prebuilds"], queryFn: fetchPublishedPrebuilds });
   const [showQr, setShowQr] = useState(false);
 
   const ambassador = data

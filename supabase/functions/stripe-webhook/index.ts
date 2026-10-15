@@ -73,7 +73,7 @@ Deno.serve(async (req: Request) => {
       const intent = String(obj.payment_intent ?? "");
       const { data: order, error: readErr } = await supabase
         .from("shop_orders")
-        .select("id, status, paid_cents, invoice_number")
+        .select("id, status, paid_cents")
         .eq("id", orderId)
         .maybeSingle();
       if (readErr) throw readErr;
@@ -86,7 +86,6 @@ Deno.serve(async (req: Request) => {
           paid_cents: (Number(order.paid_cents) || 0) + amount,
           stripe_payment_intent: intent || null,
           stripe_session_id: String(obj.id ?? ""),
-          invoice_number: order.invoice_number || `ESI-${Date.now().toString(36).toUpperCase()}`,
           updated_at: new Date().toISOString(),
         })
         .eq("id", orderId);

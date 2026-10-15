@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/db";
-import { BRAND, GUIDES, RULES } from "./catalog";
+import { BRAND, GUIDES } from "./catalog";
+import { rpcMessage, type ServerQuote } from "./pricing";
 import { getCachedProducts, getCachedProductMap, getLiveRules } from "./product-cache";
 import { checkCart } from "./checkCart";
 import { unwrap } from "./unwrap";
@@ -123,10 +124,6 @@ export async function listMyJobs() {
     .order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
   return data ?? [];
-}
-
-async function pingOps(orderId: string, message: string) {
-  await supabase.from("pipeline_alerts").insert({ order_id: orderId, kind: "new_order", message });
 }
 
 async function requireStaff(userId: string): Promise<StaffRole> {
@@ -365,6 +362,11 @@ export type CatalogProduct = {
   qr?: string | null;
   created_by: string;
   created_at: string;
+  enquiry_only?: boolean;
+  /** Override if set, else sell_ex_gst. What customers are charged. */
+  effective_price_ex_gst?: number;
+  override_ex_gst?: number | null;
+  purchasable?: boolean;
 };
 
 export async function staffListCatalogProducts(): Promise<CatalogProduct[]> {
@@ -373,12 +375,20 @@ export async function staffListCatalogProducts(): Promise<CatalogProduct[]> {
   const { data, error } = await supabase
     .from("catalog_products")
     .select(
-      "id, sku, brand, name, category, sell_ex_gst, cost_ex_gst, stock_status, listing_status, qty_on_hand, lead_weeks_min, lead_weeks_max, description, notes, image_url, images, manufacturer_url, whats_included, mount_compatibility, assembly_manual_url, specs, compare, max_nm, payload_kg, weight_kg, mounts, qr, created_by, created_at",
+      "id, sku, brand, name, category, sell_ex_gst, cost_ex_gst, stock_status, listing_status, qty_on_hand, lead_weeks_min, lead_weeks_max, description, notes, image_url, images, manufacturer_url, whats_included, mount_compatibility, assembly_manual_url, specs, compare, max_nm, payload_kg, weight_kg, mounts, qr, created_by, created_at, enquiry_only",
     )
     .order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
+  const { data: prices, error: pricesErr } = await supabase
+    .from("catalog_prices")
+    .select("sku, price_ex_gst, override_ex_gst, purchasable");
+  if (pricesErr) throw new Error(pricesErr.message);
+  const priceBySku = new Map((prices ?? []).map((p) => [p.sku as string, p]));
   return (data ?? []).map((row) => ({
     ...(row as CatalogProduct),
+    effective_price_ex_gst: Number(priceBySku.get((row as CatalogProduct).sku)?.price_ex_gst ?? (row as CatalogProduct).sell_ex_gst) || 0,
+    override_ex_gst: (priceBySku.get((row as CatalogProduct).sku)?.override_ex_gst as number | null | undefined) ?? null,
+    purchasable: Boolean(priceBySku.get((row as CatalogProduct).sku)?.purchasable),
     listing_status: (((row as CatalogProduct).listing_status || "published") as ListingStatus),
     qty_on_hand: Number((row as CatalogProduct).qty_on_hand) || 0,
     images: Array.isArray((row as CatalogProduct).images) ? (row as CatalogProduct).images : [],
@@ -412,6 +422,7 @@ export async function staffSaveCatalogProduct(input: {
   weight_kg?: number | null;
   mounts?: string[];
   qr?: string | null;
+  enquiry_only?: boolean;
 }) {
   const user = await getCurrentUser();
   await requireStaff(user.id);
@@ -445,6 +456,7 @@ export async function staffSaveCatalogProduct(input: {
     weight_kg: input.weight_kg ?? null,
     mounts: input.mounts ?? [],
     qr: input.qr ?? null,
+    ...(input.enquiry_only === undefined ? {} : { enquiry_only: input.enquiry_only }),
     updated_at: new Date().toISOString(),
     created_by: user.id,
   };
@@ -453,8 +465,8 @@ export async function staffSaveCatalogProduct(input: {
     .upsert(row, { onConflict: "sku" })
     .select("id, sku")
     .maybeSingle();
-  if (error) throw new Error(error.message);
-  if (listing_status === "published") {
+  if (error) throw new Error(friendlyGuard(error.message));
+  if (listing_status === "published" && row.sell_ex_gst > 0) {
     await supabase.from("product_overrides").upsert({
       sku: row.sku,
       sell_ex_gst: row.sell_ex_gst,
@@ -474,6 +486,11 @@ export async function staffDeleteCatalogProduct(id: string) {
   return { ok: true };
 }
 
+/** Publish guard messages from the database read fine as they are; strip the Postgres prefix. */
+function friendlyGuard(message: string) {
+  return message.replace(/^.*?ERROR:\s*/i, "");
+}
+
 export async function staffSetListingStatus(sku: string, listing_status: ListingStatus) {
   const user = await getCurrentUser();
   await requireStaff(user.id);
@@ -481,7 +498,20 @@ export async function staffSetListingStatus(sku: string, listing_status: Listing
     .from("catalog_products")
     .update({ listing_status, updated_at: new Date().toISOString() })
     .eq("sku", sku);
-  if (error) throw new Error(error.message);
+  // The guard_catalog_publish trigger refuses to publish at $0 unless enquiry-only.
+  if (error) throw new Error(friendlyGuard(error.message));
+  return { ok: true };
+}
+
+/** Enquiry-only products show "Enquire for price" and can't be added to a cart. */
+export async function staffSetEnquiryOnly(sku: string, enquiry_only: boolean) {
+  const user = await getCurrentUser();
+  await requireStaff(user.id);
+  const { error } = await supabase
+    .from("catalog_products")
+    .update({ enquiry_only, updated_at: new Date().toISOString() })
+    .eq("sku", sku);
+  if (error) throw new Error(friendlyGuard(error.message));
   return { ok: true };
 }
 
@@ -496,109 +526,63 @@ export async function listMyOrders() {
   return data ?? [];
 }
 
-export async function placeOrder(
-  input:
-    | {
-        lines: CartLine[];
-        postcode?: string;
-        notes?: string;
-        driverWeightKg?: number;
-        quoteId?: string;
-        name?: string;
-        phone?: string;
-        address?: string;
-      }
-    | {
-        data: {
-          lines: CartLine[];
-          postcode?: string;
-          notes?: string;
-          driverWeightKg?: number;
-          quoteId?: string;
-          name?: string;
-          phone?: string;
-          address?: string;
-        };
-      },
-) {
+export type PlaceOrderInput = {
+  lines: CartLine[];
+  postcode?: string;
+  notes?: string;
+  driverWeightKg?: number;
+  quoteId?: string;
+  prebuild?: string | null;
+  referralCode?: string;
+  name?: string;
+  email?: string;
+  phone?: string;
+  address?: string;
+};
+
+/**
+ * Place an order through the place_order() RPC. The browser sends SKUs and
+ * quantities only: prices, freight, GST, the CRM contact, the job card and the
+ * referral are all worked out in the database.
+ */
+async function callPlaceOrder(input: PlaceOrderInput) {
+  const lines = (input.lines ?? []).filter((l) => l.sku && l.qty > 0);
+  if (!lines.length) throw new Error("Cart is empty");
+  const { data, error } = await supabase.rpc("place_order", {
+    p: {
+      lines: lines.map((l) => ({ sku: l.sku, qty: l.qty })),
+      postcode: input.postcode ?? null,
+      notes: input.notes ?? "",
+      driver_kg: input.driverWeightKg ?? null,
+      quote_id: input.quoteId ?? null,
+      prebuild: input.prebuild ?? null,
+      referral_code: input.referralCode ?? null,
+      name: input.name ?? "",
+      email: input.email ?? null,
+      phone: input.phone ?? null,
+      address: input.address ?? null,
+    },
+  });
+  if (error) throw new Error(rpcMessage(error));
+  const res = data as { id: string; referral_code: string | null; quote: ServerQuote };
+  return { id: res.id, quote: res.quote, referralCode: res.referral_code };
+}
+
+export async function placeOrder(input: PlaceOrderInput | { data: PlaceOrderInput }) {
   const data = unwrap(input);
   const user = await getCurrentUser();
-  const profile = await ensureProfile(user.id, user.email, data.name || user.user_metadata?.display_name);
-  const lines = (data.lines ?? []).filter((l) => l.sku && l.qty > 0);
-  if (!lines.length) throw new Error("Cart is empty");
-  const result = checkCart({ lines, driverWeightKg: data.driverWeightKg, postcode: data.postcode });
-  const id = `ESO-${Date.now().toString(36).toUpperCase()}`;
-  const shipName = (data.name || profile.display_name || user.email || "Customer").trim();
-
-  let contactId: string | null = null;
-  const { data: existing } = await supabase.from("crm_contacts").select("id").eq("user_id", user.id).maybeSingle();
-  if (existing?.id) {
-    contactId = existing.id;
-    await supabase
-      .from("crm_contacts")
-      .update({
-        display_name: shipName,
-        email: user.email,
-        phone: data.phone?.trim() || undefined,
-        postcode: data.postcode ?? null,
-        address: data.address?.trim() || undefined,
-      })
-      .eq("id", existing.id);
-  } else {
-    const { data: created } = await supabase
-      .from("crm_contacts")
-      .insert({
-        user_id: user.id,
-        display_name: shipName,
-        email: user.email,
-        phone: data.phone?.trim() || null,
-        postcode: data.postcode ?? null,
-        address: data.address?.trim() || null,
-        crm_stage: result.ok ? "quoted" : "lead",
-        crm_source: "website",
-        notes: data.notes ?? "",
-      })
-      .select("id")
-      .maybeSingle();
-    contactId = created?.id ?? null;
-  }
-
-  const { error } = await supabase.from("shop_orders").insert({
-    id,
-    contact_id: contactId,
-    user_id: user.id,
-    quote_id: data.quoteId ?? null,
-    status: "pending",
-    lines,
-    total_ex_gst: result.totalExGst,
-    total_inc_gst: result.totalIncGst,
-    shipping_name: shipName,
-    shipping_address: data.address?.trim() || null,
-    postcode: data.postcode ?? null,
-    notes: data.notes ?? "",
-  });
-  if (error) throw new Error(error.message);
-  if (data.quoteId) {
-    await supabase.from("quotes").update({ status: "won", updated_at: new Date().toISOString() }).eq("id", data.quoteId);
-  }
-  await supabase.from("jobs").insert({
-    user_id: user.id,
-    quote_id: data.quoteId ?? null,
-    order_id: id,
-    stage: "enquiry",
-    notes: `Web order ${id}`,
-  });
-  await pingOps(id, `New order ${id} from ${shipName}`);
-  if (result.ok) {
+  await ensureProfile(user.id, user.email, data.name || user.user_metadata?.display_name);
+  const res = await callPlaceOrder(data);
+  if (res.quote?.ok) {
     void supabase.rpc("record_agent_memory", {
       p_kind: "won_bom",
-      p_title: `Won ${id}`,
-      p_body: lines.map((l) => `${l.qty}× ${l.sku}`).join(", "),
-      p_payload: { orderId: id, lines, totalExGst: result.totalExGst },
+      p_title: `Won ${res.id}`,
+      p_body: data.lines.map((l) => `${l.qty}× ${l.sku}`).join(", "),
+      p_payload: { orderId: res.id, lines: data.lines, totalExGst: res.quote.total_ex_gst },
       p_source: "system",
     });
   }
-  return { id, result };
+  return res;
 }
 
 export async function askBuilder(data: {
@@ -640,75 +624,16 @@ export async function publicCatalog() {
     productMap: getCachedProductMap(),
     packages: livePackages(),
     guides: GUIDES,
-    rules: getLiveRules().length ? getLiveRules() : RULES,
+    rules: getLiveRules(),
     brand: BRAND,
     seed: getCachedProducts(),
   };
 }
 
-export async function placeGuestOrder(input: {
-  lines: CartLine[];
-  postcode?: string;
-  notes?: string;
-  driverWeightKg?: number;
-  name: string;
-  email: string;
-  phone?: string;
-  address?: string;
-}) {
-  const lines = (input.lines ?? []).filter((l) => l.sku && l.qty > 0);
-  if (!lines.length) throw new Error("Cart is empty");
+export async function placeGuestOrder(input: PlaceOrderInput & { name: string; email: string }) {
   if (!input.name.trim()) throw new Error("Name is required");
   if (!input.email.trim()) throw new Error("Email is required");
-  const result = checkCart({ lines, driverWeightKg: input.driverWeightKg, postcode: input.postcode });
-  const id = `ESO-${Date.now().toString(36).toUpperCase()}`;
-  const shipName = input.name.trim();
-
-  const { data: contact } = await supabase
-    .from("crm_contacts")
-    .insert({
-      display_name: shipName,
-      email: input.email.trim().toLowerCase(),
-      phone: input.phone?.trim() || null,
-      postcode: input.postcode ?? null,
-      address: input.address?.trim() || null,
-      crm_stage: "lead",
-      crm_source: "website",
-      notes: input.notes ?? "",
-    })
-    .select("id")
-    .maybeSingle();
-
-  const { error } = await supabase.from("shop_orders").insert({
-    id,
-    contact_id: contact?.id ?? null,
-    status: "pending",
-    lines,
-    total_ex_gst: result.totalExGst,
-    total_inc_gst: result.totalIncGst,
-    shipping_name: shipName,
-    shipping_address: input.address?.trim() || null,
-    postcode: input.postcode ?? null,
-    notes: input.notes ?? "",
-  });
-  if (error) throw new Error(error.message);
-  await supabase.from("jobs").insert({
-    user_id: null,
-    order_id: id,
-    stage: "enquiry",
-    notes: `Guest order ${id} — ${shipName}`,
-  });
-  await pingOps(id, `New guest order ${id} from ${shipName}`);
-  if (result.ok) {
-    void supabase.rpc("record_agent_memory", {
-      p_kind: "won_bom",
-      p_title: `Guest ${id}`,
-      p_body: lines.map((l) => `${l.qty}× ${l.sku}`).join(", "),
-      p_payload: { orderId: id, lines, totalExGst: result.totalExGst },
-      p_source: "system",
-    });
-  }
-  return { id, result };
+  return callPlaceOrder(input);
 }
 
 export { freightExGst };

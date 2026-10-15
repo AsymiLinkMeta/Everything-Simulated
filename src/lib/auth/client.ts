@@ -19,12 +19,17 @@ export const authClient = {
   },
   signUp: {
     email: async (params: { email: string; password: string; name?: string; callbackURL?: string }) => {
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: params.email,
         password: params.password,
-        options: { data: { display_name: params.name } },
+        options: {
+          data: { display_name: params.name },
+          // The confirmation link brings them back to where they were heading.
+          emailRedirectTo: `${window.location.origin}${params.callbackURL || "/app"}`,
+        },
       });
-      return { error: error ? { message: error.message } : null };
+      // With email confirmation on, there is no session until the link is clicked.
+      return { error: error ? { message: error.message } : null, needsConfirmation: !error && !data.session };
     },
   },
 };

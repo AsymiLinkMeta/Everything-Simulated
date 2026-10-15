@@ -1,4 +1,4 @@
-import { test as base, expect, type Page, type ConsoleMessage } from "@playwright/test";
+import { test as base, expect, type Page, type ConsoleMessage, type APIRequestContext } from "@playwright/test";
 
 export const API = process.env.LOCAL_API_URL ?? "http://localhost:54321";
 export const PASSWORD = "Passw0rd!local";
@@ -34,4 +34,18 @@ export async function login(page: Page, role: Role) {
   await page.getByPlaceholder("Password", { exact: true }).fill(PASSWORD);
   await page.getByRole("button", { name: staff ? "Login" : "Sign In", exact: true }).click();
   await page.waitForURL((u) => !u.pathname.startsWith("/login"), { timeout: 15_000 });
+}
+
+export const ANON_KEY = process.env.LOCAL_ANON_KEY ?? "";
+
+/** REST headers for a demo account (or anon when role is omitted). */
+export async function tokenHeaders(request: APIRequestContext, role?: Role) {
+  const h: Record<string, string> = { apikey: ANON_KEY, Authorization: `Bearer ${ANON_KEY}`, "content-type": "application/json" };
+  if (!role) return h;
+  const tok = await request.post(`${API}/auth/v1/token?grant_type=password`, {
+    data: { email: `${role}@es.local`, password: PASSWORD },
+    headers: { apikey: ANON_KEY },
+  });
+  const { access_token } = (await tok.json()) as { access_token: string };
+  return { ...h, Authorization: `Bearer ${access_token}` };
 }

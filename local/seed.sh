@@ -23,12 +23,21 @@ BEGIN;
 SET session_replication_role = replica;  -- seed only: skip audit/alert triggers
 TRUNCATE public.prebuild_components, public.prebuilds, public.product_overrides, public.catalog_products, public.brands, public.ambassadors CASCADE;
 \set snap \`cat seed/catalog-snapshot.json\`
-INSERT INTO public.brands SELECT * FROM json_populate_recordset(null::public.brands, (:'snap'::json)->'brands');
-INSERT INTO public.catalog_products SELECT * FROM json_populate_recordset(null::public.catalog_products, (:'snap'::json)->'catalog_products');
-INSERT INTO public.prebuilds SELECT * FROM json_populate_recordset(null::public.prebuilds, (:'snap'::json)->'prebuilds');
-INSERT INTO public.prebuild_components SELECT * FROM json_populate_recordset(null::public.prebuild_components, (:'snap'::json)->'prebuild_components');
-INSERT INTO public.product_overrides SELECT * FROM json_populate_recordset(null::public.product_overrides, (:'snap'::json)->'product_overrides');
-INSERT INTO public.ambassadors SELECT * FROM json_populate_recordset(null::public.ambassadors, (:'snap'::json)->'ambassadors');
+CREATE TEMP TABLE _snap AS SELECT :'snap'::json AS j;
+-- Insert only the columns the snapshot has, so columns added by newer
+-- migrations keep their defaults (the snapshot is older than the schema).
+DO \$\$
+DECLARE t text; cols text;
+BEGIN
+  FOREACH t IN ARRAY ARRAY['brands','catalog_products','prebuilds','prebuild_components','product_overrides','ambassadors'] LOOP
+    SELECT string_agg(quote_ident(k), ', ') INTO cols
+      FROM json_object_keys((SELECT j->t->0 FROM _snap)) k
+     WHERE EXISTS (SELECT 1 FROM information_schema.columns c
+                    WHERE c.table_schema = 'public' AND c.table_name = t AND c.column_name = k);
+    EXECUTE format('INSERT INTO public.%I (%s) SELECT %s FROM json_populate_recordset(null::public.%I, (SELECT j->%L FROM _snap))',
+                   t, cols, cols, t, t);
+  END LOOP;
+END \$\$;
 -- prod still has the long slugs until its catch-up migrations run; mirror the post-migration state
 UPDATE public.prebuilds SET slug = 'starter' WHERE slug = 'starter-rig';
 UPDATE public.prebuilds SET slug = 'haptic' WHERE slug = 'haptic-racing-simulator';
@@ -42,5 +51,9 @@ ON CONFLICT (user_id) DO UPDATE SET role = excluded.role, email = excluded.email
 UPDATE public.ambassadors SET user_id = (SELECT id FROM auth.users WHERE email = 'driver@es.local');
 COMMIT;
 SQL
+
+# The snapshot is prod data from before the pricing migration. Re-apply it
+# (it is idempotent) so its data fixes run on the seeded rows, as they will on prod.
+psql "$DB" -q -1 -v ON_ERROR_STOP=1 -f ../supabase/migrations/20261015130000_server_pricing.sql 2>&1 | grep -v NOTICE || true
 psql "$DB" -qtAc "notify pgrst, 'reload schema'" >/dev/null
 echo "seeded: $(psql "$DB" -qtAc "select count(*) from catalog_products") products, $(psql "$DB" -qtAc "select count(*) from prebuilds") prebuilds, $(psql "$DB" -qtAc "select count(*) from profiles") profiles"

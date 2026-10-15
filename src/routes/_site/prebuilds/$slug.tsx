@@ -53,6 +53,16 @@ function PrebuildDetailPage() {
     );
   }
 
+  if (prebuild.isError) {
+    return (
+      <div role="alert" className="mx-auto w-full max-w-6xl px-4 py-16 text-center">
+        <h1 className="text-2xl font-medium">We couldn't load this prebuild</h1>
+        <p className="mt-4 text-muted">Check your connection and try again.</p>
+        <Button className="mt-6" onClick={() => void prebuild.refetch()}>Try again</Button>
+      </div>
+    );
+  }
+
   if (!p) {
     return (
       <div className="mx-auto w-full max-w-6xl px-4 py-16 text-center">
@@ -86,7 +96,7 @@ function PrebuildDetailPage() {
           brand: "Everything Simulated",
           description: p.blurb || p.description,
           image: p.image,
-          priceExGst: p.price_ex_gst,
+          priceExGst: p.effective_price_ex_gst ?? undefined,
           url: `/prebuilds/${p.slug}`,
           extras: (p.highlights ?? []).slice(0, 6).map((h) => ({ name: "Highlight", value: h })),
         })}
@@ -104,12 +114,18 @@ function PrebuildDetailPage() {
           {p.kicker && <p className="es-kicker">{p.kicker}</p>}
           <h1 className="mt-3 text-4xl font-medium">{p.name}</h1>
           {p.blurb && <p className="mt-4 text-muted">{p.blurb}</p>}
-          <p className="mt-6 text-3xl font-medium">
-            <Money cents={p.price_ex_gst} gst />
-          </p>
-          <p className="mt-1">
-            <IncGst cents={p.price_ex_gst} />
-          </p>
+          {p.purchasable && p.effective_price_ex_gst ? (
+            <>
+              <p className="mt-6 text-3xl font-medium">
+                <Money cents={p.effective_price_ex_gst} gst />
+              </p>
+              <p className="mt-1">
+                <IncGst cents={p.effective_price_ex_gst} />
+              </p>
+            </>
+          ) : (
+            <p className="mt-6 text-2xl font-medium">Enquire for price</p>
+          )}
 
           {p.highlights.length > 0 && (
             <ul className="mt-6 space-y-2 text-sm">
@@ -120,9 +136,11 @@ function PrebuildDetailPage() {
           )}
 
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            {p.purchasable ? (
+              <>
             <Button
               onClick={() => {
-                loadLines(p.components.map((c) => ({ sku: c.sku, qty: c.qty })));
+                loadLines(p.components.map((c) => ({ sku: c.sku, qty: c.qty })), null, p.slug);
               }}
             >
               Add to cart
@@ -130,7 +148,7 @@ function PrebuildDetailPage() {
             <Button variant="outline" asChild>
               <Link
                 to="/checkout"
-                onClick={() => loadLines(p.components.map((c) => ({ sku: c.sku, qty: c.qty })))}
+                onClick={() => loadLines(p.components.map((c) => ({ sku: c.sku, qty: c.qty })), null, p.slug)}
               >
                 Checkout this crate
               </Link>
@@ -138,6 +156,12 @@ function PrebuildDetailPage() {
             <Button variant="outline" asChild>
               <Link to="/compatibility">Open checker</Link>
             </Button>
+              </>
+            ) : (
+              <Button asChild>
+                <Link to="/contact">Enquire about this build</Link>
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -190,7 +214,7 @@ function PrebuildDetailPage() {
                     <span className="text-muted"> x {comp.qty}</span>
                   </Link>
                   <span className="text-muted">
-                    {item ? <Money cents={item.sellExGst * comp.qty} /> : null}
+                    {item && item.sellExGst > 0 ? <Money cents={item.sellExGst * comp.qty} /> : "Included"}
                   </span>
                 </li>
               );
@@ -212,7 +236,9 @@ function PrebuildDetailPage() {
               >
                 {o.kicker && <p className="es-kicker">{o.kicker}</p>}
                 <p className="mt-1 font-medium">{o.name}</p>
-                <p className="mt-1 text-sm text-muted"><Money cents={o.price_ex_gst} gst /></p>
+                <p className="mt-1 text-sm text-muted">
+                  {o.purchasable && o.effective_price_ex_gst ? <Money cents={o.effective_price_ex_gst} gst /> : "Enquire for price"}
+                </p>
               </Link>
             ))}
           </div>

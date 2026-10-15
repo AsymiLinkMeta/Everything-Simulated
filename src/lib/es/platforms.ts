@@ -14,7 +14,7 @@ export const PLATFORMS: {
     kicker: "Live catalogue",
     name: "Racing simulators",
     blurb:
-      "Turn-key racing simulators with motion, haptic feedback and triple-plus-auxiliary screens. Simagic, Trak Racer, Exodus and Dynamix — compatibility verified before deposit.",
+      "Turn-key racing simulators with motion, haptic feedback and triple-plus-auxiliary screens, compatibility verified before deposit.",
     image: "/rigs/haptic.jpg",
   },
   {
@@ -78,16 +78,6 @@ export const TRAINING_PAGES: PlatformLink[] = [
 ];
 
 export const PARTNER_GROUPS: { title: string; items: { name: string; role: string }[] }[] = [
-  {
-    title: "Hardware",
-    items: [
-      { name: "Simagic", role: "Wheelbases, wheels, pedals, QR" },
-      { name: "Trak Racer", role: "TR120S chassis · Alpine / TRX collaboration" },
-      { name: "Exodus", role: "XR1 motion-ready frames" },
-      { name: "SIMRIG", role: "SR2 motion platforms" },
-      { name: "Dynamix", role: "Motion and haptic systems we spec on Gold Coast builds" },
-    ],
-  },
   {
     title: "Events",
     items: [

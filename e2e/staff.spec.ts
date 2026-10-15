@@ -1,4 +1,4 @@
-import { test, expect, authFile, API } from "./fixtures";
+import { test, expect, authFile, API, tokenHeaders } from "./fixtures";
 import { sql, exec } from "./db";
 
 test.use({ storageState: authFile("admin") });
@@ -10,27 +10,50 @@ function seedOrder(id: string, opts: { paid?: boolean } = {}) {
         from crm_contacts where email = '${id.toLowerCase()}@example.com'`);
 }
 
-test("OMS: mark paid issues one invoice number, pack decrements stock, ship issues tracking", async ({ page }, info) => {
-  test.fail(true, "BUG-07/08: re-marking paid re-issues the invoice number; Issue tracking on a packing order does not ship it");
+test("OMS: record payment issues one invoice number, pack decrements stock, ship issues tracking", async ({ page }, info) => {
   const id = `ESO-T${Date.now().toString(36).toUpperCase()}${info.project.name[0].toUpperCase()}`;
   seedOrder(id);
   exec(`update catalog_products set qty_on_hand = 5, stock_status = 'stock' where sku = 'alpha-15'`);
   const [{ qty: before }] = sql<{ qty: number }>(`select coalesce(qty_on_hand,0) qty from catalog_products where sku='alpha-15'`);
+  const inv = () => sql<{ invoice_number: string | null }>(`select invoice_number from shop_orders where id='${id}'`)[0].invoice_number;
   await page.goto(`/staff/oms/${id}`);
-  await page.getByRole("button", { name: "paid", exact: true }).click();
-  await expect.poll(() => sql<{ invoice_number: string }>(`select invoice_number from shop_orders where id='${id}'`)[0].invoice_number).toMatch(/^ESI-/);
-  const inv1 = sql<{ invoice_number: string }>(`select invoice_number from shop_orders where id='${id}'`)[0].invoice_number;
-  await page.getByRole("button", { name: "paid", exact: true }).click();
-  await page.waitForTimeout(800);
-  const inv2 = sql<{ invoice_number: string }>(`select invoice_number from shop_orders where id='${id}'`)[0].invoice_number;
-  expect.soft(inv2, "re-marking paid keeps the invoice number").toBe(inv1);
+
+  // Can't jump to paid or packing with nothing received.
+  await page.getByRole("button", { name: "packing", exact: true }).click();
+  await expect(page.getByText(/payment/i).first()).toBeVisible();
+  expect(sql<{ s: string }>(`select status s from shop_orders where id='${id}'`)[0].s).toBe("pending");
+
+  // Part payment issues the invoice; a second payment keeps the same number.
+  await page.getByRole("button", { name: "Record payment" }).click();
+  await page.getByLabel(`Amount received for ${id}`).fill("330");
+  await page.getByRole("button", { name: "Save payment" }).click();
+  await expect.poll(inv).toMatch(/^ESI-\d{6}$/);
+  const inv1 = inv();
+  expect(sql<{ s: string; p: number }>(`select status s, paid_cents p from shop_orders where id='${id}'`)[0]).toEqual({ s: "paid", p: 33000 });
+  await page.getByRole("button", { name: "Record payment" }).click();
+  await page.getByRole("button", { name: "Save payment" }).click();
+  await expect.poll(() => sql<{ p: number }>(`select paid_cents p from shop_orders where id='${id}'`)[0].p).toBe(110000);
+  expect(inv(), "invoice number is issued once").toBe(inv1);
+
   await page.getByRole("button", { name: "packing", exact: true }).click();
   await expect.poll(() => sql<{ qty: number }>(`select coalesce(qty_on_hand,0) qty from catalog_products where sku='alpha-15'`)[0].qty).toBe(before - 1);
+  // Issuing tracking ships the order (BUG-08).
   await page.getByRole("button", { name: /Issue tracking/ }).click();
-  await expect.poll(() => sql<{ t: string }>(`select tracking_number t from shop_orders where id='${id}'`)[0].t).toBeTruthy();
-  await page.getByRole("button", { name: "shipped", exact: true }).click();
   await expect.poll(() => sql<{ s: string }>(`select status s from shop_orders where id='${id}'`)[0].s).toBe("shipped");
+  expect(sql<{ tn: string }>(`select tracking_number tn from shop_orders where id='${id}'`)[0].tn).toBeTruthy();
   await info.attach("oms", { body: await page.screenshot({ fullPage: true }), contentType: "image/png" });
+});
+
+test("OMS: a staff token cannot edit totals or payments directly", async ({ request }) => {
+  const id = `ESO-G${Date.now().toString(36).toUpperCase()}`;
+  seedOrder(id);
+  const h = await tokenHeaders(request, "admin");
+  const r = await request.patch(`${API}/rest/v1/shop_orders?id=eq.${id}`, { headers: h, data: { total_inc_gst: 1, paid_cents: 110000 } });
+  expect(r.ok()).toBe(false);
+  expect(sql<{ total: number; paid: number }>(`select total_inc_gst total, coalesce(paid_cents,0) paid from shop_orders where id='${id}'`)[0]).toEqual({ total: 110000, paid: 0 });
+  // Notes are still editable.
+  const ok = await request.patch(`${API}/rest/v1/shop_orders?id=eq.${id}`, { headers: h, data: { notes: "call first" } });
+  expect(ok.ok()).toBe(true);
 });
 
 test("OMS: Stripe refund through the refund-payment function", async ({ page }, info) => {
@@ -138,13 +161,13 @@ test("jobs board: move a job through stages", async ({ page }) => {
 });
 
 test("catalogue: AI listing generates a draft (mocked xAI)", async ({ page }) => {
-  test.fixme(true, "BUG-12: needs the xAI mock to return a full listing; UI mislabels model fallbacks as 'no API key'");
   await page.goto("/staff/catalog");
   await page.getByRole("button", { name: "New product" }).click();
   const url = page.getByPlaceholder(/https?:\/\//).first();
   await url.fill("https://example.com/wheelbase");
   await page.getByRole("button", { name: /generate/i }).first().click();
-  await expect(page.getByText(/Mock listing title|Mock product/i).first()).toBeVisible({ timeout: 30_000 });
+  await expect(page.getByText("Draft generated by Grok — review every field before saving.")).toBeVisible({ timeout: 30_000 });
+  await expect(page.locator('input[value="Mock listing title"]').first()).toBeVisible();
 });
 
 test("service: staff reply reaches the customer ticket", async ({ page }) => {

@@ -1,7 +1,6 @@
 import { SITE_ORIGIN } from "@/lib/site";
-import { BRAND, CITIES, GUIDES, PACKAGES } from "./catalog";
+import { BRAND, CITIES } from "./content";
 import { livePackages } from "./prebuilds";
-import { getCachedProducts } from "./product-cache";
 import type { Guide, Product } from "./types";
 
 export const ORIGIN = SITE_ORIGIN;
@@ -111,7 +110,8 @@ export function websiteLd() {
 }
 
 export function localBusinessLd(cityName?: string) {
-  const packs = livePackages().length ? livePackages() : PACKAGES;
+  // Offers come from the prebuilds already loaded from Supabase; none until they have.
+  const packs = livePackages().filter((p) => p.priceExGst > 0);
   return {
     "@context": "https://schema.org",
     "@type": ["LocalBusiness", "Store"],
@@ -141,7 +141,7 @@ export function localBusinessLd(cityName?: string) {
       : CITIES.map((c) => ({ "@type": "City", name: c.name })),
     sameAs: [...SAME_AS],
     parentOrganization: { "@id": `${ORIGIN}/#org` },
-    makesOffer: packs.map((p) => ({
+    makesOffer: packs.length === 0 ? undefined : packs.map((p) => ({
       "@type": "Offer",
       name: p.name,
       priceCurrency: "AUD",
@@ -251,7 +251,7 @@ export function catalogProductLd(item: Product) {
     brand: item.brand,
     description: item.description || item.notes,
     image: item.image || item.images?.[0],
-    priceExGst: item.sellExGst,
+    priceExGst: item.purchasable ? item.sellExGst : undefined,
     url: `/shop/${item.sku}`,
     availability: item.stock === "stock" ? "InStock" : item.stock === "discontinued" ? "OutOfStock" : "PreOrder",
     category: item.category,
@@ -323,7 +323,7 @@ export function graphLd(...nodes: Record<string, unknown>[]) {
 export const FAQS = [
   {
     q: "How much does a turn-key racing simulator cost in Australia?",
-    a: "Everything Simulated Starter packages start at $11,260 + GST. Haptic builds are $18,999 + GST. Full motion with SIMRIG SR2 is $28,999 + GST. Freight is crate-based Australia-wide from the Gold Coast.",
+    a: "Everything Simulated Starter packages are {{price:starter}}. Haptic builds are {{price:haptic}}. Full motion is {{price:motion}}. Freight is crate-based Australia-wide from the Gold Coast.",
   },
   {
     q: "Do you deliver outside the Gold Coast?",
@@ -335,7 +335,7 @@ export const FAQS = [
   },
   {
     q: "Will Simagic parts fit a Trak Racer or Exodus chassis?",
-    a: "The build app runs a deterministic compatibility checker before deposit. Alpha EVO on TR120S needs the Simagic side-mount kit. SR2 motion is Exodus XR1 only.",
+    a: "The build app runs a deterministic compatibility checker before deposit. It checks every part pair against our compatibility rules, flags the adapters and mounts a combination needs, and blocks pairings that don't work. The full rule list is on the compatibility page.",
   },
   {
     q: "Is the compatibility checker just a chatbot?",
@@ -357,33 +357,4 @@ export const FAQS = [
     q: "Can we book a corporate event or group driver session?",
     a: "Yes — enquire. Corporate days, professional and amateur driver groups, and on-site catering are planned on the warehouse floor behind the studio (about 200 square metres). That is capacity, not a public hire catalogue or a live street address. Call the workshop.",
   },
-];
-
-export const allIndexPaths = [
-  "/",
-  "/racing",
-  "/prebuilds",
-  ...(livePackages().length ? livePackages() : PACKAGES).map((p) => `/prebuilds/${p.slug}`),
-  "/shop",
-  ...getCachedProducts().map((p) => `/shop/${p.sku}`),
-  "/compatibility",
-  "/aircraft",
-  "/aircraft/helicopter",
-  "/aircraft/flight",
-  "/drones",
-  "/training",
-  "/training/driver",
-  "/training/industrial",
-  "/ambassadors",
-  "/events",
-  "/partners",
-  "/studio",
-  "/guides",
-  "/faqs",
-  ...GUIDES.map((g) => `/guides/${g.slug}`),
-  "/au",
-  ...CITIES.map((c) => `/au/${c.slug}`),
-  "/contact",
-  "/privacy",
-  "/terms",
 ];

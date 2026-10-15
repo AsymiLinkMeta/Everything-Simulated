@@ -263,6 +263,19 @@ export async function postNotice(input: {
     },
   };
   const msg = copy[input.kind] ?? copy.ticket;
+  // Order and payment notices are for staff: they go to the Inbox only. Turning
+  // them into tickets put "Deposit received" in Tickets as if the customer wrote it.
+  if (input.kind !== "ticket" && input.kind !== "contact") {
+    await pushInbox({
+      kind: input.kind,
+      subject: msg.subject,
+      body: msg.body,
+      from_email: input.email,
+      from_name: input.name,
+      order_id: input.orderId,
+    });
+    return { id: null };
+  }
   let ticketId: string | undefined;
   if (input.orderId) {
     const { data: existing } = await supabase

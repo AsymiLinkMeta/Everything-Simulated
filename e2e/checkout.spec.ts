@@ -3,7 +3,6 @@ import { sql } from "./db";
 
 test.describe("guest crate checkout with Stripe deposit", () => {
   test("prebuild → checkout → Stripe test checkout → signed webhook marks paid → order lookup", async ({ page, problems }, info) => {
-    test.fail(true, "BUG-01: guest order is created without its CRM contact (anon insert…select is blocked by RLS), so checkout cannot find it");
     const email = `guest-${Date.now()}-${info.project.name}@example.com`;
     await page.goto("/prebuilds/haptic");
     await page.getByRole("link", { name: "Checkout this crate" }).click();

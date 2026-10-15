@@ -5,11 +5,24 @@ vi.mock("@/lib/db", () => ({ supabase: {}, supabaseUrl: "", supabaseAnonKey: "" 
 
 import { DEFAULT_SITE_ORIGIN, normaliseOrigin, SITE_ORIGIN } from "@/lib/site";
 import { abs, ORIGIN } from "@/lib/es/seo";
-import { CITIES, GUIDES, PACKAGES } from "@/lib/es/catalog";
+import { CITIES, GUIDES } from "@/lib/es/catalog";
+import { renderLlms, renderSitemap, type SeoCatalog } from "../scripts/seo-files";
 
 const read = (p: string) => readFileSync(new URL(`../${p}`, import.meta.url), "utf8");
 const app = read("src/App.tsx");
-const sitemapPaths = [...read("public/sitemap.xml").matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
+const CATALOG: SeoCatalog = {
+  prebuilds: [
+    { slug: "starter", name: "Starter Rig", updated_at: "2026-10-01T00:00:00Z", image: "/rigs/starter.jpg", price_ex_gst: 1140800, purchasable: true },
+    { slug: "haptic", name: "Haptic", updated_at: null, image: null, price_ex_gst: null, purchasable: false },
+  ],
+  products: [{ sku: "alpha-15", name: "Alpha 15", brand: "Simagic", updated_at: "2026-09-09T00:00:00Z" }],
+  ambassadors: [{ slug: "carter-cosgrove-racing", updated_at: null }],
+  blockRules: [{ left_sku: "sr2", right_sku: "tr120s", reason: "SR2 needs a stiffer chassis." }],
+  brands: ["Simagic"],
+};
+const sitemap = renderSitemap(DEFAULT_SITE_ORIGIN, CATALOG, "2026-10-15");
+const llms = renderLlms(DEFAULT_SITE_ORIGIN, CATALOG);
+const sitemapPaths = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((m) => m[1]);
 
 describe("one configurable public host", () => {
   it("defaults to the www host the bare domain redirects to", () => {
@@ -25,9 +38,8 @@ describe("one configurable public host", () => {
     expect(normaliseOrigin("not a url")).toBe(DEFAULT_SITE_ORIGIN);
   });
 
-  it("index.html, sitemap, robots and llms.txt all use the default host only", () => {
-    for (const f of ["index.html", "public/sitemap.xml", "public/robots.txt", "public/llms.txt"]) {
-      const text = read(f);
+  it("index.html, robots, and the generated sitemap and llms.txt use the default host only", () => {
+    for (const [f, text] of [["index.html", read("index.html")], ["public/robots.txt", read("public/robots.txt")], ["sitemap.xml", sitemap], ["llms.txt", llms]]) {
       expect(text, f).not.toMatch(/https:\/\/everythingsimulated\.com\.au/);
       expect(text, f).toContain(DEFAULT_SITE_ORIGIN);
     }
@@ -58,11 +70,34 @@ describe("sitemap", () => {
     }
   });
 
-  it("covers every package, guide and city landing page", () => {
+  it("covers every prebuild, part and ambassador from the database, plus guides and cities", () => {
     const paths = new Set(sitemapPaths.map((u) => new URL(u).pathname));
-    for (const p of PACKAGES) expect(paths.has(`/prebuilds/${p.slug}`), p.slug).toBe(true);
+    for (const p of CATALOG.prebuilds) expect(paths.has(`/prebuilds/${p.slug}`), p.slug).toBe(true);
+    for (const p of CATALOG.products) expect(paths.has(`/shop/${p.sku}`), p.sku).toBe(true);
+    for (const a of CATALOG.ambassadors) expect(paths.has(`/ambassadors/${a.slug}`), a.slug).toBe(true);
     for (const g of GUIDES) expect(paths.has(`/guides/${g.slug}`), g.slug).toBe(true);
     for (const c of CITIES) expect(paths.has(`/au/${c.slug}`), c.slug).toBe(true);
+  });
+});
+
+describe("llms.txt", () => {
+  it("prices prebuilds from the database and says enquiry when there is no price", () => {
+    expect(llms).toContain("Starter Rig: $11,408 + GST");
+    expect(llms).toContain("Haptic: priced on enquiry");
+    expect(llms).toContain("sr2 + tr120s is blocked");
+  });
+  it("is no longer a hand-written file in public/", () => {
+    expect(() => read("public/llms.txt")).toThrow();
+    expect(() => read("public/sitemap.xml")).toThrow();
+  });
+});
+
+describe("no hardcoded catalogue in the frontend", () => {
+  it("has no package, rule or price constants left in src/lib/es", () => {
+    const catalog = read("src/lib/es/catalog.ts") + read("src/lib/es/content.ts");
+    expect(catalog).not.toMatch(/PACKAGES|RULES|priceExGst|sellExGst/);
+    expect(catalog).not.toMatch(/\$\d{1,3}(,\d{3})+/);
+    expect(read("src/lib/es/seo.ts")).not.toMatch(/\$\d{1,3}(,\d{3})+/);
   });
 });
 

@@ -10,6 +10,8 @@ type CartState = {
   driverWeightKg: number;
   postcode: string;
   quoteId: string | null;
+  /** Set when the cart was loaded from a prebuild; quote_cart charges the package price while the lines are unchanged. */
+  prebuildSlug: string | null;
   referralCode: string;
   setWeight: (kg: number) => void;
   setPostcode: (v: string) => void;
@@ -18,7 +20,7 @@ type CartState = {
   setQty: (sku: string, qty: number) => void;
   add: (sku: string) => void;
   remove: (sku: string) => void;
-  setLines: (lines: CartLine[], quoteId?: string | null) => void;
+  setLines: (lines: CartLine[], quoteId?: string | null, prebuildSlug?: string | null) => void;
   clear: () => void;
   result: () => CheckResult;
 };
@@ -34,13 +36,14 @@ export const useCart = create<CartState>()(
       driverWeightKg: 80,
       postcode: "4215",
       quoteId: null,
+      prebuildSlug: null,
       referralCode: "",
       setWeight: (driverWeightKg) => set({ driverWeightKg }),
       setPostcode: (postcode) => set({ postcode }),
       setReferralCode: (v) => set({ referralCode: normaliseCode(v) }),
       loadPackage: (slug) => {
         const pack = livePackages().find((p) => p.slug === slug);
-        if (pack) set({ lines: pack.lines.map((l) => ({ ...l })), quoteId: null });
+        if (pack) set({ lines: pack.lines.map((l) => ({ ...l })), quoteId: null, prebuildSlug: slug });
       },
       setQty: (sku, qty) =>
         set({
@@ -63,8 +66,9 @@ export const useCart = create<CartState>()(
         set({ lines });
       },
       remove: (sku) => set({ lines: get().lines.filter((l) => l.sku !== sku) }),
-      setLines: (lines, quoteId) => set({ lines: lines.map((l) => ({ ...l })), quoteId: quoteId ?? null }),
-      clear: () => set({ lines: [], quoteId: null }),
+      setLines: (lines, quoteId, prebuildSlug) =>
+        set({ lines: lines.map((l) => ({ ...l })), quoteId: quoteId ?? null, prebuildSlug: prebuildSlug ?? null }),
+      clear: () => set({ lines: [], quoteId: null, prebuildSlug: null }),
       result: () => checkCart({ lines: get().lines, driverWeightKg: get().driverWeightKg, postcode: get().postcode }),
     }),
     { name: "es-cart-v2" },

@@ -3,12 +3,13 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, MapPin } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { SiteShell } from "@/components/es/site-shell";
-import { JsonLd, Money } from "@/components/es/bits";
-import { BRAND, CITIES, PACKAGES } from "@/lib/es/catalog";
+import { JsonLd, LoadError, Money } from "@/components/es/bits";
+import { BRAND, CITIES } from "@/lib/es/catalog";
 import { graphLd, localBusinessLd, organizationLd, pageHead, websiteLd, faqLd, FAQS } from "@/lib/es/seo";
 import { fetchBrands } from "@/lib/es/brands";
-import { fetchFeaturedPrebuilds, livePackages } from "@/lib/es/prebuilds";
+import { fetchFeaturedPrebuilds } from "@/lib/es/prebuilds";
 import { PLATFORMS } from "@/lib/es/platforms";
+import { useLiveCopy } from "@/lib/es/live-copy";
 
 export const Route = createFileRoute("/")({
   head: () =>
@@ -22,12 +23,14 @@ export const Route = createFileRoute("/")({
 });
 
 export function Home() {
+  const { fill } = useLiveCopy();
+  const faqs = FAQS.map((f) => ({ q: f.q, a: fill(f.a) }));
   const racing = PLATFORMS.find((p) => p.slug === "racing");
   const rest = PLATFORMS.filter((p) => p.slug !== "racing");
 
   return (
     <SiteShell>
-      <JsonLd data={graphLd(organizationLd(), websiteLd(), localBusinessLd(), faqLd(FAQS))} />
+      <JsonLd data={graphLd(organizationLd(), websiteLd(), localBusinessLd(), faqLd(faqs))} />
       <section className="es-hero">
         <img src="/rigs/hero-poster.jpg" alt="Driver using a triple-screen racing simulator" className="es-hero-img" {...{ fetchpriority: "high" }} width={1948} height={908} />
         <HeroVideo />
@@ -142,7 +145,7 @@ export function Home() {
         <p className="es-kicker es-kicker-telemetry">FAQ</p>
         <h2 className="es-display mt-2 text-4xl">Frequently Asked Questions</h2>
         <dl className="mt-8 grid gap-6 md:grid-cols-2">
-          {FAQS.slice(0, 4).map((item) => (
+          {faqs.slice(0, 4).map((item) => (
             <div key={item.q} className="es-card p-5">
               <dt className="font-medium">{item.q}</dt>
               <dd className="mt-2 text-sm text-muted">{item.a}</dd>
@@ -160,7 +163,6 @@ export function Home() {
 function FeaturedPrebuilds() {
   const featured = useQuery({ queryKey: ["featured-prebuilds"], queryFn: fetchFeaturedPrebuilds });
   const items = featured.data ?? [];
-  const hasDynamic = items.length > 0;
 
   return (
     <section className="es-body">
@@ -173,39 +175,37 @@ function FeaturedPrebuilds() {
           Or spec from parts
         </Link>
       </div>
-      {hasDynamic ? (
+      {featured.isPending ? (
+        <div className="es-pack-grid" aria-busy="true" aria-label="Loading prebuilds">
+          {[0, 1, 2].map((i) => (
+            <div key={i} className="aspect-square animate-pulse rounded-xl bg-raised" />
+          ))}
+        </div>
+      ) : featured.isError ? (
+        <LoadError what="the prebuilds" onRetry={() => void featured.refetch()} />
+      ) : items.length === 0 ? (
+        <p className="text-muted">
+          No prebuilds are listed right now. <Link to="/shop" className="text-paper underline">Spec a rig from parts</Link> or{" "}
+          <Link to="/contact" className="text-paper underline">talk to the workshop</Link>.
+        </p>
+      ) : (
         <div className="es-pack-grid">
-          {items.map((p) => (
+          {items.map((p, i) => (
             <div key={p.id} className="group">
               <Link to="/prebuilds/$slug" params={{ slug: p.slug }} className="es-pack-tile">
                 <div className="es-pack-tile-frame">
-                  {p.image ? <img src={p.image} alt={p.name} /> : <div className="grid size-full place-items-center bg-raised text-muted">No image</div>}
+                  {p.image ? (
+                    <img src={p.image} alt={p.name} loading={i === 0 ? "eager" : "lazy"} decoding="async" />
+                  ) : (
+                    <div className="grid size-full place-items-center bg-raised text-muted">No image</div>
+                  )}
                 </div>
               </Link>
               <div className="es-pack-tile-meta">
                 <h3 className="text-paper">{p.name}</h3>
                 <p className="mt-2 text-sm leading-6 text-muted">{p.blurb}</p>
                 <p className="mt-4 text-lg font-medium text-paper">
-                  <Money cents={p.price_ex_gst} gst />
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <div className="es-pack-grid">
-          {(livePackages().length ? livePackages() : PACKAGES).map((p) => (
-            <div key={p.slug} className="group">
-              <Link to="/prebuilds/$slug" params={{ slug: p.slug }} className="es-pack-tile">
-                <div className="es-pack-tile-frame">
-                  <img src={p.image} alt={p.name} />
-                </div>
-              </Link>
-              <div className="es-pack-tile-meta">
-                <h3 className="text-paper">{p.name}</h3>
-                <p className="mt-2 text-sm leading-6 text-muted">{p.blurb}</p>
-                <p className="mt-4 text-lg font-medium text-paper">
-                  <Money cents={p.priceExGst} gst />
+                  {p.purchasable ? <Money cents={p.effective_price_ex_gst} gst /> : "Enquire for price"}
                 </p>
               </div>
             </div>
@@ -282,6 +282,11 @@ function BrandLogo({
   );
 }
 
+function listNames(names: string[]) {
+  if (names.length <= 1) return names.join("");
+  return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+}
+
 function BrandBanner() {
   const brands = useQuery({ queryKey: ["brands"], queryFn: () => fetchBrands() });
   const items = brands.data ?? [];
@@ -291,13 +296,13 @@ function BrandBanner() {
         <p className="es-kicker es-kicker-telemetry">Brands we spec</p>
         <h2 className="es-display mt-2 text-4xl">Premium Hardware, Professionally Assembled</h2>
         <p className="mt-2 max-w-2xl text-sm text-muted">
-          Simagic, Trak Racer, Exodus, SIMRIG and Dynamix on the racing line. Player1 from January 2026.
+          {items.length > 0 ? `${listNames(items.map((b) => b.name))} on the racing line. ` : ""}
           Every simulator is compatibility-checked, assembled and quality-tested on the Gold Coast.
         </p>
         <div className="es-brand-marquee mt-8" aria-label="Brands we spec">
           <div className="es-brand-track">
             {Array.from({ length: 3 }, (_, setIndex) =>
-              (items.length > 0 ? items : ["Simagic", "Trak Racer", "Exodus", "SIMRIG", "AOC", "Logitech", "iRacing"].map((name) => ({ id: name, name, icon_url: null, link_url: null }))).map((brand, index) => (
+              items.map((brand, index) => (
                 <BrandLogo key={`${brand.id}-${setIndex}-${index}`} brand={brand} ariaHidden={setIndex > 0} />
               )),
             )}

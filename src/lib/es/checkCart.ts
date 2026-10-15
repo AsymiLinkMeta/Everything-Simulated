@@ -1,5 +1,4 @@
-import { RULES } from "./catalog";
-import { freightExGst } from "./freight";
+import { quoteFreight } from "./freight";
 import { getCachedProductMap, getLiveRules } from "./product-cache";
 import type { CartLine, CheckIssue, CheckResult, CompatibilityRule, Product } from "./types";
 
@@ -17,7 +16,7 @@ export function checkCart(input: {
   postcode?: string;
 }): CheckResult {
   const products = input.products ?? getCachedProductMap();
-  const rules = input.rules ?? getLiveRules() ?? RULES;
+  const rules = input.rules ?? getLiveRules();
   const issues: CheckIssue[] = [];
   const expanded: { sku: string; qty: number; product: Product }[] = [];
 
@@ -122,7 +121,7 @@ export function checkCart(input: {
     lead = [Math.max(lead[0], row.product.leadWeeks[0]), Math.max(lead[1], row.product.leadWeeks[1])];
   }
 
-  const freight = freightExGst(input.postcode, input.lines);
+  const freight = quoteFreight({ postcode: input.postcode, lines: input.lines, products }).centsExGst;
   const blocks = issues.some((i) => i.severity === "block");
   return {
     ok: !blocks,

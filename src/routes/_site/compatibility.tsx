@@ -9,7 +9,7 @@ export const Route = createFileRoute("/_site/compatibility")({
   head: () =>
     pageHead({
       title: "Racing Simulator Compatibility Checker | Everything Simulated",
-      description: "Verify your racing simulator build before you buy. Our compatibility engine checks Simagic, Trak Racer, Exodus and SIMRIG components for torque, payload, quick-release and mount clearance.",
+      description: "Verify your racing simulator build before you buy. Our compatibility engine checks every chassis, wheelbase, pedal, seat, screen and motion pairing for torque, payload, quick-release and mount clearance.",
       path: "/compatibility",
     }),
   component: Compatibility,

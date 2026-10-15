@@ -1,6 +1,5 @@
 import { supabase } from "@/lib/db";
-import { PACKAGES, packageBySlug } from "./catalog";
-import { livePackages } from "./prebuilds";
+import { livePackages, resolvePrebuildSlug } from "./prebuilds";
 import type { PackageSpec } from "./types";
 
 export type AgeBand = "U12" | "12-15" | "16-17" | "18+";
@@ -105,7 +104,8 @@ export function ambassadorProfileUrl(slug: string) {
 
 export function crateForAmbassador(a: Ambassador): PackageSpec | null {
   if (!a.crate) return null;
-  return livePackages().find((p) => p.slug === a.crate) ?? packageBySlug(a.crate) ?? PACKAGES.find((p) => p.slug === a.crate) ?? null;
+  const slug = resolvePrebuildSlug(a.crate);
+  return livePackages().find((p) => p.slug === slug || p.slug === a.crate) ?? null;
 }
 
 export function specsForAmbassador(a: Ambassador): RigSpec[] {

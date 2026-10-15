@@ -1,4 +1,4 @@
-import { createFileRoute, notFound, applyHeadPayload } from "@tanstack/react-router";
+import { createFileRoute, Link, notFound, applyHeadPayload } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { BookOpen, Boxes, Check, Package } from "lucide-react";
@@ -102,12 +102,18 @@ function ProductPage() {
         <div>
           <p className="es-kicker">{item.brand}</p>
           <h1 className="mt-2 text-3xl font-medium">{item.name}</h1>
-          <p className="mt-4 text-2xl">
-            <Money cents={item.sellExGst} gst />
-          </p>
-          <p>
-            <IncGst cents={item.sellExGst} />
-          </p>
+          {item.purchasable ? (
+            <>
+              <p className="mt-4 text-2xl">
+                <Money cents={item.sellExGst} gst />
+              </p>
+              <p>
+                <IncGst cents={item.sellExGst} />
+              </p>
+            </>
+          ) : (
+            <p className="mt-4 text-2xl">Enquire for price</p>
+          )}
           <p className="mt-4 text-sm text-muted capitalize">
             {item.stock === "stock" ? "In stock on the Gold Coast" : item.stock} · lead {item.leadWeeks[0]}–{item.leadWeeks[1]} weeks
           </p>
@@ -117,9 +123,15 @@ function ProductPage() {
           <div className="mt-6">
             <CheckPills result={result} />
           </div>
-          <Button className="mt-8" onClick={() => add(item.sku)}>
-            {inCart ? "In the build — add another / replace" : "Add to build"}
-          </Button>
+          {item.purchasable ? (
+            <Button className="mt-8" onClick={() => add(item.sku)}>
+              {inCart ? "In the build — add another / replace" : "Add to build"}
+            </Button>
+          ) : (
+            <Button className="mt-8" asChild>
+              <Link to="/contact">Enquire for price</Link>
+            </Button>
+          )}
           <p className="mt-4 text-sm text-muted">
             The live checker sits in the cart. A block means we will not take a deposit on that mix.
           </p>

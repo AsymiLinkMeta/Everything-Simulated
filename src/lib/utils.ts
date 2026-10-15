@@ -13,6 +13,16 @@ export function aud(cents: number) {
   }).format(cents / 100);
 }
 
+/** Dollars and cents, for amounts that are actually charged (deposits, payments). */
+export function audExact(cents: number) {
+  return new Intl.NumberFormat("en-AU", {
+    style: "currency",
+    currency: "AUD",
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(cents / 100);
+}
+
 export function gstInclusive(exGstCents: number) {
   return Math.round(exGstCents * 1.1);
 }

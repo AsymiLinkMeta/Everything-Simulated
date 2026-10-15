@@ -101,10 +101,15 @@ function Login() {
       return;
     }
     if (!staff && mode === "up") {
-      const { error: err } = await authClient.signUp.email({ email, password, name, callbackURL: next });
+      const { error: err, needsConfirmation } = await authClient.signUp.email({ email, password, name, callbackURL: next });
       setPending(false);
       if (err) {
         setError(err.message ?? "Could not create account");
+        return;
+      }
+      if (needsConfirmation) {
+        setPassword("");
+        setInfo(`Check your email. We sent a confirmation link to ${email}; open it to finish creating your account.`);
         return;
       }
     } else {
@@ -209,7 +214,7 @@ function Login() {
                 />
               ) : null}
               {error ? <p className="text-sm text-esred">{error}</p> : null}
-              {info ? <p className="text-sm text-muted">{info}</p> : null}
+              {info ? <p role="status" className="text-sm text-muted">{info}</p> : null}
               <Button type="submit" className="w-full" disabled={pending}>
                 {pending
                   ? "Please wait…"

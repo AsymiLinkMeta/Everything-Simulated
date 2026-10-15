@@ -15,7 +15,7 @@ const STEPS: { id: ProductCategory | "more"; label: string; hint: string }[] = [
   { id: "wheel", label: "Wheel", hint: "Match the QR on the base." },
   { id: "pedals", label: "Pedals", hint: "Load cell, hydraulic or entry." },
   { id: "seat", label: "Seat", hint: "Side mounts and driver size." },
-  { id: "motion", label: "Motion", hint: "SR2 only on Exodus XR1." },
+  { id: "motion", label: "Motion", hint: "The checker matches it to your chassis." },
   { id: "monitor", label: "Screens", hint: "Single, triples or ultrawide." },
   { id: "mount", label: "Mounts", hint: "Monitor arms and decks." },
   { id: "pc", label: "PC", hint: "Optional race PC, or bring your own." },

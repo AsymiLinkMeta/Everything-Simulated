@@ -5,6 +5,7 @@ import { FAQS, faqLd, graphLd, organizationLd, pageHead } from "@/lib/es/seo";
 import { JsonLd, Money } from "@/components/es/bits";
 import { Button } from "@/components/ui/button";
 import { PageHero } from "@/components/es/section-page";
+import { useLiveCopy } from "@/lib/es/live-copy";
 
 export const Route = createFileRoute("/_site/faqs")({
   head: () =>
@@ -17,9 +18,11 @@ export const Route = createFileRoute("/_site/faqs")({
 });
 
 function FAQs() {
+  const { fill } = useLiveCopy();
+  const faqs = FAQS.map((f) => ({ q: f.q, a: fill(f.a) }));
   return (
     <div>
-      <JsonLd data={graphLd(organizationLd(), faqLd(FAQS))} />
+      <JsonLd data={graphLd(organizationLd(), faqLd(faqs))} />
       <PageHero
         kicker="Questions"
         title="Frequently Asked Questions"
@@ -28,7 +31,7 @@ function FAQs() {
       />
       <div className="es-body mx-auto max-w-3xl">
         <ol className="es-rail">
-          {FAQS.map((f, i) => (
+          {faqs.map((f, i) => (
             <li key={f.q} className="es-rail-step">
               <strong>{String(i + 1).padStart(2, "0")} {f.q}</strong>
               <span>{f.a}</span>

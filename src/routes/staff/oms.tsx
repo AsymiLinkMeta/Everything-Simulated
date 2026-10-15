@@ -17,6 +17,7 @@ import type { CartLine } from "@/lib/es/types";
 import { aud } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { RecordPayment } from "@/components/es/record-payment";
 
 export const Route = createFileRoute("/staff/oms")({
   component: OmsHome,
@@ -188,12 +189,23 @@ function OmsHome() {
                       </p>
                       <div className="mt-2 flex flex-wrap gap-1">
                         {col === "pending" ? (
-                          <Button size="sm" variant="outline" onClick={() => staffSetOrderStatus(o.id, "paid").then(() => qc.invalidateQueries({ queryKey: ["oms-orders"] }))}>
-                            Mark paid
-                          </Button>
+                          <RecordPayment
+                            orderId={o.id}
+                            balanceCents={o.total_inc_gst - (o.refunded_cents ?? 0) - (o.paid_cents ?? 0)}
+                            label="Mark paid"
+                            onDone={() => qc.invalidateQueries({ queryKey: ["oms-orders"] })}
+                          />
                         ) : null}
                         {col === "paid" ? (
-                          <Button size="sm" variant="outline" onClick={() => staffSetOrderStatus(o.id, "packing").then(() => qc.invalidateQueries({ queryKey: ["oms-orders"] }))}>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() =>
+                              staffSetOrderStatus(o.id, "packing")
+                                .then(() => qc.invalidateQueries({ queryKey: ["oms-orders"] }))
+                                .catch((err) => toast.error(err instanceof Error ? err.message : "Could not pack"))
+                            }
+                          >
                             Pack
                           </Button>
                         ) : null}
@@ -203,8 +215,7 @@ function OmsHome() {
                             variant="outline"
                             onClick={async () => {
                               try {
-                                if (!o.tracking_number) await staffAssignTracking(o.id);
-                                await staffSetOrderStatus(o.id, "shipped");
+                                await staffAssignTracking(o.id, o.tracking_number ?? undefined);
                                 await qc.invalidateQueries({ queryKey: ["oms-orders"] });
                               } catch (err) {
                                 toast.error(err instanceof Error ? err.message : "Could not ship");
@@ -215,7 +226,15 @@ function OmsHome() {
                           </Button>
                         ) : null}
                         {col === "shipped" ? (
-                          <Button size="sm" variant="outline" onClick={() => staffSetOrderStatus(o.id, "delivered").then(() => qc.invalidateQueries({ queryKey: ["oms-orders"] }))}>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() =>
+                              staffSetOrderStatus(o.id, "delivered")
+                                .then(() => qc.invalidateQueries({ queryKey: ["oms-orders"] }))
+                                .catch((err) => toast.error(err instanceof Error ? err.message : "Could not update"))
+                            }
+                          >
                             Delivered
                           </Button>
                         ) : null}
