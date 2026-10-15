@@ -17,12 +17,23 @@ case "${1:-up}" in
 esac
 # Container-to-container DNS is unreliable on some Docker hosts (this box included), so the
 # db and mail containers publish ports and auth/rest run on the host network.
-# public.ecr.aws rate-limits anonymous pulls (CI hit "toomanyrequests"), so pull with backoff first.
+# public.ecr.aws rate-limits anonymous pulls ("toomanyrequests" in CI). Retry, then fall back
+# to the same image on Docker Hub and tag it with the ECR name so `docker run` finds it.
+mirror() {
+  case "$1" in
+    public.ecr.aws/supabase/postgrest:*) echo "postgrest/postgrest:${1##*:}" ;;
+    public.ecr.aws/supabase/mailpit:*) echo "axllent/mailpit:${1##*:}" ;;
+    public.ecr.aws/*) echo "${1#public.ecr.aws/}" ;;
+    *) echo "$1" ;;
+  esac
+}
 pull() {
-  local img=$1
+  local img=$1 alt
   docker image inspect "$img" >/dev/null 2>&1 && return
-  for i in 1 2 3 4 5 6; do
-    docker pull -q "$img" >/dev/null && return
+  alt=$(mirror "$img")
+  for i in 1 2 3 4; do
+    docker pull -q "$img" >/dev/null 2>&1 && return
+    if [[ "$alt" != "$img" ]] && docker pull -q "$alt" >/dev/null 2>&1; then docker tag "$alt" "$img"; return; fi
     echo "pull $img failed (attempt $i), retrying in $((i * 15))s" >&2; sleep $((i * 15))
   done
   docker pull "$img"

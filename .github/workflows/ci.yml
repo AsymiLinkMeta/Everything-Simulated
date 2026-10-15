@@ -47,7 +47,8 @@ jobs:
     runs-on: ubuntu-latest
     services:
       postgres:
-        image: public.ecr.aws/supabase/postgres:17.11.0.004
+        # Docker Hub copy of the same image: public.ecr.aws rate-limits anonymous CI pulls.
+        image: supabase/postgres:17.11.0.004
         env:
           POSTGRES_PASSWORD: postgres
         ports:
@@ -89,11 +90,12 @@ jobs:
       - name: Start local Supabase-compatible stack
         run: local/stack.sh up
       - run: local/migrate.sh
-      - run: local/seed.sh
+      # seed.sh creates the demo accounts through the gateway's /auth/v1, so start it first.
       - name: Start API gateway and edge functions
         run: |
           nohup deno run -A --node-modules-dir=none local/gateway.ts > gateway.log 2>&1 &
           for i in $(seq 1 90); do curl -sf http://localhost:54321/health && break; sleep 2; done
+      - run: local/seed.sh
       - run: npx playwright install --with-deps chromium
       - name: Playwright
         run: |
