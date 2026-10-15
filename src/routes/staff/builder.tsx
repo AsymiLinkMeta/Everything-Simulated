@@ -106,7 +106,7 @@ function StaffBuilder() {
               </span>
               <select
                 aria-label={`Badge for ${p.name}`}
-                className="min-h-11 rounded-md border border-line bg-surface px-3 text-sm text-paper"
+                className="es-input w-auto min-w-40 pr-9"
                 value={badges[p.sku] ?? ""}
                 onChange={(e) => void setBadge(p.sku, e.target.value)}
               >
@@ -136,7 +136,7 @@ function StaffBuilder() {
         >
           <label className="grid gap-1 text-sm">
             <span>Category</span>
-            <select className="min-h-11 rounded-md border border-line bg-surface px-3 text-paper" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value, sku: "" })}>
+            <select className="es-input pr-9" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value, sku: "" })}>
               {CATEGORIES.map((c) => (
                 <option key={c} value={c}>
                   {c}
@@ -146,7 +146,7 @@ function StaffBuilder() {
           </label>
           <label className="grid gap-1 text-sm">
             <span>Product (optional)</span>
-            <select className="min-h-11 rounded-md border border-line bg-surface px-3 text-paper" value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })}>
+            <select className="es-input pr-9" value={form.sku} onChange={(e) => setForm({ ...form, sku: e.target.value })}>
               <option value="">Default for the category</option>
               {(products.data ?? [])
                 .filter((p) => p.category === form.category)
