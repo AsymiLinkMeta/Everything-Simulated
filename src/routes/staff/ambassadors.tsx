@@ -30,9 +30,16 @@ function StaffAmbassadors() {
     <div className="space-y-6">
       <div className="flex flex-wrap gap-2" role="tablist" aria-label="Ambassador programme">
         {([["people", "Ambassadors"], ["payouts", "Commissions & payouts"], ["settings", "Programme settings"]] as const).map(([k, label]) => (
-          <Button key={k} size="sm" role="tab" aria-selected={tab === k} variant={tab === k ? "primary" : "outline"} onClick={() => setTab(k)}>
+          <button
+            key={k}
+            type="button"
+            role="tab"
+            aria-selected={tab === k}
+            onClick={() => setTab(k)}
+            className={`min-h-9 rounded-md border px-3 text-sm transition-colors ${tab === k ? "border-esred bg-esred/15 text-paper" : "border-line text-muted hover:text-paper"}`}
+          >
             {label}
-          </Button>
+          </button>
         ))}
       </div>
       {tab === "people" ? <AmbassadorList /> : tab === "payouts" ? <PayoutsPanel /> : <ProgrammeSettingsPanel />}

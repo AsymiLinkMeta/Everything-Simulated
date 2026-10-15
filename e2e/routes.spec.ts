@@ -6,7 +6,7 @@ const PUBLIC = [
   "/", "/racing", "/racing/checker", "/racing/prebuilds", "/racing/shop", "/compatibility", "/shop", "/shop/alpha-15",
   "/prebuilds", "/prebuilds/starter", "/prebuilds/haptic", "/prebuilds/motion", "/builds", "/builds/haptic",
   "/aircraft", "/aircraft/flight", "/aircraft/helicopter", "/drones", "/training", "/training/driver", "/training/industrial",
-  "/studio", "/events", "/catering", "/partners", "/ambassadors", "/ambassadors/carter-cosgrove-racing", "/drivers",
+  "/studio", "/events", "/catering", "/partners", "/guardian", "/ambassadors", "/ambassadors/carter-cosgrove-racing", "/drivers",
   "/guides", "/guides/motion-vs-haptic-vs-static", "/au", "/au/brisbane", "/faqs", "/contact", "/order", "/checkout",
   "/privacy", "/terms", "/login",
 ];
