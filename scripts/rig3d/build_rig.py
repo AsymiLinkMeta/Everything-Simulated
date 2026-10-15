@@ -182,8 +182,8 @@ def screen_material(image, u0=0.0, u1=1.0):
     nt = m.node_tree
     b = nt.nodes["Principled BSDF"]
     b.inputs["Base Color"].default_value = (0.004, 0.005, 0.007, 1)
-    b.inputs["Roughness"].default_value = 0.08
-    b.inputs["Coat Weight"].default_value = 0.3
+    b.inputs["Roughness"].default_value = 0.45  # matte anti-glare panel
+    b.inputs["Coat Weight"].default_value = 0.0
     uv = nt.nodes.new("ShaderNodeUVMap")
     mp = nt.nodes.new("ShaderNodeMapping")
     mp.inputs["Location"].default_value = (u0, 0, 0)
@@ -197,7 +197,7 @@ def screen_material(image, u0=0.0, u1=1.0):
     tex.extension = "EXTEND"
     nt.links.new(mp.outputs["Vector"], tex.inputs["Vector"])
     nt.links.new(tex.outputs["Color"], b.inputs["Emission Color"])
-    b.inputs["Emission Strength"].default_value = 4.0
+    b.inputs["Emission Strength"].default_value = 3.0
     SCREEN_IMG[key] = m
     return m
 
@@ -744,8 +744,9 @@ for s, side in [(1, "L"), (-1, "R")]:
 profile("Top crossbar", (ST_X - 80, -360, 1640), (ST_X - 80, 360, 1640), 80, 40, u=(0, 0, 1))
 layer("mount-sides")
 for s, side in [(1, "L"), (-1, "R")]:
-    h = Vector((ST_X - 60, s * (SW / 2 + 40), BAR_Z))
     d = Vector((-math.sin(SIDE), s * math.cos(SIDE), 0))
+    behind = Vector((math.cos(SIDE), s * math.sin(SIDE), 0))  # away from the driver, square to the screen
+    h = Vector((CX, s * (SW / 2 + 4), BAR_Z)) + behind * 95 + d * 40
     profile(f"Side arm {side}", tuple(h), tuple(h + d * 520), 40, 40, u=(0, 0, 1))
     box(f"Side hinge {side}", tuple(h), (60, 60, 90), MAT["alu"], bevel=0.003)
 
