@@ -17,7 +17,22 @@ case "${1:-up}" in
 esac
 # Container-to-container DNS is unreliable on some Docker hosts (this box included), so the
 # db and mail containers publish ports and auth/rest run on the host network.
-run() { local n=$1; shift; docker inspect $P-$n >/dev/null 2>&1 && { docker start $P-$n >/dev/null; return; }; docker run -d --name $P-$n "$@" >/dev/null; }
+# public.ecr.aws rate-limits anonymous pulls (CI hit "toomanyrequests"), so pull with backoff first.
+pull() {
+  local img=$1
+  docker image inspect "$img" >/dev/null 2>&1 && return
+  for i in 1 2 3 4 5 6; do
+    docker pull -q "$img" >/dev/null && return
+    echo "pull $img failed (attempt $i), retrying in $((i * 15))s" >&2; sleep $((i * 15))
+  done
+  docker pull "$img"
+}
+run() {
+  local n=$1; shift
+  docker inspect $P-$n >/dev/null 2>&1 && { docker start $P-$n >/dev/null; return; }
+  pull "${@: -1}"
+  docker run -d --name $P-$n "$@" >/dev/null
+}
 run db -v $P-db:/var/lib/postgresql/data -p 54322:5432 -e POSTGRES_PASSWORD=postgres -e JWT_SECRET="$JWT_SECRET" -e JWT_EXP=3600 public.ecr.aws/supabase/postgres:17.11.0.004
 echo -n "waiting for db"
 for _ in $(seq 1 90); do
