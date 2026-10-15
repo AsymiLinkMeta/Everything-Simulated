@@ -3,7 +3,6 @@ import { sql } from "./db";
 
 test.describe("sign-up with email confirmation", () => {
   test("new account must confirm email before signing in", async ({ page, problems }, info) => {
-    test.fail(true, "BUG-03: sign-up navigates into the app with no session and never says to check email");
     const email = `new-${Date.now()}-${info.project.name}@example.com`;
     await page.goto("/login");
     await page.getByRole("button", { name: "New here? Create an account" }).click();
@@ -27,8 +26,7 @@ test.describe("sign-up with email confirmation", () => {
     await page.goto("/app");
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     expect(new URL(page.url()).pathname).toBe("/app");
-    const [p] = sql<{ role: string }>(`select role from profiles where email = '${email}'`);
-    expect(p?.role).toBe("customer");
+    await expect.poll(() => sql<{ role: string }>(`select role from profiles where email = '${email}'`)[0]?.role).toBe("customer");
     expect(problems.page).toEqual([]);
   });
 });

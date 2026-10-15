@@ -58,7 +58,16 @@ function aiReply(body: Record<string, unknown>) {
   const last = messages.at(-1)?.content ?? "";
   // Callers that ask for JSON get a small, valid JSON object they can parse.
   const wantsJson = /json/i.test(JSON.stringify(messages.slice(0, 1))) || body.response_format;
-  const content = wantsJson
+  // generate-product-listing: return a listing that passes its isListing() check.
+  const wantsListing = /manufacturerUrl/.test(JSON.stringify(messages.slice(0, 1)));
+  const content = wantsListing
+    ? JSON.stringify({
+      sku: "mock-wheelbase-15", brand: "Mockbrand", name: "Mock listing title", category: "wheelbase",
+      price: 0, description: "Mock description from the local xAI stub.", notes: "Mock notes.",
+      images: [], whatsIncluded: ["Wheelbase"], mountCompatibility: "", specs: { Torque: "15 Nm" },
+      compare: "", mounts: [], maxNm: 15, payloadKg: null, weightKg: 9, qr: null,
+    })
+    : wantsJson
     ? JSON.stringify({
       reply: "Mock adviser: that combination works. Consider a quick-release for easy swaps.",
       title: "Mock listing title", summary: "Mock summary.", description: "Mock description.",
