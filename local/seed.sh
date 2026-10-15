@@ -57,5 +57,6 @@ SQL
 psql "$DB" -q -1 -v ON_ERROR_STOP=1 -f ../supabase/migrations/20261015130000_server_pricing.sql 2>&1 | grep -v NOTICE || true
 psql "$DB" -q -1 -v ON_ERROR_STOP=1 -f ../supabase/migrations/20261016090000_ambassador_program.sql 2>&1 | grep -v NOTICE || true
 psql "$DB" -q -1 -v ON_ERROR_STOP=1 -f ../supabase/migrations/20261017090000_prebuild_price_source.sql 2>&1 | grep -v NOTICE || true
+psql "$DB" -q -1 -v ON_ERROR_STOP=1 -f ../supabase/migrations/20261017100000_hide_catalog_cost.sql 2>&1 | grep -v NOTICE || true
 psql "$DB" -qtAc "notify pgrst, 'reload schema'" >/dev/null
 echo "seeded: $(psql "$DB" -qtAc "select count(*) from catalog_products") products, $(psql "$DB" -qtAc "select count(*) from prebuilds") prebuilds, $(psql "$DB" -qtAc "select count(*) from profiles") profiles"

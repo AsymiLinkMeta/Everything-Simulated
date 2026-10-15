@@ -447,4 +447,51 @@ SELECT pg_temp.check((SELECT published FROM public.ambassadors WHERE id = '00000
   'minor can be published once the guardian has approved');
 RESET ROLE;
 
+-- ---- Cost price is not readable by API clients (20261017100000_hide_catalog_cost) ----
+RESET ROLE;
+UPDATE public.catalog_products SET cost_ex_gst = 61000 WHERE sku = 'sec-priced';
+SELECT pg_temp.as_anon();
+DO $$
+BEGIN
+  PERFORM cost_ex_gst FROM public.catalog_products;
+  RAISE EXCEPTION 'FAILED: anon read cost_ex_gst';
+EXCEPTION WHEN insufficient_privilege THEN RAISE NOTICE 'ok - anon cannot read catalog cost prices';
+END $$;
+DO $$
+BEGIN
+  PERFORM * FROM public.catalog_products;
+  RAISE EXCEPTION 'FAILED: anon select * includes cost_ex_gst';
+EXCEPTION WHEN insufficient_privilege THEN RAISE NOTICE 'ok - select * on catalog_products is refused for anon';
+END $$;
+SELECT pg_temp.check((SELECT sell_ex_gst = 100000 FROM public.catalog_products WHERE sku = 'sec-priced'),
+  'anon still reads public catalogue columns');
+DO $$
+BEGIN
+  PERFORM public.staff_catalog_costs();
+  RAISE EXCEPTION 'FAILED: anon called staff_catalog_costs';
+EXCEPTION WHEN insufficient_privilege THEN RAISE NOTICE 'ok - anon cannot call staff_catalog_costs';
+END $$;
+SELECT pg_temp.as_user('00000000-0000-0000-0000-00000000000e');
+DO $$
+BEGIN
+  PERFORM cost_ex_gst FROM public.catalog_products;
+  RAISE EXCEPTION 'FAILED: customer read cost_ex_gst';
+EXCEPTION WHEN insufficient_privilege THEN RAISE NOTICE 'ok - signed-in customers cannot read catalog cost prices';
+END $$;
+DO $$
+BEGIN
+  PERFORM public.staff_catalog_costs();
+  RAISE EXCEPTION 'FAILED: customer called staff_catalog_costs';
+EXCEPTION WHEN OTHERS THEN
+  IF SQLERRM LIKE 'FAILED:%' THEN RAISE; END IF;
+  RAISE NOTICE 'ok - customers cannot call staff_catalog_costs';
+END $$;
+SELECT pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
+SELECT pg_temp.check((SELECT cost_ex_gst = 61000 FROM public.staff_catalog_costs() WHERE sku = 'sec-priced'),
+  'staff read cost prices through staff_catalog_costs()');
+UPDATE public.catalog_products SET cost_ex_gst = 62000 WHERE sku = 'sec-priced';
+RESET ROLE;
+SELECT pg_temp.check((SELECT cost_ex_gst = 62000 FROM public.catalog_products WHERE sku = 'sec-priced'),
+  'staff can still write cost prices');
+
 ROLLBACK;

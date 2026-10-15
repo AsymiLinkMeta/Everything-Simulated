@@ -378,7 +378,7 @@ export async function staffListCatalogProducts(): Promise<CatalogProduct[]> {
   const { data, error } = await supabase
     .from("catalog_products")
     .select(
-      "id, sku, brand, name, category, sell_ex_gst, cost_ex_gst, stock_status, listing_status, qty_on_hand, lead_weeks_min, lead_weeks_max, description, notes, image_url, images, manufacturer_url, whats_included, mount_compatibility, assembly_manual_url, specs, compare, max_nm, payload_kg, weight_kg, mounts, qr, created_by, created_at, enquiry_only",
+      "id, sku, brand, name, category, sell_ex_gst, stock_status, listing_status, qty_on_hand, lead_weeks_min, lead_weeks_max, description, notes, image_url, images, manufacturer_url, whats_included, mount_compatibility, assembly_manual_url, specs, compare, max_nm, payload_kg, weight_kg, mounts, qr, created_by, created_at, enquiry_only",
     )
     .order("created_at", { ascending: false });
   if (error) throw new Error(error.message);
