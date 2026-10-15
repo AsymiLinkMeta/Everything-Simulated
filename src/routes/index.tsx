@@ -29,7 +29,7 @@ export function Home() {
     <SiteShell>
       <JsonLd data={graphLd(organizationLd(), websiteLd(), localBusinessLd(), faqLd(FAQS))} />
       <section className="es-hero">
-        <img src="/rigs/hero-poster.jpg" alt="Driver using a triple-screen racing simulator" className="es-hero-img" fetchPriority="high" width={1948} height={908} />
+        <img src="/rigs/hero-poster.jpg" alt="Driver using a triple-screen racing simulator" className="es-hero-img" {...{ fetchpriority: "high" }} width={1948} height={908} />
         <HeroVideo />
         <div className="es-hero-mask" />
         <div className="es-hero-copy">

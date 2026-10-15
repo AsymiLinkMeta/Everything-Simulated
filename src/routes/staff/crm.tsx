@@ -144,7 +144,7 @@ function CrmHome() {
       {people.isPending ? (
         <p className="text-sm text-muted">Loading pipeline…</p>
       ) : view === "board" ? (
-        <div className="es-board">
+        <div className="es-board" tabIndex={0} role="region" aria-label="Lead pipeline">
           {CRM_STAGES.map((stage) => {
             const col = rows.filter((p) => p.crm_stage === stage);
             return (

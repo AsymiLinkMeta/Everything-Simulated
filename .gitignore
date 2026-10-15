@@ -10,3 +10,7 @@ dist
 supabase/functions/.env
 supabase/.temp
 supabase/.branches
+e2e/.auth/
+e2e/.results/
+e2e/.report/
+local/.env.e2e
