@@ -1,5 +1,5 @@
 """
-Builds assets/rig3d/rig.blend: a generic (unbranded) aluminium-profile sim rig for the
+Builds assets/rig3d/rig.blend: a generic, Everything Simulated branded aluminium-profile sim rig for the
 rig builder preview. Units are metres; the model is laid out in millimetres via mm().
 
     blender -b --factory-startup -P scripts/rig3d/build_rig.py
