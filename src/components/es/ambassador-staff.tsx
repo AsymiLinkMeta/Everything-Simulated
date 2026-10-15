@@ -266,7 +266,7 @@ export function PayoutsPanel() {
               </li>
             ))}
           </ul>
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Commissions table">
             <table className="w-full text-left text-sm" data-testid="commission-report">
               <caption className="sr-only">Ambassador commissions</caption>
               <thead className="text-muted">

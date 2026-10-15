@@ -77,7 +77,10 @@ test.describe("referral links", () => {
 // These change programme-wide settings, so they run once (desktop) and in order.
 test.describe("programme (staff)", () => {
   test.describe.configure({ mode: "serial" });
+  // Playwright needs the destructuring pattern for the fixtures argument.
+  // eslint-disable-next-line no-empty-pattern
   test.beforeEach(({}, info) => test.skip(info.project.name !== "desktop", "programme settings are global; run once"));
+  // eslint-disable-next-line no-empty-pattern
   test.afterAll(({}, info) => {
     if (info.project.name !== "desktop") return;
     exec(`delete from ambassadors where slug like 'e2e-minor-%'`);

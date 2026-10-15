@@ -110,7 +110,7 @@ function CommissionList({ d }: { d: AmbassadorDashboard }) {
     return <p className="text-sm text-muted">No referred orders yet. Share your link or QR code to get started.</p>;
   }
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto" tabIndex={0} role="region" aria-label="Referred orders">
       <table className="w-full text-left text-sm">
         <caption className="sr-only">Referred orders and commission</caption>
         <thead className="text-muted">
