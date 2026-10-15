@@ -24,6 +24,9 @@ export default defineConfig({
     { name: "setup", testMatch: /global\.setup\.ts/ },
     { name: "desktop", use: { ...devices["Desktop Chrome"], viewport: { width: 1440, height: 900 } }, dependencies: ["setup"] },
     { name: "mobile", use: { ...devices["Pixel 7"] }, dependencies: ["setup"] },
+    // Layout sweeps at the remaining breakpoints (routes only; flows run on desktop + mobile).
+    { name: "small-360", testMatch: /routes\.spec\.ts/, use: { ...devices["Galaxy S9+"], viewport: { width: 360, height: 740 } }, dependencies: ["setup"] },
+    { name: "tablet-768", testMatch: /routes\.spec\.ts/, use: { ...devices["Desktop Chrome"], viewport: { width: 768, height: 1024 }, isMobile: true, hasTouch: true, deviceScaleFactor: 2 }, dependencies: ["setup"] },
   ],
   webServer: process.env.E2E_BASE_URL
     ? undefined

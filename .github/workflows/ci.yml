@@ -71,3 +71,40 @@ jobs:
         env:
           DB_URL: postgres://postgres:postgres@127.0.0.1:5432/postgres
           ADMIN_URL: postgres://supabase_admin:postgres@127.0.0.1:5432/postgres
+
+  e2e:
+    name: End-to-end (Playwright, local stack)
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - uses: denoland/setup-deno@v2
+        with:
+          deno-version: v2.x
+      - run: npm ci
+      - name: Start local Supabase-compatible stack
+        run: local/stack.sh up
+      - run: local/migrate.sh
+      - run: local/seed.sh
+      - name: Start API gateway and edge functions
+        run: |
+          nohup deno run -A --node-modules-dir=none local/gateway.ts > gateway.log 2>&1 &
+          for i in $(seq 1 90); do curl -sf http://localhost:54321/health && break; sleep 2; done
+      - run: npx playwright install --with-deps chromium
+      - name: Playwright
+        run: |
+          source local/stack.env
+          LOCAL_ANON_KEY="$ANON_KEY" npm run e2e
+      - if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            e2e/.report
+            e2e/.results
+            gateway.log
+          retention-days: 14
