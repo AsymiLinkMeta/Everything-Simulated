@@ -1,3 +1,4 @@
+import { STAGE_IMAGES } from "@/lib/es/stage-images";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { JsonLd } from "@/components/es/bits";
 import { ImageCards, PageHero, PhoneStrip, SectionLinks } from "@/components/es/section-page";
@@ -22,7 +23,7 @@ function AircraftHub() {
         kicker="Aircraft · workshop platform"
         title="Aircraft & Cockpit Simulators"
         lead="Helicopter and fixed-wing cockpits built on the same Gold Coast floor as our racing simulators. Every aircraft build starts with a studio consultation."
-        image="/rigs/showroom.jpg"
+        image={STAGE_IMAGES["/aircraft"]}
       >
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <Link to="/contact" className="es-btn">Enquire</Link>

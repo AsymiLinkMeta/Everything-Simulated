@@ -1,3 +1,4 @@
+import { STAGE_IMAGES } from "@/lib/es/stage-images";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { JsonLd } from "@/components/es/bits";
 import { CtaStrip, PageHero } from "@/components/es/section-page";
@@ -29,7 +30,7 @@ function EventsPage() {
         kicker="Events · catering · group training"
         title="Corporate Events & Group Training"
         lead={`Team-building days, professional driver groups and catered events at the Gold Coast simulator facility. Planned venue of ${VENUE.size} — ${VENUE.status}. Contact the workshop to secure a date.`}
-        image="/rigs/showroom.jpg"
+        image={STAGE_IMAGES["/events"]}
         tone="race"
       >
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">

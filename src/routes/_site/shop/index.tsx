@@ -1,3 +1,4 @@
+import { STAGE_IMAGES } from "@/lib/es/stage-images";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -57,7 +58,7 @@ function Shop() {
         kicker="Catalogue"
         title="Sim Racing Parts & Components"
         lead="Every component in this catalogue is one we install, wire and ship. No third-party drop-shipping."
-        image="/rigs/starter.jpg"
+        image={STAGE_IMAGES["/shop"]}
       />
       <div className="es-body">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">

@@ -1,3 +1,4 @@
+import { STAGE_IMAGES } from "@/lib/es/stage-images";
 import { PrebuildPhoto } from "@/components/es/site-image";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
@@ -50,7 +51,7 @@ export function AmbassadorsPage() {
           kicker="People · Ambassadors"
           title="Our Ambassador Drivers"
           lead="The drivers and teams we stand behind. Each profile shows their motorsport, series and the simulator they train on."
-          image="/rigs/haptic.jpg"
+          image={STAGE_IMAGES["/ambassadors"]}
           tone="race"
         />
         <div className="es-body">
@@ -75,7 +76,7 @@ export function AmbassadorsPage() {
         kicker="People · Ambassadors"
         title="Our Ambassador Drivers"
         lead="The drivers and teams we stand behind. Each profile shows their motorsport, series and the simulator they train on. Order their exact rig configuration — the ambassador code attributes the build, not a discount."
-        image="/rigs/haptic.jpg"
+        image={STAGE_IMAGES["/ambassadors"]}
         tone="race"
       />
 

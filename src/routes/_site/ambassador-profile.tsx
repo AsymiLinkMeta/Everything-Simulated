@@ -130,7 +130,7 @@ export function AmbassadorProfile() {
           <span className={`es-tier-pill es-tier-pill--${ambassador.tier}`}>{tierLabel(tiers.data, ambassador.tier)}</span>
         </div>
         <div className="mt-8 flex flex-wrap gap-3">
-          {crate ? <OrderRigButton ambassador={ambassador} /> : null}
+          {crate || ambassador.crate ? <OrderRigButton ambassador={ambassador} /> : null}
           <Link to={ambassadorLink(ambassador.code, ambassador.slug)} className="es-btn es-btn-paper">
             Code {ambassador.code}
           </Link>

@@ -27,16 +27,8 @@
       @font-face { font-family: "Teko"; font-style: normal; font-weight: 600; font-display: swap; src: url("/fonts/teko-latin-600.woff2") format("woff2"); }
       @font-face { font-family: "Teko"; font-style: normal; font-weight: 700; font-display: swap; src: url("/fonts/teko-latin-700.woff2") format("woff2"); }
     </style>
-    <!-- Home only: start the hero photo before the app script runs (it is the LCP image). -->
-    <script>
-      if (location.pathname === "/") {
-        var l = document.createElement("link");
-        l.rel = "preload"; l.as = "image"; l.type = "image/webp"; l.setAttribute("fetchpriority", "high");
-        l.setAttribute("imagesrcset", "/rigs/hero-poster-640.webp 640w, /rigs/hero-poster-1024.webp 1024w, /rigs/hero-poster-1600.webp 1600w");
-        l.setAttribute("imagesizes", "100vw");
-        document.head.appendChild(l);
-      }
-    </script>
+    <!-- Start the page's hero photo (the LCP image) before the app script runs. Filled at build time from src/lib/es/stage-images.ts. -->
+    <script>/*stage-preload*/</script>
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="Everything Simulated" />
     <meta property="og:locale" content="en_AU" />

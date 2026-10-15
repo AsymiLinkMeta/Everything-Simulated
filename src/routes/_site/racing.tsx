@@ -1,3 +1,4 @@
+import { STAGE_IMAGES } from "@/lib/es/stage-images";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PrebuildPhoto, usePrebuildImage } from "@/components/es/site-image";
 import { useQuery } from "@tanstack/react-query";
@@ -54,7 +55,7 @@ function RacingHub() {
         kicker="Racing · live catalogue"
         title="Turn-Key Racing Simulators"
         lead="Motion platforms, haptic feedback, triple screens and an auxiliary display — fully assembled on the Gold Coast. Browse prebuilt packages, individual components or run the compatibility checker before you commit."
-        image="/rigs/motion.jpg"
+        image={STAGE_IMAGES["/racing"]}
         tone="race"
       >
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">

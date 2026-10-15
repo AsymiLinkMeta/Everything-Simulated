@@ -1,3 +1,4 @@
+import { STAGE_IMAGES } from "@/lib/es/stage-images";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PrebuildPhoto } from "@/components/es/site-image";
 import { useQuery } from "@tanstack/react-query";
@@ -28,7 +29,7 @@ function PrebuildsPage() {
         kicker="Turn-key"
         title="Prebuilt Racing Simulators"
         lead="Every rig is assembled, tested and photographed on the Gold Coast before dispatch."
-        image="/rigs/motion.jpg"
+        image={STAGE_IMAGES["/prebuilds"]}
       />
       <div className="es-body">
         {prebuilds.isPending ? (

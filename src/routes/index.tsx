@@ -1,3 +1,4 @@
+import { STAGE_IMAGES } from "@/lib/es/stage-images";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { SiteImage, PrebuildPhoto } from "@/components/es/site-image";
 import { useQuery } from "@tanstack/react-query";
@@ -33,7 +34,7 @@ export function Home() {
     <SiteShell>
       <JsonLd data={graphLd(organizationLd(), websiteLd(), localBusinessLd(), faqLd(faqs))} />
       <section className="es-hero">
-        <SiteImage src="/rigs/hero-poster.jpg" alt="Driver using a triple-screen racing simulator" className="es-hero-img" priority width={1948} height={908} />
+        <SiteImage src={STAGE_IMAGES["/"]} alt="Driver using a triple-screen racing simulator" className="es-hero-img" priority width={1948} height={908} />
         <HeroVideo />
         <div className="es-hero-mask" />
         <div className="es-hero-copy">
