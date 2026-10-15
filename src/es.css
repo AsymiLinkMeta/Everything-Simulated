@@ -1831,8 +1831,8 @@ a.es-trust-item:hover .es-trust-value {
   background: #0f0f11;
 }
 .es-rp-stage { position: relative; width: 100%; background: #141416; }
-.es-rp-stage > picture, .es-rp-stage > img { position: absolute; inset: 0; width: 100%; height: 100%; }
-.es-rp-stage img { display: block; width: 100%; height: 100%; object-fit: contain; }
+/* every photo and layer sits on the same 900 x 738 canvas (picture may be display: contents) */
+.es-rp-stage img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: contain; }
 .es-rp-frame { animation: es-rp-fade 360ms ease both; }
 .es-rp-frame.is-last { animation: none; }
 .es-rp-frame.is-empty { filter: grayscale(0.6) brightness(0.55); }
