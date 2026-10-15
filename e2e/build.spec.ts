@@ -1,4 +1,4 @@
-import { test, expect } from "./fixtures";
+import { test, expect, authFile } from "./fixtures";
 import { exec, sql } from "./db";
 
 /** The step-by-step rig builder at /build. Every part, price, badge and layer comes from the local DB. */
@@ -127,5 +127,19 @@ test.describe("rig builder data from staff", () => {
     await page.goto("/build?b=xr1");
     await expect(page.getByTestId("rig-preview")).toHaveAttribute("data-mode", "layers");
     await expect(page.getByTestId("rig-preview").locator("img")).toHaveCount(1);
+  });
+
+  test.describe("staff", () => {
+    test.use({ storageState: authFile("admin") });
+    test("staff set a badge in Staff > Builder and it shows on /build", async ({ page }, info) => {
+      test.skip(info.project.name !== "desktop", "mutates shared catalogue rows");
+      exec(`update catalog_products set builder_badge = null where builder_badge is not null`);
+      await page.goto("/staff/builder");
+      await page.getByRole("button", { name: "Wheelbase", exact: true }).click();
+      await page.getByLabel("Badge for Alpha 15nm Wheelbase").selectOption("flagship");
+      await expect.poll(() => sql<{ b: string }>(`select builder_badge b from catalog_products where sku = 'alpha-15'`)[0].b).toBe("flagship");
+      await page.goto("/build?step=wheelbase");
+      await expect(page.getByTestId("builder-card-alpha-15").getByTestId("builder-badge")).toHaveText("Flagship");
+    });
   });
 });

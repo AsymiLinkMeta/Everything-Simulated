@@ -26,7 +26,8 @@ CREATE TABLE IF NOT EXISTS public.builder_layers (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   category text NOT NULL CHECK (category ~ '^[a-z_]{2,32}$'),
   sku text REFERENCES public.catalog_products (sku) ON UPDATE CASCADE ON DELETE CASCADE,
-  image_url text NOT NULL CHECK (image_url ~ '^(https://|/)[^\s]+$' AND length(image_url) <= 500),
+  -- https, a site path, or the local dev Storage host.
+  image_url text NOT NULL CHECK (image_url ~ '^(https://|http://(localhost|127\.0\.0\.1)(:[0-9]+)?/|/)[^\s]+$' AND length(image_url) <= 500),
   z integer NOT NULL DEFAULT 0 CHECK (z BETWEEN -100 AND 100),
   label text CHECK (label IS NULL OR length(label) <= 80),
   created_at timestamptz NOT NULL DEFAULT now(),
