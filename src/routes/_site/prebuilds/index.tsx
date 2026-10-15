@@ -32,6 +32,7 @@ function PrebuildsPage() {
         image={STAGE_IMAGES["/prebuilds"]}
       />
       <div className="es-body">
+        <h2 className="sr-only">Available prebuilds</h2>
         {prebuilds.isPending ? (
           <div className="es-pack-grid">{[1, 2, 3].map((i) => <div key={i} className="aspect-square animate-pulse bg-raised" />)}</div>
         ) : prebuilds.isError ? (
