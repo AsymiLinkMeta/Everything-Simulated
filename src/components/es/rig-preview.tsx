@@ -23,7 +23,7 @@ export function RigPreview({ layers, picked, screens = 0 }: { layers: LayerRow[]
     <figure className="es-rb-preview" data-testid="rig-preview" data-mode={layers.length ? "layers" : "fallback"}>
       <svg viewBox={RIG_VIEWBOX} role="img" aria-label={`Rig preview, ${parts} part${parts === 1 ? "" : "s"} picked`} style={{ "--rp-lift": `${lift}px` } as CSSProperties}>
         <defs>
-          <linearGradient id="rp-screen" x1="0" y1="0" x2="0.35" y2="1">
+          <linearGradient id="rp-screen" x1="0" y1="0" x2="0" y2="1">
             <stop offset="0" stopColor="#1d2738" />
             <stop offset="0.55" stopColor="#0c1019" />
             <stop offset="1" stopColor="#3a0a07" />

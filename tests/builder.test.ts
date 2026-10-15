@@ -94,6 +94,9 @@ describe("drawn rig preview", () => {
   });
   it("screen count drives single, triple and top screen", () => {
     expect(rigPartStates(cats("monitor"), 1)["screen-sides"]).toBe("off");
+    const dual = rigPartStates(cats("monitor"), 2);
+    expect([dual["screen-dual"], dual["screen-center"], dual["screen-sides"]]).toEqual(["on", "off", "off"]);
+    expect(rigPartStates(cats("monitor"), 3)["screen-dual"]).toBe("off");
     expect(rigPartStates(cats("monitor", "mount"), 3)["screen-sides"]).toBe("on");
     expect(rigPartStates(cats("monitor", "mount"), 3)["mount-sides"]).toBe("on");
     const four = rigPartStates(cats("monitor", "mount"), 4);

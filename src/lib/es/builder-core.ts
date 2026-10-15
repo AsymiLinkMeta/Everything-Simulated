@@ -158,12 +158,13 @@ const PART_CATEGORIES: Record<string, string[]> = {
   "mount-top": ["mount"],
   "screen-center": ["monitor"],
   "screen-sides": ["monitor"],
+  "screen-dual": ["monitor"],
   "screen-top": ["monitor"],
 };
 
 /**
  * Each drawn part's state for the picked categories and screen count. Screens follow the
- * monitor quantity (1–2 one screen, 3 a triple, 4+ adds a top screen); a VR build with no
+ * monitor quantity (1 one screen, 2 a dual, 3 a triple, 4+ adds a top screen; all curved); a VR build with no
  * screens or stand drops the display entirely.
  */
 export function rigPartStates(picked: Set<string>, screens: number, overridden: Set<string> = new Set()): Record<string, RigPartState> {
@@ -178,7 +179,9 @@ export function rigPartStates(picked: Set<string>, screens: number, overridden: 
     }
     let s: RigPartState = cats.some(has) ? "on" : "ghost";
     if (part.startsWith("screen-")) s = screens > 0 ? "on" : "ghost";
+    if (part === "screen-center" && screens === 2) s = "off";
     if (part === "screen-sides" && !triple) s = "off";
+    if (part === "screen-dual" && screens !== 2) s = "off";
     if (part === "screen-top") s = screens >= 4 ? "on" : "off";
     if (part === "mount-sides" && !triple) s = "off";
     if (part === "mount-top" && (screens < 4 || !has("mount"))) s = "off";

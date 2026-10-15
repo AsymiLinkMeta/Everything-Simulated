@@ -11,7 +11,7 @@
 import { writeFileSync } from "node:fs";
 
 type V = [number, number, number];
-type Mat = { base: string; amb?: number; dif?: number; spec?: number; shin?: number; fill?: string; glow?: number };
+type Mat = { base: string; amb?: number; dif?: number; spec?: number; shin?: number; fill?: string; glow?: number; opacity?: number };
 type Face = { pts: V[]; mat: Mat; part: string; bias: number; two?: boolean; decor?: Decor[] };
 type Decor = { pts: V[]; stroke: string; width: number };
 
@@ -34,7 +34,8 @@ const M: Record<string, Mat> = {
   fabric: { base: "#34363d", amb: 0.55, dif: 0.65, spec: 0.04, shin: 4 },
   red: { base: "#e10600", amb: 0.55, dif: 0.6, spec: 0.35, shin: 24 },
   redGlow: { base: "#ff1410", amb: 1, dif: 0, spec: 0, glow: 1 },
-  screen: { base: "#0a0d13", fill: "url(#rp-screen)" },
+  screen: { base: "#0a0d13", fill: "url(#rp-screen)", opacity: 0.78 },
+  panel: { base: "#121926", amb: 0.5, dif: 0.6, spec: 0.85, shin: 26 },
   glass: { base: "#0b0c10", fill: "url(#rp-glass)" },
   motor: { base: "#3a3e46", amb: 0.5, dif: 0.75, spec: 0.6, shin: 34 },
 };
@@ -375,31 +376,90 @@ for (const s of [1, -1]) box(SX + 40, SX + 80, s * 300 - 20, s * 300 + 20, 1270,
 box(SX + 40, SX + 80, -320, 320, 1590, 1630, M.alu, true);
 PART = "mount-sides";
 for (const s of [1, -1]) {
-  const hinge: V = [SX + 50, s * 380, 980];
+  const hinge: V = [SX + 45, s * 380, 980];
   const dir: V = [-Math.sin(SIDE), s * Math.cos(SIDE), 0];
   obox(hinge, mul(dir, 520), [0, 0, 40], mul(cross(dir, [0, 0, 1]), s * 40), M.alu);
 }
-const monitor = (o: V, along: V, part: string, SH = SCR_H) => {
-  PART = part;
-  const facing = norm(cross(along, [0, 0, 1])); // toward the driver
-  const back = mul(facing, -1);
-  obox(o, along, [0, 0, SH], mul(back, 22), M.black);
-  const scr = (k: number): V => add(add(o, mul(along, k)), mul(facing, 0.6));
-  const in0 = add(scr(0.015), [0, 0, 14]);
-  const w = mul(along, 0.97);
-  faces.push({ pts: [in0, add(in0, w), add(add(in0, w), [0, 0, SH - 40]), add(in0, [0, 0, SH - 40])], mat: M.screen, part, bias: 5 });
-  const mid = add(add(o, mul(along, 0.5)), add(mul(back, 22), [0, 0, SH * 0.5]));
-  obox(add(mid, add(mul(along, -0.12), [0, 0, -70])), mul(along, 0.24), [0, 0, 140], mul(back, 40), M.black);
+/**
+ * A curved monitor (radius R, concave toward the driver) between its left and right chord
+ * ends as the driver sees them: thin 7 mm bezel, a slim rear shell and a VESA housing.
+ */
+const R_CURVE = 1200; // 1200R, within the brief's 1000R-1500R
+const BEZEL = 7;
+const quadN = (pts: V[], want: V, mat: Mat, bias = 0) => {
+  const n = cross(sub(pts[1], pts[0]), sub(pts[2], pts[0]));
+  faces.push({ pts: dot(n, want) < 0 ? [...pts].reverse() : pts, mat, part: PART, bias });
 };
-monitor([SX, SW / 2, SB], [0, -SW, 0], "screen-center");
+const monitor = (p0: V, p1: V, bottom: number, part: string, H = SCR_H) => {
+  PART = part;
+  const chord = sub(p1, p0);
+  const c = Math.hypot(...chord);
+  const along = norm(chord);
+  const facing = norm(cross(along, [0, 0, 1])); // toward the driver
+  const mid = mul(add(p0, p1), 0.5);
+  const phi = Math.asin(c / 2 / R_CURVE);
+  const N = 12;
+  const at = (t: number, inset = 0): { p: V; n: V } => {
+    const a = -phi + 2 * phi * t;
+    const back = R_CURVE * Math.cos(a) - R_CURVE * Math.cos(phi);
+    const n = norm(add(mul(facing, Math.cos(a)), mul(along, -Math.sin(a))));
+    const p = add(add(add(mid, mul(along, R_CURVE * Math.sin(a))), mul(facing, -back)), mul(n, inset));
+    return { p: [p[0], p[1], bottom] as V, n };
+  };
+  const up = (p: V, h: number): V => [p[0], p[1], p[2] + h];
+  const DEPTH = 16;
+  for (let i = 0; i < N; i++) {
+    const A = at(i / N);
+    const B = at((i + 1) / N);
+    const nA = A.n;
+    const Ab = add(A.p, mul(nA, -DEPTH));
+    const Bb = add(B.p, mul(B.n, -DEPTH));
+    quadN([A.p, B.p, up(B.p, H), up(A.p, H)], nA, M.black); // bezel / front
+    quadN([Ab, Bb, up(Bb, H), up(Ab, H)], mul(nA, -1), M.black); // rear shell
+    quadN([A.p, B.p, Bb, Ab], [0, 0, -1], M.black);
+    quadN([up(A.p, H), up(B.p, H), up(Bb, H), up(Ab, H)], [0, 0, 1], M.black);
+    // screen: inset by the bezel, glossy panel with the screen glow on top
+    const e = BEZEL / c;
+    const t0 = Math.max(i / N, e);
+    const t1 = Math.min((i + 1) / N, 1 - e);
+    const S0 = at(t0, 0.8).p;
+    const S1 = at(t1, 0.8).p;
+    const pts = [up(S0, BEZEL), up(S1, BEZEL), up(S1, H - BEZEL), up(S0, H - BEZEL)];
+    quadN(pts, nA, M.panel, 5);
+    quadN(pts, nA, M.screen, 6);
+  }
+  for (const [t, dir] of [[0, -1], [1, 1]] as const) {
+    const E = at(t);
+    const Eb = add(E.p, mul(E.n, -DEPTH));
+    quadN([E.p, Eb, up(Eb, H), up(E.p, H)], mul(along, dir), M.black);
+  }
+  // VESA housing behind the centre of the panel
+  const back = add(at(0.5).p, mul(facing, -DEPTH));
+  obox(add(add(back, mul(along, -85)), [0, 0, H * 0.5 - 75]), mul(along, 170), [0, 0, 150], mul(facing, -38), M.black);
+};
+const SEAM = 4;
+const CX = SX - 75; // chord plane: keeps the curved panels and their housings clear of the stand
+// single / triple centre screen
+monitor([CX, SW / 2, SB], [CX, -SW / 2, SB], SB, "screen-center");
+// triple: side screens hinge at the centre screen's edges and wrap toward the driver
 for (const s of [1, -1]) {
   const dir: V = [-Math.sin(SIDE), s * Math.cos(SIDE), 0];
-  const start: V = add([SX, s * (SW / 2 + 6), SB], [0, 0, 0]);
-  const end = add(start, mul(dir, SW));
-  if (s > 0) monitor(end, mul(dir, -SW), "screen-sides");
-  else monitor(start, mul(dir, SW), "screen-sides");
+  const hinge: V = [CX, s * (SW / 2 + SEAM), SB];
+  const outer = add(hinge, mul(dir, SW));
+  if (s > 0) monitor(outer, hinge, SB, "screen-sides");
+  else monitor(hinge, outer, SB, "screen-sides");
 }
-monitor([SX, 300, 1262], [0, -600, 0], "screen-top", 350);
+// dual: two screens meeting at the centre line, each angled 22 degrees toward the driver
+const DUAL = rad(22);
+for (const s of [1, -1]) {
+  const dir: V = [-Math.sin(DUAL), s * Math.cos(DUAL), 0];
+  const seam: V = [CX, s * SEAM, SB];
+  const outer = add(seam, mul(dir, SW));
+  if (s > 0) monitor(outer, seam, SB, "screen-dual");
+  else monitor(seam, outer, SB, "screen-dual");
+}
+// top screen on the four-screen frame: 27-inch curved
+monitor([CX, 305, 1262], [CX, -305, 1262], 1262, "screen-top", 350);
 
 // ---- VR headset, resting on the headrest ----
 PART = "headset";
@@ -453,7 +513,9 @@ for (const v of visible) {
   const isLine = v.f.mat === M.red && v.f.pts.length > 4 && v.f.part === "seat" && v.f.bias === 4;
   let el = isLine
     ? `<path d="${path(v.f.pts, false)}" fill="none" stroke="#e10600" stroke-width="1.6" stroke-dasharray="3 2.5"/>`
-    : `<path d="${path(v.f.pts)}" fill="${fill}" stroke="${fill.startsWith("url") ? "#05070a" : fill}" stroke-width="${fill.startsWith("url") ? 0.8 : 0.6}"/>`;
+    : fill.startsWith("url")
+      ? `<path d="${path(v.f.pts)}" fill="${fill}" fill-opacity="${v.f.mat.opacity ?? 1}" stroke="${fill}" stroke-opacity="${v.f.mat.opacity ?? 1}" stroke-width="0.7"/>`
+      : `<path d="${path(v.f.pts)}" fill="${fill}" stroke="${fill}" stroke-width="0.6"/>`;
   for (const d of v.f.decor ?? []) el += `<path d="${path(d.pts, false)}" stroke="${d.stroke}" stroke-width="${d.width}" fill="none"/>`;
   const last = groups[groups.length - 1];
   if (last && last.part === v.f.part) last.html += el;
