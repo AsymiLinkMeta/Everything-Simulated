@@ -319,7 +319,7 @@ Deno.serve(withCors(async (req: Request) => {
 
     const apiKey = Deno.env.get("XAI_API_KEY");
     if (!apiKey) {
-      return new Response(JSON.stringify({ listing: fallback, source: "draft" }), {
+      return new Response(JSON.stringify({ listing: fallback, source: "draft", reason: "no_key" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -415,15 +415,19 @@ If the source data is thin, still populate sku, brand, name, category, descripti
     });
 
     if (!response.ok) {
-      return new Response(JSON.stringify({ listing: fallback, source: "draft" }), {
+      return new Response(JSON.stringify({ listing: fallback, source: "draft", reason: "model_error" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     const body = (await response.json()) as { choices?: { message?: { content?: string } }[] };
     const content = body.choices?.[0]?.message?.content;
-    if (!content) throw new Error("Missing model response");
-    const parsed: unknown = JSON.parse(content);
+    let parsed: unknown = null;
+    try {
+      parsed = content ? JSON.parse(content) : null;
+    } catch {
+      parsed = null;
+    }
 
     if (isListing(parsed)) {
       // Force price to 0 regardless of what the AI returned
@@ -447,7 +451,7 @@ If the source data is thin, still populate sku, brand, name, category, descripti
       });
     }
 
-    return new Response(JSON.stringify({ listing: fallback, source: "draft" }), {
+    return new Response(JSON.stringify({ listing: fallback, source: "draft", reason: "unparseable" }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   } catch {
