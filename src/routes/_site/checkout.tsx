@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Check, ShoppingCart } from "lucide-react";
 import { toast } from "sonner";
 import { useCart } from "@/lib/es/cart-store";
+import { getReferralCode } from "@/lib/es/referral";
 import { fetchProducts } from "@/lib/es/product-cache";
 import { placeGuestOrder, placeOrder } from "@/lib/es/server";
 import { useServerQuote } from "@/lib/es/pricing";
@@ -134,7 +135,8 @@ function Checkout() {
         phone,
         address,
         prebuild: prebuildSlug,
-        referralCode: referralCode || undefined,
+        // Last touch: a code typed here wins, else the 90-day attribution cookie.
+        referralCode: referralCode || getReferralCode() || undefined,
       };
       const res = user
         ? await placeOrder({ ...order, quoteId: quoteId ?? undefined })

@@ -10,12 +10,15 @@ import {
   fetchAmbassadors,
   getCachedAmbassadorBySlug,
   ambassadorLink,
-  ambassadorProfileUrl,
+  ambassadorShareUrl,
   crateForAmbassador,
   specsForAmbassador,
-  TIER_LABELS,
+  fetchTiers,
+  tierLabel,
 } from "@/lib/es/ambassadors";
-import { breadcrumbLd, pageHead } from "@/lib/es/seo";
+import { LoadError } from "@/components/es/bits";
+import { BRAND } from "@/lib/es/content";
+import { ORIGIN, breadcrumbLd, pageHead } from "@/lib/es/seo";
 import { fetchPublishedPrebuilds } from "@/lib/es/prebuilds";
 
 export const Route = createFileRoute("/_site/ambassador-profile")({
@@ -30,7 +33,8 @@ export const Route = createFileRoute("/_site/ambassador-profile")({
 
 export function AmbassadorProfile() {
   const { slug } = useParams();
-  const { data, isPending } = useQuery({ queryKey: ["ambassadors"], queryFn: fetchAmbassadors });
+  const { data, isPending, isError, refetch } = useQuery({ queryKey: ["ambassadors"], queryFn: fetchAmbassadors });
+  const tiers = useQuery({ queryKey: ["ambassador-tiers"], queryFn: fetchTiers });
   // crateForAmbassador reads the prebuild cache; load it so the rig links resolve.
   useQuery({ queryKey: ["prebuilds"], queryFn: fetchPublishedPrebuilds });
   const [showQr, setShowQr] = useState(false);
@@ -62,6 +66,14 @@ export function AmbassadorProfile() {
     );
   }
 
+  if (isError && !ambassador) {
+    return (
+      <div className="es-body">
+        <LoadError what="this profile" onRetry={() => void refetch()} />
+      </div>
+    );
+  }
+
   if (!ambassador) {
     return (
       <div className="es-body">
@@ -77,10 +89,28 @@ export function AmbassadorProfile() {
 
   const crate = crateForAmbassador(ambassador);
   const specs = specsForAmbassador(ambassador);
-  const profileUrl = ambassadorProfileUrl(ambassador.slug);
+  const shareUrl = ambassadorShareUrl(ambassador);
+  const pageUrl = `${ORIGIN}/ambassadors/${ambassador.slug}`;
+  const sameAs = Object.values(ambassador.social ?? {}).filter((v): v is string => typeof v === "string" && /^https:\/\//.test(v));
 
   return (
     <div>
+      <JsonLd
+        data={{
+          "@context": "https://schema.org",
+          "@type": "ProfilePage",
+          url: pageUrl,
+          mainEntity: {
+            "@type": "Person",
+            name: ambassador.name,
+            url: pageUrl,
+            description: ambassador.bio.slice(0, 300) || undefined,
+            image: ambassador.photo || undefined,
+            sameAs: sameAs.length ? sameAs : undefined,
+            affiliation: { "@type": "Organization", name: BRAND.name, url: ORIGIN },
+          },
+        }}
+      />
       <JsonLd
         data={breadcrumbLd([
           { name: "Home", path: "/" },
@@ -96,11 +126,11 @@ export function AmbassadorProfile() {
         tone="race"
       >
         <div className="mt-4">
-          <span className={`es-tier-pill es-tier-pill--${ambassador.tier}`}>{TIER_LABELS[ambassador.tier]}</span>
+          <span className={`es-tier-pill es-tier-pill--${ambassador.tier}`}>{tierLabel(tiers.data, ambassador.tier)}</span>
         </div>
         <div className="mt-8 flex flex-wrap gap-3">
           {crate ? <OrderRigButton ambassador={ambassador} /> : null}
-          <Link to={ambassadorLink(ambassador.code)} className="es-btn es-btn-paper">
+          <Link to={ambassadorLink(ambassador.code, ambassador.slug)} className="es-btn es-btn-paper">
             Code {ambassador.code}
           </Link>
           <button
@@ -116,12 +146,12 @@ export function AmbassadorProfile() {
       {showQr && (
         <div className="es-body" style={{ textAlign: "center", paddingBottom: 0 }}>
           <div className="es-qr-panel">
-            <QrCode url={profileUrl} size={200} />
+            <QrCode url={shareUrl} size={200} filename={`es-ambassador-${ambassador.slug}`} label={`QR code for ${ambassador.name}`} />
             <p className="mt-3 text-sm text-muted">
-              Scan to view this profile on another device
+              Scan to open this profile. Orders placed within 90 days are credited to {ambassador.name}.
             </p>
             <p className="mt-1 text-xs text-muted break-all" style={{ maxWidth: 320, margin: "4px auto 0" }}>
-              {profileUrl}
+              {shareUrl}
             </p>
           </div>
         </div>
@@ -143,7 +173,7 @@ export function AmbassadorProfile() {
                 </p>
               </>
             ) : (
-              <p className="text-sm leading-6 text-muted">Staff attach a live prebuild before Order this rig goes live.</p>
+              <p className="text-sm leading-6 text-muted">Ask the workshop about this driver's rig.</p>
             )}
             {specs.length ? (
               <dl className="es-spec-table">

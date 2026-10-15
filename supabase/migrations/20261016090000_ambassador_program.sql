@@ -171,11 +171,20 @@ BEGIN
       RAISE EXCEPTION 'Only staff can change the code, link, tier or publishing' USING ERRCODE = 'insufficient_privilege';
     END IF;
   END IF;
+  -- A minor can't opt out of guardian approval by changing their own age band.
+  IF TG_OP = 'UPDATE' AND public.ambassador_is_minor(OLD.age_band) AND NOT public.ambassador_is_minor(NEW.age_band)
+     AND auth.uid() IS NOT NULL AND NOT public.is_staff() THEN
+    RAISE EXCEPTION 'Ask the workshop to update your age band' USING ERRCODE = 'insufficient_privilege';
+  END IF;
   IF NEW.published AND public.ambassador_is_minor(NEW.age_band) THEN
     SELECT status INTO v_guardian FROM ambassador_guardians WHERE ambassador_id = NEW.id;
     IF v_guardian IS DISTINCT FROM 'approved' THEN
-      RAISE EXCEPTION 'A guardian must approve % before this profile can be published', NEW.name
-        USING ERRCODE = 'check_violation';
+      IF TG_OP = 'UPDATE' AND OLD.published AND NEW.age_band IS DISTINCT FROM OLD.age_band THEN
+        NEW.published := false;  -- newly marked as a minor: take the profile down until a guardian approves
+      ELSE
+        RAISE EXCEPTION 'A guardian must approve % before this profile can be published', NEW.name
+          USING ERRCODE = 'check_violation';
+      END IF;
     END IF;
   END IF;
   RETURN NEW;
@@ -579,7 +588,7 @@ BEGIN
   SELECT * INTO g FROM ambassador_guardians WHERE ambassador_id = p_ambassador AND status IN ('pending', 'declined');
   IF NOT FOUND THEN RAISE EXCEPTION 'No guardian approval is waiting for this ambassador' USING ERRCODE = 'check_violation'; END IF;
   IF g.guardian_email !~ '@' THEN RAISE EXCEPTION 'Add the guardian''s email first' USING ERRCODE = 'check_violation'; END IF;
-  IF g.requested_at > now() - interval '2 minutes' THEN RAISE EXCEPTION 'A link was just sent; try again in a few minutes' USING ERRCODE = 'check_violation'; END IF;
+  IF g.token_hash IS NOT NULL AND g.requested_at > now() - interval '2 minutes' THEN RAISE EXCEPTION 'A link was just sent; try again in a few minutes' USING ERRCODE = 'check_violation'; END IF;
   UPDATE ambassador_guardians SET token_hash = encode(extensions.digest(v_token, 'sha256'), 'hex'),
     token_expires = now() + make_interval(days => v_days), requested_at = now(), status = 'pending', updated_at = now()
   WHERE ambassador_id = p_ambassador;

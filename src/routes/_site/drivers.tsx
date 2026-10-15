@@ -9,9 +9,11 @@ import {
   ambassadorProfilePath,
   crateForAmbassador,
   specsForAmbassador,
-  TIER_LABELS,
+  fetchTiers,
+  tierLabel,
 } from "@/lib/es/ambassadors";
-import type { Ambassador, AmbassadorTier } from "@/lib/es/ambassadors";
+import type { Ambassador, AmbassadorTier, TierRow } from "@/lib/es/ambassadors";
+import { LoadError } from "@/components/es/bits";
 import { breadcrumbLd, pageHead } from "@/lib/es/seo";
 import { fetchPublishedPrebuilds } from "@/lib/es/prebuilds";
 
@@ -26,19 +28,17 @@ export const Route = createFileRoute("/_site/drivers")({
   component: AmbassadorsPage,
 });
 
-const TIER_ORDER: AmbassadorTier[] = ["fully_sponsored", "sponsored_driver", "sponsored_customer"];
-
-function groupByTier(ambassadors: Ambassador[]): { tier: AmbassadorTier; label: string; items: Ambassador[] }[] {
-  const groups: { tier: AmbassadorTier; label: string; items: Ambassador[] }[] = [];
-  for (const tier of TIER_ORDER) {
-    const items = ambassadors.filter((a) => a.tier === tier);
-    if (items.length) groups.push({ tier, label: TIER_LABELS[tier], items });
-  }
-  return groups;
+/** Groups in the order of ambassador_tiers.sort_order; unknown tiers go last. */
+function groupByTier(ambassadors: Ambassador[], tiers: TierRow[]): { tier: AmbassadorTier; label: string; items: Ambassador[] }[] {
+  const order = [...tiers.map((t) => t.key), ...ambassadors.map((a) => a.tier)].filter((k, i, all) => all.indexOf(k) === i);
+  return order
+    .map((tier) => ({ tier, label: tierLabel(tiers, tier), items: ambassadors.filter((a) => a.tier === tier) }))
+    .filter((g) => g.items.length > 0);
 }
 
 export function AmbassadorsPage() {
-  const { data: ambassadors, isPending } = useQuery({ queryKey: ["ambassadors"], queryFn: fetchAmbassadors });
+  const { data: ambassadors, isPending, isError, refetch } = useQuery({ queryKey: ["ambassadors"], queryFn: fetchAmbassadors });
+  const tiers = useQuery({ queryKey: ["ambassador-tiers"], queryFn: fetchTiers });
   // crateForAmbassador reads the prebuild cache; load it so the rig links resolve.
   useQuery({ queryKey: ["prebuilds"], queryFn: fetchPublishedPrebuilds });
 
@@ -60,7 +60,7 @@ export function AmbassadorsPage() {
   }
 
   const published = ambassadors ?? [];
-  const groups = groupByTier(published);
+  const groups = groupByTier(published, tiers.data ?? []);
 
   return (
     <div>
@@ -79,7 +79,9 @@ export function AmbassadorsPage() {
       />
 
       <div className="es-body">
-        {published.length === 0 ? (
+        {isError ? (
+          <LoadError what="ambassadors" onRetry={() => void refetch()} />
+        ) : published.length === 0 ? (
           <p className="py-12 text-center text-muted">Ambassador profiles will appear here once published.</p>
         ) : (
           <div className="space-y-16">
@@ -91,7 +93,7 @@ export function AmbassadorsPage() {
                 </div>
                 <ul className="es-ambassador-grid">
                   {g.items.map((a) => (
-                    <AmbassadorCard key={a.slug} a={a} />
+                    <AmbassadorCard key={a.slug} a={a} label={g.label} />
                   ))}
                 </ul>
               </section>
@@ -112,7 +114,7 @@ export function AmbassadorsPage() {
   );
 }
 
-function AmbassadorCard({ a }: { a: Ambassador }) {
+function AmbassadorCard({ a, label }: { a: Ambassador; label: string }) {
   const crate = crateForAmbassador(a);
   const specs = specsForAmbassador(a).slice(0, 4);
 
@@ -128,7 +130,7 @@ function AmbassadorCard({ a }: { a: Ambassador }) {
             <Link to={ambassadorProfilePath(a.slug)}>{a.name}</Link>
           </h2>
         </div>
-        <span className={`es-tier-pill es-tier-pill--${a.tier}`}>{TIER_LABELS[a.tier]}</span>
+        <span className={`es-tier-pill es-tier-pill--${a.tier}`}>{label}</span>
       </div>
       <p className="es-ambassador-meta">
         {[a.series, a.className, a.teamStatus, a.ageBand, a.base].filter(Boolean).join(" · ")}
@@ -149,9 +151,7 @@ function AmbassadorCard({ a }: { a: Ambassador }) {
             <a href={a.social.facebook} target="_blank" rel="noopener noreferrer">Facebook</a>
           ) : null}
         </p>
-      ) : (
-        <p className="es-ambassador-socials is-empty">Socials land when they send the links.</p>
-      )}
+      ) : null}
 
       {crate ? (
         <div className="es-ambassador-rig">
@@ -181,11 +181,11 @@ function AmbassadorCard({ a }: { a: Ambassador }) {
           </div>
         </div>
       ) : (
-        <p className="es-ambassador-code">Rig pending — staff attach a prebuild.</p>
+        <p className="es-ambassador-code">Ask the workshop about this driver's rig.</p>
       )}
       <p className="es-ambassador-code">
         Code <strong>{a.code}</strong>
-        <Link to={ambassadorLink(a.code)}>Use this link at checkout</Link>
+        <Link to={ambassadorLink(a.code, a.slug)}>Shop with this code</Link>
       </p>
     </li>
   );

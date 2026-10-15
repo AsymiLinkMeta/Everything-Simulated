@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/db";
+import { getReferralCode } from "./referral";
 import { BRAND, GUIDES } from "./catalog";
 import { rpcMessage, type ServerQuote } from "./pricing";
 import { getCachedProducts, getCachedProductMap, getLiveRules } from "./product-cache";
@@ -76,6 +77,8 @@ export async function saveQuote(
     check_ok: result.ok,
     total_ex_gst: result.totalExGst,
     postcode: data.postcode ?? null,
+    // Ambassador attribution travels quote -> order (place_order inherits it).
+    referral_code: getReferralCode(),
   });
   if (error) throw new Error(error.message);
   return { id, result };

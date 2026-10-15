@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/db";
+import { getReferralCode } from "./referral";
 
 export type TicketStatus = "open" | "pending" | "waiting" | "resolved" | "closed";
 
@@ -134,6 +135,7 @@ export async function createTicket(input: {
       subject,
       body,
       status: "open",
+      referral_code: getReferralCode(),
     })
     .select("*")
     .maybeSingle();

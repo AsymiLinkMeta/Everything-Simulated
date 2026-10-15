@@ -3,15 +3,15 @@ import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { QrCode } from "@/components/es/qr-code";
 import {
   fetchMyAmbassadorProfile,
   ambassadorSelfUpdate,
-  ambassadorLink,
   ambassadorProfilePath,
-  ambassadorProfileUrl,
-  TIER_LABELS,
+  fetchAmbassadorDashboard,
+  fetchTiers,
+  tierLabel,
 } from "@/lib/es/ambassadors";
+import { AmbassadorDashboardPanel, GuardianCard, ShareKit } from "@/components/es/ambassador-dashboard";
 import type { AmbassadorSocial, RigSpec } from "@/lib/es/ambassadors";
 
 export const Route = createFileRoute("/app/ambassador")({
@@ -39,7 +39,9 @@ function AmbassadorSelfEdit() {
   const [youtube, setYoutube] = useState("");
   const [facebook, setFacebook] = useState("");
   const [rigSpecs, setRigSpecs] = useState<RigSpec[]>([]);
-  const [showQr, setShowQr] = useState(false);
+  const tiers = useQuery({ queryKey: ["ambassador-tiers"], queryFn: fetchTiers });
+  // Guardian status rides on the dashboard RPC (the guardian table itself is staff-only).
+  const dash = useQuery({ queryKey: ["ambassador-dashboard", "me", 90], queryFn: () => fetchAmbassadorDashboard(null, 90) });
 
   useEffect(() => {
     if (!profile) return;
@@ -85,6 +87,7 @@ function AmbassadorSelfEdit() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ["my-ambassador"] });
       qc.invalidateQueries({ queryKey: ["ambassadors"] });
+      qc.invalidateQueries({ queryKey: ["ambassador-dashboard"] });
     },
   });
 
@@ -98,7 +101,7 @@ function AmbassadorSelfEdit() {
         <p className="es-kicker">Ambassador</p>
         <h1 className="text-2xl font-medium">No ambassador profile linked</h1>
         <p className="text-sm text-muted">
-          Your account is not linked to an ambassador profile. A staff member needs to create your profile and connect it to your account first.
+          This account isn't linked to an ambassador profile yet. Ask the workshop to set one up and connect it to this email.
         </p>
       </div>
     );
@@ -111,32 +114,21 @@ function AmbassadorSelfEdit() {
         <h1 className="mt-1 text-2xl font-medium">{profile.name}</h1>
         <p className="mt-1 text-sm text-muted">
           Code: <strong>{profile.code}</strong>
-          {" · "}{TIER_LABELS[profile.tier]}
-          {profile.published ? " · Published" : " · Draft (not public yet)"}
+          {" · "}{tierLabel(tiers.data, profile.tier)}
+          {profile.published ? " · Published" : " · Not public yet"}
         </p>
         <div className="mt-3 flex flex-wrap gap-3 text-sm">
           <a href={ambassadorProfilePath(profile.slug)} className="text-accent hover:underline">
             View public profile
           </a>
-          <a href={ambassadorLink(profile.code)} className="text-accent hover:underline">
-            Checkout link
-          </a>
-          <button
-            type="button"
-            onClick={() => setShowQr(!showQr)}
-            className="text-accent hover:underline"
-            style={{ background: "none", border: "none", cursor: "pointer" }}
-          >
-            {showQr ? "Hide QR" : "Show QR code"}
-          </button>
         </div>
-        {showQr && (
-          <div className="mt-4">
-            <QrCode url={ambassadorProfileUrl(profile.slug)} size={180} />
-            <p className="mt-2 text-xs text-muted">Show this on your phone so others can scan to view your profile.</p>
-          </div>
-        )}
       </div>
+
+      {dash.data?.guardian ? (
+        <GuardianCard ambassadorId={profile.id} guardian={dash.data.guardian} onChanged={() => void dash.refetch()} />
+      ) : null}
+      <AmbassadorDashboardPanel />
+      <ShareKit code={profile.code} slug={profile.slug} name={profile.name} />
 
       <form
         className="space-y-6"
