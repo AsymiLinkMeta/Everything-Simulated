@@ -34,10 +34,10 @@ scene = bpy.context.scene
 scene.unit_settings.system = "METRIC"
 
 LAYERS = [
-    "chassis", "seat", "wheelbase", "wheel", "pedals", "sidemount", "shifter", "handbrake", "pc", "motion",
+    "chassis-back", "chassis", "seat", "wheelbase", "wheel", "pedals", "sidemount", "shifter", "handbrake", "pc", "motion",
     "headset", "mount", "mount-sides", "mount-top", "screen-center", "screen-sides", "screen-dual", "screen-top",
 ]
-RIG_LAYERS = {"chassis", "seat", "wheelbase", "wheel", "pedals", "sidemount", "shifter", "handbrake", "headset"}
+RIG_LAYERS = {"chassis-back", "chassis", "seat", "wheelbase", "wheel", "pedals", "sidemount", "shifter", "handbrake", "headset"}
 COLL = {}
 for name in LAYERS:
     c = bpy.data.collections.new(name)
@@ -161,7 +161,7 @@ def seat_material():
 
 
 MAT["seat"] = seat_material()
-MAT["shell"] = principled("Seat shell", (0.015, 0.015, 0.017), 0.0, 0.18, **{"Coat Weight": 1.0})
+MAT["shell"] = principled("Seat shell", (0.012, 0.012, 0.014), 0.0, 0.32, **{"Coat Weight": 0.5, "Coat Roughness": 0.25})
 
 
 def screen_material():
@@ -351,16 +351,23 @@ for s, side in [(1, "L"), (-1, "R")]:
         tri = [(0, 0), (130 * dirx, 0), (0, 130)]
         if dirx < 0:
             tri = list(reversed(tri))
-        plate(f"Gusset {side}{x}", tri, (x, s * RAIL_Y - 16, 182), (1, 0, 0), (0, 0, 1), 32, MAT["alu_bright"])
-# wheel deck cross beam and front-mount plate
-profile("Wheel deck beam", (UP_X0 + 20, -RAIL_Y + 20, 600), (UP_X0 + 20, RAIL_Y - 20, 600), 40, 80, u=(1, 0, 0))
+        plate(f"Gusset {side}{x}", tri, (x, s * RAIL_Y - 16, 182), (1, 0, 0), (0, 0, 1), 32, MAT["alu"])
+# front-mount cross bar across the tops of the uprights (keeps the pedals in view below it)
+profile("Wheel deck beam", (UP_X0 + 20, -RAIL_Y + 20, UP_TOP - 30), (UP_X0 + 20, RAIL_Y - 20, UP_TOP - 30), 40, 60, u=(1, 0, 0))
+
+# Frame parts the pedals sit in front of (from the preview camera) go to their own layer, drawn
+# under the pedals; the rest of the frame is drawn over them (see stack_order.py).
+for nm in ("Rail L", "Front cross", "Foot L1360", "Slot strip L82", "Slot strip L122", "Seat cross 270", "Seat cross 580", "Upright L", "Gusset L880"):
+    ob = bpy.data.objects[nm]
+    COLL["chassis"].objects.unlink(ob)
+    COLL["chassis-back"].objects.link(ob)
 
 # ---- wheelbase on a front mount ------------------------------------------------------
 layer("wheelbase")
 TILT = math.radians(14)
 AX = Vector((-math.cos(TILT), 0, -math.sin(TILT)))  # from the mount toward the driver
-PLATE = Vector((UP_X0 - 4, 0, 700))
-plate("Front mount plate", rounded_rect(200, 240, 10), PLATE + Vector((0, 0, -30)), (0, 1, 0), (0, 0, 1), 10, MAT["steel"])
+PLATE = Vector((UP_X0 - 4, 0, 690))
+plate("Front mount plate", rounded_rect(190, 200, 10), PLATE + Vector((0, 0, -10)), (0, 1, 0), (0, 0, 1), 10, MAT["steel"])
 MB0 = PLATE + AX * 2
 MB1 = PLATE + AX * 215
 box("Motor flange", tuple(MB0 + AX * 9), (18, 160, 160), MAT["plastic"], rot=Matrix.Rotation(TILT, 4, "Y"))

@@ -33,7 +33,8 @@ scene = bpy.context.scene
 COLL = {c.name: c for c in bpy.data.collections}
 LIFT = bpy.data.objects["RigLift"]
 MOTION_LIFT = 0.15
-RIG_LAYERS = ["chassis", "seat", "wheelbase", "wheel", "pedals", "sidemount", "shifter", "handbrake", "headset"]
+ASPECT = 0.82  # height / width of the preview frame
+RIG_LAYERS = ["chassis-back", "chassis", "seat", "wheelbase", "wheel", "pedals", "sidemount", "shifter", "handbrake", "headset"]
 ALL = list(COLL)
 
 
@@ -42,12 +43,12 @@ def mm(*v):
 
 
 # ----------------------------------------------------------------------------- camera
-TARGET = mm(930, -40, 700)
+TARGET = mm(920, -20, 820)
 # Rear three-quarter, raised: the screens face the driver, so this is the view in which they face
 # the viewer, and it looks over the seat at the wheel and pedals.
-AZ = math.radians(36)  # swung from straight behind toward the driver's right
-EL = math.radians(30)
-DIST = 7.0
+AZ = math.radians(28)  # swung from straight behind toward the driver's right
+EL = math.radians(46)
+DIST = 6.9
 cam_data = bpy.data.cameras.new("Camera")
 cam_data.lens = 70
 cam = bpy.data.objects.new("Camera", cam_data)
@@ -72,15 +73,30 @@ def area(name, loc, size, energy, color=(1, 1, 1), shape="RECTANGLE", size_y=Non
     return ob
 
 
-area("Key", Vector((-2.2, 2.4, 3.2)), 2.4, 260, size_y=1.6)
+area("Key", Vector((-2.4, 2.2, 3.4)), 2.4, 420, size_y=1.6)
 area("Fill", Vector((-3.2, -3.0, 1.8)), 3.0, 70, (0.92, 0.95, 1.0))
 area("Rim cool", Vector((3.4, -2.2, 2.4)), 1.6, 160, (0.85, 0.9, 1.0))
 area("Rim red", Vector((3.0, 2.6, 1.2)), 1.8, 140, (1.0, 0.1, 0.05))
-area("Top", Vector((0.8, 0, 4.0)), 3.0, 90, size_y=1.2)
+area("Top", Vector((0.9, 0, 3.6)), 2.4, 220, size_y=1.6)
 world = bpy.data.worlds.new("Studio")
 world.use_nodes = True
-world.node_tree.nodes["Background"].inputs["Color"].default_value = (0.012, 0.012, 0.014, 1)
-world.node_tree.nodes["Background"].inputs["Strength"].default_value = 1.0
+# a dim studio gradient (darker floor, soft lighter ceiling) so metals have something to reflect
+wn = world.node_tree
+bg = wn.nodes["Background"]
+geo = wn.nodes.new("ShaderNodeTexCoord")
+sep = wn.nodes.new("ShaderNodeSeparateXYZ")
+ramp = wn.nodes.new("ShaderNodeValToRGB")
+ramp.color_ramp.elements[0].position = 0.45
+ramp.color_ramp.elements[0].color = (0.006, 0.006, 0.007, 1)
+ramp.color_ramp.elements[1].position = 0.9
+ramp.color_ramp.elements[1].color = (0.2, 0.2, 0.22, 1)
+mapr = wn.nodes.new("ShaderNodeMapRange")
+mapr.inputs["From Min"].default_value = -1
+wn.links.new(geo.outputs["Generated"], sep.inputs["Vector"])
+wn.links.new(sep.outputs["Z"], mapr.inputs["Value"])
+wn.links.new(mapr.outputs["Result"], ramp.inputs["Fac"])
+wn.links.new(ramp.outputs["Color"], bg.inputs["Color"])
+bg.inputs["Strength"].default_value = 1.0
 scene.world = world
 
 # floor: a shadow catcher, only used by the shadow passes
@@ -106,7 +122,7 @@ scene.cycles.transmission_bounces = 6
 scene.cycles.caustics_reflective = False
 scene.cycles.caustics_refractive = False
 r.resolution_x = args.width
-r.resolution_y = round(args.width * 0.7)
+r.resolution_y = round(args.width * ASPECT)
 r.resolution_percentage = 100
 r.film_transparent = True
 r.image_settings.file_format = "PNG"
@@ -184,7 +200,7 @@ elif args.mode == "depth":
     nt.links.new(rl.outputs["Depth"], out.inputs[0])
     comp = nt.nodes.new("CompositorNodeComposite")
     nt.links.new(rl.outputs["Image"], comp.inputs["Image"])
-    for name in ALL:
+    for name in ALL if args.only != "chassis-objects" else []:
         for lifted in (False, True):
             if lifted and name not in RIG_LAYERS + ["motion"]:
                 continue
@@ -192,4 +208,14 @@ elif args.mode == "depth":
             out.file_slots[0].path = f"depth-{name}{'--raised' if lifted else ''}-"
             r.filepath = os.path.join(args.out, "scratch.png")
             bpy.ops.render.render(write_still=True)
+    if args.only == "chassis-objects":
+        show(["chassis"])
+        obs = list(COLL["chassis"].objects)
+        for ob in obs:
+            for o2 in obs:
+                o2.hide_render = o2 is not ob
+            out.file_slots[0].path = f"depth-obj~{ob.name}-"
+            bpy.ops.render.render(write_still=True)
+        for o2 in obs:
+            o2.hide_render = False
     print("depth done")
