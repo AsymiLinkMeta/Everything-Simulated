@@ -62,7 +62,7 @@ test.describe("customer app", () => {
 
   test("build studio → save quote → appears in quotes", async ({ page }) => {
     await page.goto("/prebuilds/starter");
-    await page.getByRole("button", { name: "Add to cart" }).click();
+    await page.getByTestId("prebuild-add").click();
     await page.goto("/app/build");
     await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
     const save = page.getByRole("button", { name: /save (quote|build)/i }).first();

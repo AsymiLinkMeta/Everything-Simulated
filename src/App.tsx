@@ -73,6 +73,7 @@ const StaffJobs = lazyRoute(() => import("@/routes/staff/jobs"));
 const StaffBookings = lazyRoute(() => import("@/routes/staff/bookings"));
 const StaffBrands = lazyRoute(() => import("@/routes/staff/brands"));
 const StaffTeam = lazyRoute(() => import("@/routes/staff/team"));
+const StaffSite = lazyRoute(() => import("@/routes/staff/site"));
 const StaffCrm = lazyRoute(() => import("@/routes/staff/crm"));
 const StaffCrmId = lazyRoute(() => import("@/routes/staff/crm-id"));
 const StaffOms = lazyRoute(() => import("@/routes/staff/oms"));
@@ -189,6 +190,7 @@ export default function App() {
         <Route path="bookings" element={<StaffBookings />} />
         <Route path="brands" element={<StaffBrands />} />
         <Route path="team" element={<StaffTeam />} />
+        <Route path="site" element={<StaffSite />} />
         <Route path="prebuilds" element={<StaffPrebuilds />} />
         <Route path="service" element={<StaffService />} />
         <Route path="agent" element={<StaffAgent />} />

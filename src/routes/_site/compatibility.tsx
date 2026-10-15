@@ -26,7 +26,7 @@ function Compatibility() {
         lead="Select one component at a time. The compatibility engine automatically blocks incompatible combinations before you reach the deposit stage."
         image={STAGE_IMAGES["/compatibility"]}
       />
-      <div className="es-body grid min-w-0 gap-8 lg:grid-cols-[1fr_360px]">
+      <div className="es-body grid min-w-0 grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
         <BuildStudio />
         <div className="lg:sticky lg:top-24 lg:self-start">
           <CartPanel />

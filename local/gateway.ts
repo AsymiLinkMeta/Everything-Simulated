@@ -6,6 +6,7 @@
  * Serves http://localhost:54321 like a Supabase project:
  *   /auth/v1/*       -> GoTrue   (127.0.0.1:54331)
  *   /rest/v1/*       -> PostgREST (127.0.0.1:54332)
+ *   /storage/v1/*    -> Storage API (127.0.0.1:54333)
  *   /functions/v1/x  -> supabase/functions/x/index.ts, loaded in-process, with
  *                       verify_jwt enforced from supabase/config.toml
  *
@@ -142,7 +143,7 @@ async function validJwt(req: Request) {
 
 const cors = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, prefer, range, accept-profile, content-profile, x-supabase-api-version",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, prefer, range, accept-profile, content-profile, x-supabase-api-version, x-upsert, cache-control",
   "Access-Control-Allow-Methods": "GET, POST, PUT, PATCH, DELETE, OPTIONS",
   "Access-Control-Expose-Headers": "content-range, x-supabase-api-version",
 };
@@ -186,6 +187,7 @@ realServe({ port: PORT, hostname: "0.0.0.0" }, async (req) => {
   try {
     if (path.startsWith("/auth/v1")) return await proxy(req, "http://127.0.0.1:54331", "/auth/v1");
     if (path.startsWith("/rest/v1")) return await proxy(req, "http://127.0.0.1:54332", "/rest/v1");
+    if (path.startsWith("/storage/v1")) return await proxy(req, "http://127.0.0.1:54333", "/storage/v1");
     const fm = path.match(/^\/functions\/v1\/([a-z0-9-]+)/);
     if (fm) {
       const h = handlers[fm[1]];

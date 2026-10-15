@@ -6,7 +6,12 @@ import { Button } from "@/components/ui/button";
 import { CartPanel } from "@/components/es/cart-panel";
 import { BackButton, CheckPills, JsonLd, Money, IncGst, ProductTile } from "@/components/es/bits";
 import { fetchProducts, productImage } from "@/lib/es/product-cache";
-import { SiteImage } from "@/components/es/site-image";
+import { ProductPhoto } from "@/components/es/product-photo";
+import { StickyBuyBar } from "@/components/es/sticky-buy-bar";
+import { productPhotos } from "@/lib/es/product-photos";
+import { stockLabel } from "@/lib/es/stock";
+import { UNIQUE_CATEGORIES } from "@/lib/es/checkCart";
+import { toast } from "@/lib/toast";
 import { useCart } from "@/lib/es/cart-store";
 import { breadcrumbLd, catalogProductLd, pageHead } from "@/lib/es/seo";
 
@@ -29,11 +34,17 @@ function ProductPage() {
   const add = useCart((s) => s.add);
   const result = useCart((s) => s.result)();
   const inCart = useCart((s) => s.lines.some((l) => l.sku === sku));
+  const unique = item ? UNIQUE_CATEGORIES.has(item.category) : false;
+  const addLabel = inCart ? (unique ? "In your cart" : "Add another") : "Add to cart";
+  function addItem() {
+    if (!item) return;
+    add(item.sku);
+    toast.success(`${item.name} added to your cart`);
+  }
   const related = item
     ? (products.data ?? []).filter((p) => p.category === item.category && p.sku !== item.sku).slice(0, 3)
     : [];
-  const gallery = item ? [item.image || productImage(item), ...(item.images ?? [])].filter(Boolean) : [];
-  const uniqueGallery = [...new Set(gallery)];
+  const uniqueGallery = item ? productPhotos([item.image, ...(item.images ?? [])]) : [];
   const [hero, setHero] = useState<string>("");
   const firstImage = uniqueGallery[0];
 
@@ -45,7 +56,7 @@ function ProductPage() {
           title: `${item.brand} ${item.name} | Everything Simulated`,
           description: (item.description || item.notes || `${item.brand} ${item.name} for Gold Coast assembled racing simulators.`).slice(0, 160),
           path: `/shop/${item.sku}`,
-          image: productImage(item),
+          image: productImage(item) ?? undefined,
           type: "product",
         }),
       );
@@ -78,9 +89,10 @@ function ProductPage() {
       <JsonLd data={catalogProductLd(item)} />
       <div className="grid min-w-0 grid-cols-1 gap-8 lg:grid-cols-[1fr_1fr_320px]">
         <div>
-          <SiteImage
+          <ProductPhoto
             src={hero || productImage(item)}
             alt={item.name}
+            label={item.brand}
             priority
             sizes="(min-width: 1024px) 34vw, 100vw"
             className="es-card h-80 w-full object-cover md:h-[28rem]"
@@ -95,6 +107,8 @@ function ProductPage() {
                   className={`size-16 shrink-0 overflow-hidden rounded-md border ${
                     hero === src ? "border-paper" : "border-line"
                   }`}
+                  aria-label={`Show photo ${uniqueGallery.indexOf(src) + 1}`}
+                  aria-pressed={hero === src}
                 >
                   <img src={src} alt="" className="size-full object-cover" />
                 </button>
@@ -117,8 +131,8 @@ function ProductPage() {
           ) : (
             <p className="mt-4 text-2xl">Enquire for price</p>
           )}
-          <p className="mt-4 text-sm text-muted capitalize">
-            {item.stock === "stock" ? "In stock on the Gold Coast" : item.stock} · lead {item.leadWeeks[0]}–{item.leadWeeks[1]} weeks
+          <p className="mt-4 text-sm text-muted" data-testid="stock-line">
+            {stockLabel(item.stock).long || item.stock} · usually {item.leadWeeks[0]}–{item.leadWeeks[1]} weeks to build and ship
           </p>
           {item.description ? <p className="mt-4 text-sm leading-6 text-muted">{item.description}</p> : null}
           {item.notes ? <p className="mt-3 text-sm text-muted">{item.notes}</p> : null}
@@ -127,8 +141,8 @@ function ProductPage() {
             <CheckPills result={result} />
           </div>
           {item.purchasable ? (
-            <Button className="mt-8" onClick={() => add(item.sku)}>
-              {inCart ? "In the build — add another / replace" : "Add to build"}
+            <Button className="mt-8" onClick={addItem}>
+              {addLabel}
             </Button>
           ) : (
             <Button className="mt-8" asChild>
@@ -136,11 +150,14 @@ function ProductPage() {
             </Button>
           )}
           <p className="mt-4 text-sm text-muted">
-            The live checker sits in the cart. A block means we will not take a deposit on that mix.
+            The cart checks every part against the rest of your build. If a mix won't work, we won't take a deposit on it.
           </p>
         </div>
         <CartPanel compact />
       </div>
+      {item.purchasable ? (
+        <StickyBuyBar name={`${item.brand} ${item.name}`} priceExGst={item.sellExGst} actionLabel={addLabel} onAction={addItem} />
+      ) : null}
 
       {(item.whatsIncluded?.length || item.mountCompatibility || item.specs || item.compare || item.assemblyManualUrl) ? (
         <div className="mt-12 grid grid-cols-1 gap-6 lg:grid-cols-2">

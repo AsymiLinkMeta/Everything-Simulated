@@ -45,7 +45,7 @@ function DriverTraining() {
         <div className="mt-10">
           <ImageCards
             cards={[
-              { to: "/racing", image: "/rigs/motion.jpg", kicker: "Hardware", title: "Racing tools", hint: "The crates the program runs on." },
+              { to: "/racing", image: "/rigs/motion.jpg", kicker: "Hardware", title: "Racing tools", hint: "The rigs the program runs on." },
               { to: "/events", image: "/rigs/showroom.jpg", kicker: "Groups", title: "Group days", hint: "Professional and amateur sessions at the warehouse." },
               { to: "/ambassadors", image: "/rigs/haptic.jpg", kicker: "People", title: "Ambassadors", hint: "Drivers the workshop stands with." },
             ]}

@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/db";
+import { productPhotos } from "./product-photos";
 import { setFreightConfig, type FreightConfig } from "./freight";
 import type { CompatibilityRule, ListingStatus, Product, ProductCategory, Severity, StockStatus } from "./types";
 
@@ -38,7 +39,8 @@ function asImages(raw: unknown, fallback?: string | null): string[] {
 }
 
 function toProduct(row: DbRow): Product {
-  const images = asImages(row.images, row.image || row.image_url);
+  // Stock /rigs/ shots in old rows are site art, not product photos: drop them.
+  const images = productPhotos(asImages(row.images, row.image || row.image_url));
   return {
     sku: row.sku,
     brand: row.brand,
@@ -166,10 +168,7 @@ export function product(sku: string): Product | undefined {
   return getCachedProduct(sku);
 }
 
-export function productImage(p: Product): string {
-  if (p.image) return p.image;
-  if (p.images?.[0]) return p.images[0];
-  if (p.category === "motion") return "/rigs/motion.jpg";
-  if (p.category === "chassis" || p.category === "pc" || p.category === "monitor" || p.category === "mount") return "/rigs/haptic.jpg";
-  return "/rigs/starter.jpg";
+/** The product's own shop photo, or null (render a "Photo coming" tile, never stock art). */
+export function productImage(p: Product): string | null {
+  return productPhotos([p.image, ...(p.images ?? [])])[0] ?? null;
 }

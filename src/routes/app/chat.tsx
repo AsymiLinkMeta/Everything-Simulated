@@ -90,7 +90,7 @@ function Chat() {
         <p className="es-kicker">AI Build Agent</p>
         <h1 className="mt-2 text-3xl font-medium">Your build assistant</h1>
         <p className="mt-2 text-sm text-muted">
-          It reads the checker, won crates and workshop playbooks. It never invents SKUs. Chat stays on this account.
+          It reads the checker, past builds and workshop playbooks. It never invents SKUs. Chat stays on this account.
         </p>
         <div className="mt-3">
           {lines.length ? <CheckPills result={result} /> : <p className="text-xs text-muted">Your cart is empty. Ask for a starting point, or load a prebuild.</p>}
@@ -126,7 +126,7 @@ function Chat() {
         {pending ? <p className="text-sm text-muted">Working on your build…</p> : null}
         {turn?.proposedLines.length ? (
           <div className="es-card space-y-3 p-4">
-            <p className="text-sm font-medium">Proposed crate</p>
+            <p className="text-sm font-medium">Proposed build</p>
             <ul className="text-sm text-muted">
               {turn.proposedLines.map((l) => (
                 <li key={l.sku}>

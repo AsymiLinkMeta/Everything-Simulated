@@ -3,6 +3,9 @@ import { SiteImage } from "@/components/es/site-image";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { BackButton, IncGst, JsonLd, LineName, Money } from "@/components/es/bits";
+import { StickyBuyBar } from "@/components/es/sticky-buy-bar";
+import { TrustBar } from "@/components/es/trust-bar";
+import { toast } from "@/lib/toast";
 import { Button } from "@/components/ui/button";
 import { breadcrumbLd, pageHead, productLd } from "@/lib/es/seo";
 import { fetchPrebuildBySlug, fetchPublishedPrebuilds } from "@/lib/es/prebuilds";
@@ -31,7 +34,14 @@ function PrebuildDetailPage() {
   const allPrebuilds = useQuery({ queryKey: ["prebuilds"], queryFn: fetchPublishedPrebuilds });
   const products = useQuery({ queryKey: ["products"], queryFn: () => fetchProducts() });
   const loadLines = useCart((s) => s.setLines);
+  const cartPrebuild = useCart((s) => s.prebuildSlug);
   const p = prebuild.data;
+  const added = Boolean(p && cartPrebuild === p.slug);
+  function addBuild() {
+    if (!p) return;
+    loadLines(p.components.map((c) => ({ sku: c.sku, qty: c.qty })), null, p.slug);
+    toast.success(`${p.name} is in your cart`);
+  }
 
   useEffect(() => {
     if (!p) return;
@@ -136,27 +146,20 @@ function PrebuildDetailPage() {
             </ul>
           )}
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
             {p.purchasable ? (
               <>
-            <Button
-              onClick={() => {
-                loadLines(p.components.map((c) => ({ sku: c.sku, qty: c.qty })), null, p.slug);
-              }}
-            >
-              Add to cart
-            </Button>
-            <Button variant="outline" asChild>
-              <Link
-                to="/checkout"
-                onClick={() => loadLines(p.components.map((c) => ({ sku: c.sku, qty: c.qty })), null, p.slug)}
-              >
-                Checkout this crate
-              </Link>
-            </Button>
-            <Button variant="outline" asChild>
-              <Link to="/compatibility">Open checker</Link>
-            </Button>
+                <Button onClick={addBuild} data-testid="prebuild-add">
+                  {added ? "In your cart" : "Add to cart"}
+                </Button>
+                <Button variant="outline" asChild>
+                  <Link to="/checkout" onClick={addBuild}>
+                    Buy this build
+                  </Link>
+                </Button>
+                <Link to="/compatibility" className="text-sm text-muted underline-offset-4 hover:text-paper hover:underline sm:ml-2">
+                  Customise it in the checker
+                </Link>
               </>
             ) : (
               <Button asChild>
@@ -166,6 +169,15 @@ function PrebuildDetailPage() {
           </div>
         </div>
       </div>
+      <TrustBar className="mt-10 rounded-xl border" />
+      {p.purchasable && p.effective_price_ex_gst ? (
+        <StickyBuyBar
+          name={p.name}
+          priceExGst={p.effective_price_ex_gst}
+          actionLabel={added ? "In your cart" : "Add to cart"}
+          onAction={addBuild}
+        />
+      ) : null}
 
       {p.description && (
         <div className="mt-16">
@@ -204,7 +216,7 @@ function PrebuildDetailPage() {
 
       {p.components.length > 0 && (
         <>
-          <h2 className="mt-16 text-2xl font-medium">What's in the crate</h2>
+          <h2 className="mt-16 text-2xl font-medium">What's in the build</h2>
           <ul className="mt-6 divide-y divide-line rounded-xl border border-line">
             {p.components.map((comp) => {
               const item = productMap[comp.sku];

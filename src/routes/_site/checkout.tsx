@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { TrustBar } from "@/components/es/trust-bar";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowLeft, Check, ShoppingCart } from "lucide-react";
@@ -50,7 +51,7 @@ function Checkout() {
   const quote = useServerQuote({ lines, postcode, prebuild: prebuildSlug, driverWeightKg });
   const q = quote.data;
   const blocks = (q?.issues ?? []).filter((i) => i.severity === "block");
-  const canOrder = Boolean(q?.ok) && !quote.isFetching;
+  const canOrder = Boolean(q?.ok) && !quote.isSettling;
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -176,7 +177,7 @@ function Checkout() {
       <h1 className="text-2xl font-medium">Checkout</h1>
       <p className="mt-1 text-sm text-muted">
         {stripeOn
-          ? `Pay a ${depositPercent}% deposit on the next screen, or request the crate and we will invoice you.`
+          ? `Pay a ${depositPercent}% deposit on the next screen, or request the build and we will invoice you.`
           : "Submit the build. The workshop will send a deposit invoice."}
       </p>
 
@@ -229,7 +230,9 @@ function Checkout() {
                     <span className="tabular-nums">{aud(q.items_ex_gst)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span className="text-muted">Freight: {q.freight.zone}</span>
+                    <span className="text-muted">
+                      {postcode.length === 4 ? <>Freight: {q.freight.zone}</> : <>Freight estimate (add your postcode below)</>}
+                    </span>
                     <span className="tabular-nums">{aud(q.freight_ex_gst)}</span>
                   </div>
                   <ul className="space-y-0.5 text-xs text-muted">
@@ -240,7 +243,7 @@ function Checkout() {
                       </li>
                     ))}
                     <li>
-                      {q.freight.kg} kg · {q.freight.crates} crate{q.freight.crates === 1 ? "" : "s"} from the Gold Coast
+                      {q.freight.kg} kg · {q.freight.crates} shipping crate{q.freight.crates === 1 ? "" : "s"} from the Gold Coast
                     </li>
                   </ul>
                   <div className="flex justify-between text-sm">
@@ -307,7 +310,7 @@ function Checkout() {
                 value={address}
                 onChange={(e) => setAddress(e.target.value)}
                 placeholder="Street, suburb, state"
-                className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-paper placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-accent"
+                className="es-input mt-1"
               />
             </label>
 
@@ -316,8 +319,9 @@ function Checkout() {
               <Input
                 required
                 value={postcode}
-                onChange={(e) => setPostcode(e.target.value)}
-                placeholder="4215"
+                onChange={(e) => setPostcode(e.target.value.replace(/\D/g, "").slice(0, 4))}
+                inputMode="numeric"
+                placeholder="e.g. 4215"
                 autoComplete="postal-code"
                 maxLength={4}
               />
@@ -326,7 +330,7 @@ function Checkout() {
             <label className="block">
               <span className="text-sm text-muted">Order notes</span>
               <textarea
-                className="mt-1 w-full rounded-lg border border-line bg-surface px-3 py-2 text-sm text-paper placeholder:text-muted focus:outline-none focus:ring-1 focus:ring-accent"
+                className="es-input mt-1"
                 rows={3}
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
@@ -344,7 +348,7 @@ function Checkout() {
               />
               <span className="mt-1 block text-xs text-muted">
                 {referredBy
-                  ? `This crate will be attributed to ${referredBy.name}. It does not change the price.`
+                  ? `This order will be credited to ${referredBy.name}. It does not change the price.`
                   : "Enter an ambassador code, voucher or gift card if you have one."}
               </span>
             </label>
@@ -369,7 +373,7 @@ function Checkout() {
             <label className="flex items-start gap-3 rounded-lg border border-line px-4 py-3 text-sm">
               <input type="checkbox" className="mt-1" checked={payNow} onChange={(e) => setPayNow(e.target.checked)} />
               <span>
-                Pay {depositPercent}% deposit now ({audExact(depositInc)} inc GST). Uncheck to request the crate and invoice later.
+                Pay {depositPercent}% deposit now ({audExact(depositInc)} inc GST). Uncheck to request the build and pay by invoice later.
               </span>
             </label>
           ) : null}
@@ -380,9 +384,10 @@ function Checkout() {
 
           <p className="text-center text-xs text-muted">
             {stripeOn
-              ? "Card payments are processed by Stripe. The remaining balance is invoiced before the crate leaves."
-              : "No payment is taken on this page until Stripe is connected. The workshop will send a deposit invoice."}
+              ? "Card payments are processed by Stripe. The remaining balance is invoiced before your rig ships."
+              : "No card payment is taken here yet. The workshop emails you a deposit invoice to confirm your build slot."}
           </p>
+          <TrustBar className="rounded-xl border" />
         </section>
       </form>
     </div>

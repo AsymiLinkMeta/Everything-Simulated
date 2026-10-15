@@ -5,7 +5,7 @@ test.describe("guest crate checkout with Stripe deposit", () => {
   test("prebuild → checkout → Stripe test checkout → signed webhook marks paid → order lookup", async ({ page, problems }, info) => {
     const email = `guest-${Date.now()}-${info.project.name}@example.com`;
     await page.goto("/prebuilds/haptic");
-    await page.getByRole("link", { name: "Checkout this crate" }).click();
+    await page.getByRole("link", { name: "Buy this build" }).click();
     await expect(page).toHaveURL(/\/checkout/);
     await expect(page.getByRole("heading", { name: "Checkout" })).toBeVisible();
 
@@ -13,6 +13,9 @@ test.describe("guest crate checkout with Stripe deposit", () => {
     await page.getByPlaceholder("jane@example.com").fill(email);
     await page.getByPlaceholder("04xx xxx xxx").fill("0400 000 000");
     await page.getByPlaceholder("Street, suburb, state").fill("1 Test St, Southport QLD");
+    await page.getByPlaceholder("e.g. 4215").fill("4215");
+    // Freight is re-priced for the postcode; the pay button is disabled until the new quote lands.
+    await expect(page.getByRole("button", { name: /Pay .* deposit/ })).toBeEnabled();
     const pay = page.getByRole("button", { name: /Pay .* deposit/ });
     await expect(pay).toBeVisible();
     const shown = (await pay.textContent()) ?? "";

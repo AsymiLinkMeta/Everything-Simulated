@@ -349,7 +349,7 @@ export const FAQS = [
   },
   {
     q: "How long does a Gold Coast build take?",
-    a: "Lead time is typically 3–6 weeks from deposit. Hydraulic P1000 haptics and motion platforms can sit at the longer end when parts are indent.",
+    a: "Lead time is typically 3–6 weeks from deposit. Hydraulic P1000 haptics and motion platforms can sit at the longer end when parts are made to order.",
   },
   {
     q: "Is Everything Simulated only racing simulators?",

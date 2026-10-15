@@ -9,7 +9,7 @@ export function NotFoundPage() {
     applyHeadPayload(
       pageHead({
         title: "Page not found | Everything Simulated",
-        description: "That crate, SKU or city is not in the catalogue.",
+        description: "That page, product or city is not on the site.",
         path: loc.pathname || "/",
         index: false,
       }),
@@ -21,7 +21,7 @@ export function NotFoundPage() {
         <p className="es-kicker">404</p>
         <h1 className="text-2xl font-medium">That page isn’t in the workshop</h1>
         <p className="text-sm text-muted">
-          The crate, SKU or city you asked for isn’t here. Try the shop or a prebuilt rig.
+          The page, product or city you asked for isn’t here. Try the shop or a prebuilt rig.
         </p>
         <div className="flex flex-col gap-2 sm:flex-row sm:justify-center">
           <Button asChild>

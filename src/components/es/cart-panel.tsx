@@ -65,7 +65,7 @@ export function CartPanel({ compact = false }: { compact?: boolean }) {
       {!compact ? (
         <div className="flex flex-wrap gap-2">
           {(packs.data?.length ? packs.data : livePackages()).map((p) => (
-            <Button key={p.slug} variant="outline" size="sm" onClick={async () => {
+            <Button key={p.slug} variant="subtle" size="sm" onClick={async () => {
               if (!livePackages().some((x) => x.slug === p.slug)) await fetchPublishedPrebuilds().catch(() => {});
               loadPackage(p.slug);
             }}>
@@ -130,19 +130,31 @@ export function CartPanel({ compact = false }: { compact?: boolean }) {
       {lines.length ? <IssueList issues={result.issues} /> : null}
       <div className="grid grid-cols-2 gap-3">
         <label className="text-xs text-muted">
-          Driver kg
+          Postcode
           <Input
-            type="number"
-            min={40}
-            max={160}
-            value={driverWeightKg}
-            onChange={(e) => setWeight(Number(e.target.value) || 80)}
+            inputMode="numeric"
+            autoComplete="postal-code"
+            maxLength={4}
+            placeholder="e.g. 4215"
+            value={postcode}
+            onChange={(e) => setPostcode(e.target.value.replace(/\D/g, "").slice(0, 4))}
           />
         </label>
         <label className="text-xs text-muted">
-          Postcode
-          <Input value={postcode} onChange={(e) => setPostcode(e.target.value)} />
+          Driver weight (kg)
+          <Input
+            type="number"
+            inputMode="numeric"
+            min={40}
+            max={160}
+            placeholder="e.g. 80"
+            value={driverWeightKg ?? ""}
+            onChange={(e) => setWeight(e.target.value ? Number(e.target.value) : undefined)}
+          />
         </label>
+        <p className="col-span-2 text-[11px] leading-4 text-muted">
+          Postcode prices the freight. Driver weight only matters for motion rigs (we assume 80 kg if blank).
+        </p>
       </div>
       <div aria-live="polite" data-testid="cart-total">
         {!lines.length ? (
@@ -164,7 +176,9 @@ export function CartPanel({ compact = false }: { compact?: boolean }) {
             <p className="text-xl font-medium tabular-nums">{aud(quote.data.items_ex_gst)} + GST</p>
             <p className="text-sm text-muted">{aud(quote.data.total_inc_gst)} inc GST with freight</p>
             <p className="mt-1 text-xs text-muted">
-              Crate {aud(quote.data.freight_ex_gst)} — {quote.data.freight.label}
+              {postcode.length === 4
+                ? <>Freight {aud(quote.data.freight_ex_gst)} — {quote.data.freight.label}</>
+                : <>Freight estimate {aud(quote.data.freight_ex_gst)}. Add your postcode for the exact price.</>}
             </p>
             {quote.data.mode === "package" ? (
               <p className="mt-1 text-xs text-muted">Package price applied.</p>
@@ -188,9 +202,9 @@ export function CartPanel({ compact = false }: { compact?: boolean }) {
           </p>
         ) : null}
         <Button variant="outline" onClick={onSave} disabled={!lines.length}>
-          {user ? "Save quote" : "Sign In to save quote"}
+          {user ? "Save quote" : "Sign in to save quote"}
         </Button>
-        <Button variant="outline" asChild>
+        <Button variant="ghost" asChild>
           <Link to="/app/chat">Ask the build expert</Link>
         </Button>
         {lines.length ? (

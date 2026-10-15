@@ -26,5 +26,6 @@ https://everythingsimulated.com.au/*  https://www.everythingsimulated.com.au/:sp
 /racing/shop             /shop               301
 /racing/checker          /compatibility      301
 
-# SPA fallback (must stay last).
+# SPA fallback (must stay last). The build replaces this line with one rewrite per
+# app route and a final `/* /index.html 404` (scripts/spa-redirects.ts).
 /*    /index.html   200

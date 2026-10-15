@@ -306,3 +306,40 @@
 .es-page main .es-chapter-row .es-chapter {
   min-height: 0;
 }
+
+/* Phones: keep page heroes to roughly 40% of the screen so products show on the first screen.
+   Lives last in this file so it wins over the desktop .es-stage sizes above. */
+@media (max-width: 639px) {
+  .es-stage {
+    min-height: 0;
+  }
+  .es-stage-copy {
+    min-height: 0;
+    padding: 2.75rem 1rem 1.75rem;
+  }
+  .es-stage-copy h1 {
+    font-size: clamp(2.1rem, 9.5vw, 2.75rem);
+    line-height: 0.95;
+  }
+  .es-stage-copy .es-lead,
+  .es-stage-copy .lead {
+    margin-top: 0.75rem;
+    font-size: 0.95rem;
+    line-height: 1.5;
+  }
+  .es-stage .es-lights {
+    display: none;
+  }
+  /* Home billboard: about 70% of the screen with one line of lead, so the trust bar and racing band peek in. */
+  .es-hero,
+  .es-hero-copy {
+    min-height: 72dvh;
+  }
+  .es-hero-copy {
+    padding: 5rem 1rem 2.5rem;
+  }
+  .es-hero-more,
+  .es-hero .es-lights {
+    display: none;
+  }
+}

@@ -265,6 +265,14 @@ function Login() {
         <Link to="/" className="block text-sm text-muted">
           Back to the site
         </Link>
+        {!staff ? (
+          <p className="border-t border-line pt-4 text-xs text-subtle">
+            Workshop team?{" "}
+            <a href="/login?portal=staff" className="underline underline-offset-4 hover:text-paper">
+              Staff login
+            </a>
+          </p>
+        ) : null}
       </div>
     </main>
   );

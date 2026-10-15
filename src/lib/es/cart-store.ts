@@ -7,13 +7,14 @@ import type { CartLine, CheckResult } from "./types";
 
 type CartState = {
   lines: CartLine[];
-  driverWeightKg: number;
+  /** Optional; pricing and the motion payload check assume 80 kg when unset. */
+  driverWeightKg?: number;
   postcode: string;
   quoteId: string | null;
   /** Set when the cart was loaded from a prebuild; quote_cart charges the package price while the lines are unchanged. */
   prebuildSlug: string | null;
   referralCode: string;
-  setWeight: (kg: number) => void;
+  setWeight: (kg: number | undefined) => void;
   setPostcode: (v: string) => void;
   setReferralCode: (v: string) => void;
   loadPackage: (slug: string) => void;
@@ -33,8 +34,8 @@ export const useCart = create<CartState>()(
   persist(
     (set, get) => ({
       lines: [],
-      driverWeightKg: 80,
-      postcode: "4215",
+      driverWeightKg: undefined,
+      postcode: "",
       quoteId: null,
       prebuildSlug: null,
       referralCode: "",
@@ -71,6 +72,20 @@ export const useCart = create<CartState>()(
       clear: () => set({ lines: [], quoteId: null, prebuildSlug: null }),
       result: () => checkCart({ lines: get().lines, driverWeightKg: get().driverWeightKg, postcode: get().postcode }),
     }),
-    { name: "es-cart-v2" },
+    {
+      name: "es-cart-v2",
+      version: 1,
+      migrate: (persisted, version) => migrateCart(persisted, version) as CartState,
+    },
   ),
 );
+
+/** v0 carts were seeded with 80 kg and the workshop's 4215 postcode as if the customer had typed them. */
+export function migrateCart(persisted: unknown, version: number): Partial<CartState> {
+  const st = { ...((persisted ?? {}) as Partial<CartState>) };
+  if (version < 1) {
+    if (st.driverWeightKg === 80) st.driverWeightKg = undefined;
+    if (st.postcode === "4215") st.postcode = "";
+  }
+  return st;
+}

@@ -222,7 +222,7 @@ function TrackOrder() {
             {order.status === "pending" && "Build request received. Pay the deposit below or wait for the workshop invoice."}
             {order.status === "paid" && "Deposit received. Your build is queued for the workshop."}
             {order.status === "packing" && "Your rig is being assembled and QA tested."}
-            {order.status === "shipped" && "Your crate is in transit."}
+            {order.status === "shipped" && "Your rig is in transit."}
             {order.status === "delivered" && "Delivered. Enjoy the rig."}
             {order.status === "cancelled" && "This order was cancelled."}
           </div>

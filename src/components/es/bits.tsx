@@ -1,4 +1,6 @@
 import { useState } from "react";
+import { ProductPhoto } from "./product-photo";
+import { stockLabel } from "@/lib/es/stock";
 import { PrebuildPhoto } from "@/components/es/site-image";
 import { toast } from "@/lib/toast";
 import { ArrowLeft, Plus, X, Wrench, Loader2, Check } from "lucide-react";
@@ -52,13 +54,6 @@ export function AuthSlot() {
   return <CustomerSignInLink />;
 }
 
-export function StaffLoginLink() {
-  return (
-    <a href="/login?portal=staff" className="es-footer-login">
-      Staff / Admin Login
-    </a>
-  );
-}
 
 const COOKIE_KEY = "es-cookie-ack";
 
@@ -345,10 +340,13 @@ export function ProductTile({ item }: { item: Product }) {
   return (
     <Link to="/shop/$sku" params={{ sku: item.sku }} className="es-card group overflow-hidden">
       <div className="relative aspect-video bg-raised">
-        <img src={productImage(item)} alt={item.name} className="size-full object-cover opacity-90" loading="lazy" decoding="async" />
+        <ProductPhoto src={productImage(item)} alt={item.name} label={item.brand} className="size-full object-cover opacity-90" sizes="(min-width: 1024px) 25vw, 50vw" />
         {item.stock === "indent" ? (
-          <span className="absolute left-3 top-3 rounded-md bg-ink/80 px-2 py-1 text-[11px] uppercase tracking-wide text-muted">
-            Indent
+          <span
+            className="absolute left-3 top-3 rounded-md bg-ink/80 px-2 py-1 text-[11px] uppercase tracking-wide text-muted"
+            title={stockLabel(item.stock).long}
+          >
+            {stockLabel(item.stock).short}
           </span>
         ) : null}
         {buyable ? (

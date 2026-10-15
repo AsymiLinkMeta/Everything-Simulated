@@ -15,7 +15,7 @@ function AppOrders() {
       <div>
         <p className="es-kicker">Orders</p>
         <h1 className="mt-2 text-3xl font-medium">Tracking</h1>
-        <p className="mt-2 text-sm text-muted">Deposits and crates from your account. Staff mark paid, packed and shipped in OMS.</p>
+        <p className="mt-2 text-sm text-muted">Deposits and orders from your account. Staff mark paid, packed and shipped in OMS.</p>
       </div>
       {orders.isPending ? <p className="text-sm text-muted">Loading…</p> : null}
       {!orders.data?.length && !orders.isPending ? (

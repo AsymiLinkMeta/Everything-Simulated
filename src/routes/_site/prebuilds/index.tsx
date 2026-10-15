@@ -1,4 +1,5 @@
 import { STAGE_IMAGES } from "@/lib/es/stage-images";
+import { TrustBar } from "@/components/es/trust-bar";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { PrebuildPhoto } from "@/components/es/site-image";
 import { useQuery } from "@tanstack/react-query";
@@ -31,6 +32,7 @@ function PrebuildsPage() {
         lead="Every rig is assembled, tested and photographed on the Gold Coast before dispatch."
         image={STAGE_IMAGES["/prebuilds"]}
       />
+      <TrustBar />
       <div className="es-body">
         <h2 className="sr-only">Available prebuilds</h2>
         {prebuilds.isPending ? (

@@ -95,11 +95,14 @@ test.describe("programme (staff)", () => {
     await page.goto(`/?ref=${CODE}`);
     await expect.poll(async () => (await page.context().cookies()).find((c) => c.name === "es_ref")?.value).toBe(CODE);
     await page.goto("/prebuilds/haptic");
-    await page.getByRole("link", { name: "Checkout this crate" }).click();
+    await page.getByRole("link", { name: "Buy this build" }).click();
     await page.getByPlaceholder("Jane Smith").fill("Referred Buyer");
     await page.getByPlaceholder("jane@example.com").fill(email);
     await page.getByPlaceholder("04xx xxx xxx").fill("0400 000 000");
     await page.getByPlaceholder("Street, suburb, state").fill("1 Test St, Southport QLD");
+    await page.getByPlaceholder("e.g. 4215").fill("4215");
+    // Freight is re-priced for the postcode; the pay button is disabled until the new quote lands.
+    await expect(page.getByRole("button", { name: /Pay .* deposit/ })).toBeEnabled();
     await page.getByRole("button", { name: /Pay .* deposit/ }).click();
     await page.getByRole("button", { name: /^Pay/ }).click({ timeout: 20_000 });
     await page.waitForURL(/\/order/, { timeout: 20_000 });
