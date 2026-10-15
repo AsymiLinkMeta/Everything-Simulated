@@ -17,7 +17,7 @@ local/stack.sh up          # first run pulls images; `reset` wipes the database
 local/migrate.sh           # all supabase/migrations in order
 local/seed.sh              # catalogue copied (read-only, anonymised) from prod + demo accounts
 deno run -A --node-modules-dir=none local/gateway.ts &
-source local/.env.local-stack && LOCAL_ANON_KEY=$ANON_KEY npm run e2e
+source local/stack.env && LOCAL_ANON_KEY=$ANON_KEY npm run e2e
 ```
 
 Demo accounts (password `Passw0rd!local`): `admin@es.local`, `staff@es.local` (sales),
@@ -29,7 +29,7 @@ and `api.x.ai` with mocks. Paying on the mock checkout sends a **signed**
 `checkout.session.completed` event to the real `stripe-webhook` function, exactly as Stripe does.
 `POST /__mock/stripe/event {type, object}` sends any other signed event (for example `charge.refunded`).
 
-`local/.env.local-stack` holds throwaway keys signed with a local-only secret. They are not credentials.
+`local/stack.env` holds throwaway keys signed with a local-only secret. They are not credentials.
 
 Why not `supabase start`? On hosts where container-to-container networking is unreliable,
 the CLI's realtime migration step times out. This stack only needs published ports, so it works there too.

@@ -6,7 +6,7 @@
 #   driver@es.local (customer linked to the seeded ambassador)
 set -euo pipefail
 cd "$(dirname "$0")"
-source ./.env.local-stack
+source ./stack.env
 DB=${LOCAL_DB_URL:-postgres://postgres:postgres@127.0.0.1:54322/postgres}
 API=${LOCAL_API_URL:-http://localhost:54321}
 PW='Passw0rd!local'

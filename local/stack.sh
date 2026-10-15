@@ -7,7 +7,7 @@
 # The API gateway (local/gateway.ts) serves all of it at http://localhost:54321.
 set -euo pipefail
 cd "$(dirname "$0")"
-source ./.env.local-stack
+source ./stack.env
 P=es-local
 case "${1:-up}" in
   down|reset)

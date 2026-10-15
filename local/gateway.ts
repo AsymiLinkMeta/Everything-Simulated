@@ -18,7 +18,7 @@
 import { signStripePayload } from "../supabase/functions/_shared/stripe-signature.ts";
 
 const env = Object.fromEntries(
-  Deno.readTextFileSync(new URL("./.env.local-stack", import.meta.url))
+  Deno.readTextFileSync(new URL("./stack.env", import.meta.url))
     .split("\n").filter((l) => /^[A-Z_]+=/.test(l)).map((l) => [l.slice(0, l.indexOf("=")), l.slice(l.indexOf("=") + 1)]),
 );
 const PORT = Number(Deno.env.get("GATEWAY_PORT") ?? 54321);
