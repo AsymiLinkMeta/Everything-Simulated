@@ -99,6 +99,7 @@ function RigBuilder() {
   const map = useMemo(() => Object.fromEntries((products.data ?? []).map((p) => [p.sku, p])), [products.data]);
   const picked = useMemo(() => lines.map((l) => map[l.sku]).filter(Boolean) as Product[], [lines, map]);
   const pickedCats = useMemo(() => new Set(picked.map((p) => p.category as string)), [picked]);
+  const screens = useMemo(() => lines.reduce((n, l) => n + (map[l.sku]?.category === "monitor" ? l.qty || 1 : 0), 0), [lines, map]);
   const result = useMemo(() => checkCart({ lines, products: map, driverWeightKg, postcode }), [lines, map, driverWeightKg, postcode]);
   const quote = useServerQuote({ lines, postcode, prebuild: prebuildSlug, driverWeightKg }, { enabled: lines.length > 0 });
 
@@ -348,7 +349,7 @@ function RigBuilder() {
           </section>
 
           <aside className="es-rb-side" aria-label="Your build">
-            <RigPreview layers={layerStack(picked, builder.data?.layers ?? [])} picked={pickedCats} />
+            <RigPreview layers={layerStack(picked, builder.data?.layers ?? [])} picked={pickedCats} screens={screens} />
             <div className="es-rb-summary">
               <p className="es-kicker">Your build</p>
               {picked.length ? (

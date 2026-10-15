@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { BUILDER_STEPS, badgeLabel, decodeBuild, encodeBuild, filterAndSort, layerStack, newIssues, stepForCategory, withPick } from "@/lib/es/builder-core";
+import { BUILDER_STEPS, rigPartStates, badgeLabel, decodeBuild, encodeBuild, filterAndSort, layerStack, newIssues, stepForCategory, withPick } from "@/lib/es/builder-core";
 import type { Product } from "@/lib/es/types";
+import { RIG_GROUPS } from "@/components/es/rig-art";
 
 const P = (sku: string, category: string, extra: Partial<Product> = {}): Product =>
   ({ sku, brand: "B", name: sku.toUpperCase(), category, sellExGst: 1000, stock: "stock", leadWeeks: [1, 2], ...extra }) as Product;
@@ -76,5 +77,42 @@ describe("preview layers", () => {
     const out = layerStack([P("seat-1", "seat"), P("xr1", "chassis")], layers);
     expect(out.map((l) => l.image_url)).toEqual(["/l/xr1.webp", "/l/seat.webp"]);
     expect(layerStack([P("pc", "pc")], layers)).toEqual([]);
+  });
+});
+
+describe("drawn rig preview", () => {
+  const cats = (...c: string[]) => new Set(c);
+  it("knows every drawn part", () => {
+    const states = rigPartStates(cats(), 0);
+    for (const g of RIG_GROUPS) expect(states[g.part], g.part).toBeDefined();
+  });
+  it("empty build: the whole rig is a ghost, triple screens included", () => {
+    const s = rigPartStates(cats(), 0);
+    expect(s.chassis).toBe("ghost");
+    expect(s["screen-sides"]).toBe("ghost");
+    expect(s["screen-top"]).toBe("off");
+  });
+  it("screen count drives single, triple and top screen", () => {
+    expect(rigPartStates(cats("monitor"), 1)["screen-sides"]).toBe("off");
+    expect(rigPartStates(cats("monitor", "mount"), 3)["screen-sides"]).toBe("on");
+    expect(rigPartStates(cats("monitor", "mount"), 3)["mount-sides"]).toBe("on");
+    const four = rigPartStates(cats("monitor", "mount"), 4);
+    expect(four["screen-top"]).toBe("on");
+    expect(four["mount-top"]).toBe("on");
+  });
+  it("a VR build with no screens drops the display", () => {
+    const s = rigPartStates(cats("headset", "chassis"), 0);
+    expect(s.headset).toBe("on");
+    expect(s["screen-center"]).toBe("off");
+    expect(s.mount).toBe("off");
+  });
+  it("either shifter or handbrake brings in the side mount", () => {
+    expect(rigPartStates(cats("handbrake"), 0).sidemount).toBe("on");
+    expect(rigPartStates(cats(), 0).sidemount).toBe("ghost");
+  });
+  it("staff layer art for a category hides that category's drawing only", () => {
+    const s = rigPartStates(cats("chassis", "seat"), 0, cats("chassis"));
+    expect(s.chassis).toBe("off");
+    expect(s.seat).toBe("on");
   });
 });

@@ -121,12 +121,29 @@ test.describe("rig builder data from staff", () => {
     exec(`delete from builder_layers`);
     await page.goto("/build?b=xr1");
     await expect(page.getByTestId("rig-preview")).toHaveAttribute("data-mode", "fallback");
-    await expect(page.locator('[data-part="chassis"]')).toHaveClass(/is-on/);
-    await expect(page.locator('[data-part="seat"]')).not.toHaveClass(/is-on/);
+    const preview = page.getByTestId("rig-preview");
+    await expect(preview.locator('[data-part="chassis"]').first()).toHaveAttribute("data-state", "on");
+    await expect(preview.locator('[data-part="seat"]').first()).toHaveAttribute("data-state", "ghost");
     exec(`insert into builder_layers (category, image_url, z, label) values ('chassis', '/rigs/haptic.jpg', 0, 'Chassis')`);
     await page.goto("/build?b=xr1");
-    await expect(page.getByTestId("rig-preview")).toHaveAttribute("data-mode", "layers");
-    await expect(page.getByTestId("rig-preview").locator("img")).toHaveCount(1);
+    await expect(preview).toHaveAttribute("data-mode", "layers");
+    await expect(preview.locator("img")).toHaveCount(1);
+    // The staff image replaces the drawn chassis; the rest of the drawing stays.
+    await expect(preview.locator('[data-part="chassis"]')).toHaveCount(0);
+    await expect(preview.locator('[data-part="seat"]').first()).toHaveAttribute("data-state", "ghost");
+    exec(`delete from builder_layers`);
+  });
+
+  test("preview: a motion build with triple screens lights up the platform and all three screens", async ({ page }, info) => {
+    test.skip(info.project.name !== "desktop", "reads shared layer rows");
+    exec(`delete from builder_layers`);
+    await page.goto("/build?b=xr1,sr2,quad-mount,aoc-32*3");
+    const preview = page.getByTestId("rig-preview");
+    for (const part of ["chassis", "motion", "mount", "mount-sides", "screen-center", "screen-sides"]) {
+      await expect(preview.locator(`[data-part="${part}"]`).first(), part).toHaveAttribute("data-state", "on");
+    }
+    await expect(preview.locator('[data-part="screen-top"]')).toHaveCount(0);
+    await expect(preview.locator('[data-part="wheel"]').first()).toHaveAttribute("data-state", "ghost");
   });
 
   test.describe("staff", () => {

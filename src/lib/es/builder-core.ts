@@ -135,3 +135,55 @@ export function layerStack(picked: Product[], layers: LayerRow[]): LayerRow[] {
   }
   return out.sort((a, b) => a.z - b.z);
 }
+
+// ---------- drawn rig preview ----------
+
+export type RigPartState = "on" | "ghost" | "off";
+
+/** Which builder categories light up each drawn part. */
+const PART_CATEGORIES: Record<string, string[]> = {
+  chassis: ["chassis"],
+  seat: ["seat"],
+  wheelbase: ["wheelbase"],
+  wheel: ["wheel"],
+  pedals: ["pedals"],
+  shifter: ["shifter"],
+  handbrake: ["handbrake"],
+  sidemount: ["shifter", "handbrake"],
+  pc: ["pc"],
+  motion: ["motion"],
+  headset: ["headset"],
+  mount: ["mount"],
+  "mount-sides": ["mount"],
+  "mount-top": ["mount"],
+  "screen-center": ["monitor"],
+  "screen-sides": ["monitor"],
+  "screen-top": ["monitor"],
+};
+
+/**
+ * Each drawn part's state for the picked categories and screen count. Screens follow the
+ * monitor quantity (1–2 one screen, 3 a triple, 4+ adds a top screen); a VR build with no
+ * screens or stand drops the display entirely.
+ */
+export function rigPartStates(picked: Set<string>, screens: number, overridden: Set<string> = new Set()): Record<string, RigPartState> {
+  const has = (c: string) => picked.has(c);
+  const vrOnly = has("headset") && screens === 0 && !has("mount");
+  const triple = screens === 0 || screens >= 3;
+  const out: Record<string, RigPartState> = {};
+  for (const [part, cats] of Object.entries(PART_CATEGORIES)) {
+    if (cats.every((c) => overridden.has(c))) {
+      out[part] = "off";
+      continue;
+    }
+    let s: RigPartState = cats.some(has) ? "on" : "ghost";
+    if (part.startsWith("screen-")) s = screens > 0 ? "on" : "ghost";
+    if (part === "screen-sides" && !triple) s = "off";
+    if (part === "screen-top") s = screens >= 4 ? "on" : "off";
+    if (part === "mount-sides" && !triple) s = "off";
+    if (part === "mount-top" && (screens < 4 || !has("mount"))) s = "off";
+    if (vrOnly && (part.startsWith("screen-") || part.startsWith("mount"))) s = "off";
+    out[part] = s;
+  }
+  return out;
+}
