@@ -160,7 +160,7 @@ function Login() {
                           setError(
                             err instanceof Error
                               ? err.message
-                              : `Could not continue with ${p.label}. Enable it in Supabase Auth providers.`,
+                              : `Could not continue with ${p.label}. Try again, or sign in with your email below.`,
                           );
                         }
                       }}
@@ -169,9 +169,6 @@ function Login() {
                     </Button>
                   ))}
                 </div>
-                <p className="text-center text-xs text-subtle">
-                  Google and X use your Supabase Auth providers. Email still works if those are off.
-                </p>
                 <p className="text-center text-xs text-subtle">or email</p>
               </>
             )}

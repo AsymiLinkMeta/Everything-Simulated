@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { SiteImage } from "@/components/es/site-image";
 import { toast } from "sonner";
 import { ArrowLeft, Plus, X, Wrench, Loader2, Check } from "lucide-react";
 import "../../es.css";
@@ -30,11 +31,8 @@ export function Logo({ compact = false }: { compact?: boolean }) {
   return (
     <Link to="/" className={`es-logo${compact ? " es-logo-compact" : ""}`} aria-label="Everything Simulated">
       <picture>
-        <img
-          src="/Everything_Simulated_LOGO_W+R.png"
-          alt="Everything Simulated"
-          className="es-logo-image"
-        />
+        <source type="image/webp" srcSet="/logo-192.webp" />
+        <img src="/logo-192.png" alt="Everything Simulated" className="es-logo-image" width={192} height={192} decoding="async" />
       </picture>
     </Link>
   );
@@ -323,7 +321,7 @@ export function PackageCard({ pack }: { pack: PackageSpec }) {
   return (
     <Link to="/prebuilds/$slug" params={{ slug: pack.slug }} className="es-card group flex flex-col overflow-hidden">
       <div className="relative aspect-video overflow-hidden">
-        <img src={pack.image} alt={pack.name} className="size-full object-cover transition-transform duration-300 group-hover:scale-105" />
+        <SiteImage src={pack.image} alt={pack.name} className="size-full object-cover transition-transform duration-300 group-hover:scale-105" sizes="(min-width: 1024px) 33vw, 100vw" />
         <span className="es-kicker" style={{ position: "absolute", left: 16, top: 16, background: "rgba(7,7,8,0.8)", padding: "4px 8px", borderRadius: 8 }}>
           {pack.kicker}
         </span>

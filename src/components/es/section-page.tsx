@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { SiteImage } from "@/components/es/site-image";
 import { Link } from "@tanstack/react-router";
 import { BRAND } from "@/lib/es/catalog";
 import type { PlatformLink } from "@/lib/es/platforms";
@@ -69,7 +70,7 @@ export function ImageCards({
         <li key={card.to}>
           <Link to={card.to} className="es-tile">
             <div className="es-tile-frame">
-              <img src={card.image} alt="" />
+              <SiteImage src={card.image} sizes="(min-width: 1024px) 33vw, 100vw" />
             </div>
             <div className="es-tile-copy">
               <p className="es-kicker">{card.kicker}</p>
@@ -118,7 +119,7 @@ export function PageHero({
 }) {
   return (
     <header className={`es-stage es-stage-${tone}`}>
-      {image ? <img src={image} alt="" className="es-stage-img" /> : null}
+      {image ? <SiteImage src={image} className="es-stage-img" priority /> : null}
       <div className="es-stage-veil" />
       <div className="es-stage-copy">
         <div className="es-lights" aria-hidden="true">
@@ -208,7 +209,7 @@ export function MediaSplit({
   return (
     <div className={`es-media-split${flip ? " is-flip" : ""}`}>
       <div className="es-media-split-frame">
-        <img src={image} alt="" />
+        <SiteImage src={image} sizes="(min-width: 1024px) 50vw, 100vw" />
       </div>
       <div className="es-media-split-copy">
         <p className="es-kicker">{kicker}</p>

@@ -53,6 +53,11 @@ a {
   color: inherit;
 }
 
+/* <SiteImage> wraps photos in <picture>; keep the <img> as the layout child. */
+picture {
+  display: contents;
+}
+
 img {
   max-width: 100%;
 }
@@ -71,6 +76,8 @@ img {
   min-width: 0;
   max-width: 100%;
   overflow-x: hidden;
+  /* Keeps the footer below the fold while a lazy page or its data loads (no layout shift). */
+  min-height: 100dvh;
 }
 
 @media (max-width: 767px) {

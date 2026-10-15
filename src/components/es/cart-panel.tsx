@@ -59,7 +59,7 @@ export function CartPanel({ compact = false }: { compact?: boolean }) {
           <p className="es-kicker">Build</p>
           <h2 className="text-lg font-medium">Your cart</h2>
         </div>
-        <CheckPills result={result} />
+        {lines.length ? <CheckPills result={result} /> : null}
       </div>
       {!compact ? (
         <div className="flex flex-wrap gap-2">
@@ -123,7 +123,7 @@ export function CartPanel({ compact = false }: { compact?: boolean }) {
             Add required adapter
           </Button>
         ))}
-      <IssueList issues={result.issues} />
+      {lines.length ? <IssueList issues={result.issues} /> : null}
       <div className="grid grid-cols-2 gap-3">
         <label className="text-xs text-muted">
           Driver kg
@@ -169,10 +169,21 @@ export function CartPanel({ compact = false }: { compact?: boolean }) {
         )}
       </div>
       <div className="flex flex-col gap-2">
-        <Button asChild>
-          <Link to="/checkout">Checkout</Link>
-        </Button>
-        <Button variant="outline" onClick={onSave}>
+        {lines.length ? (
+          <Button asChild>
+            <Link to="/checkout">Checkout</Link>
+          </Button>
+        ) : (
+          <Button disabled aria-describedby="cart-empty-hint">
+            Checkout
+          </Button>
+        )}
+        {!lines.length ? (
+          <p id="cart-empty-hint" className="sr-only">
+            Add parts or load a prebuild to check out.
+          </p>
+        ) : null}
+        <Button variant="outline" onClick={onSave} disabled={!lines.length}>
           {user ? "Save quote" : "Sign In to save quote"}
         </Button>
         <Button variant="outline" asChild>

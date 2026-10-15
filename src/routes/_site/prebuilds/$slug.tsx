@@ -1,4 +1,5 @@
 import { createFileRoute, Link, applyHeadPayload } from "@tanstack/react-router";
+import { SiteImage } from "@/components/es/site-image";
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { BackButton, IncGst, JsonLd, LineName, Money } from "@/components/es/bits";
@@ -104,7 +105,7 @@ function PrebuildDetailPage() {
 
       <div className="grid grid-cols-1 gap-10 md:grid-cols-2">
         {p.image ? (
-          <img src={p.image} alt={p.name} className="es-card h-80 w-full object-cover md:h-full" />
+          <SiteImage src={p.image} alt={p.name} className="es-card h-80 w-full object-cover md:h-full" priority sizes="(min-width: 768px) 50vw, 100vw" />
         ) : (
           <div className="es-card flex h-80 items-center justify-center bg-raised text-muted md:h-full">
             No image
@@ -237,7 +238,7 @@ function PrebuildDetailPage() {
                 {o.kicker && <p className="es-kicker">{o.kicker}</p>}
                 <p className="mt-1 font-medium">{o.name}</p>
                 <p className="mt-1 text-sm text-muted">
-                  {o.purchasable && o.effective_price_ex_gst ? <Money cents={o.effective_price_ex_gst} gst /> : "Enquire for price"}
+                  {o.purchasable && o.effective_price_ex_gst ? <>{o.price_source === "parts" ? "From " : ""}<Money cents={o.effective_price_ex_gst} gst /></> : "Enquire for price"}
                 </p>
               </Link>
             ))}

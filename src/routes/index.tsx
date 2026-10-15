@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { SiteImage } from "@/components/es/site-image";
 import { useQuery } from "@tanstack/react-query";
 import { ArrowRight, MapPin } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
@@ -32,7 +33,7 @@ export function Home() {
     <SiteShell>
       <JsonLd data={graphLd(organizationLd(), websiteLd(), localBusinessLd(), faqLd(faqs))} />
       <section className="es-hero">
-        <img src="/rigs/hero-poster.jpg" alt="Driver using a triple-screen racing simulator" className="es-hero-img" {...{ fetchpriority: "high" }} width={1948} height={908} />
+        <SiteImage src="/rigs/hero-poster.jpg" alt="Driver using a triple-screen racing simulator" className="es-hero-img" priority width={1948} height={908} />
         <HeroVideo />
         <div className="es-hero-mask" />
         <div className="es-hero-copy">
@@ -59,7 +60,7 @@ export function Home() {
 
       {racing ? (
         <Link to={racing.to} className="es-chapter">
-          <img src={racing.image} alt="" />
+          <SiteImage src={racing.image} sizes="(min-width: 1024px) 50vw, 100vw" />
           <div className="es-chapter-veil" />
           <div className="es-chapter-copy">
             <span className="es-chapter-idx">01</span>
@@ -73,7 +74,7 @@ export function Home() {
       <div className="es-chapter-row">
         {rest.map((platform, i) => (
           <Link key={platform.slug} to={platform.to} className="es-chapter">
-            <img src={platform.image} alt="" />
+            <SiteImage src={platform.image} sizes="(min-width: 1024px) 33vw, 100vw" />
             <div className="es-chapter-veil" />
             <div className="es-chapter-copy">
               <span className="es-chapter-idx">{String(i + 2).padStart(2, "0")}</span>
@@ -115,7 +116,7 @@ export function Home() {
       <BrandBanner />
 
       <Link to="/studio" className="es-chapter">
-        <img src="/rigs/Everything_Simulated_Hero.jpg" alt="Driver using a racing simulator" />
+        <SiteImage src="/rigs/Everything_Simulated_Hero.jpg" alt="Driver using a racing simulator" />
         <div className="es-chapter-veil" />
         <div className="es-chapter-copy">
           <p className="es-kicker es-kicker-telemetry">Studio</p>
@@ -195,7 +196,7 @@ function FeaturedPrebuilds() {
               <Link to="/prebuilds/$slug" params={{ slug: p.slug }} className="es-pack-tile">
                 <div className="es-pack-tile-frame">
                   {p.image ? (
-                    <img src={p.image} alt={p.name} loading={i === 0 ? "eager" : "lazy"} decoding="async" />
+                    <SiteImage src={p.image} alt={p.name} sizes="(min-width: 1024px) 33vw, 100vw" />
                   ) : (
                     <div className="grid size-full place-items-center bg-raised text-muted">No image</div>
                   )}
@@ -205,7 +206,7 @@ function FeaturedPrebuilds() {
                 <h3 className="text-paper">{p.name}</h3>
                 <p className="mt-2 text-sm leading-6 text-muted">{p.blurb}</p>
                 <p className="mt-4 text-lg font-medium text-paper">
-                  {p.purchasable ? <Money cents={p.effective_price_ex_gst} gst /> : "Enquire for price"}
+                  {p.purchasable ? <>{p.price_source === "parts" ? "From " : ""}<Money cents={p.effective_price_ex_gst} gst /></> : "Enquire for price"}
                 </p>
               </div>
             </div>
@@ -236,11 +237,28 @@ function HeroVideo() {
       setPhase("black");
       timer = window.setTimeout(() => setPhase("revealed"), 1100);
     };
+    // Skip the intro on data-saver or slow connections: the poster is the hero.
+    const conn = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
+    if (conn?.saveData || /(^|-)2g|3g/.test(conn?.effectiveType ?? "")) {
+      setPhase("revealed");
+      return;
+    }
     video.addEventListener("ended", onEnded);
-    // Both videos are preload="none"; only the one for this viewport is fetched.
-    video.preload = "auto";
-    video.play().catch(() => setPhase("revealed"));
+    // Both videos are preload="none"; only the one for this viewport is fetched, and only
+    // once the page has loaded so it never competes with the hero image, fonts or app code.
+    let cancelled = false;
+    const start = () => {
+      if (cancelled) return;
+      video.preload = "auto";
+      video.play().catch(() => setPhase("revealed"));
+    };
+    const ric = (window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number }).requestIdleCallback;
+    const idle = () => (ric ? ric(start, { timeout: 1500 }) : window.setTimeout(start, 200));
+    if (document.readyState === "complete") idle();
+    else window.addEventListener("load", idle, { once: true });
     return () => {
+      cancelled = true;
+      window.removeEventListener("load", idle);
       video.removeEventListener("ended", onEnded);
       window.clearTimeout(timer);
     };
@@ -249,10 +267,10 @@ function HeroVideo() {
   return (
     <>
       <div className={`es-hero-video-wrap${phase === "revealed" ? " is-finished" : ""}`}>
-        <video ref={desktopRef} className="es-hero-video es-hero-video-desktop" muted playsInline preload="none" aria-hidden="true" poster="/rigs/hero-poster.jpg">
+        <video ref={desktopRef} className="es-hero-video es-hero-video-desktop" muted playsInline preload="none" aria-hidden="true" poster="/rigs/hero-poster-1600.webp">
           <source src="/videos/hero-uw.mp4" type="video/mp4" />
         </video>
-        <video ref={mobileRef} className="es-hero-video es-hero-video-mobile" muted playsInline preload="none" aria-hidden="true" poster="/rigs/hero-poster.jpg">
+        <video ref={mobileRef} className="es-hero-video es-hero-video-mobile" muted playsInline preload="none" aria-hidden="true" poster="/rigs/hero-poster-1600.webp">
           <source src="/videos/hero-mobile.mp4" type="video/mp4" />
         </video>
       </div>
@@ -269,7 +287,7 @@ function BrandLogo({
   ariaHidden?: boolean;
 }) {
   const content = brand.icon_url ? (
-    <img src={brand.icon_url} alt={ariaHidden ? "" : brand.name} className="h-full w-full object-contain" />
+    <img src={brand.icon_url} alt={ariaHidden ? "" : brand.name} className="h-full w-full object-contain" loading="lazy" decoding="async" />
   ) : (
     <span className="text-base font-medium text-paper">{brand.name}</span>
   );
@@ -288,10 +306,21 @@ function listNames(names: string[]) {
 }
 
 function BrandBanner() {
-  const brands = useQuery({ queryKey: ["brands"], queryFn: () => fetchBrands() });
+  // Logos are fetched when the strip is about to scroll into view, not on first paint.
+  const ref = useRef<HTMLElement>(null);
+  const [near, setNear] = useState(false);
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || near) return;
+    if (!("IntersectionObserver" in window)) return setNear(true);
+    const io = new IntersectionObserver((entries) => entries.some((e) => e.isIntersecting) && setNear(true), { rootMargin: "600px 0px" });
+    io.observe(el);
+    return () => io.disconnect();
+  }, [near]);
+  const brands = useQuery({ queryKey: ["brands"], queryFn: () => fetchBrands(), enabled: near });
   const items = brands.data ?? [];
   return (
-    <section className="border-y border-line bg-panel">
+    <section ref={ref} className="border-y border-line bg-panel">
       <div className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-16">
         <p className="es-kicker es-kicker-telemetry">Brands we spec</p>
         <h2 className="es-display mt-2 text-4xl">Premium Hardware, Professionally Assembled</h2>

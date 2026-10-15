@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { SiteImage } from "@/components/es/site-image";
 import { useQuery } from "@tanstack/react-query";
 import { JsonLd, LoadError, Money } from "@/components/es/bits";
 import { ImageCards, MediaSplit, PageHero, PhoneStrip } from "@/components/es/section-page";
@@ -83,14 +84,14 @@ function RacingHub() {
           {packs.slice(0, 3).map((p) => (
             <Link key={p.slug} to="/prebuilds/$slug" params={{ slug: p.slug }} className="es-pack-tile">
               <div className="es-pack-tile-frame">
-                {p.image ? <img src={p.image} alt={p.name} /> : null}
+                {p.image ? <SiteImage src={p.image} alt={p.name} sizes="(min-width: 1024px) 33vw, 100vw" /> : null}
               </div>
               <div className="es-pack-tile-meta">
                 <p className="es-kicker">{p.kicker}</p>
                 <h3>{p.name}</h3>
                 <p className="mt-2 text-sm text-muted">{p.blurb}</p>
                 <p className="mt-3">
-                  {p.purchasable ? <Money cents={p.effective_price_ex_gst} gst /> : "Enquire for price"}
+                  {p.purchasable ? <>{p.price_source === "parts" ? "From " : ""}<Money cents={p.effective_price_ex_gst} gst /></> : "Enquire for price"}
                 </p>
               </div>
             </Link>

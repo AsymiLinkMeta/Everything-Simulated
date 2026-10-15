@@ -92,6 +92,8 @@ export type PrebuildWithComponents = Prebuild & {
   /** From the prebuild_prices view: package price, or the sum of priced parts. null = enquire. */
   effective_price_ex_gst: number | null;
   purchasable: boolean;
+  /** 'parts' = no package price; the price is the sum of the listed parts (shown as "from"). */
+  price_source: "package" | "parts" | null;
 };
 
 let prebuildCache: PrebuildWithComponents[] | null = null;
@@ -106,12 +108,13 @@ export function resolvePrebuildSlug(slug: string) {
   return SLUG_ALIASES[slug] || slug;
 }
 
-type PriceRow = { id: string; price_ex_gst: number | null; purchasable: boolean };
+type PriceRow = { id: string; price_ex_gst: number | null; purchasable: boolean; price_source?: "package" | "parts" | null };
 
 function shapePrebuild(prebuild: Prebuild, comps: PrebuildComponent[], price?: PriceRow): PrebuildWithComponents {
   return {
     effective_price_ex_gst: price?.price_ex_gst ?? null,
     purchasable: Boolean(price?.purchasable),
+    price_source: price?.price_source ?? null,
     ...prebuild,
     highlights: Array.isArray(prebuild.highlights) ? prebuild.highlights : [],
     specs: prebuild.specs && typeof prebuild.specs === "object" && !Array.isArray(prebuild.specs) ? prebuild.specs : {},
@@ -124,7 +127,7 @@ async function loadComponentsAndPrices(ids: string[]) {
   if (!ids.length) return { comps: new Map<string, PrebuildComponent[]>(), prices: new Map<string, PriceRow>() };
   const [compsRes, pricesRes] = await Promise.all([
     supabase.from("prebuild_components").select("*").in("prebuild_id", ids).order("sort_order", { ascending: true }),
-    supabase.from("prebuild_prices").select("id, price_ex_gst, purchasable").in("id", ids),
+    supabase.from("prebuild_prices").select("id, price_ex_gst, purchasable, price_source").in("id", ids),
   ]);
   if (compsRes.error) throw new Error(compsRes.error.message);
   if (pricesRes.error) throw new Error(pricesRes.error.message);
@@ -139,7 +142,17 @@ async function loadComponentsAndPrices(ids: string[]) {
 }
 
 /** Published prebuilds from the database. Throws on error so pages can show an error state. */
-export async function fetchPublishedPrebuilds(): Promise<PrebuildWithComponents[]> {
+// Home, footer and cart all ask for the published list on first paint; share one request.
+let publishedInflight: Promise<PrebuildWithComponents[]> | null = null;
+
+export function fetchPublishedPrebuilds(): Promise<PrebuildWithComponents[]> {
+  publishedInflight ??= loadPublishedPrebuilds().finally(() => {
+    publishedInflight = null;
+  });
+  return publishedInflight;
+}
+
+async function loadPublishedPrebuilds(): Promise<PrebuildWithComponents[]> {
   const { data, error } = await supabase
     .from("prebuilds")
     .select("*")

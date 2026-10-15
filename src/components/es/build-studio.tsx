@@ -159,7 +159,7 @@ export function BuildStudio() {
         <Button variant="outline" disabled={step === 0} onClick={() => setStep((s) => Math.max(0, s - 1))}>
           <ChevronLeft className="size-4" /> Back
         </Button>
-        <p className="text-xs text-muted">{result.ok ? "Build is compatible so far." : "Fix the blocks in the cart before deposit."}</p>
+        <p className="text-xs text-muted">{!lines.length ? "Pick a part to start your build." : result.ok ? "Build is compatible so far." : "Fix the blocks in the cart before deposit."}</p>
         <Button disabled={step === STEPS.length - 1} onClick={() => setStep((s) => Math.min(STEPS.length - 1, s + 1))}>
           {selectedByCat.get(current.id as ProductCategory) || current.id === "more" ? "Next" : "Skip"} <ChevronRight className="size-4" />
         </Button>
