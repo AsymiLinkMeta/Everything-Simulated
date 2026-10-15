@@ -29,11 +29,11 @@ function BackToTop() {
     <button
       type="button"
       aria-label="Return to top"
+      className="es-to-top"
       onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
       style={{
         position: "fixed",
         left: "1rem",
-        bottom: "1rem",
         zIndex: 60,
         display: "inline-flex",
         alignItems: "center",

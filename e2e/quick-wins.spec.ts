@@ -138,6 +138,11 @@ test.describe("mobile buy bar", () => {
     await expect(bar).toBeInViewport();
     await bar.getByRole("button").click();
     await expect(bar.getByRole("link", { name: /Cart, 1 item/ })).toBeVisible();
+    // The return-to-top button sits above the bar, not on it.
+    const top = page.getByRole("button", { name: "Return to top" });
+    await expect(top).toBeVisible();
+    const [a, b] = [await top.boundingBox(), await bar.boundingBox()];
+    expect(a!.y + a!.height).toBeLessThanOrEqual(b!.y + 1);
   });
 
   test("shop grid stays inside the screen with a part in the cart", async ({ page }, info) => {

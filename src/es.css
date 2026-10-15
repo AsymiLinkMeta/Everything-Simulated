@@ -1742,3 +1742,9 @@ a.es-trust-item:hover .es-trust-value {
     bottom: calc(4.5rem + env(safe-area-inset-bottom));
   }
 }
+
+/* Return-to-top button: clear of the bottom bars. */
+.es-to-top { bottom: calc(1rem + env(safe-area-inset-bottom)); }
+@media (max-width: 767.98px) {
+  body:has(.es-sticky-buy) .es-to-top { bottom: calc(5.25rem + env(safe-area-inset-bottom)); }
+}
