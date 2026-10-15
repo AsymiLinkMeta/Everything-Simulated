@@ -49,11 +49,11 @@ def mm(*v):
 
 
 # ----------------------------------------------------------------------------- camera
-TARGET = mm(*map(float, args.target.split(","))) if args.target else mm(920, -20, 820)
+TARGET = mm(*map(float, args.target.split(","))) if args.target else mm(950, 0, 850)
 # Rear three-quarter, raised: the screens face the driver, so this is the view in which they face
 # the viewer, and it looks over the seat at the wheel and pedals.
-AZ = math.radians(28 if args.az is None else args.az)  # swung from straight behind toward the driver's right
-EL = math.radians(46 if args.el is None else args.el)
+AZ = math.radians(30 if args.az is None else args.az)  # swung from straight behind toward the driver's right
+EL = math.radians(15 if args.el is None else args.el)
 DIST = 6.9 if args.dist is None else args.dist
 cam_data = bpy.data.cameras.new("Camera")
 cam_data.lens = 70 if args.lens is None else args.lens
@@ -114,13 +114,13 @@ def area(name, loc, size, energy, color=(1, 1, 1), shape="RECTANGLE", size_y=Non
 # Product-photo studio for a black rig: a big soft key over the camera's shoulder, a broad top softbox,
 # and strong rim strips behind and beside the rig so black anodised edges separate from a dark page.
 CAM_DIR = (TARGET - cam.location).normalized()
-area("Key", cam.location + Vector((0.6, 1.6, 1.8)), 3.0, 900, size_y=2.0)
-area("Fill", cam.location + Vector((0.4, -1.2, -0.6)), 3.0, 160, (0.92, 0.95, 1.0))
-area("Top", Vector((0.9, 0, 3.4)), 3.2, 520, size_y=2.0)
-area("Rim L", Vector((2.6, 2.4, 2.0)), 0.5, 900, (0.9, 0.94, 1.0), size_y=3.0)
-area("Rim R", Vector((2.4, -2.6, 1.6)), 0.5, 700, (0.9, 0.94, 1.0), size_y=3.0)
-area("Rim back", Vector((-1.6, 1.8, 1.4)), 0.5, 500, (1.0, 0.92, 0.88), size_y=2.4)
-area("Rim red", Vector((3.2, 0.0, 0.5)), 1.6, 260, (1.0, 0.08, 0.04))
+area("Key", cam.location + Vector((0.6, 1.6, 1.8)), 3.0, 220, size_y=2.0)
+area("Fill", cam.location + Vector((0.4, -1.2, -0.6)), 3.0, 40, (0.92, 0.95, 1.0))
+area("Top", Vector((0.9, 0, 3.4)), 3.2, 170, size_y=2.0)
+area("Rim L", Vector((2.6, 2.4, 2.0)), 0.5, 380, (0.9, 0.94, 1.0), size_y=3.0)
+area("Rim R", Vector((2.4, -2.6, 1.6)), 0.5, 300, (0.9, 0.94, 1.0), size_y=3.0)
+area("Rim back", Vector((-1.6, 1.8, 1.4)), 0.5, 200, (1.0, 0.92, 0.88), size_y=2.4)
+area("Rim red", Vector((3.2, 0.0, 0.5)), 1.6, 120, (1.0, 0.08, 0.04))
 world = bpy.data.worlds.new("Studio")
 world.use_nodes = True
 # a dim studio gradient (darker floor, soft lighter ceiling) so metals have something to reflect
@@ -132,7 +132,7 @@ ramp = wn.nodes.new("ShaderNodeValToRGB")
 ramp.color_ramp.elements[0].position = 0.45
 ramp.color_ramp.elements[0].color = (0.012, 0.012, 0.014, 1)
 ramp.color_ramp.elements[1].position = 0.9
-ramp.color_ramp.elements[1].color = (0.42, 0.42, 0.45, 1)
+ramp.color_ramp.elements[1].color = (0.22, 0.22, 0.24, 1)
 mapr = wn.nodes.new("ShaderNodeMapRange")
 mapr.inputs["From Min"].default_value = -1
 wn.links.new(geo.outputs["Generated"], sep.inputs["Vector"])

@@ -104,9 +104,10 @@ MAT = {
     "plastic": principled("Satin black plastic", (0.02, 0.02, 0.022), 0.0, 0.42),
     "gloss": principled("Gloss black", (0.012, 0.012, 0.014), 0.0, 0.12, **{"Coat Weight": 1.0}),
     "rubber": add_bump(principled("Rubber", (0.012, 0.012, 0.013), 0.0, 0.75), 1800, 0.25),
-    "red": principled("Red accent", (0.75, 0.01, 0.006), 0.0, 0.32, **{"Coat Weight": 0.6, "Emission Color": (1.0, 0.02, 0.01, 1), "Emission Strength": 0.08}),
+    # ES brand red #e10600 (--es-red), as linear RGB
+    "red": principled("ES red accent", (0.753, 0.0018, 0.0), 0.0, 0.32, **{"Coat Weight": 0.6, "Emission Color": (0.753, 0.0018, 0.0, 1), "Emission Strength": 0.1}),
     "silver": principled("Polished foot", (0.8, 0.8, 0.82), 1.0, 0.15),
-    "red_anod": principled("Red anodised", (0.7, 0.02, 0.015), 1.0, 0.3),
+    "red_anod": principled("ES red anodised", (0.753, 0.0018, 0.0), 1.0, 0.3),
     "motor": principled("Motor housing", (0.05, 0.052, 0.058), 0.9, 0.28),
 }
 
@@ -196,9 +197,77 @@ def screen_material(image, u0=0.0, u1=1.0):
     tex.extension = "EXTEND"
     nt.links.new(mp.outputs["Vector"], tex.inputs["Vector"])
     nt.links.new(tex.outputs["Color"], b.inputs["Emission Color"])
-    b.inputs["Emission Strength"].default_value = 2.2
+    b.inputs["Emission Strength"].default_value = 4.0
     SCREEN_IMG[key] = m
     return m
+
+
+DECAL_MAT = {}
+
+
+def decal_material(image, kind="print"):
+    """Transparent decal from a brand image (make_brand_art.py). kind "print" is a satin screen print,
+    "stitch" a slightly raised embroidered look for the seat."""
+    key = (image, kind)
+    if key in DECAL_MAT:
+        return DECAL_MAT[key]
+    m = bpy.data.materials.new(f"Decal {image} {kind}")
+    m.use_nodes = True
+    nt = m.node_tree
+    b = nt.nodes["Principled BSDF"]
+    tex = nt.nodes.new("ShaderNodeTexImage")
+    img = bpy.data.images.get(image) or bpy.data.images.load(os.path.join(ART, image))
+    img.name = image
+    tex.image = img
+    tex.extension = "CLIP"
+    nt.links.new(tex.outputs["Alpha"], b.inputs["Alpha"])
+    if kind == "stitch":
+        mix = nt.nodes.new("ShaderNodeMix"); mix.data_type = "RGBA"; mix.inputs["Factor"].default_value = 0.2
+        mix.inputs["B"].default_value = (0.3, 0.3, 0.3, 1)
+        nt.links.new(tex.outputs["Color"], mix.inputs["A"])
+        nt.links.new(mix.outputs["Result"], b.inputs["Base Color"])
+        b.inputs["Roughness"].default_value = 0.85
+        b.inputs["Sheen Weight"].default_value = 0.8
+        noise = nt.nodes.new("ShaderNodeTexNoise"); noise.inputs["Scale"].default_value = 3000
+        bump = nt.nodes.new("ShaderNodeBump"); bump.inputs["Strength"].default_value = 0.4; bump.inputs["Distance"].default_value = 0.0008
+        nt.links.new(noise.outputs["Fac"], bump.inputs["Height"])
+        nt.links.new(bump.outputs["Normal"], b.inputs["Normal"])
+    else:
+        nt.links.new(tex.outputs["Color"], b.inputs["Base Color"])
+        b.inputs["Roughness"].default_value = 0.42
+    DECAL_MAT[key] = m
+    return m
+
+
+def decal(name, image, centre_mm, normal, up, width, kind="print", segs=1, wrap_to=None):
+    """A flat decal width mm wide (height from the image's aspect) facing along normal, 0.8 mm off the
+    surface. wrap_to shrink-wraps a subdivided decal onto a curved object (the seat shell)."""
+    img = bpy.data.images.get(image) or bpy.data.images.load(os.path.join(ART, image))
+    img.name = image
+    h = width * img.size[1] / img.size[0]
+    n = Vector(normal).normalized()
+    upv = Vector(up).normalized()
+    right = upv.cross(n).normalized()
+    upv = n.cross(right).normalized()
+    c = Vector(centre_mm) + n * 0.8
+    bm = bmesh.new()
+    uvl = bm.loops.layers.uv.new("UVMap")
+    vs = [[bm.verts.new(mm(*(c + right * (width * (i / segs - 0.5)) + upv * (h * (j / segs - 0.5))))) for j in range(segs + 1)] for i in range(segs + 1)]
+    for i in range(segs):
+        for j in range(segs):
+            f = bm.faces.new((vs[i][j], vs[i + 1][j], vs[i + 1][j + 1], vs[i][j + 1]))
+            for loop, (a, b) in zip(f.loops, ((i, j), (i + 1, j), (i + 1, j + 1), (i, j + 1))):
+                loop[uvl].uv = (a / segs, b / segs)
+    ob = mesh_obj(name, bm, decal_material(image, kind))
+    for p in ob.data.polygons:
+        p.use_smooth = True
+    if wrap_to is not None:
+        sw = ob.modifiers.new("Wrap", "SHRINKWRAP")
+        sw.target = wrap_to
+        sw.wrap_method = "NEAREST_SURFACEPOINT"
+        sw.wrap_mode = "OUTSIDE_SURFACE"
+        sw.offset = 0.0012
+    return ob
 
 
 PANO = "screen-pano.png"
@@ -382,8 +451,7 @@ for x in (300, 600):
 DECK_X, DECK_Z = 940, 780
 profile("Wheel deck channel", (DECK_X, -UP_Y + 20, DECK_Z), (DECK_X, UP_Y - 20, DECK_Z), 120, 40, u=(1, 0, 0))
 for s, side in [(1, "L"), (-1, "R")]:
-    trap = [(-110, -90), (110, -90), (80, 90), (-80, 90)]
-    plate(f"Deck side plate {side}", trap, (DECK_X, s * (UP_Y - 20), DECK_Z), (1, 0, 0), (0, 0, 1), 8 * s, MAT["red_anod"])
+    plate(f"Deck side plate {side}", rounded_rect(220, 180, 14), (DECK_X, s * (UP_Y - 20), DECK_Z), (1, 0, 0), (0, 0, 1), 8 * s, MAT["red_anod"])
     for bx, bz in ((-70, -60), (0, -60), (70, -60), (-45, 50), (45, 50)):
         cylinder(f"Deck bolt {side}{bx}{bz}", (DECK_X + bx, s * (UP_Y - 28), DECK_Z + bz), (DECK_X + bx, s * (UP_Y - 33), DECK_Z + bz), 6.5, MAT["gloss"], segs=16)
 plate("Wheel deck plate", rounded_rect(300, 260, 8), (DECK_X - 20, 0, DECK_Z + 20), (1, 0, 0), (0, 1, 0), 6, MAT["steel"])
@@ -391,12 +459,22 @@ plate("Wheel deck plate", rounded_rect(300, 260, 8), (DECK_X - 20, 0, DECK_Z + 2
 # Parts drawn under the pedals and the seat (the far side and the front, from the preview camera); the
 # rest of the frame is drawn over them (see stack_order.py).
 BACK = ["Rail L", "Front cross", "Foot L30", f"Foot L{LEN - 30}", "Upright L", "Gusset L860", "Gusset L1020", "Seat cross 300", "Seat cross 600",
-        "Wheel deck channel", "Deck side plate L", "Rear cross"]
-BACK += [o.name for o in COLL["chassis"].objects if o.name.startswith(("Slot strip L", "Upright strip L", "Front cross strip", "Rear cross strip", "Deck bolt L"))]
+        "Wheel deck channel", "Deck side plate L"]
+BACK += [o.name for o in COLL["chassis"].objects if o.name.startswith(("Slot strip L", "Upright strip L", "Front cross strip", "Deck bolt L"))]
 for nm in BACK:
     ob = bpy.data.objects[nm]
     COLL["chassis"].objects.unlink(ob)
     COLL["chassis-back"].objects.link(ob)
+
+# ES branding on the frame: lockups on the rear and front crosses, the mark on the near upright,
+# the wordmark on the inside of both brand-red deck side plates
+layer("chassis")
+decal("Brand rear cross", "brand-lockup.png", (0, 0, RZ), (-1, 0, 0), (0, 0, 1), 440)
+decal("Brand upright R", "brand-mark.png", ((UP_X0 + UP_X1) / 2, -UP_Y - 20, 690), (0, -1, 0), (0, 0, 1), 110)
+decal("Brand deck plate R", "brand-wordmark-white.png", (DECK_X, -(UP_Y - 28), DECK_Z), (0, 1, 0), (0, 0, 1), 170)
+layer("chassis-back")
+decal("Brand front cross", "brand-lockup.png", (LEN, 0, RZ), (1, 0, 0), (0, 0, 1), 440)
+decal("Brand deck plate L", "brand-wordmark-white.png", (DECK_X, UP_Y - 28, DECK_Z), (0, -1, 0), (0, 0, 1), 170)
 
 # ---- wheelbase: generic direct-drive motor on the deck, tilted up toward the driver --------------
 layer("wheelbase")
@@ -447,6 +525,7 @@ plate("Pedal plate", [(y, x + 210) for (y, x) in rounded_rect(560, 420, 10)], P0
 for k, yy in enumerate((-180, -90, 90, 180)):  # mounting slots
     box(f"Plate slot {k}", tuple(P0 + PU * 230 + Vector((0, yy, 0)) + PN * 0.6), (300, 9, 1), MAT["gloss"], bevel=0, rot=Matrix.Rotation(-PA, 4, "Y"))
 plate("Heel rest", rounded_rect(560, 70, 8), P0 + PU * 4, (0, 1, 0), PN, 6, MAT["steel"])
+decal("Brand heel rest", "brand-lockup.png", tuple(P0 + PU * 3.2 + PN * 36), tuple(-PU), tuple(PN), 250)
 for s in (1, -1):  # side brackets from the plate to the rails
     plate(f"Pedal bracket {s}", [(0, 0), (420, 0), (420, 150), (0, 40)], (1000, s * (RAIL_Y - 26), 60), (1, 0, 0), (0, 0, 1), 6 * s, MAT["steel"])
 
@@ -574,7 +653,8 @@ sol.thickness = -0.036
 sol.offset = 1
 sol.material_offset = 1
 sol.material_offset_rim = 1
-sol.use_even_offset = True
+sol.use_even_offset = False
+sol.use_quality_normals = True
 sub = seat.modifiers.new("Smooth", "SUBSURF")
 sub.levels = 2
 sub.render_levels = 2
@@ -588,6 +668,17 @@ for i, (y, sv, w, h) in enumerate([(-85, 0.86, 34, 75), (85, 0.86, 34, 75)]):
     b.object = cut
     b.operation = "DIFFERENCE"
 
+_c = centre(0.8)
+_c2, _c1 = centre(0.81), centre(0.79)
+_t = (_c2 - _c1).normalized()
+_n = Vector((_t.y, -_t.x))
+if _n.x < 0:
+    _n = -_n
+_back = _c - _n * 90
+decal("Brand seat back", "brand-mark.png", (_back.x, 0, _back.y), (-_n.x, 0, -_n.y), (_t.x, 0, _t.y), 150, kind="stitch", segs=14, wrap_to=seat)
+_f = centre(0.9) + Vector((_n.x, _n.y)) * 60
+decal("Brand seat headrest", "brand-mark.png", (_f.x, 0, _f.y), (_n.x, 0, _n.y), (_t.x, 0, _t.y), 90, kind="stitch", segs=10, wrap_to=seat)
+
 # ---- VR headset on the headrest ---------------------------------------------------------
 layer("headset")
 hc = centre(1.0) + Vector((50, 60))
@@ -598,17 +689,19 @@ box("Visor stripe", (hc.x + 83, 0, hc.y - 20), (2, 120, 4), MAT["red"], bevel=0.
 
 # ---- PC tower beside the seat (driver's left) -------------------------------------------
 layer("pc")
-PCY = RAIL_Y + 300
-box("Case", (300, PCY, 245), (470, 220, 490), MAT["plastic"], bevel=0.004)
-box("Glass", (300, PCY - 112, 250), (440, 4, 450), MAT["pc_glass"], bevel=0.001)
-box("GPU", (300, PCY - 40, 220), (300, 60, 120), MAT["steel"])
-box("GPU glow", (300, PCY - 72, 168), (300, 2, 4), MAT["glow"], bevel=0)
-cylinder("CPU cooler", (360, PCY - 20, 360), (360, PCY - 90, 360), 55, MAT["plastic"])
-torus("Fan ring", (360, PCY - 92, 360), (0, 1, 0), 52, 3, MAT["glow"], 64, 8)
-for z in (120, 260, 400):
-    torus(f"Rear fan {z}", (64, PCY, z), (1, 0, 0), 55, 2.5, MAT["glow"], 64, 8)
+PCY = RAIL_Y + 330
+PCX = 650
+box("Case", (PCX, PCY, 245), (470, 220, 490), MAT["plastic"], bevel=0.004)
+box("Glass", (PCX, PCY - 112, 250), (440, 4, 450), MAT["pc_glass"], bevel=0.001)
+box("GPU", (PCX, PCY - 40, 220), (300, 60, 120), MAT["steel"])
+box("GPU glow", (PCX, PCY - 72, 168), (300, 2, 4), MAT["glow"], bevel=0)
+cylinder("CPU cooler", (PCX + 60, PCY - 20, 360), (PCX + 60, PCY - 90, 360), 55, MAT["plastic"])
+torus("Fan ring", (PCX + 60, PCY - 92, 360), (0, 1, 0), 52, 3, MAT["glow"], 64, 8)
+for z in (100, 230, 360):
+    torus(f"Rear fan {z}", (PCX - 236, PCY, z), (1, 0, 0), 55, 2.5, MAT["glow"], 64, 8)
+decal("Brand PC", "brand-mark.png", (PCX - 235, PCY, 452), (-1, 0, 0), (0, 0, 1), 52)
 for i in range(4):
-    cylinder(f"PC foot {i}", (100 + 400 * (i % 2), PCY - 90 + 180 * (i // 2), 0), (100 + 400 * (i % 2), PCY - 90 + 180 * (i // 2), 10), 14, MAT["rubber"])
+    cylinder(f"PC foot {i}", (PCX - 200 + 400 * (i % 2), PCY - 90 + 180 * (i // 2), 0), (PCX - 200 + 400 * (i % 2), PCY - 90 + 180 * (i // 2), 10), 14, MAT["rubber"])
 
 # ---- motion: four corner actuators bolted outboard of the rails (modelled in the raised pose) -----
 layer("motion")
@@ -641,7 +734,8 @@ for s, side in [(1, "L"), (-1, "R")]:
         cylinder(f"Stand foot pad {side}{x}", (x, s * ST_Y, 0), (x, s * ST_Y, 4), 22, MAT["rubber"])
     profile(f"Stand post {side}", (ST_X, s * ST_Y, 40), (ST_X, s * ST_Y, BAR_Z + 40), 40, 80, u=(1, 0, 0))
 profile("Stand crossbar", (ST_X - 40, -ST_Y - 40, BAR_Z), (ST_X - 40, ST_Y + 40, BAR_Z), 80, 40, u=(0, 0, 1))
-profile("Stand lower bar", (ST_X, -ST_Y + 40, 120), (ST_X, ST_Y - 40, 120), 40, 40, u=(0, 0, 1))
+profile("Stand lower bar", (ST_X, -ST_Y + 40, 140), (ST_X, ST_Y - 40, 140), 80, 40, u=(0, 0, 1))
+decal("Brand stand", "brand-lockup.png", (ST_X - 20, 0, 140), (-1, 0, 0), (0, 0, 1), 380)
 box("Centre VESA arm", ((CX + ST_X - 60) / 2 + 40, 0, BAR_Z), (ST_X - 60 - CX - 60, 60, 40), MAT["alu"], bevel=0.002)
 layer("mount-top")
 for s, side in [(1, "L"), (-1, "R")]:
