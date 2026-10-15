@@ -121,7 +121,7 @@ CREATE POLICY "staff_playbooks_write" ON public.agent_playbooks FOR ALL TO authe
 
 DROP POLICY IF EXISTS "staff_memory_select" ON public.agent_memory;
 DROP POLICY IF EXISTS "staff_memory_write" ON public.agent_memory;
-CREATE POLICY "staff_memory_select" ON public.agent_memory FOR SELECT TO authenticated USING (true);
+CREATE POLICY "staff_memory_select" ON public.agent_memory FOR SELECT TO authenticated USING (is_staff());
 CREATE POLICY "staff_memory_write" ON public.agent_memory FOR ALL TO authenticated
   USING (is_staff()) WITH CHECK (is_staff());
 

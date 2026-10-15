@@ -117,4 +117,17 @@ SELECT pg_temp.check(
     LIKE '%paid_cents%',
   'lookup_guest_order returns paid_cents');
 
+-- 12. A client INSERT asking for role=admin is stored as customer (hotfix guard).
+RESET ROLE;
+INSERT INTO auth.users (id, email, email_confirmed_at) VALUES ('00000000-0000-0000-0000-00000000000e', 'self@example.com', now());
+INSERT INTO public.agent_memory (kind, title, body) VALUES ('note', 'internal', 'staff only');
+SELECT pg_temp.as_user('00000000-0000-0000-0000-00000000000e');
+INSERT INTO public.profiles (user_id, email, role) VALUES ('00000000-0000-0000-0000-00000000000e', 'self@example.com', 'admin');
+SELECT pg_temp.check((SELECT role FROM public.profiles WHERE user_id = '00000000-0000-0000-0000-00000000000e') = 'customer',
+  'client insert with role=admin is stored as customer');
+
+-- 13. Customers cannot read agent memory (staff-only knowledge base).
+SELECT pg_temp.check((SELECT count(*) FROM public.agent_memory) = 0,
+  'customers cannot read agent_memory');
+
 ROLLBACK;
