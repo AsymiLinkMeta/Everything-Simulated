@@ -1,6 +1,7 @@
+import { STAGE_IMAGES } from "@/lib/es/stage-images";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { BRAND } from "@/lib/es/catalog";
 import { createTicket } from "@/lib/es/inbox";
 import { contactPageLd, pageHead } from "@/lib/es/seo";
@@ -52,7 +53,7 @@ function Contact() {
         kicker="Workshop"
         title="Contact the Workshop"
         lead="Call us directly for a showroom demo, or send an enquiry below — it goes straight to the team."
-        image="/rigs/showroom.jpg"
+        image={STAGE_IMAGES["/contact"]}
       />
       <div className="es-body mx-auto max-w-3xl">
         <div className="grid gap-4 sm:grid-cols-2">

@@ -12,7 +12,8 @@ const read = (p: string) => readFileSync(new URL(`../${p}`, import.meta.url), "u
 const app = read("src/App.tsx");
 const CATALOG: SeoCatalog = {
   prebuilds: [
-    { slug: "starter", name: "Starter Rig", updated_at: "2026-10-01T00:00:00Z", image: "/rigs/starter.jpg", price_ex_gst: 1140800, purchasable: true },
+    { slug: "starter", name: "Starter Rig", updated_at: "2026-10-01T00:00:00Z", image: "/rigs/starter.jpg", price_ex_gst: 1140800, purchasable: true, price_source: "parts" },
+    { slug: "motion", name: "Motion", updated_at: null, image: null, price_ex_gst: 2899900, purchasable: true, price_source: "package" },
     { slug: "haptic", name: "Haptic", updated_at: null, image: null, price_ex_gst: null, purchasable: false },
   ],
   products: [{ sku: "alpha-15", name: "Alpha 15", brand: "Simagic", updated_at: "2026-09-09T00:00:00Z" }],
@@ -82,7 +83,8 @@ describe("sitemap", () => {
 
 describe("llms.txt", () => {
   it("prices prebuilds from the database and says enquiry when there is no price", () => {
-    expect(llms).toContain("Starter Rig: $11,408 + GST");
+    expect(llms).toContain("Starter Rig: from $11,408 + GST");
+    expect(llms).toContain("Motion: $28,999 + GST.");
     expect(llms).toContain("Haptic: priced on enquiry");
     expect(llms).toContain("sr2 + tr120s is blocked");
   });

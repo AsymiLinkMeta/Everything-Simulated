@@ -1,4 +1,6 @@
+import { STAGE_IMAGES } from "@/lib/es/stage-images";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { PrebuildPhoto, usePrebuildImage } from "@/components/es/site-image";
 import { useQuery } from "@tanstack/react-query";
 import { JsonLd, LoadError, Money } from "@/components/es/bits";
 import { ImageCards, MediaSplit, PageHero, PhoneStrip } from "@/components/es/section-page";
@@ -32,6 +34,7 @@ function RacingHub() {
   const featured = useQuery({ queryKey: ["featured-prebuilds"], queryFn: fetchFeaturedPrebuilds });
   const packs = featured.data ?? [];
   const spotlight = packs.find((p) => p.purchasable) ?? packs[0];
+  const spotlightImage = usePrebuildImage(spotlight);
 
   return (
     <div>
@@ -52,7 +55,7 @@ function RacingHub() {
         kicker="Racing · live catalogue"
         title="Turn-Key Racing Simulators"
         lead="Motion platforms, haptic feedback, triple screens and an auxiliary display — fully assembled on the Gold Coast. Browse prebuilt packages, individual components or run the compatibility checker before you commit."
-        image="/rigs/motion.jpg"
+        image={STAGE_IMAGES["/racing"]}
         tone="race"
       >
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -83,14 +86,14 @@ function RacingHub() {
           {packs.slice(0, 3).map((p) => (
             <Link key={p.slug} to="/prebuilds/$slug" params={{ slug: p.slug }} className="es-pack-tile">
               <div className="es-pack-tile-frame">
-                {p.image ? <img src={p.image} alt={p.name} /> : null}
+                <PrebuildPhoto prebuild={p} alt={p.name} sizes="(min-width: 1024px) 33vw, 100vw" />
               </div>
               <div className="es-pack-tile-meta">
                 <p className="es-kicker">{p.kicker}</p>
                 <h3>{p.name}</h3>
                 <p className="mt-2 text-sm text-muted">{p.blurb}</p>
                 <p className="mt-3">
-                  {p.purchasable ? <Money cents={p.effective_price_ex_gst} gst /> : "Enquire for price"}
+                  {p.purchasable ? <>{p.price_source === "parts" ? "From " : ""}<Money cents={p.effective_price_ex_gst} gst /></> : "Enquire for price"}
                 </p>
               </div>
             </Link>
@@ -102,7 +105,7 @@ function RacingHub() {
       {spotlight ? (
         <section className="es-body pt-0">
           <MediaSplit
-            image={spotlight.image || "/rigs/haptic.jpg"}
+            image={spotlightImage || "/rigs/haptic.jpg"}
             kicker={spotlight.kicker || "Featured"}
             title={spotlight.name}
             lead={spotlight.blurb || spotlight.description}

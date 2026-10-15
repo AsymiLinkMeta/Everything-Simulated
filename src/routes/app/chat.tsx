@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { listChat, saveQuote } from "@/lib/es/server";
 import { createTicket } from "@/lib/es/inbox";
 import { rateAgent, runBuildAgent, type AgentTurn } from "@/lib/es/agent";
@@ -93,7 +93,7 @@ function Chat() {
           It reads the checker, won crates and workshop playbooks. It never invents SKUs. Chat stays on this account.
         </p>
         <div className="mt-3">
-          <CheckPills result={result} />
+          {lines.length ? <CheckPills result={result} /> : <p className="text-xs text-muted">Your cart is empty. Ask for a starting point, or load a prebuild.</p>}
         </div>
         <div className="mt-4 flex flex-wrap gap-2">
           <Button type="button" variant="outline" size="sm" disabled={pending} onClick={() => runAgent("recommend", "Recommend the best parts or package for my goals and explain the trade-offs.")}>

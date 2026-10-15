@@ -1,3 +1,4 @@
+import { STAGE_IMAGES } from "@/lib/es/stage-images";
 import { createFileRoute } from "@tanstack/react-router";
 import { GUIDES } from "@/lib/es/catalog";
 import { itemListLd, pageHead } from "@/lib/es/seo";
@@ -24,7 +25,7 @@ function Guides() {
         kicker="Editorial"
         title="Sim Racing Buying Guides"
         lead="Written from hands-on experience with the builds we assemble — not affiliate parts lists."
-        image="/rigs/starter.jpg"
+        image={STAGE_IMAGES["/guides"]}
       />
       <div className="es-body">
         <ImageCards

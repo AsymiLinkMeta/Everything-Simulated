@@ -35,7 +35,7 @@ test.describe("server pricing", () => {
   });
 
   test("enquiry-only products are blocked from checkout", async ({ request }) => {
-    const [row] = sql<{ sku: string }>(`select sku from catalog_products where enquiry_only and listing_status='published' limit 1`);
+    const [row] = sql<{ sku: string }>(`select sku from catalog_products where enquiry_only and listing_status='published' and sku not like 'e2e-%' order by sku limit 1`);
     test.skip(!row, "no enquiry-only product seeded");
     const h = await tokenHeaders(request);
     const q = await (await request.post(`${API}/rest/v1/rpc/quote_cart`, { headers: h, data: { p_lines: [{ sku: row.sku, qty: 1 }], p_postcode: "4215", p_prebuild: null, p_driver_kg: null } })).json();
@@ -68,7 +68,7 @@ test.describe("server pricing", () => {
   });
 
   test("checkout shows the server total and enquiry products say 'Enquire for price'", async ({ page }) => {
-    const [row] = sql<{ sku: string }>(`select sku from catalog_products where enquiry_only and listing_status='published' limit 1`);
+    const [row] = sql<{ sku: string }>(`select sku from catalog_products where enquiry_only and listing_status='published' and sku not like 'e2e-%' order by sku limit 1`);
     test.skip(!row, "no enquiry-only product seeded");
     await page.goto(`/shop/${row.sku}`);
     await expect(page.getByText("Enquire for price").first()).toBeVisible();

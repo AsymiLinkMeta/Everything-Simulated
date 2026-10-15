@@ -1,3 +1,4 @@
+import { STAGE_IMAGES } from "@/lib/es/stage-images";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { JsonLd } from "@/components/es/bits";
 import { ImageCards, PageHero, PhoneStrip, SectionLinks } from "@/components/es/section-page";
@@ -22,7 +23,7 @@ function TrainingHub() {
         kicker="Training · programs"
         title="Simulator Training Programs"
         lead="Motorsport and junior drivers already train on four-screen racing simulators. Group sessions for professional and amateur drivers run from the warehouse floor. Industrial and heavy-vehicle programs are available by consultation."
-        image="/rigs/starter.jpg"
+        image={STAGE_IMAGES["/training"]}
       >
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
           <Link to="/training/driver" className="es-btn">Driver programs</Link>

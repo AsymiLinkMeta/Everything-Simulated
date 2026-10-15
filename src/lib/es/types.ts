@@ -84,6 +84,10 @@ export type CheckResult = {
 };
 
 export type PackageSpec = {
+  /** Prebuild id, when the package came from the database. */
+  id?: string;
+  /** Image not loaded yet (see PrebuildPhoto). */
+  imageDeferred?: boolean;
   slug: string;
   name: string;
   kicker: string;

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useRef, useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Aperture, Eraser, Link2, Plus, Trash2, Upload, X } from "lucide-react";
 import { fetchBrands, staffCreateBrand, staffDeleteBrand } from "@/lib/es/brands";
 import { Button } from "@/components/ui/button";

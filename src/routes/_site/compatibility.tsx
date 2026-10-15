@@ -1,3 +1,4 @@
+import { STAGE_IMAGES } from "@/lib/es/stage-images";
 import { createFileRoute } from "@tanstack/react-router";
 import { CartPanel } from "@/components/es/cart-panel";
 import { BuildStudio } from "@/components/es/build-studio";
@@ -23,7 +24,7 @@ function Compatibility() {
         kicker="Build engine"
         title="Racing Simulator Compatibility Checker"
         lead="Select one component at a time. The compatibility engine automatically blocks incompatible combinations before you reach the deposit stage."
-        image="/rigs/motion.jpg"
+        image={STAGE_IMAGES["/compatibility"]}
       />
       <div className="es-body grid min-w-0 gap-8 lg:grid-cols-[1fr_360px]">
         <BuildStudio />

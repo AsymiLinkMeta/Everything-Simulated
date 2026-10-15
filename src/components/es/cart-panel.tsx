@@ -2,8 +2,8 @@ import { Link } from "@tanstack/react-router";
 import { Minus, Plus, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
-import { fetchPublishedPrebuilds, livePackages } from "@/lib/es/prebuilds";
+import { toast } from "@/lib/toast";
+import { fetchPrebuildLinks, fetchPublishedPrebuilds, livePackages } from "@/lib/es/prebuilds";
 import { fetchProducts } from "@/lib/es/product-cache";
 import { useCart } from "@/lib/es/cart-store";
 import { saveQuote } from "@/lib/es/server";
@@ -19,7 +19,8 @@ export function CartPanel({ compact = false }: { compact?: boolean }) {
   useEffect(() => setReady(true), []);
   const { user } = useCurrentUserState();
   const catalog = useQuery({ queryKey: ["products"], queryFn: () => fetchProducts() });
-  const packs = useQuery({ queryKey: ["prebuilds"], queryFn: fetchPublishedPrebuilds });
+  // Only names for the buttons; the full prebuild list (with images) loads on click.
+  const packs = useQuery({ queryKey: ["prebuild-links"], queryFn: fetchPrebuildLinks });
   const lines = useCart((s) => s.lines);
   const driverWeightKg = useCart((s) => s.driverWeightKg);
   const postcode = useCart((s) => s.postcode);
@@ -59,12 +60,15 @@ export function CartPanel({ compact = false }: { compact?: boolean }) {
           <p className="es-kicker">Build</p>
           <h2 className="text-lg font-medium">Your cart</h2>
         </div>
-        <CheckPills result={result} />
+        {lines.length ? <CheckPills result={result} /> : null}
       </div>
       {!compact ? (
         <div className="flex flex-wrap gap-2">
           {(packs.data?.length ? packs.data : livePackages()).map((p) => (
-            <Button key={p.slug} variant="outline" size="sm" onClick={() => loadPackage(p.slug)}>
+            <Button key={p.slug} variant="outline" size="sm" onClick={async () => {
+              if (!livePackages().some((x) => x.slug === p.slug)) await fetchPublishedPrebuilds().catch(() => {});
+              loadPackage(p.slug);
+            }}>
               Load {p.name}
             </Button>
           ))}
@@ -123,7 +127,7 @@ export function CartPanel({ compact = false }: { compact?: boolean }) {
             Add required adapter
           </Button>
         ))}
-      <IssueList issues={result.issues} />
+      {lines.length ? <IssueList issues={result.issues} /> : null}
       <div className="grid grid-cols-2 gap-3">
         <label className="text-xs text-muted">
           Driver kg
@@ -169,10 +173,21 @@ export function CartPanel({ compact = false }: { compact?: boolean }) {
         )}
       </div>
       <div className="flex flex-col gap-2">
-        <Button asChild>
-          <Link to="/checkout">Checkout</Link>
-        </Button>
-        <Button variant="outline" onClick={onSave}>
+        {lines.length ? (
+          <Button asChild>
+            <Link to="/checkout">Checkout</Link>
+          </Button>
+        ) : (
+          <Button disabled aria-describedby="cart-empty-hint">
+            Checkout
+          </Button>
+        )}
+        {!lines.length ? (
+          <p id="cart-empty-hint" className="sr-only">
+            Add parts or load a prebuild to check out.
+          </p>
+        ) : null}
+        <Button variant="outline" onClick={onSave} disabled={!lines.length}>
           {user ? "Save quote" : "Sign In to save quote"}
         </Button>
         <Button variant="outline" asChild>

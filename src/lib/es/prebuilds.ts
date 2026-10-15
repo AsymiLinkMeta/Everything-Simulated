@@ -92,6 +92,10 @@ export type PrebuildWithComponents = Prebuild & {
   /** From the prebuild_prices view: package price, or the sum of priced parts. null = enquire. */
   effective_price_ex_gst: number | null;
   purchasable: boolean;
+  /** True when the list was loaded without the image; use fetchPrebuildImage / PrebuildPhoto. */
+  imageDeferred?: boolean;
+  /** 'parts' = no package price; the price is the sum of the listed parts (shown as "from"). */
+  price_source: "package" | "parts" | null;
 };
 
 let prebuildCache: PrebuildWithComponents[] | null = null;
@@ -106,12 +110,13 @@ export function resolvePrebuildSlug(slug: string) {
   return SLUG_ALIASES[slug] || slug;
 }
 
-type PriceRow = { id: string; price_ex_gst: number | null; purchasable: boolean };
+type PriceRow = { id: string; price_ex_gst: number | null; purchasable: boolean; price_source?: "package" | "parts" | null };
 
 function shapePrebuild(prebuild: Prebuild, comps: PrebuildComponent[], price?: PriceRow): PrebuildWithComponents {
   return {
     effective_price_ex_gst: price?.price_ex_gst ?? null,
     purchasable: Boolean(price?.purchasable),
+    price_source: price?.price_source ?? null,
     ...prebuild,
     highlights: Array.isArray(prebuild.highlights) ? prebuild.highlights : [],
     specs: prebuild.specs && typeof prebuild.specs === "object" && !Array.isArray(prebuild.specs) ? prebuild.specs : {},
@@ -124,7 +129,7 @@ async function loadComponentsAndPrices(ids: string[]) {
   if (!ids.length) return { comps: new Map<string, PrebuildComponent[]>(), prices: new Map<string, PriceRow>() };
   const [compsRes, pricesRes] = await Promise.all([
     supabase.from("prebuild_components").select("*").in("prebuild_id", ids).order("sort_order", { ascending: true }),
-    supabase.from("prebuild_prices").select("id, price_ex_gst, purchasable").in("id", ids),
+    supabase.from("prebuild_prices").select("id, price_ex_gst, purchasable, price_source").in("id", ids),
   ]);
   if (compsRes.error) throw new Error(compsRes.error.message);
   if (pricesRes.error) throw new Error(pricesRes.error.message);
@@ -139,18 +144,68 @@ async function loadComponentsAndPrices(ids: string[]) {
 }
 
 /** Published prebuilds from the database. Throws on error so pages can show an error state. */
-export async function fetchPublishedPrebuilds(): Promise<PrebuildWithComponents[]> {
+// Home, footer and cart all ask for the published list on first paint; share one request.
+let publishedInflight: Promise<PrebuildWithComponents[]> | null = null;
+
+export function fetchPublishedPrebuilds(): Promise<PrebuildWithComponents[]> {
+  publishedInflight ??= loadPublishedPrebuilds().finally(() => {
+    publishedInflight = null;
+  });
+  return publishedInflight;
+}
+
+// Every column except image. Prebuild images can be inline data URIs (~50-100 KB each), so
+// the list leaves them out and each card loads its own image when it nears the viewport
+// (see fetchPrebuildImage / PrebuildPhoto). Listing pages then render without waiting on them.
+const LIST_COLUMNS =
+  "id, slug, name, kicker, blurb, description, price_ex_gst, highlights, specs, capabilities, featured, sort_order, status, enquiry_only, archived_at, archived_reason, created_by, created_at, updated_at";
+
+async function loadPublishedPrebuilds(): Promise<PrebuildWithComponents[]> {
   const { data, error } = await supabase
     .from("prebuilds")
-    .select("*")
+    .select(LIST_COLUMNS)
     .eq("status", "published")
     .order("sort_order", { ascending: true });
   if (error) throw new Error(error.message);
-  const prebuilds = (data ?? []) as Prebuild[];
+  const prebuilds = ((data ?? []) as Omit<Prebuild, "image">[]).map((p) => ({ ...p, image: imageCache.get(p.id) ?? "" }));
   const { comps, prices } = await loadComponentsAndPrices(prebuilds.map((p) => p.id));
-  const result = prebuilds.map((p) => shapePrebuild(p, comps.get(p.id) ?? [], prices.get(p.id)));
+  const result = prebuilds.map((p) => ({ ...shapePrebuild(p, comps.get(p.id) ?? [], prices.get(p.id)), imageDeferred: !imageCache.has(p.id) }));
   prebuildCache = result;
   return result;
+}
+
+const imageCache = new Map<string, string>();
+const imageInflight = new Map<string, Promise<string>>();
+
+/** One prebuild's image (URL or data URI); "" when it has none. Cached for the session. */
+export function fetchPrebuildImage(id: string): Promise<string> {
+  const hit = imageCache.get(id);
+  if (hit !== undefined) return Promise.resolve(hit);
+  let p = imageInflight.get(id);
+  if (!p) {
+    p = (async () => {
+      const { data, error } = await supabase.from("prebuilds").select("image").eq("id", id).maybeSingle();
+      if (error) throw new Error(error.message);
+      const image = (data?.image as string | null) ?? "";
+      imageCache.set(id, image);
+      for (const c of prebuildCache ?? []) if (c.id === id) Object.assign(c, { image, imageDeferred: false });
+      return image;
+    })().finally(() => imageInflight.delete(id));
+    imageInflight.set(id, p);
+  }
+  return p;
+}
+
+/** Name and slug of each published prebuild, for nav links. Much lighter than the full list (no images). */
+export async function fetchPrebuildLinks(): Promise<{ slug: string; name: string }[]> {
+  if (prebuildCache) return prebuildCache.map((p) => ({ slug: p.slug, name: p.name }));
+  const { data, error } = await supabase
+    .from("prebuilds")
+    .select("slug, name")
+    .eq("status", "published")
+    .order("sort_order", { ascending: true });
+  if (error) throw new Error(error.message);
+  return (data ?? []) as { slug: string; name: string }[];
 }
 
 export async function fetchFeaturedPrebuilds(): Promise<PrebuildWithComponents[]> {
@@ -161,18 +216,25 @@ export async function fetchFeaturedPrebuilds(): Promise<PrebuildWithComponents[]
 
 export async function fetchPrebuildBySlug(slug: string): Promise<PrebuildWithComponents | null> {
   const wanted = resolvePrebuildSlug(slug);
-  const { data, error } = await supabase
-    .from("prebuilds")
-    .select("*")
-    .in("slug", [...new Set([slug, wanted])])
-    .eq("status", "published")
-    .limit(1)
-    .maybeSingle();
-  if (error) throw new Error(error.message);
-  if (!data) return null;
-  const prebuild = data as Prebuild;
-  const { comps, prices } = await loadComponentsAndPrices([prebuild.id]);
-  return shapePrebuild(prebuild, comps.get(prebuild.id) ?? [], prices.get(prebuild.id));
+  const slugs = [...new Set([slug, wanted])];
+  // One round trip for the row and its parts (embedded), with the price lookup in parallel.
+  const [rowRes, priceRes] = await Promise.all([
+    supabase
+      .from("prebuilds")
+      .select("*, prebuild_components(*)")
+      .in("slug", slugs)
+      .eq("status", "published")
+      .order("sort_order", { referencedTable: "prebuild_components", ascending: true })
+      .limit(1)
+      .maybeSingle(),
+    supabase.from("prebuild_prices").select("id, slug, price_ex_gst, purchasable, price_source").in("slug", slugs),
+  ]);
+  if (rowRes.error) throw new Error(rowRes.error.message);
+  if (priceRes.error) throw new Error(priceRes.error.message);
+  if (!rowRes.data) return null;
+  const { prebuild_components: comps, ...prebuild } = rowRes.data as Prebuild & { prebuild_components: PrebuildComponent[] | null };
+  const price = ((priceRes.data ?? []) as PriceRow[]).find((r) => r.id === prebuild.id);
+  return shapePrebuild(prebuild, comps ?? [], price);
 }
 
 // ---- Staff ----
@@ -306,12 +368,14 @@ export function getCachedPrebuilds(): PrebuildWithComponents[] {
 
 export function prebuildToPackage(p: PrebuildWithComponents): PackageSpec {
   return {
+    id: p.id,
+    imageDeferred: p.imageDeferred,
     slug: p.slug,
     name: p.name,
     kicker: p.kicker,
     priceExGst: p.effective_price_ex_gst ?? 0,
     blurb: p.blurb,
-    image: p.image || "/rigs/starter.jpg",
+    image: p.image || (p.imageDeferred ? "" : "/rigs/starter.jpg"),
     lines: p.components.map((c) => ({ sku: c.sku, qty: c.qty })),
     highlights: p.highlights,
     popular: p.featured,

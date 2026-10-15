@@ -1,6 +1,6 @@
 import { ImagePlus, Star, X } from "lucide-react";
 import { useRef, useState, type DragEvent } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MAX_LISTING_IMAGES, sanitizeListingImages, uniqueImages } from "@/lib/es/listing-images";

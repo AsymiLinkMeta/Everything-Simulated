@@ -8,7 +8,6 @@ type DbRow = {
   name: string;
   category: string;
   sell_ex_gst: number;
-  cost_ex_gst?: number | null;
   stock_status: string;
   listing_status?: string | null;
   qty_on_hand?: number | null;
@@ -46,7 +45,6 @@ function toProduct(row: DbRow): Product {
     name: row.name,
     category: row.category as ProductCategory,
     sellExGst: row.sell_ex_gst,
-    costExGst: row.cost_ex_gst ?? undefined,
     stock: row.stock_status as StockStatus,
     listingStatus: (row.listing_status as ListingStatus) || "published",
     qtyOnHand: row.qty_on_hand ?? 0,
@@ -104,7 +102,7 @@ export async function fetchProducts(opts?: { includeDrafts?: boolean }): Promise
       supabase
         .from("catalog_products")
         .select(
-          "sku, brand, name, category, sell_ex_gst, cost_ex_gst, stock_status, listing_status, qty_on_hand, lead_weeks_min, lead_weeks_max, description, notes, max_nm, payload_kg, weight_kg, mounts, qr, image, image_url, images, whats_included, mount_compatibility, assembly_manual_url, specs, compare, enquiry_only",
+          "sku, brand, name, category, sell_ex_gst, stock_status, listing_status, qty_on_hand, lead_weeks_min, lead_weeks_max, description, notes, max_nm, payload_kg, weight_kg, mounts, qr, image, image_url, images, whats_included, mount_compatibility, assembly_manual_url, specs, compare, enquiry_only",
         )
         .order("sku"),
       supabase.from("compatibility_rules").select("id, left_sku, right_sku, severity, reason, adapter_sku"),

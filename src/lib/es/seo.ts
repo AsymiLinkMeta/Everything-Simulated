@@ -1,6 +1,7 @@
 import { SITE_ORIGIN } from "@/lib/site";
 import { BRAND, CITIES } from "./content";
 import { livePackages } from "./prebuilds";
+import { gstInclusive } from "@/lib/utils";
 import type { Guide, Product } from "./types";
 
 export const ORIGIN = SITE_ORIGIN;
@@ -145,7 +146,7 @@ export function localBusinessLd(cityName?: string) {
       "@type": "Offer",
       name: p.name,
       priceCurrency: "AUD",
-      price: p.priceExGst ? (p.priceExGst / 100).toFixed(0) : undefined,
+      price: p.priceExGst ? (gstInclusive(p.priceExGst) / 100).toFixed(2) : undefined,
       url: abs(`/prebuilds/${p.slug}`),
     })),
     knowsAbout: [
@@ -235,7 +236,12 @@ export function productLd(input: {
       "@type": "Offer",
       url: abs(input.url),
       priceCurrency: "AUD",
-      price: input.priceExGst && input.priceExGst > 0 ? (input.priceExGst / 100).toFixed(2) : undefined,
+      // Australian consumer prices are quoted GST-inclusive (that's what Google shows shoppers).
+      price: input.priceExGst && input.priceExGst > 0 ? (gstInclusive(input.priceExGst) / 100).toFixed(2) : undefined,
+      priceSpecification:
+        input.priceExGst && input.priceExGst > 0
+          ? { "@type": "PriceSpecification", price: (gstInclusive(input.priceExGst) / 100).toFixed(2), priceCurrency: "AUD", valueAddedTaxIncluded: true }
+          : undefined,
       availability: `https://schema.org/${input.availability ?? "InStock"}`,
       itemCondition: "https://schema.org/NewCondition",
       seller: { "@id": `${ORIGIN}/#org` },

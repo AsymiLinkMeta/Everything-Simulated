@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Truck } from "lucide-react";
 import { fetchProducts } from "@/lib/es/product-cache";
 import { staffListQuotes } from "@/lib/es/server";

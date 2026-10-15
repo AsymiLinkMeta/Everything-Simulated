@@ -1,4 +1,6 @@
+import { STAGE_IMAGES } from "@/lib/es/stage-images";
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { PrebuildPhoto } from "@/components/es/site-image";
 import { useQuery } from "@tanstack/react-query";
 import { JsonLd, LoadError, Money } from "@/components/es/bits";
 import { itemListLd, pageHead } from "@/lib/es/seo";
@@ -27,9 +29,10 @@ function PrebuildsPage() {
         kicker="Turn-key"
         title="Prebuilt Racing Simulators"
         lead="Every rig is assembled, tested and photographed on the Gold Coast before dispatch."
-        image="/rigs/motion.jpg"
+        image={STAGE_IMAGES["/prebuilds"]}
       />
       <div className="es-body">
+        <h2 className="sr-only">Available prebuilds</h2>
         {prebuilds.isPending ? (
           <div className="es-pack-grid">{[1, 2, 3].map((i) => <div key={i} className="aspect-square animate-pulse bg-raised" />)}</div>
         ) : prebuilds.isError ? (
@@ -55,13 +58,13 @@ function PrebuildCard({ prebuild }: { prebuild: PrebuildWithComponents }) {
   return (
     <Link to="/prebuilds/$slug" params={{ slug: prebuild.slug }} className="es-pack-tile">
       <div className="es-pack-tile-frame">
-        {prebuild.image ? <img src={prebuild.image} alt={prebuild.name} /> : <div className="grid size-full place-items-center bg-raised text-muted">No image</div>}
+        <PrebuildPhoto prebuild={prebuild} alt={prebuild.name} sizes="(min-width: 1024px) 33vw, 100vw" placeholder={<div className="grid size-full place-items-center bg-raised text-muted">No image</div>} />
       </div>
       <div className="es-pack-tile-meta">
         <h3>{prebuild.name}</h3>
         <p className="mt-2 text-sm text-muted">{prebuild.blurb}</p>
         <p className="mt-3 text-lg font-medium">
-          {prebuild.purchasable ? <Money cents={prebuild.effective_price_ex_gst} gst /> : "Enquire for price"}
+          {prebuild.purchasable ? <>{prebuild.price_source === "parts" ? "From " : ""}<Money cents={prebuild.effective_price_ex_gst} gst /></> : "Enquire for price"}
         </p>
       </div>
     </Link>

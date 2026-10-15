@@ -1,3 +1,4 @@
+import { STAGE_IMAGES } from "@/lib/es/stage-images";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { BRAND } from "@/lib/es/catalog";
 import { VENUE, VENUE_FLOOR } from "@/lib/es/events";
@@ -24,7 +25,7 @@ function Studio() {
         kicker="Showroom · try before you buy"
         title="Gold Coast Simulator Showroom"
         lead="Experience your build before it ships. Book a session on Starter, Haptic or Motion — we adjust wheel height, pedal spacing and coaching displays to your exact driving position."
-        image="/rigs/showroom.jpg"
+        image={STAGE_IMAGES["/studio"]}
         tone="race"
       >
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">

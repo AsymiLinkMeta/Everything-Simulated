@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { fetchRules, staffDeleteRule, staffSaveRule } from "@/lib/es/rules";
 import { fetchProducts, invalidateProductCache } from "@/lib/es/product-cache";
 import type { Severity } from "@/lib/es/types";

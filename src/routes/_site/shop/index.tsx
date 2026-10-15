@@ -1,3 +1,4 @@
+import { STAGE_IMAGES } from "@/lib/es/stage-images";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
@@ -57,7 +58,7 @@ function Shop() {
         kicker="Catalogue"
         title="Sim Racing Parts & Components"
         lead="Every component in this catalogue is one we install, wire and ship. No third-party drop-shipping."
-        image="/rigs/starter.jpg"
+        image={STAGE_IMAGES["/shop"]}
       />
       <div className="es-body">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -68,8 +69,9 @@ function Shop() {
               </button>
             ))}
           </div>
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search SKU, brand, name" className="min-h-11 border border-line bg-transparent px-3 text-sm text-paper placeholder:text-muted sm:ml-auto sm:w-64" />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search SKU, brand, name" aria-label="Search parts" className="min-h-11 border border-line bg-transparent px-3 text-sm text-paper placeholder:text-muted sm:ml-auto sm:w-64" />
         </div>
+        <h2 className="sr-only">Parts</h2>
         <div className="mt-8 grid min-w-0 gap-8 lg:grid-cols-[1fr_320px]">
           <div className="grid min-w-0 grid-cols-2 gap-4 xl:grid-cols-3">
             {items.length ? items.map((item) => <ProductTile key={item.sku} item={item} />) : <p className="col-span-full text-sm text-muted">No parts match that filter.</p>}

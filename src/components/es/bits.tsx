@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { toast } from "sonner";
+import { PrebuildPhoto } from "@/components/es/site-image";
+import { toast } from "@/lib/toast";
 import { ArrowLeft, Plus, X, Wrench, Loader2, Check } from "lucide-react";
 import "../../es.css";
 import { Link } from "@tanstack/react-router";
@@ -10,7 +11,6 @@ import type { CheckIssue, CheckResult, PackageSpec, Product, CartLine } from "@/
 import { product, productImage, getCachedProductMap } from "@/lib/es/product-cache";
 import { useCart } from "@/lib/es/cart-store";
 import { UNIQUE_CATEGORIES } from "@/lib/es/checkCart";
-import { askBuilder } from "@/lib/es/server";
 import { cn } from "@/lib/utils";
 
 export function BackButton({ label = "Back" }: { label?: string }) {
@@ -30,11 +30,8 @@ export function Logo({ compact = false }: { compact?: boolean }) {
   return (
     <Link to="/" className={`es-logo${compact ? " es-logo-compact" : ""}`} aria-label="Everything Simulated">
       <picture>
-        <img
-          src="/Everything_Simulated_LOGO_W+R.png"
-          alt="Everything Simulated"
-          className="es-logo-image"
-        />
+        <source type="image/webp" srcSet="/logo-192.webp" />
+        <img src="/logo-192.png" alt="Everything Simulated" className="es-logo-image" width={192} height={192} decoding="async" />
       </picture>
     </Link>
   );
@@ -57,7 +54,7 @@ export function AuthSlot() {
 
 export function StaffLoginLink() {
   return (
-    <a href="/login?portal=staff" className="es-footer-login" aria-label="Staff login">
+    <a href="/login?portal=staff" className="es-footer-login">
       Staff / Admin Login
     </a>
   );
@@ -83,7 +80,7 @@ export function CookieDisclaimer() {
       <button
         type="button"
         className="es-cookie-close"
-        aria-label="Dismiss cookie notice"
+        aria-label="OK, dismiss cookie notice"
         onClick={() => {
           try {
             localStorage.setItem(COOKIE_KEY, "1");
@@ -198,6 +195,8 @@ function IssueRow({ issue }: { issue: CheckIssue }) {
   async function handleFix() {
     setFixing(true);
     try {
+      // Loaded on demand: server.ts pulls in the build agent, which no first paint needs.
+      const { askBuilder } = await import("@/lib/es/server");
       const res = await askBuilder({
         message: `Fix this compatibility issue: ${issue.message}. Suggest the minimal cart change needed.`,
         lines,
@@ -323,7 +322,7 @@ export function PackageCard({ pack }: { pack: PackageSpec }) {
   return (
     <Link to="/prebuilds/$slug" params={{ slug: pack.slug }} className="es-card group flex flex-col overflow-hidden">
       <div className="relative aspect-video overflow-hidden">
-        <img src={pack.image} alt={pack.name} className="size-full object-cover transition-transform duration-300 group-hover:scale-105" />
+        <PrebuildPhoto prebuild={pack} fallback="/rigs/starter.jpg" alt={pack.name} className="size-full object-cover transition-transform duration-300 group-hover:scale-105" sizes="(min-width: 1024px) 33vw, 100vw" />
         <span className="es-kicker" style={{ position: "absolute", left: 16, top: 16, background: "rgba(7,7,8,0.8)", padding: "4px 8px", borderRadius: 8 }}>
           {pack.kicker}
         </span>

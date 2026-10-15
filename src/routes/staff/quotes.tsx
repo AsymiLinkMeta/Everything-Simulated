@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { staffListQuotes } from "@/lib/es/server";
 import { staffConvertQuote } from "@/lib/es/crm-oms";
 import { recordMemory } from "@/lib/es/agent";

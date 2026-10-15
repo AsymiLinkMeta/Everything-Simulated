@@ -1,3 +1,4 @@
+import { PrebuildPhoto, SiteImage } from "@/components/es/site-image";
 import { createFileRoute, Link, applyHeadPayload } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -129,7 +130,7 @@ export function AmbassadorProfile() {
           <span className={`es-tier-pill es-tier-pill--${ambassador.tier}`}>{tierLabel(tiers.data, ambassador.tier)}</span>
         </div>
         <div className="mt-8 flex flex-wrap gap-3">
-          {crate ? <OrderRigButton ambassador={ambassador} /> : null}
+          {crate || ambassador.crate ? <OrderRigButton ambassador={ambassador} /> : null}
           <Link to={ambassadorLink(ambassador.code, ambassador.slug)} className="es-btn es-btn-paper">
             Code {ambassador.code}
           </Link>
@@ -160,7 +161,7 @@ export function AmbassadorProfile() {
       <div className="es-body">
         <div className="es-media-split">
           <div className="es-media-split-frame">
-            <img src={crate?.image || ambassador.photo || "/rigs/haptic.jpg"} alt="" />
+            {crate ? <PrebuildPhoto prebuild={crate} fallback={ambassador.photo || "/rigs/haptic.jpg"} alt="" /> : <SiteImage src={ambassador.photo || "/rigs/haptic.jpg"} alt="" />}
           </div>
           <div className="es-media-split-copy">
             <p className="es-kicker">Their rig</p>

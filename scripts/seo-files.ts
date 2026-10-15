@@ -9,7 +9,7 @@
 import { BRAND, CITIES, GUIDES } from "../src/lib/es/content";
 
 export type SeoCatalog = {
-  prebuilds: { slug: string; name: string; updated_at: string | null; image: string | null; price_ex_gst: number | null; purchasable: boolean }[];
+  prebuilds: { slug: string; name: string; updated_at: string | null; image: string | null; price_ex_gst: number | null; purchasable: boolean; price_source?: "package" | "parts" | null }[];
   products: { sku: string; name: string; brand: string; updated_at: string | null }[];
   ambassadors: SeoAmbassador[];
   blockRules: { left_sku: string; right_sku: string; reason: string }[];
@@ -144,7 +144,12 @@ export function renderLlms(origin: string, data: SeoCatalog): string {
   const prebuilds = data.prebuilds.length
     ? data.prebuilds
         .map((p) => {
-          const price = p.purchasable && p.price_ex_gst ? `${money(p.price_ex_gst)} + GST` : "priced on enquiry";
+          // A price summed from parts is a starting point: the parts can be swapped or upgraded.
+          const price = !(p.purchasable && p.price_ex_gst)
+            ? "priced on enquiry"
+            : p.price_source === "parts"
+              ? `from ${money(p.price_ex_gst)} + GST (as listed; parts can be swapped)`
+              : `${money(p.price_ex_gst)} + GST`;
           return `- ${p.name}: ${price}. ${origin}/prebuilds/${p.slug}`;
         })
         .join("\n")
@@ -218,7 +223,9 @@ export async function fetchSeoCatalog(supabaseUrl: string, anonKey: string): Pro
     get<{ id: string; slug: string; name: string; updated_at: string | null; image: string | null }[]>(
       "prebuilds?select=id,slug,name,updated_at,image&status=eq.published&order=sort_order",
     ),
-    get<{ id: string; price_ex_gst: number | null; purchasable: boolean }[]>("prebuild_prices?select=id,price_ex_gst,purchasable"),
+    get<{ id: string; price_ex_gst: number | null; purchasable: boolean; price_source: "package" | "parts" | null }[]>(
+      "prebuild_prices?select=id,price_ex_gst,purchasable,price_source",
+    ),
     get<{ sku: string; name: string; brand: string; updated_at: string | null }[]>(
       "catalog_products?select=sku,name,brand,updated_at&listing_status=eq.published&order=sku",
     ),
@@ -237,6 +244,7 @@ export async function fetchSeoCatalog(supabaseUrl: string, anonKey: string): Pro
       image: p.image,
       price_ex_gst: priceById.get(p.id)?.price_ex_gst ?? null,
       purchasable: Boolean(priceById.get(p.id)?.purchasable),
+      price_source: priceById.get(p.id)?.price_source ?? null,
     })),
     products,
     ambassadors,

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { Eye, EyeOff, UserPlus } from "lucide-react";
 import { getProfile, staffListProfiles, staffSetRole } from "@/lib/es/server";
 import { createStaffAccount, type CreatableRole } from "@/lib/es/staff-accounts";

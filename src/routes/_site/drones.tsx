@@ -1,3 +1,4 @@
+import { STAGE_IMAGES } from "@/lib/es/stage-images";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { JsonLd } from "@/components/es/bits";
 import { ImageCards, PageHero, PhoneStrip } from "@/components/es/section-page";
@@ -27,7 +28,7 @@ function DronesPage() {
         kicker="Drones · workshop platform"
         title="Drone & FPV Training Simulators"
         lead="Purpose-built ground-station and FPV trainers for operators who need logged hours before flying live. Each build is specced to your mission requirements and assembled on the Gold Coast."
-        image="/rigs/motion.jpg"
+        image={STAGE_IMAGES["/drones"]}
         tone="adventure"
       >
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">

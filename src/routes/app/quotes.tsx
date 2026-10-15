@@ -1,7 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { toast } from "sonner";
+import { toast } from "@/lib/toast";
 import { listMyQuotes } from "@/lib/es/server";
 import { useCart } from "@/lib/es/cart-store";
 import { aud } from "@/lib/utils";

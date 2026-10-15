@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { CartPanel } from "@/components/es/cart-panel";
 import { BackButton, CheckPills, JsonLd, Money, IncGst, ProductTile } from "@/components/es/bits";
 import { fetchProducts, productImage } from "@/lib/es/product-cache";
+import { SiteImage } from "@/components/es/site-image";
 import { useCart } from "@/lib/es/cart-store";
 import { breadcrumbLd, catalogProductLd, pageHead } from "@/lib/es/seo";
 
@@ -77,9 +78,11 @@ function ProductPage() {
       <JsonLd data={catalogProductLd(item)} />
       <div className="grid min-w-0 grid-cols-1 gap-8 lg:grid-cols-[1fr_1fr_320px]">
         <div>
-          <img
+          <SiteImage
             src={hero || productImage(item)}
             alt={item.name}
+            priority
+            sizes="(min-width: 1024px) 34vw, 100vw"
             className="es-card h-80 w-full object-cover md:h-[28rem]"
           />
           {uniqueGallery.length > 1 ? (
