@@ -2,6 +2,11 @@
 [build]
   command = "npm run build"
   publish = "dist"
+  # Skip the build (exit 0) only when every change since the last build is outside the site: migrations
+  # and edge functions (deployed separately), docs, tests, the Blender sources for the rig preview (the
+  # packed art lives in public/ and src/ and still triggers a build), CI config and Markdown. Anything
+  # else, a first build, a rebuild of the same commit, or an unknown base commit always builds (exit 1).
+  ignore = "if [ -n \"$CACHED_COMMIT_REF\" ] && [ \"$CACHED_COMMIT_REF\" != \"$COMMIT_REF\" ] && git cat-file -e \"$CACHED_COMMIT_REF^{commit}\" 2>/dev/null; then git diff --quiet \"$CACHED_COMMIT_REF\" \"$COMMIT_REF\" -- . ':(exclude)supabase' ':(exclude)docs' ':(exclude)e2e' ':(exclude)tests' ':(exclude)scripts/rig3d' ':(exclude)assets/rig3d' ':(exclude).github' ':(exclude)*.md'; else exit 1; fi"
 
 [build.environment]
   NODE_VERSION = "22"
