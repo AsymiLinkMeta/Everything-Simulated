@@ -5,540 +5,540 @@ export const RIG_PARTS_BASE = "/builder-rig/parts/";
 export const RIG_PARTS_SIZE = { width: 900, height: 738 } as const;
 export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
   "s1": {
-    "ghost": "ghost-s1.774dc69b.webp",
+    "ghost": "ghost-s1.6f69de05.webp",
     "parts": {
       "chassis": {
-        "lit": "lit-s1-chassis.ba679bbc.webp",
-        "edge": "edge-s1-chassis.3db0260b.webp",
+        "lit": "lit-s1-chassis.1c762ce9.webp",
+        "edge": "edge-s1-chassis.94aebc3b.webp",
         "box": [
-          191,
+          190,
           288,
-          416,
+          418,
           409
         ]
       },
       "seat": {
-        "lit": "lit-s1-seat.13bfef1b.webp",
-        "edge": "edge-s1-seat.d3002991.webp",
+        "lit": "lit-s1-seat.f412517e.webp",
+        "edge": "edge-s1-seat.21d83af9.webp",
         "box": [
-          236,
+          235,
           292,
-          258,
+          259,
           316
         ]
       },
       "wheelbase": {
-        "lit": "lit-s1-wheelbase.9bd326fc.webp",
-        "edge": "edge-s1-wheelbase.90499e5b.webp",
+        "lit": "lit-s1-wheelbase.884f79b2.webp",
+        "edge": "edge-s1-wheelbase.54ff3ad3.webp",
         "box": [
-          400,
-          259,
-          99,
-          96
+          399,
+          258,
+          101,
+          97
         ]
       },
       "wheel": {
-        "lit": "lit-s1-wheel.f9a80b68.webp",
-        "edge": "edge-s1-wheel.f25b141b.webp",
+        "lit": "lit-s1-wheel.cea62a6f.webp",
+        "edge": "edge-s1-wheel.c7461cc6.webp",
         "box": [
-          358,
-          238,
-          121,
-          134
+          357,
+          237,
+          123,
+          136
         ]
       },
       "pedals": {
-        "lit": "lit-s1-pedals.f915b451.webp",
-        "edge": "edge-s1-pedals.4c26c57c.webp",
+        "lit": "lit-s1-pedals.0927d84d.webp",
+        "edge": "edge-s1-pedals.24b1eb51.webp",
         "box": [
-          380,
-          406,
-          228,
-          225
+          379,
+          405,
+          229,
+          227
         ]
       },
       "mount": {
-        "lit": "lit-s1-mount.add1f4f2.webp",
-        "edge": "edge-s1-mount.a3c16e26.webp",
+        "lit": "lit-s1-mount.e470bc81.webp",
+        "edge": "edge-s1-mount.a1b09e48.webp",
         "box": [
-          368,
-          16,
-          381,
-          601
+          358,
+          209,
+          392,
+          408
         ]
       },
       "screens": {
-        "lit": "lit-s1-screens.fd7998f0.webp",
-        "edge": "edge-s1-screens.0489790e.webp",
+        "lit": "lit-s1-screens.d66f1712.webp",
+        "edge": "edge-s1-screens.19857c81.webp",
         "box": [
-          215,
-          37,
-          490,
-          362
+          417,
+          170,
+          222,
+          173
         ]
       },
       "motion": {
-        "lit": "lit-s1-motion.a31aeec9.webp",
-        "edge": "edge-s1-motion.79b9a864.webp",
+        "lit": "lit-s1-motion.e7e69526.webp",
+        "edge": "edge-s1-motion.368508b9.webp",
         "box": [
           153,
           421,
           513,
-          301
+          302
         ]
       },
       "pc": {
-        "lit": "lit-s1-pc.e6e27016.webp",
-        "edge": "edge-s1-pc.d2fb901b.webp",
+        "lit": "lit-s1-pc.8b2460ae.webp",
+        "edge": "edge-s1-pc.baa6364b.webp",
         "box": [
-          151,
-          412,
           150,
-          181
+          411,
+          152,
+          183
         ]
       },
       "headset": {
-        "lit": "lit-s1-headset.e7faeb22.webp",
-        "edge": "edge-s1-headset.38d66f93.webp",
+        "lit": "lit-s1-headset.28f94c22.webp",
+        "edge": "edge-s1-headset.cee5d9a3.webp",
         "box": [
           257,
-          255,
-          108,
-          67
+          254,
+          109,
+          68
         ]
       },
       "sidemount": {
-        "lit": "lit-s1-sidemount.077c28ed.webp",
-        "edge": "edge-s1-sidemount.ce4a5b29.webp",
+        "lit": "lit-s1-sidemount.ee5caa33.webp",
+        "edge": "edge-s1-sidemount.0ae7fc7e.webp",
         "box": [
           491,
-          438,
+          437,
           106,
-          179
+          181
         ]
       },
       "shifter": {
-        "lit": "lit-s1-shifter.d5b56cf3.webp",
-        "edge": "edge-s1-shifter.053d4a1f.webp",
+        "lit": "lit-s1-shifter.60d69db9.webp",
+        "edge": "edge-s1-shifter.303f116a.webp",
         "box": [
           529,
-          375,
-          53,
-          99
+          374,
+          54,
+          100
         ]
       },
       "handbrake": {
-        "lit": "lit-s1-handbrake.7433856a.webp",
-        "edge": "edge-s1-handbrake.d921c65a.webp",
+        "lit": "lit-s1-handbrake.d0634d82.webp",
+        "edge": "edge-s1-handbrake.e7588093.webp",
         "box": [
-          504,
+          503,
           348,
-          61,
+          62,
           134
         ]
       }
     }
   },
   "s2": {
-    "ghost": "ghost-s2.774dc69b.webp",
+    "ghost": "ghost-s2.e11ff4f9.webp",
     "parts": {
       "chassis": {
-        "lit": "lit-s2-chassis.ba679bbc.webp",
-        "edge": "edge-s2-chassis.3db0260b.webp",
+        "lit": "lit-s2-chassis.59745213.webp",
+        "edge": "edge-s2-chassis.94aebc3b.webp",
         "box": [
-          191,
+          190,
           288,
-          416,
+          418,
           409
         ]
       },
       "seat": {
-        "lit": "lit-s2-seat.13bfef1b.webp",
-        "edge": "edge-s2-seat.d3002991.webp",
+        "lit": "lit-s2-seat.477c9efb.webp",
+        "edge": "edge-s2-seat.21d83af9.webp",
         "box": [
-          236,
+          235,
           292,
-          258,
+          259,
           316
         ]
       },
       "wheelbase": {
-        "lit": "lit-s2-wheelbase.9bd326fc.webp",
-        "edge": "edge-s2-wheelbase.90499e5b.webp",
+        "lit": "lit-s2-wheelbase.57d693b5.webp",
+        "edge": "edge-s2-wheelbase.54ff3ad3.webp",
         "box": [
-          400,
-          259,
-          99,
-          96
+          399,
+          258,
+          101,
+          97
         ]
       },
       "wheel": {
-        "lit": "lit-s2-wheel.f9a80b68.webp",
-        "edge": "edge-s2-wheel.f25b141b.webp",
+        "lit": "lit-s2-wheel.f527936a.webp",
+        "edge": "edge-s2-wheel.c7461cc6.webp",
         "box": [
-          358,
-          238,
-          121,
-          134
+          357,
+          237,
+          123,
+          136
         ]
       },
       "pedals": {
-        "lit": "lit-s2-pedals.f915b451.webp",
-        "edge": "edge-s2-pedals.4c26c57c.webp",
+        "lit": "lit-s2-pedals.fd1cee25.webp",
+        "edge": "edge-s2-pedals.24b1eb51.webp",
         "box": [
-          380,
-          406,
-          228,
-          225
+          379,
+          405,
+          229,
+          227
         ]
       },
       "mount": {
-        "lit": "lit-s2-mount.add1f4f2.webp",
-        "edge": "edge-s2-mount.a3c16e26.webp",
+        "lit": "lit-s2-mount.63997418.webp",
+        "edge": "edge-s2-mount.b320a505.webp",
         "box": [
-          368,
-          16,
-          381,
-          601
+          367,
+          243,
+          383,
+          374
         ]
       },
       "screens": {
-        "lit": "lit-s2-screens.fd7998f0.webp",
-        "edge": "edge-s2-screens.0489790e.webp",
+        "lit": "lit-s2-screens.a4508a50.webp",
+        "edge": "edge-s2-screens.e49cf243.webp",
         "box": [
-          215,
-          37,
-          490,
-          362
+          297,
+          173,
+          396,
+          199
         ]
       },
       "motion": {
-        "lit": "lit-s2-motion.a31aeec9.webp",
-        "edge": "edge-s2-motion.79b9a864.webp",
+        "lit": "lit-s2-motion.c785b5a1.webp",
+        "edge": "edge-s2-motion.368508b9.webp",
         "box": [
           153,
           421,
           513,
-          301
+          302
         ]
       },
       "pc": {
-        "lit": "lit-s2-pc.e6e27016.webp",
-        "edge": "edge-s2-pc.d2fb901b.webp",
+        "lit": "lit-s2-pc.fdb4fd84.webp",
+        "edge": "edge-s2-pc.baa6364b.webp",
         "box": [
-          151,
-          412,
           150,
-          181
+          411,
+          152,
+          183
         ]
       },
       "headset": {
-        "lit": "lit-s2-headset.e7faeb22.webp",
-        "edge": "edge-s2-headset.38d66f93.webp",
+        "lit": "lit-s2-headset.bb07db49.webp",
+        "edge": "edge-s2-headset.cee5d9a3.webp",
         "box": [
           257,
-          255,
-          108,
-          67
+          254,
+          109,
+          68
         ]
       },
       "sidemount": {
-        "lit": "lit-s2-sidemount.077c28ed.webp",
-        "edge": "edge-s2-sidemount.ce4a5b29.webp",
+        "lit": "lit-s2-sidemount.37803481.webp",
+        "edge": "edge-s2-sidemount.0ae7fc7e.webp",
         "box": [
           491,
-          438,
+          437,
           106,
-          179
+          181
         ]
       },
       "shifter": {
-        "lit": "lit-s2-shifter.d5b56cf3.webp",
-        "edge": "edge-s2-shifter.053d4a1f.webp",
+        "lit": "lit-s2-shifter.f1885f84.webp",
+        "edge": "edge-s2-shifter.303f116a.webp",
         "box": [
           529,
-          375,
-          53,
-          99
+          374,
+          54,
+          100
         ]
       },
       "handbrake": {
-        "lit": "lit-s2-handbrake.7433856a.webp",
-        "edge": "edge-s2-handbrake.d921c65a.webp",
+        "lit": "lit-s2-handbrake.8cf13e1a.webp",
+        "edge": "edge-s2-handbrake.e7588093.webp",
         "box": [
-          504,
+          503,
           348,
-          61,
+          62,
           134
         ]
       }
     }
   },
   "s3": {
-    "ghost": "ghost-s3.774dc69b.webp",
+    "ghost": "ghost-s3.8627d1f8.webp",
     "parts": {
       "chassis": {
-        "lit": "lit-s3-chassis.ba679bbc.webp",
-        "edge": "edge-s3-chassis.3db0260b.webp",
+        "lit": "lit-s3-chassis.c40c71f9.webp",
+        "edge": "edge-s3-chassis.94aebc3b.webp",
         "box": [
-          191,
+          190,
           288,
-          416,
+          418,
           409
         ]
       },
       "seat": {
-        "lit": "lit-s3-seat.13bfef1b.webp",
-        "edge": "edge-s3-seat.d3002991.webp",
+        "lit": "lit-s3-seat.525d0b4e.webp",
+        "edge": "edge-s3-seat.21d83af9.webp",
         "box": [
-          236,
+          235,
           292,
-          258,
+          259,
           316
         ]
       },
       "wheelbase": {
-        "lit": "lit-s3-wheelbase.9bd326fc.webp",
-        "edge": "edge-s3-wheelbase.90499e5b.webp",
+        "lit": "lit-s3-wheelbase.4a0ba55f.webp",
+        "edge": "edge-s3-wheelbase.54ff3ad3.webp",
         "box": [
-          400,
-          259,
-          99,
-          96
+          399,
+          258,
+          101,
+          97
         ]
       },
       "wheel": {
-        "lit": "lit-s3-wheel.f9a80b68.webp",
-        "edge": "edge-s3-wheel.f25b141b.webp",
+        "lit": "lit-s3-wheel.ee81b6ba.webp",
+        "edge": "edge-s3-wheel.c7461cc6.webp",
         "box": [
-          358,
-          238,
-          121,
-          134
+          357,
+          237,
+          123,
+          136
         ]
       },
       "pedals": {
-        "lit": "lit-s3-pedals.f915b451.webp",
-        "edge": "edge-s3-pedals.4c26c57c.webp",
+        "lit": "lit-s3-pedals.1472087f.webp",
+        "edge": "edge-s3-pedals.24b1eb51.webp",
         "box": [
-          380,
-          406,
-          228,
-          225
+          379,
+          405,
+          229,
+          227
         ]
       },
       "mount": {
-        "lit": "lit-s3-mount.add1f4f2.webp",
-        "edge": "edge-s3-mount.a3c16e26.webp",
+        "lit": "lit-s3-mount.cdbad70f.webp",
+        "edge": "edge-s3-mount.50796993.webp",
         "box": [
-          368,
-          16,
-          381,
-          601
+          367,
+          216,
+          383,
+          401
         ]
       },
       "screens": {
-        "lit": "lit-s3-screens.fd7998f0.webp",
-        "edge": "edge-s3-screens.0489790e.webp",
+        "lit": "lit-s3-screens.d90f9e83.webp",
+        "edge": "edge-s3-screens.aa4cf6d2.webp",
         "box": [
-          215,
-          37,
-          490,
-          362
+          214,
+          170,
+          492,
+          230
         ]
       },
       "motion": {
-        "lit": "lit-s3-motion.a31aeec9.webp",
-        "edge": "edge-s3-motion.79b9a864.webp",
+        "lit": "lit-s3-motion.5ef41b88.webp",
+        "edge": "edge-s3-motion.368508b9.webp",
         "box": [
           153,
           421,
           513,
-          301
+          302
         ]
       },
       "pc": {
-        "lit": "lit-s3-pc.e6e27016.webp",
-        "edge": "edge-s3-pc.d2fb901b.webp",
+        "lit": "lit-s3-pc.76770c7c.webp",
+        "edge": "edge-s3-pc.baa6364b.webp",
         "box": [
-          151,
-          412,
           150,
-          181
+          411,
+          152,
+          183
         ]
       },
       "headset": {
-        "lit": "lit-s3-headset.e7faeb22.webp",
-        "edge": "edge-s3-headset.38d66f93.webp",
+        "lit": "lit-s3-headset.5174d969.webp",
+        "edge": "edge-s3-headset.cee5d9a3.webp",
         "box": [
           257,
-          255,
-          108,
-          67
+          254,
+          109,
+          68
         ]
       },
       "sidemount": {
-        "lit": "lit-s3-sidemount.077c28ed.webp",
-        "edge": "edge-s3-sidemount.ce4a5b29.webp",
+        "lit": "lit-s3-sidemount.be2704fa.webp",
+        "edge": "edge-s3-sidemount.0ae7fc7e.webp",
         "box": [
           491,
-          438,
+          437,
           106,
-          179
+          181
         ]
       },
       "shifter": {
-        "lit": "lit-s3-shifter.d5b56cf3.webp",
-        "edge": "edge-s3-shifter.053d4a1f.webp",
+        "lit": "lit-s3-shifter.4e2fdc4b.webp",
+        "edge": "edge-s3-shifter.303f116a.webp",
         "box": [
           529,
-          375,
-          53,
-          99
+          374,
+          54,
+          100
         ]
       },
       "handbrake": {
-        "lit": "lit-s3-handbrake.7433856a.webp",
-        "edge": "edge-s3-handbrake.d921c65a.webp",
+        "lit": "lit-s3-handbrake.617ed0a0.webp",
+        "edge": "edge-s3-handbrake.e7588093.webp",
         "box": [
-          504,
+          503,
           348,
-          61,
+          62,
           134
         ]
       }
     }
   },
   "s4": {
-    "ghost": "ghost-s4.774dc69b.webp",
+    "ghost": "ghost-s4.877ba460.webp",
     "parts": {
       "chassis": {
-        "lit": "lit-s4-chassis.ba679bbc.webp",
-        "edge": "edge-s4-chassis.3db0260b.webp",
+        "lit": "lit-s4-chassis.7132aef8.webp",
+        "edge": "edge-s4-chassis.94aebc3b.webp",
         "box": [
-          191,
+          190,
           288,
-          416,
+          418,
           409
         ]
       },
       "seat": {
-        "lit": "lit-s4-seat.13bfef1b.webp",
-        "edge": "edge-s4-seat.d3002991.webp",
+        "lit": "lit-s4-seat.6dfef11b.webp",
+        "edge": "edge-s4-seat.21d83af9.webp",
         "box": [
-          236,
+          235,
           292,
-          258,
+          259,
           316
         ]
       },
       "wheelbase": {
-        "lit": "lit-s4-wheelbase.9bd326fc.webp",
-        "edge": "edge-s4-wheelbase.90499e5b.webp",
+        "lit": "lit-s4-wheelbase.b114fa10.webp",
+        "edge": "edge-s4-wheelbase.54ff3ad3.webp",
         "box": [
-          400,
-          259,
-          99,
-          96
+          399,
+          258,
+          101,
+          97
         ]
       },
       "wheel": {
-        "lit": "lit-s4-wheel.f9a80b68.webp",
-        "edge": "edge-s4-wheel.f25b141b.webp",
+        "lit": "lit-s4-wheel.35b465bc.webp",
+        "edge": "edge-s4-wheel.c7461cc6.webp",
         "box": [
-          358,
-          238,
-          121,
-          134
+          357,
+          237,
+          123,
+          136
         ]
       },
       "pedals": {
-        "lit": "lit-s4-pedals.f915b451.webp",
-        "edge": "edge-s4-pedals.4c26c57c.webp",
+        "lit": "lit-s4-pedals.d47cabed.webp",
+        "edge": "edge-s4-pedals.24b1eb51.webp",
         "box": [
-          380,
-          406,
-          228,
-          225
+          379,
+          405,
+          229,
+          227
         ]
       },
       "mount": {
-        "lit": "lit-s4-mount.add1f4f2.webp",
-        "edge": "edge-s4-mount.a3c16e26.webp",
+        "lit": "lit-s4-mount.31911fc8.webp",
+        "edge": "edge-s4-mount.65736613.webp",
         "box": [
-          368,
-          16,
-          381,
-          601
+          367,
+          15,
+          383,
+          602
         ]
       },
       "screens": {
-        "lit": "lit-s4-screens.fd7998f0.webp",
-        "edge": "edge-s4-screens.0489790e.webp",
+        "lit": "lit-s4-screens.3f204c19.webp",
+        "edge": "edge-s4-screens.f11f5522.webp",
         "box": [
-          215,
+          214,
           37,
-          490,
-          362
+          492,
+          363
         ]
       },
       "motion": {
-        "lit": "lit-s4-motion.a31aeec9.webp",
-        "edge": "edge-s4-motion.79b9a864.webp",
+        "lit": "lit-s4-motion.a7e1b8d6.webp",
+        "edge": "edge-s4-motion.368508b9.webp",
         "box": [
           153,
           421,
           513,
-          301
+          302
         ]
       },
       "pc": {
-        "lit": "lit-s4-pc.e6e27016.webp",
-        "edge": "edge-s4-pc.d2fb901b.webp",
+        "lit": "lit-s4-pc.eebe0ad3.webp",
+        "edge": "edge-s4-pc.baa6364b.webp",
         "box": [
-          151,
-          412,
           150,
-          181
+          411,
+          152,
+          183
         ]
       },
       "headset": {
-        "lit": "lit-s4-headset.e7faeb22.webp",
-        "edge": "edge-s4-headset.38d66f93.webp",
+        "lit": "lit-s4-headset.9c08d64d.webp",
+        "edge": "edge-s4-headset.cee5d9a3.webp",
         "box": [
           257,
-          255,
-          108,
-          67
+          254,
+          109,
+          68
         ]
       },
       "sidemount": {
-        "lit": "lit-s4-sidemount.077c28ed.webp",
-        "edge": "edge-s4-sidemount.ce4a5b29.webp",
+        "lit": "lit-s4-sidemount.8d0e669c.webp",
+        "edge": "edge-s4-sidemount.0ae7fc7e.webp",
         "box": [
           491,
-          438,
+          437,
           106,
-          179
+          181
         ]
       },
       "shifter": {
-        "lit": "lit-s4-shifter.d5b56cf3.webp",
-        "edge": "edge-s4-shifter.053d4a1f.webp",
+        "lit": "lit-s4-shifter.4940296e.webp",
+        "edge": "edge-s4-shifter.303f116a.webp",
         "box": [
           529,
-          375,
-          53,
-          99
+          374,
+          54,
+          100
         ]
       },
       "handbrake": {
-        "lit": "lit-s4-handbrake.7433856a.webp",
-        "edge": "edge-s4-handbrake.d921c65a.webp",
+        "lit": "lit-s4-handbrake.b9c86fb7.webp",
+        "edge": "edge-s4-handbrake.e7588093.webp",
         "box": [
-          504,
+          503,
           348,
-          61,
+          62,
           134
         ]
       }
