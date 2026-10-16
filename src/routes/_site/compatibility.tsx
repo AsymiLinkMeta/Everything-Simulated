@@ -5,6 +5,7 @@ import { BuildStudio } from "@/components/es/build-studio";
 import { pageHead, breadcrumbLd } from "@/lib/es/seo";
 import { JsonLd } from "@/components/es/bits";
 import { PageHero } from "@/components/es/section-page";
+import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_site/compatibility")({
   head: () =>
@@ -26,6 +27,13 @@ function Compatibility() {
         lead="Select one component at a time. The compatibility engine automatically blocks incompatible combinations before you reach the deposit stage."
         image={STAGE_IMAGES["/compatibility"]}
       />
+      <p className="es-body !pb-0 text-sm text-muted">
+        Prefer a guided path?{" "}
+        <Link to="/build" className="text-paper underline underline-offset-4">
+          Use the step-by-step rig builder
+        </Link>
+        .
+      </p>
       <div className="es-body grid min-w-0 grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,1fr)_360px]">
         <BuildStudio />
         <div className="lg:sticky lg:top-24 lg:self-start">

@@ -30,6 +30,7 @@ function PortalLoading() {
 const Shop = lazyRoute(() => import("@/routes/_site/shop/index"));
 const ShopSku = lazyRoute(() => import("@/routes/_site/shop/$sku"));
 const Compat = lazyRoute(() => import("@/routes/_site/compatibility"));
+const RigBuilder = lazyRoute(() => import("@/routes/_site/build"));
 const Studio = lazyRoute(() => import("@/routes/_site/studio"));
 const Events = lazyRoute(() => import("@/routes/_site/events"));
 const Guides = lazyRoute(() => import("@/routes/_site/guides/index"));
@@ -74,6 +75,7 @@ const StaffBookings = lazyRoute(() => import("@/routes/staff/bookings"));
 const StaffBrands = lazyRoute(() => import("@/routes/staff/brands"));
 const StaffTeam = lazyRoute(() => import("@/routes/staff/team"));
 const StaffSite = lazyRoute(() => import("@/routes/staff/site"));
+const StaffBuilder = lazyRoute(() => import("@/routes/staff/builder"));
 const StaffCrm = lazyRoute(() => import("@/routes/staff/crm"));
 const StaffCrmId = lazyRoute(() => import("@/routes/staff/crm-id"));
 const StaffOms = lazyRoute(() => import("@/routes/staff/oms"));
@@ -130,6 +132,7 @@ export default function App() {
       <Route path="/shop" element={<Page C={Shop} />} />
       <Route path="/shop/:sku" element={<Page C={ShopSku} />} />
       <Route path="/compatibility" element={<Page C={Compat} />} />
+      <Route path="/build" element={<Page C={RigBuilder} />} />
       <Route path="/studio" element={<Page C={Studio} />} />
       <Route path="/events" element={<Page C={Events} />} />
       <Route path="/catering" element={<Navigate to="/events" replace />} />
@@ -191,6 +194,7 @@ export default function App() {
         <Route path="brands" element={<StaffBrands />} />
         <Route path="team" element={<StaffTeam />} />
         <Route path="site" element={<StaffSite />} />
+        <Route path="builder" element={<StaffBuilder />} />
         <Route path="prebuilds" element={<StaffPrebuilds />} />
         <Route path="service" element={<StaffService />} />
         <Route path="agent" element={<StaffAgent />} />

@@ -543,4 +543,39 @@ EXCEPTION WHEN insufficient_privilege THEN RAISE NOTICE 'ok - anon cannot delete
 END $$;
 RESET ROLE;
 
+-- ---- Rig builder badges and layers (20261019090000_rig_builder) ----
+RESET ROLE;
+UPDATE public.catalog_products SET builder_badge = 'flagship' WHERE sku = 'sec-priced';
+SELECT pg_temp.as_anon();
+SELECT pg_temp.check((SELECT builder_badge = 'flagship' FROM public.catalog_products WHERE sku = 'sec-priced'), 'anon reads builder badges');
+DO $$
+BEGIN
+  INSERT INTO public.builder_layers (category, image_url) VALUES ('chassis', '/l/forged.webp');
+  RAISE EXCEPTION 'FAILED: anon wrote builder_layers';
+EXCEPTION WHEN insufficient_privilege THEN RAISE NOTICE 'ok - anon cannot write builder layers';
+END $$;
+SELECT pg_temp.as_user('00000000-0000-0000-0000-00000000000e');
+DO $$
+BEGIN
+  INSERT INTO public.builder_layers (category, image_url) VALUES ('chassis', '/l/forged.webp');
+  RAISE EXCEPTION 'FAILED: customer wrote builder_layers';
+EXCEPTION WHEN insufficient_privilege THEN RAISE NOTICE 'ok - customers cannot write builder layers';
+END $$;
+SELECT pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
+INSERT INTO public.builder_layers (category, image_url, z) VALUES ('chassis', '/l/chassis.webp', 0);
+SELECT pg_temp.check((SELECT count(*) = 1 FROM public.builder_layers), 'staff add a builder layer');
+DO $$
+BEGIN
+  INSERT INTO public.builder_layers (category, image_url) VALUES ('seat', 'javascript:alert(1)');
+  RAISE EXCEPTION 'FAILED: non-https layer url accepted';
+EXCEPTION WHEN check_violation THEN RAISE NOTICE 'ok - layer images must be https or site paths';
+END $$;
+DO $$
+BEGIN
+  UPDATE public.catalog_products SET builder_badge = 'cheapest_ever' WHERE sku = 'sec-priced';
+  RAISE EXCEPTION 'FAILED: unknown badge accepted';
+EXCEPTION WHEN check_violation THEN RAISE NOTICE 'ok - unknown builder badges are refused';
+END $$;
+RESET ROLE;
+
 ROLLBACK;
