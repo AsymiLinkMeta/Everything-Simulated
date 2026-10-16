@@ -5,7 +5,7 @@ const ALLOW_HEADERS = "Content-Type, Authorization, X-Client-Info, Apikey, X-Int
 
 /**
  * Allowed browser origins: SITE_URL plus a comma-separated ALLOWED_ORIGINS list
- * (staging, Bolt preview, http://localhost:5173 for dev). Wildcards are not supported.
+ * (staging, deploy previews, http://localhost:5173 for dev). Wildcards are not supported.
  */
 export function allowedOrigins(siteUrl = readEnv("SITE_URL"), extra = readEnv("ALLOWED_ORIGINS")): Set<string> {
   const set = new Set<string>([resolveSiteUrl(siteUrl)]);

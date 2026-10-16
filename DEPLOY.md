@@ -29,7 +29,7 @@ supabase db push            # applies supabase/migrations/* in order
 ```
 
 Migrations replay cleanly on an empty database (verified with `npm run test:db`, which also
-runs the RLS/admin security checks). For an **existing** project that was set up through Bolt,
+runs the RLS/admin security checks). For an **existing** project whose schema was created before the CLI tracked it,
 `supabase db push` only applies versions it has not recorded. Check first:
 
 ```bash
@@ -55,6 +55,12 @@ cp supabase/functions/.env.example supabase/functions/.env   # fill in; never co
 supabase secrets set --env-file supabase/functions/.env
 supabase functions deploy                                      # deploys all functions
 ```
+
+Functions: `generate-product-listing` (uses `XAI_API_KEY` for listing copy, falls back to a local draft),
+`discover-products` (reads official Shopify/HTML catalogues), `ask-builder`, `create-staff-account`
+(needs `SUPABASE_SERVICE_ROLE_KEY`), `send-mail`, `create-checkout-session`, `stripe-webhook`,
+`refund-payment` and `billing-config`. At minimum set `SITE_URL` and `ALLOWED_ORIGINS` (add your preview
+origin while developing), or browser calls get 403.
 
 `verify_jwt` per function is set in `supabase/config.toml`. `send-mail`, `stripe-webhook`,
 `create-checkout-session` and `billing-config` authenticate in code (see the comments there).

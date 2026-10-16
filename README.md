@@ -13,7 +13,7 @@ Premium Gold Coast sim-racing workshop: marketing site, parts shop, compatibilit
 
 Admins are created explicitly (allowlisted, verified email or `promote_admin()` in the SQL editor; see [docs/ENV.md](docs/ENV.md#admin-bootstrap)). Admins create staff and customers. Staff can add **customer** logins only. The last admin cannot be demoted.
 
-## Stack (this repo / Bolt.new)
+## Stack
 
 Vite + React 18 + React Router + Tailwind v3 + Supabase Auth + Postgres.
 
@@ -25,7 +25,16 @@ Domain logic lives in `src/lib/es/` (no UI framework):
 - `rules.ts` — staff-editable compatibility graph
 - `crm-oms.ts` — CRM pipeline + OMS fulfilment
 
-**Bolt.new:** see [BOLT.md](./BOLT.md). Apply `supabase/migrations/*`. Deploy the Edge Functions. Do not rewrite the checker.
+Setup: apply `supabase/migrations/*`, deploy the Edge Functions (see [DEPLOY.md](DEPLOY.md)). Do not rewrite the checker.
+
+## Conventions
+
+- **Header and footer stay dark.** Don't restyle them with Tailwind-only utilities. The site chrome lives in [`src/es.css`](src/es.css) (`es-header`, `es-nav`, `es-nav-link`, `es-menu`, `es-footer`, `es-footer-grid`, `es-footer-col`, `es-logo`, `es-hero`, `es-card`, `es-btn`). `src/components/es/es-chrome.ts` imports it so the chrome stylesheet is always bundled.
+- **Theme tokens:** `--es-ink: #070708`, `--es-panel: #111114`, `--es-paper: #f4f4f5`, `--es-red: #E10600`, `--es-radius: 15px`. Fonts: Outfit (body), Teko (headings). Cards use the 15px radius. No emoji icons.
+- **Domain logic, do not rewrite:** `catalog.ts`, `checkCart.ts`, `types.ts`, `cart-store.ts`, `product-cache.ts` in `src/lib/es/`. `checkCart` is the source of truth; the chat assistant may only explain its JSON.
+- **No server functions in the frontend.** Don't use TanStack Start `createServerFn`. All staff and customer writes go through the Supabase client, RPCs or the Edge Functions.
+- **Auth:** email/password with **Confirm email** on. The first admin comes from `admin_bootstrap_emails` (docs/ENV.md). Keep `GROK_PROVIDERS` empty until Google/X sign-in is configured.
+- **Product photos:** use `ListingImages` (drag and drop). Don't restyle manufacturer photos (no black background, no ES logo overlay).
 
 ## Catalogue workflow
 
