@@ -35,10 +35,20 @@ python3 scripts/rig3d/fetch_assets.py            # CC0 HDRIs + textures (Poly Ha
 python3 scripts/rig3d/make_brand_art.py          # ES decals from public/Everything_Simulated_LOGO_W+R.png + Teko
 blender -b --factory-startup -P scripts/rig3d/render_screen_scene.py   # in-game track images for the screens
 blender -b --factory-startup -P scripts/rig3d/build_rig.py             # model -> assets/rig3d/rig.blend
-blender -b assets/rig3d/rig.blend -P scripts/rig3d/render_rig.py -- --mode frames --out /workspace/rig-renders
-blender -b assets/rig3d/rig.blend -P scripts/rig3d/render_rig.py -- --mode full --out /workspace/rig-renders
-python3 scripts/rig3d/pack_frames.py /tmp/rig-final
+blender -b assets/rig3d/rig.blend -P scripts/rig3d/render_rig.py -- --mode parts --samples 160 --out /workspace/rig-renders
+python3 scripts/rig3d/pack_parts.py /workspace/rig-renders  # -> public/builder-rig/parts + src/components/es/rig-parts.ts
 ```
+
+The builder preview (src/components/es/rig-preview.tsx) shows the complete rig as a see-through ghost
+with every part outlined, and lights up the picked parts. `--mode parts` renders, per screen layout
+(s1, s2, s3, s4 = triple + curved top screen), one studio beauty with every part in it (motion platform
+and add-ons included, no depth of field) plus an anti-aliased mask per part (object index pass), and an
+empty-studio plate. pack_parts.py builds the ghost (plate showing through a flattened copy of the rig,
+plus part outlines), cuts each part out of the beauty with its mask (so lit parts line up exactly and
+occlusion is real), and makes a soft ring per part that the browser uses as a CSS mask for the red
+"added" pulse and the hover outline. Only the ghost (~20-30 KB) loads up front.
+
+The older full-frame modes (`frames`, `overlays`, `full`, with pack_frames.py) are kept for reference.
 
 ## Look
 
