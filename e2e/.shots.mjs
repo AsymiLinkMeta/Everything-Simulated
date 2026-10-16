@@ -20,7 +20,8 @@ for (const [vw, vh, tag] of [[390, 844, "390"], [1440, 900, "1440"]]) {
     await hideBar();
     await fig.screenshot({ path: `${out}/${name}-${tag}-preview.png` });
   };
-  const hideBar = () => p.addStyleTag({ content: ".es-rb-total{visibility:hidden}" });
+  // the sticky total bar and any toast are page chrome, not the preview: keep them out of the panel shots
+  const hideBar = () => p.addStyleTag({ content: ".es-rb-total,[data-sonner-toaster]{visibility:hidden !important}" });
   const go = async (q) => { await p.goto(base + q); await p.waitForLoadState("networkidle"); };
 
   await go(""); await shot("1-empty");

@@ -5,10 +5,10 @@ export const RIG_PARTS_BASE = "/builder-rig/parts/";
 export const RIG_PARTS_SIZE = { width: 900, height: 738 } as const;
 export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
   "s1": {
-    "ghost": "ghost-s1.6f69de05.webp",
+    "ghost": "ghost-s1.fe82187f.webp",
     "parts": {
       "chassis": {
-        "lit": "lit-s1-chassis.1c762ce9.webp",
+        "lit": "lit-s1-chassis.ada6e2a5.webp",
         "edge": "edge-s1-chassis.94aebc3b.webp",
         "box": [
           190,
@@ -18,7 +18,7 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "seat": {
-        "lit": "lit-s1-seat.f412517e.webp",
+        "lit": "lit-s1-seat.db816e1b.webp",
         "edge": "edge-s1-seat.21d83af9.webp",
         "box": [
           235,
@@ -28,7 +28,7 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "wheelbase": {
-        "lit": "lit-s1-wheelbase.884f79b2.webp",
+        "lit": "lit-s1-wheelbase.b8fa09bf.webp",
         "edge": "edge-s1-wheelbase.54ff3ad3.webp",
         "box": [
           399,
@@ -38,7 +38,7 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "wheel": {
-        "lit": "lit-s1-wheel.cea62a6f.webp",
+        "lit": "lit-s1-wheel.a86e65e2.webp",
         "edge": "edge-s1-wheel.c7461cc6.webp",
         "box": [
           357,
@@ -48,7 +48,7 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "pedals": {
-        "lit": "lit-s1-pedals.0927d84d.webp",
+        "lit": "lit-s1-pedals.14b29f43.webp",
         "edge": "edge-s1-pedals.24b1eb51.webp",
         "box": [
           379,
@@ -58,8 +58,8 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "mount": {
-        "lit": "lit-s1-mount.e470bc81.webp",
-        "edge": "edge-s1-mount.a1b09e48.webp",
+        "lit": "lit-s1-mount.8775c641.webp",
+        "edge": "edge-s1-mount.e160b36f.webp",
         "box": [
           358,
           209,
@@ -68,17 +68,17 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "screens": {
-        "lit": "lit-s1-screens.d66f1712.webp",
-        "edge": "edge-s1-screens.19857c81.webp",
+        "lit": "lit-s1-screens.ec8015c8.webp",
+        "edge": "edge-s1-screens.42456df0.webp",
         "box": [
           417,
           170,
-          222,
-          173
+          223,
+          174
         ]
       },
       "motion": {
-        "lit": "lit-s1-motion.e7e69526.webp",
+        "lit": "lit-s1-motion.71950ce7.webp",
         "edge": "edge-s1-motion.368508b9.webp",
         "box": [
           153,
@@ -88,7 +88,7 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "pc": {
-        "lit": "lit-s1-pc.8b2460ae.webp",
+        "lit": "lit-s1-pc.907db390.webp",
         "edge": "edge-s1-pc.baa6364b.webp",
         "box": [
           150,
@@ -98,7 +98,7 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "headset": {
-        "lit": "lit-s1-headset.28f94c22.webp",
+        "lit": "lit-s1-headset.2bb2e74d.webp",
         "edge": "edge-s1-headset.cee5d9a3.webp",
         "box": [
           257,
@@ -108,7 +108,7 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "sidemount": {
-        "lit": "lit-s1-sidemount.ee5caa33.webp",
+        "lit": "lit-s1-sidemount.40197323.webp",
         "edge": "edge-s1-sidemount.0ae7fc7e.webp",
         "box": [
           491,
@@ -118,7 +118,7 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "shifter": {
-        "lit": "lit-s1-shifter.60d69db9.webp",
+        "lit": "lit-s1-shifter.a17f275f.webp",
         "edge": "edge-s1-shifter.303f116a.webp",
         "box": [
           529,
@@ -128,7 +128,7 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "handbrake": {
-        "lit": "lit-s1-handbrake.d0634d82.webp",
+        "lit": "lit-s1-handbrake.7bd59ee7.webp",
         "edge": "edge-s1-handbrake.e7588093.webp",
         "box": [
           503,
@@ -140,10 +140,10 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
     }
   },
   "s2": {
-    "ghost": "ghost-s2.e11ff4f9.webp",
+    "ghost": "ghost-s2.df3b747f.webp",
     "parts": {
       "chassis": {
-        "lit": "lit-s2-chassis.59745213.webp",
+        "lit": "lit-s2-chassis.844eaa28.webp",
         "edge": "edge-s2-chassis.94aebc3b.webp",
         "box": [
           190,
@@ -153,7 +153,7 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "seat": {
-        "lit": "lit-s2-seat.477c9efb.webp",
+        "lit": "lit-s2-seat.32a1b294.webp",
         "edge": "edge-s2-seat.21d83af9.webp",
         "box": [
           235,
@@ -163,7 +163,7 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "wheelbase": {
-        "lit": "lit-s2-wheelbase.57d693b5.webp",
+        "lit": "lit-s2-wheelbase.442ea7a7.webp",
         "edge": "edge-s2-wheelbase.54ff3ad3.webp",
         "box": [
           399,
@@ -173,7 +173,7 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "wheel": {
-        "lit": "lit-s2-wheel.f527936a.webp",
+        "lit": "lit-s2-wheel.cf4cb323.webp",
         "edge": "edge-s2-wheel.c7461cc6.webp",
         "box": [
           357,
@@ -183,7 +183,7 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "pedals": {
-        "lit": "lit-s2-pedals.fd1cee25.webp",
+        "lit": "lit-s2-pedals.a6c4b1fb.webp",
         "edge": "edge-s2-pedals.24b1eb51.webp",
         "box": [
           379,
@@ -193,27 +193,27 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "mount": {
-        "lit": "lit-s2-mount.63997418.webp",
-        "edge": "edge-s2-mount.b320a505.webp",
+        "lit": "lit-s2-mount.2b007f84.webp",
+        "edge": "edge-s2-mount.64a01385.webp",
         "box": [
           367,
-          243,
+          226,
           383,
-          374
+          391
         ]
       },
       "screens": {
-        "lit": "lit-s2-screens.a4508a50.webp",
-        "edge": "edge-s2-screens.e49cf243.webp",
+        "lit": "lit-s2-screens.eaca90d8.webp",
+        "edge": "edge-s2-screens.d4432fde.webp",
         "box": [
-          297,
-          173,
-          396,
-          199
+          295,
+          172,
+          400,
+          201
         ]
       },
       "motion": {
-        "lit": "lit-s2-motion.c785b5a1.webp",
+        "lit": "lit-s2-motion.99defe8d.webp",
         "edge": "edge-s2-motion.368508b9.webp",
         "box": [
           153,
@@ -223,7 +223,7 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "pc": {
-        "lit": "lit-s2-pc.fdb4fd84.webp",
+        "lit": "lit-s2-pc.ff28facb.webp",
         "edge": "edge-s2-pc.baa6364b.webp",
         "box": [
           150,
@@ -233,7 +233,7 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "headset": {
-        "lit": "lit-s2-headset.bb07db49.webp",
+        "lit": "lit-s2-headset.d4c47db4.webp",
         "edge": "edge-s2-headset.cee5d9a3.webp",
         "box": [
           257,
@@ -243,7 +243,7 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "sidemount": {
-        "lit": "lit-s2-sidemount.37803481.webp",
+        "lit": "lit-s2-sidemount.f8631cee.webp",
         "edge": "edge-s2-sidemount.0ae7fc7e.webp",
         "box": [
           491,
@@ -253,7 +253,7 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "shifter": {
-        "lit": "lit-s2-shifter.f1885f84.webp",
+        "lit": "lit-s2-shifter.3679f375.webp",
         "edge": "edge-s2-shifter.303f116a.webp",
         "box": [
           529,
@@ -263,7 +263,7 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "handbrake": {
-        "lit": "lit-s2-handbrake.8cf13e1a.webp",
+        "lit": "lit-s2-handbrake.507e56e2.webp",
         "edge": "edge-s2-handbrake.e7588093.webp",
         "box": [
           503,
@@ -275,10 +275,10 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
     }
   },
   "s3": {
-    "ghost": "ghost-s3.8627d1f8.webp",
+    "ghost": "ghost-s3.ed31409e.webp",
     "parts": {
       "chassis": {
-        "lit": "lit-s3-chassis.c40c71f9.webp",
+        "lit": "lit-s3-chassis.57a43176.webp",
         "edge": "edge-s3-chassis.94aebc3b.webp",
         "box": [
           190,
@@ -288,7 +288,7 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "seat": {
-        "lit": "lit-s3-seat.525d0b4e.webp",
+        "lit": "lit-s3-seat.e16b9793.webp",
         "edge": "edge-s3-seat.21d83af9.webp",
         "box": [
           235,
@@ -298,7 +298,7 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "wheelbase": {
-        "lit": "lit-s3-wheelbase.4a0ba55f.webp",
+        "lit": "lit-s3-wheelbase.7f0a8b95.webp",
         "edge": "edge-s3-wheelbase.54ff3ad3.webp",
         "box": [
           399,
@@ -308,7 +308,7 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "wheel": {
-        "lit": "lit-s3-wheel.ee81b6ba.webp",
+        "lit": "lit-s3-wheel.16513663.webp",
         "edge": "edge-s3-wheel.c7461cc6.webp",
         "box": [
           357,
@@ -318,7 +318,7 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "pedals": {
-        "lit": "lit-s3-pedals.1472087f.webp",
+        "lit": "lit-s3-pedals.f7fada95.webp",
         "edge": "edge-s3-pedals.24b1eb51.webp",
         "box": [
           379,
@@ -328,8 +328,8 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "mount": {
-        "lit": "lit-s3-mount.cdbad70f.webp",
-        "edge": "edge-s3-mount.50796993.webp",
+        "lit": "lit-s3-mount.9110b852.webp",
+        "edge": "edge-s3-mount.4a3d464b.webp",
         "box": [
           367,
           216,
@@ -338,17 +338,17 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "screens": {
-        "lit": "lit-s3-screens.d90f9e83.webp",
-        "edge": "edge-s3-screens.aa4cf6d2.webp",
+        "lit": "lit-s3-screens.5fb4747e.webp",
+        "edge": "edge-s3-screens.86b37ea0.webp",
         "box": [
-          214,
+          210,
           170,
-          492,
+          500,
           230
         ]
       },
       "motion": {
-        "lit": "lit-s3-motion.5ef41b88.webp",
+        "lit": "lit-s3-motion.cf0155bf.webp",
         "edge": "edge-s3-motion.368508b9.webp",
         "box": [
           153,
@@ -358,7 +358,7 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "pc": {
-        "lit": "lit-s3-pc.76770c7c.webp",
+        "lit": "lit-s3-pc.be369ebc.webp",
         "edge": "edge-s3-pc.baa6364b.webp",
         "box": [
           150,
@@ -368,7 +368,7 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "headset": {
-        "lit": "lit-s3-headset.5174d969.webp",
+        "lit": "lit-s3-headset.6a5e5163.webp",
         "edge": "edge-s3-headset.cee5d9a3.webp",
         "box": [
           257,
@@ -378,7 +378,7 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "sidemount": {
-        "lit": "lit-s3-sidemount.be2704fa.webp",
+        "lit": "lit-s3-sidemount.802a524f.webp",
         "edge": "edge-s3-sidemount.0ae7fc7e.webp",
         "box": [
           491,
@@ -388,7 +388,7 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "shifter": {
-        "lit": "lit-s3-shifter.4e2fdc4b.webp",
+        "lit": "lit-s3-shifter.007eb72d.webp",
         "edge": "edge-s3-shifter.303f116a.webp",
         "box": [
           529,
@@ -398,7 +398,7 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "handbrake": {
-        "lit": "lit-s3-handbrake.617ed0a0.webp",
+        "lit": "lit-s3-handbrake.1447f42d.webp",
         "edge": "edge-s3-handbrake.e7588093.webp",
         "box": [
           503,
@@ -410,10 +410,10 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
     }
   },
   "s4": {
-    "ghost": "ghost-s4.877ba460.webp",
+    "ghost": "ghost-s4.c07ec9b2.webp",
     "parts": {
       "chassis": {
-        "lit": "lit-s4-chassis.7132aef8.webp",
+        "lit": "lit-s4-chassis.e244b4a2.webp",
         "edge": "edge-s4-chassis.94aebc3b.webp",
         "box": [
           190,
@@ -423,7 +423,7 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "seat": {
-        "lit": "lit-s4-seat.6dfef11b.webp",
+        "lit": "lit-s4-seat.dd50d208.webp",
         "edge": "edge-s4-seat.21d83af9.webp",
         "box": [
           235,
@@ -433,7 +433,7 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "wheelbase": {
-        "lit": "lit-s4-wheelbase.b114fa10.webp",
+        "lit": "lit-s4-wheelbase.5f70e8fe.webp",
         "edge": "edge-s4-wheelbase.54ff3ad3.webp",
         "box": [
           399,
@@ -443,7 +443,7 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "wheel": {
-        "lit": "lit-s4-wheel.35b465bc.webp",
+        "lit": "lit-s4-wheel.30f7f6a7.webp",
         "edge": "edge-s4-wheel.c7461cc6.webp",
         "box": [
           357,
@@ -453,7 +453,7 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "pedals": {
-        "lit": "lit-s4-pedals.d47cabed.webp",
+        "lit": "lit-s4-pedals.b85eed09.webp",
         "edge": "edge-s4-pedals.24b1eb51.webp",
         "box": [
           379,
@@ -463,8 +463,8 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "mount": {
-        "lit": "lit-s4-mount.31911fc8.webp",
-        "edge": "edge-s4-mount.65736613.webp",
+        "lit": "lit-s4-mount.52fcb036.webp",
+        "edge": "edge-s4-mount.cd3ad8d8.webp",
         "box": [
           367,
           15,
@@ -473,17 +473,17 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "screens": {
-        "lit": "lit-s4-screens.3f204c19.webp",
-        "edge": "edge-s4-screens.f11f5522.webp",
+        "lit": "lit-s4-screens.5226722f.webp",
+        "edge": "edge-s4-screens.021508ad.webp",
         "box": [
-          214,
-          37,
-          492,
-          363
+          210,
+          36,
+          500,
+          364
         ]
       },
       "motion": {
-        "lit": "lit-s4-motion.a7e1b8d6.webp",
+        "lit": "lit-s4-motion.81c7827a.webp",
         "edge": "edge-s4-motion.368508b9.webp",
         "box": [
           153,
@@ -493,7 +493,7 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "pc": {
-        "lit": "lit-s4-pc.eebe0ad3.webp",
+        "lit": "lit-s4-pc.4372c4a6.webp",
         "edge": "edge-s4-pc.baa6364b.webp",
         "box": [
           150,
@@ -503,7 +503,7 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "headset": {
-        "lit": "lit-s4-headset.9c08d64d.webp",
+        "lit": "lit-s4-headset.0037201a.webp",
         "edge": "edge-s4-headset.cee5d9a3.webp",
         "box": [
           257,
@@ -513,7 +513,7 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "sidemount": {
-        "lit": "lit-s4-sidemount.8d0e669c.webp",
+        "lit": "lit-s4-sidemount.935a2a15.webp",
         "edge": "edge-s4-sidemount.0ae7fc7e.webp",
         "box": [
           491,
@@ -523,7 +523,7 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "shifter": {
-        "lit": "lit-s4-shifter.4940296e.webp",
+        "lit": "lit-s4-shifter.44d8ae39.webp",
         "edge": "edge-s4-shifter.303f116a.webp",
         "box": [
           529,
@@ -533,7 +533,7 @@ export const RIG_PART_VARIANTS: Record<string, RigPartVariant> = {
         ]
       },
       "handbrake": {
-        "lit": "lit-s4-handbrake.b9c86fb7.webp",
+        "lit": "lit-s4-handbrake.dc24656f.webp",
         "edge": "edge-s4-handbrake.e7588093.webp",
         "box": [
           503,
