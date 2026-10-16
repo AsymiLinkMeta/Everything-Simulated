@@ -392,4 +392,8 @@ elif args.mode == "parts":
         setup_part_passes(pdir, key)
         scene.frame_set(1)
         render(path)
+    if not only or "plate" in only:  # the empty studio: what a see-through ghost lets show through
+        show_frame([], False)
+        scene.use_nodes = False
+        render(os.path.join(pdir, "plate.png"))
 print("render done", flush=True)
