@@ -1039,6 +1039,7 @@ SB = 840         # screen bottom
 SW, SH = 720, 420
 SIDE = math.radians(55)
 CX = 1400        # chord line of the centre screen
+GAP = 20         # visible gap between neighbouring panels (each has its own full bezel)
 layer("mount")
 for s, side in [(1, "L"), (-1, "R")]:
     profile(f"Stand foot {side}", (1180, s * ST_Y, 20), (1780, s * ST_Y, 20), 40, 80, u=(0, 0, 1))
@@ -1056,12 +1057,13 @@ layer("mount-sides")
 for s, side in [(1, "L"), (-1, "R")]:
     d = Vector((-math.sin(SIDE), s * math.cos(SIDE), 0))
     behind = Vector((math.cos(SIDE), s * math.sin(SIDE), 0))  # away from the driver, square to the screen
-    h = Vector((CX, s * (SW / 2 + 4), BAR_Z)) + behind * 95 + d * 40
+    h = Vector((CX, s * (SW / 2 + GAP), BAR_Z)) + behind * 95 + d * 40
     profile(f"Side arm {side}", tuple(h), tuple(h + d * 520), 40, 40, u=(0, 0, 1))
     box(f"Side hinge {side}", tuple(h), (60, 60, 90), MAT["alu"], bevel=0.003)
 
 R_CURVE = 1000
-BEZEL = 7
+BEZEL = 11
+MAT["bezel rim"] = principled("Bezel rim", (0.05, 0.05, 0.055), 0.6, 0.32)
 
 
 def curved_monitor(name, p0, p1, bottom, height=SH, screen=None, tilt=0.0):
@@ -1119,6 +1121,11 @@ def curved_monitor(name, p0, p1, bottom, height=SH, screen=None, tilt=0.0):
         return ob
 
     strip(f"{name} body", 0, 1, bottom, bottom + height, 0, 16, MAT["gloss"])
+    # a satin rim all round the bezel: catches the light so every panel reads as its own monitor
+    r = 2.2 / c
+    for nm, t0, t1, z0, z1 in (("rim L", 0, r, bottom, bottom + height), ("rim R", 1 - r, 1, bottom, bottom + height),
+                               ("rim bottom", 0, 1, bottom, bottom + 2.2), ("rim top", 0, 1, bottom + height - 2.2, bottom + height)):
+        strip(f"{name} {nm}", t0, t1, z0, z1, 0.9, 17.5, MAT["bezel rim"])
     e = BEZEL / c
     strip(f"{name} panel", e, 1 - e, bottom + BEZEL, bottom + height - BEZEL, 0.6, 0, screen or screen_material(PANO, 1 / 3, 2 / 3), uv=True)
     back_c, _ = at(0.5)
@@ -1137,7 +1144,7 @@ curved_monitor("Centre screen", (CX, SW / 2, 0), (CX, -SW / 2, 0), SB)
 layer("screen-sides")
 for s, side in [(1, "L"), (-1, "R")]:
     d = Vector((-math.sin(SIDE), s * math.cos(SIDE), 0))
-    hinge = Vector((CX, s * (SW / 2 + 4), 0))
+    hinge = Vector((CX, s * (SW / 2 + GAP), 0))
     outer = hinge + d * SW
     if s > 0:
         curved_monitor(f"Side screen {side}", outer, hinge, SB, screen=screen_material(PANO, 0, 1 / 3))
@@ -1147,7 +1154,7 @@ layer("screen-dual")
 DUAL = math.radians(22)
 for s, side in [(1, "L"), (-1, "R")]:
     d = Vector((-math.sin(DUAL), s * math.cos(DUAL), 0))
-    seam = Vector((CX, s * 4, 0))
+    seam = Vector((CX, s * GAP / 2, 0))
     outer = seam + d * SW
     if s > 0:
         curved_monitor(f"Dual screen {side}", outer, seam, SB, screen=screen_material(PANO, 1 / 6, 1 / 2))
