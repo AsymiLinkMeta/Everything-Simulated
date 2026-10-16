@@ -132,7 +132,7 @@ export function RigPreview({
           data-part="ghost"
           data-variant={view.variant}
           decoding="async"
-          fetchPriority="high"
+          {...{ fetchpriority: "high" } /* React 18 only passes the lowercase attribute through */}
           onLoad={() => setShown(view.variant)}
         />
         {RIG_PARTS.map((p) => {
