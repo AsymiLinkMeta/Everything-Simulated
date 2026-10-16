@@ -51,7 +51,20 @@ function LitImage({ src }: { src: string }) {
  * masks, so they line up exactly. Only the ghost loads up front; part images load as parts are added.
  * Staff layer art in builder_layers is drawn on top and keeps its category ghosted.
  */
-export function RigPreview({ layers, picked, screens = 0, highlight = null }: { layers: LayerRow[]; picked: Set<string>; screens?: number; highlight?: string | null }) {
+export function RigPreview({
+  layers,
+  picked,
+  screens = 0,
+  highlight = null,
+  ready = true,
+}: {
+  layers: LayerRow[];
+  picked: Set<string>;
+  screens?: number;
+  highlight?: string | null;
+  /** The catalogue has loaded. Parts that appear while a saved or shared build is restoring don't pulse. */
+  ready?: boolean;
+}) {
   const overridden = new Set(layers.map((l) => l.category));
   const view = rigView(picked, screens, overridden);
   const variant = RIG_PART_VARIANTS[view.variant];
@@ -62,15 +75,21 @@ export function RigPreview({ layers, picked, screens = 0, highlight = null }: { 
   const [shown, setShown] = useState(view.variant);
   const last = shown !== view.variant ? RIG_PART_VARIANTS[shown] : null;
 
-  // parts lit since the last render pulse red for a moment (not on first load)
+  // parts lit since the last render pulse red for a moment (not while the build is restoring on load)
   const prev = useRef<Set<RigPart> | null>(null);
+  const armed = useRef(false);
+  useEffect(() => {
+    if (!ready) return;
+    const t = window.setTimeout(() => (armed.current = true), 1000);
+    return () => window.clearTimeout(t);
+  }, [ready]);
   const [adding, setAdding] = useState<Set<RigPart>>(new Set());
   const litKey = view.lit.join(" ");
   useEffect(() => {
     const now = new Set(litKey ? (litKey.split(" ") as RigPart[]) : []);
     const before = prev.current;
     prev.current = now;
-    if (!before) return;
+    if (!before || !armed.current) return;
     const added = [...now].filter((p) => !before.has(p));
     if (!added.length) return;
     setAdding((a) => new Set([...a, ...added]));

@@ -177,7 +177,7 @@ function RigBuilder() {
   const blocked = result.issues.some((i) => i.severity === "block") || (q ? !q.ok : false);
   const total = q?.total_inc_gst ?? null;
 
-  const preview = <RigPreview layers={layerStack(picked, builder.data?.layers ?? [])} picked={pickedCats} screens={screens} highlight={hoverCat} />;
+  const preview = <RigPreview layers={layerStack(picked, builder.data?.layers ?? [])} picked={pickedCats} screens={screens} highlight={hoverCat} ready={!!products.data} />;
   // hovering or focusing an option outlines the part it would add on the rig preview
   const hoverProps = (cat: string) => ({
     onMouseEnter: () => setHoverCat(cat),

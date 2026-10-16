@@ -178,6 +178,7 @@ test.describe("rig builder data from staff", () => {
     await page.goto("/build?b=xr1&step=wheelbase");
     const preview = page.getByTestId("rig-preview");
     await expect(preview).toHaveAttribute("data-lit", "chassis");
+    await page.waitForTimeout(1100); // parts restored on load don't pulse; picks after that do
     const card = page.getByTestId("builder-card-alpha-15");
     await card.hover();
     await expect(preview.locator('[data-part="wheelbase"].is-hover[data-state="ghost"]')).toHaveCount(1);
