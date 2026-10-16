@@ -1,38 +1,41 @@
+// Screenshots of the ghost-and-light-up rig preview for review (not a test). Needs the dev server on :5173.
 import { chromium } from "@playwright/test";
+import { mkdirSync } from "node:fs";
 const base = "http://localhost:5173/build";
-const out = "/workspace/Everything-Simulated/e2e/.shots";
-const core = "tr120s,alpha-15,gt-neo,p1000,touring-seat";
-const builds = {
-  empty: "",
-  motion: `?b=xr1,sr2,alpha-15,gt-neo,p1000-haptic,touring-seat,quad-mount,aoc-32*3,seq-shifter,handbrake,pc-race`,
-  single: `?b=${core},quad-mount,aoc-32`,
-  dual: `?b=${core},quad-mount,aoc-32*2`,
-  triple: `?b=${core},quad-mount,aoc-32*3`,
-  quad: `?b=${core},quad-mount,aoc-32*4,pc-race`,
-  vr: `?b=${core},pro-x,pc-starter`,
-};
+const out = "/workspace/Everything-Simulated/e2e/.shots/ghost";
+mkdirSync(out, { recursive: true });
+const couple = "tr120s,touring-seat,alpha-15";
 const b = await chromium.launch();
 for (const [vw, vh, tag] of [[390, 844, "390"], [1440, 900, "1440"]]) {
   const ctx = await b.newContext({ viewport: { width: vw, height: vh }, deviceScaleFactor: tag === "390" ? 2 : 1 });
   await ctx.addInitScript(() => { localStorage.clear(); localStorage.setItem("es-cookie-ack", "1"); });
   const p = await ctx.newPage();
-  const shot = async (name) => {
-    const fig = p.getByTestId("rig-preview");
+  const fig = p.getByTestId("rig-preview");
+  const loaded = () => p.waitForFunction(() => [...document.querySelectorAll('[data-testid="rig-preview"] img')].every((i) => i.complete && i.naturalWidth > 0 && (!i.classList.contains("es-rp-lit") || i.dataset.loaded)));
+  const shot = async (name, { settle = 2200, page = true } = {}) => {
     await fig.scrollIntoViewIfNeeded();
-    await p.waitForFunction(() => [...document.querySelectorAll('[data-testid="rig-preview"] img')].every((i) => i.complete && i.naturalWidth > 0));
-    await p.waitForTimeout(900);
-    await p.screenshot({ path: `${out}/${name}-${tag}.png` });
-    await p.addStyleTag({ content: ".es-rb-total{visibility:hidden}" });
+    await loaded();
+    if (settle) await p.waitForTimeout(settle);
+    if (page) await p.screenshot({ path: `${out}/${name}-${tag}.png` });
     await fig.screenshot({ path: `${out}/${name}-${tag}-preview.png` });
   };
-  for (const [name, q] of Object.entries(builds)) {
-    await p.goto(base + q); await p.waitForLoadState("networkidle");
-    await shot(name);
-  }
-  await p.goto(base); await p.waitForLoadState("networkidle");
-  await p.getByRole("button", { name: /Starter Rig/ }).first().click();
-  await p.waitForTimeout(500);
-  await shot("starter");
+  const go = async (q) => { await p.goto(base + q); await p.waitForLoadState("networkidle"); };
+
+  await go(""); await shot("1-empty");
+  await go(`?b=${couple}`); await shot("2-parts-added");
+  // mid-add: pick a wheel and catch the red pulse
+  await go(`?b=${couple}&step=wheel`);
+  await loaded(); await p.waitForTimeout(800);
+  const card = p.getByTestId("builder-card-gt-neo");
+  if (tag === "1440") { await card.hover(); await p.waitForTimeout(700); await shot("3a-hover-wheel", { settle: 0 }); }
+  await card.getByRole("button", { name: "Choose" }).click();
+  await p.waitForFunction(() => document.querySelector('[data-testid="rig-preview"] [data-part="wheel"] img.es-rp-lit')?.dataset.loaded);
+  await p.waitForTimeout(260);
+  await fig.screenshot({ path: `${out}/3-mid-add-glow-${tag}-preview.png` });
+  await p.screenshot({ path: `${out}/3-mid-add-glow-${tag}.png` });
+  await go(""); await p.getByRole("button", { name: /Starter Rig/ }).first().click(); await p.waitForTimeout(500);
+  await p.mouse.move(0, 0); await shot("4-starter");
+  await go("?b=xr1,sr2,alpha-15,gt-neo,p1000-haptic,touring-seat,quad-mount,aoc-32*4,pc-race"); await shot("5-triple-top-motion");
   await ctx.close();
 }
 await b.close();

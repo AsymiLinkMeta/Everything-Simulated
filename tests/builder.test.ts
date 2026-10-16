@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { BUILDER_STEPS, rigView, RIG_OVERLAYS, badgeLabel, decodeBuild, encodeBuild, filterAndSort, layerStack, newIssues, stepForCategory, withPick } from "@/lib/es/builder-core";
+import { BUILDER_STEPS, rigView, RIG_PARTS, RIG_PARTS_FOR, rigPartsFor, badgeLabel, decodeBuild, encodeBuild, filterAndSort, layerStack, newIssues, stepForCategory, withPick } from "@/lib/es/builder-core";
 import type { Product } from "@/lib/es/types";
-import { RIG_PHOTO_FRAMES, RIG_PHOTO_OVERLAYS } from "@/components/es/rig-photo";
+import { RIG_PART_VARIANTS } from "@/components/es/rig-parts";
 
 const P = (sku: string, category: string, extra: Partial<Product> = {}): Product =>
   ({ sku, brand: "B", name: sku.toUpperCase(), category, sellExGst: 1000, stock: "stock", leadWeeks: [1, 2], ...extra }) as Product;
@@ -82,52 +82,46 @@ describe("preview layers", () => {
 
 describe("rendered rig preview", () => {
   const cats = (...c: string[]) => new Set(c);
-  it("has a photo (AVIF + WebP) for every screen layout with and without motion, and every overlay", () => {
-    for (const s of ["s0", "st", "s1", "s2", "s3", "s4"])
-      for (const m of [0, 1]) {
-        expect(RIG_PHOTO_FRAMES[`${s}m${m}`]?.avif, `${s}m${m}`).toMatch(/\.avif$/);
-        expect(RIG_PHOTO_FRAMES[`${s}m${m}`]?.webp, `${s}m${m}`).toMatch(/\.webp$/);
+  it("has a ghost and, for every part, a photoreal cut-out and a glow ring in every screen layout", () => {
+    for (const v of ["s1", "s2", "s3", "s4"]) {
+      expect(RIG_PART_VARIANTS[v]?.ghost, v).toMatch(/^ghost-s\d\.[0-9a-f]{8}\.webp$/);
+      for (const p of RIG_PARTS) {
+        const f = RIG_PART_VARIANTS[v].parts[p];
+        expect(f?.lit, `${v} ${p}`).toMatch(/\.webp$/);
+        expect(f?.edge, `${v} ${p}`).toMatch(/\.webp$/);
+        expect(f!.box.every((n) => Number.isInteger(n) && n >= 0), `${v} ${p}`).toBe(true);
       }
-    for (const o of RIG_OVERLAYS) {
-      expect(RIG_PHOTO_OVERLAYS[o], o).toBeDefined();
-      if (o !== "pc") expect(RIG_PHOTO_OVERLAYS[`${o}--raised`], `${o}--raised`).toBeDefined();
     }
   });
-  it("every reachable build maps to a photo that exists", () => {
+  it("every reachable build maps to a layout and parts that exist", () => {
     const all = ["chassis", "seat", "wheelbase", "wheel", "pedals", "monitor", "mount", "headset", "motion", "pc", "shifter", "handbrake"];
     for (let mask = 0; mask < 1 << all.length; mask += 7) {
       const picked = new Set(all.filter((_, i) => mask & (1 << i)));
       for (const n of [0, 1, 2, 3, 4, 6]) {
         const v = rigView(picked, n);
-        expect(RIG_PHOTO_FRAMES[v.frame], v.frame).toBeDefined();
-        for (const o of v.overlays) expect(RIG_PHOTO_OVERLAYS[o], o).toBeDefined();
+        for (const p of v.lit) expect(RIG_PART_VARIANTS[v.variant].parts[p], `${v.variant} ${p}`).toBeDefined();
       }
     }
   });
-  it("empty build: the triple photo as a dimmed teaser, no add-ons", () => {
-    expect(rigView(cats(), 0)).toMatchObject({ frame: "s3m0", empty: true, overlays: [] });
+  it("empty build: the whole triple rig as a ghost, nothing lit", () => {
+    expect(rigView(cats(), 0)).toEqual({ variant: "s3", lit: [], empty: true });
   });
-  it("screen count picks the layout exactly: 1 single, 2 dual, 3 triple, 4+ triple and the separate top screen", () => {
+  it("screen count picks the layout exactly: 1 single, 2 dual, 3 triple, 4+ triple and the curved top screen", () => {
     const m = cats("chassis", "monitor", "mount");
-    expect([1, 2, 3, 4, 5].map((n) => rigView(m, n).screens)).toEqual(["s1", "s2", "s3", "s4", "s4"]);
-    expect(rigView(cats("chassis"), 0).screens).toBe("s0");
-    expect(rigView(cats("chassis", "mount"), 0).screens).toBe("st");
+    expect([0, 1, 2, 3, 4, 5].map((n) => rigView(m, n).variant)).toEqual(["s3", "s1", "s2", "s3", "s4", "s4"]);
   });
-  it("a motion platform swaps in the raised photo and raised add-ons", () => {
-    const v = rigView(cats("chassis", "motion", "shifter", "pc"), 3);
-    expect(v.frame).toBe("s3m1");
-    expect(v.raised).toBe(true);
-    expect(v.overlays).toEqual(["pc", "sidemount--raised", "shifter--raised"]);
+  it("each picked category lights its own part; shifters and handbrakes bring the side mount", () => {
+    expect(rigView(cats("chassis", "motion", "monitor", "mount"), 3).lit).toEqual(["chassis", "motion", "mount", "screens"]);
+    expect(rigView(cats("handbrake"), 0).lit).toEqual(["sidemount", "handbrake"]);
+    expect(rigView(cats("handbrake", "shifter", "headset", "pc"), 0).lit).toEqual(["pc", "sidemount", "shifter", "handbrake", "headset"]);
+    expect(rigView(cats("audio", "software"), 0)).toMatchObject({ lit: [], empty: false });
   });
-  it("a VR build with no screens or stand shows the bare cockpit and the headset", () => {
-    expect(rigView(cats("chassis", "headset"), 0)).toMatchObject({ frame: "s0m0", overlays: ["headset"] });
+  it("every mapped part is a real rig part, and hover maps a category to its parts", () => {
+    for (const parts of Object.values(RIG_PARTS_FOR)) for (const p of parts) expect(RIG_PARTS).toContain(p);
+    expect(rigPartsFor("monitor")).toEqual(["screens"]);
+    expect(rigPartsFor(null)).toEqual([]);
   });
-  it("either shifter or handbrake brings in the side mount; overlays stack back to front", () => {
-    expect(rigView(cats("handbrake"), 0).overlays).toEqual(["sidemount", "handbrake"]);
-    expect(rigView(cats("handbrake", "shifter", "headset", "pc"), 0).overlays).toEqual(["pc", "headset", "sidemount", "shifter", "handbrake"]);
-  });
-  it("staff layer art for a category hides that category's overlay only", () => {
-    const v = rigView(cats("pc", "shifter"), 0, cats("pc"));
-    expect(v.overlays).toEqual(["sidemount", "shifter"]);
+  it("staff layer art for a category keeps that part ghosted", () => {
+    expect(rigView(cats("pc", "shifter"), 0, cats("pc")).lit).toEqual(["sidemount", "shifter"]);
   });
 });

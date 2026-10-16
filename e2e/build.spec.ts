@@ -116,58 +116,78 @@ test.describe("rig builder data from staff", () => {
     await expect(page.locator("[data-testid^=builder-card-]").first()).toHaveAttribute("data-testid", "builder-card-alpha-15");
   });
 
-  test("preview: a studio photo of the build until staff add layer art", async ({ page }, info) => {
+  test("preview: the full rig as a ghost, the picked parts lit, until staff add layer art", async ({ page }, info) => {
     test.skip(info.project.name !== "desktop", "mutates shared layer rows");
     exec(`delete from builder_layers`);
     await page.goto("/build?b=xr1");
     const preview = page.getByTestId("rig-preview");
     await expect(preview).toHaveAttribute("data-mode", "rendered");
-    // a chassis with no screens or stand: the bare cockpit photo, nothing dimmed
-    await expect(preview).toHaveAttribute("data-frame", "s0m0");
+    // a chassis and no screens: the triple layout stays as a ghost, only the chassis is lit
+    await expect(preview).toHaveAttribute("data-variant", "s3");
+    await expect(preview).toHaveAttribute("data-lit", "chassis");
     await expect(preview).not.toHaveAttribute("data-empty", "true");
-    const frame = preview.locator('img[data-part="frame"]');
-    await expect(frame).toHaveAttribute("src", /\/builder-rig\/frame-s0m0\.[0-9a-f]+\.webp$/);
-    await expect.poll(() => frame.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth)).toBeGreaterThan(0);
+    const ghost = preview.locator('img[data-part="ghost"]');
+    await expect(ghost).toHaveAttribute("src", /\/builder-rig\/parts\/ghost-s3\.[0-9a-f]+\.webp$/);
+    await expect.poll(() => ghost.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth)).toBeGreaterThan(0);
+    const chassis = preview.locator('[data-part="chassis"][data-state="lit"] img.es-rp-lit');
+    await expect(chassis).toHaveAttribute("src", /lit-s3-chassis\.[0-9a-f]+\.webp$/);
+    await expect(chassis).toHaveAttribute("data-loaded", "true");
     exec(`insert into builder_layers (category, image_url, z, label) values ('chassis', '/rigs/haptic.jpg', 0, 'Chassis')`);
     await page.goto("/build?b=xr1");
     await expect(preview).toHaveAttribute("data-mode", "layers");
     await expect(preview.locator("img.es-rb-layer")).toHaveCount(1);
-    await expect(preview.locator('img[data-part="frame"]')).toHaveCount(1);
+    await expect(preview.locator('img[data-part="ghost"]')).toHaveCount(1);
+    await expect(preview.locator('[data-state="lit"]')).toHaveCount(0);
     exec(`delete from builder_layers`);
   });
 
-  test("preview: a motion build with triple screens shows the raised triple photo", async ({ page }, info) => {
+  test("preview: a motion build with triple screens lights the platform, stand and screens", async ({ page }, info) => {
     test.skip(info.project.name !== "desktop", "reads shared layer rows");
     exec(`delete from builder_layers`);
     await page.goto("/build?b=xr1,sr2,quad-mount,aoc-32*3");
     const preview = page.getByTestId("rig-preview");
-    await expect(preview).toHaveAttribute("data-frame", "s3m1");
-    await expect(preview).toHaveAttribute("data-raised", "true");
-    await expect(preview.locator('img[data-part="frame"]')).toHaveAttribute("src", /frame-s3m1\.[0-9a-f]+\.webp$/);
-    await expect(preview.locator('source[type="image/avif"]').first()).toHaveAttribute("srcset", /frame-s3m1\.[0-9a-f]+\.avif$/);
+    await expect(preview).toHaveAttribute("data-variant", "s3");
+    for (const p of ["chassis", "motion", "mount", "screens"]) await expect(preview.locator(`[data-part="${p}"][data-state="lit"]`), p).toHaveCount(1);
+    await expect(preview.locator('[data-part="seat"]')).toHaveCount(0);
   });
 
-  test("preview: screens match the monitor count exactly; a fourth adds the separate top screen", async ({ page }, info) => {
+  test("preview: screens match the monitor count exactly; a fourth adds the curved top screen", async ({ page }, info) => {
     test.skip(info.project.name !== "desktop", "reads shared layer rows");
     exec(`delete from builder_layers`);
     const preview = page.getByTestId("rig-preview");
-    for (const [qty, frame] of [["", "s1m0"], ["*2", "s2m0"], ["*3", "s3m0"], ["*4", "s4m0"]]) {
+    for (const [qty, v] of [["", "s1"], ["*2", "s2"], ["*3", "s3"], ["*4", "s4"]]) {
       await page.goto(`/build?b=xr1,quad-mount,aoc-32${qty}`);
-      await expect(preview, `aoc-32${qty}`).toHaveAttribute("data-frame", frame);
-      await expect(preview.locator('img[data-part="frame"]')).toHaveAttribute("src", new RegExp(`frame-${frame}\\.`));
+      await expect(preview, `aoc-32${qty}`).toHaveAttribute("data-variant", v);
+      await expect(preview.locator('img[data-part="ghost"]')).toHaveAttribute("src", new RegExp(`ghost-${v}\\.`));
+      await expect(preview.locator('[data-part="screens"] img.es-rp-lit')).toHaveAttribute("src", new RegExp(`lit-${v}-screens\\.`));
     }
-    await page.goto("/build?b=xr1,quad-mount");
-    await expect(preview).toHaveAttribute("data-frame", "stm0");
   });
 
-  test("preview: an empty build shows one dimmed photo, and it loads", async ({ page }) => {
+  test("preview: an empty build is the whole rig in outline, and it loads", async ({ page }) => {
     await page.goto("/build");
     const preview = page.getByTestId("rig-preview");
     await expect(preview).toHaveAttribute("data-empty", "true");
-    const frame = preview.locator('img[data-part="frame"]');
-    await expect(frame).toHaveCount(1);
-    await expect.poll(() => frame.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth)).toBeGreaterThan(0);
-    await expect(preview.locator(".es-rp-layer")).toHaveCount(0);
+    const ghost = preview.locator('img[data-part="ghost"]');
+    await expect(ghost).toHaveCount(1);
+    await expect.poll(() => ghost.evaluate((img: HTMLImageElement) => img.complete && img.naturalWidth)).toBeGreaterThan(0);
+    await expect(preview.locator(".es-rp-part")).toHaveCount(0);
+  });
+
+  test("preview: adding a part lights it with a red pulse; hovering an option outlines its part", async ({ page }, info) => {
+    test.skip(info.project.name !== "desktop", "hover");
+    await page.goto("/build?b=xr1&step=wheelbase");
+    const preview = page.getByTestId("rig-preview");
+    await expect(preview).toHaveAttribute("data-lit", "chassis");
+    const card = page.getByTestId("builder-card-alpha-15");
+    await card.hover();
+    await expect(preview.locator('[data-part="wheelbase"].is-hover[data-state="ghost"]')).toHaveCount(1);
+    await card.getByRole("button", { name: "Choose" }).click();
+    await expect(preview.locator('[data-part="wheelbase"].is-adding[data-state="lit"]')).toHaveCount(1);
+    await expect(preview.locator('[data-part="wheelbase"].is-adding')).toHaveCount(0, { timeout: 5000 });
+    await expect(preview.locator('[data-part="wheelbase"][data-state="lit"]')).toHaveCount(1);
+    await page.mouse.move(0, 0);
+    await page.locator("h1").first().hover();
+    await expect(preview.locator(".is-hover")).toHaveCount(0);
   });
 
   test("preview: on phones it leads the step, on desktop it sits in the side panel", async ({ page }, info) => {

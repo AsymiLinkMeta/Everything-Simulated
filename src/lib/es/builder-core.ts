@@ -138,49 +138,54 @@ export function layerStack(picked: Product[], layers: LayerRow[]): LayerRow[] {
 
 // ---------- rendered rig preview ----------
 
-/** Screen layouts the preview has a photo for: none, stand only, 1, 2, 3, and 3 + the separate top screen. */
-export type RigScreens = "s0" | "st" | "s1" | "s2" | "s3" | "s4";
-/** Add-ons drawn as layers over the photo, back to front. */
-export const RIG_OVERLAYS = ["pc", "headset", "sidemount", "shifter", "handbrake"] as const;
-export type RigOverlay = (typeof RIG_OVERLAYS)[number];
-/** Add-ons bolted to the frame: they ride the motion platform, so they have a raised render. */
-export const RIG_RIDES: readonly RigOverlay[] = ["headset", "sidemount", "shifter", "handbrake"];
+/**
+ * Screen layouts the preview has a render for: 1 single, 2 dual, 3 triple, 3 + the separate top screen.
+ * Every screen is curved, the top one included.
+ */
+export type RigVariant = "s1" | "s2" | "s3" | "s4";
+/** Parts of the rig that light up, back to front (the order they are layered in). */
+export const RIG_PARTS = ["chassis", "motion", "mount", "screens", "pc", "seat", "pedals", "wheelbase", "wheel", "sidemount", "shifter", "handbrake", "headset"] as const;
+export type RigPart = (typeof RIG_PARTS)[number];
+
+/** Which rig parts a product category lights up. Shifters and handbrakes bring their side mount. */
+export const RIG_PARTS_FOR: Readonly<Record<string, readonly RigPart[]>> = {
+  chassis: ["chassis"],
+  wheelbase: ["wheelbase"],
+  wheel: ["wheel"],
+  pedals: ["pedals"],
+  seat: ["seat"],
+  monitor: ["screens"],
+  mount: ["mount"],
+  headset: ["headset"],
+  motion: ["motion"],
+  pc: ["pc"],
+  shifter: ["sidemount", "shifter"],
+  handbrake: ["sidemount", "handbrake"],
+};
+
+export function rigPartsFor(category: string | null | undefined): RigPart[] {
+  return category ? [...(RIG_PARTS_FOR[category] ?? [])] : [];
+}
 
 export interface RigView {
-  /** Key of the full-frame studio photo, e.g. "s3m1" (screen layout + motion). */
-  frame: `${RigScreens}m${0 | 1}`;
-  screens: RigScreens;
-  raised: boolean;
-  /** Overlay files to stack on the photo, back to front (raised variants named "<part>--raised"). */
-  overlays: string[];
-  /** Nothing picked yet: the photo is shown dimmed as a teaser. */
+  /** Which render of the whole rig to show: the screen layout. */
+  variant: RigVariant;
+  /** Parts shown photoreal, back to front. Everything else stays a ghost with an outline. */
+  lit: RigPart[];
+  /** Nothing picked yet: the whole rig is a ghost. */
   empty: boolean;
 }
 
 /**
- * Which rendered photo and overlays show a build. Every photo has the full cockpit (frame, seat,
- * wheelbase, wheel, pedals) rendered together for real contact shadows; the screen layout follows the
- * monitor quantity exactly (1 single, 2 dual, 3 triple, 4+ triple plus a distinct top screen on its own
- * posts; all curved), a stand with no monitors shows the bare stand, and a motion platform swaps in the
- * raised photo. Add-ons (PC, side mount for a shifter or handbrake, VR headset) are overlays. Staff layer
- * art for a category hides that category's overlay. An empty build shows the triple as a dimmed teaser.
+ * The builder preview shows the complete rig as a see-through ghost with every part outlined, and
+ * lights up the parts of the build in full studio photo quality. The screen layout follows the monitor
+ * quantity exactly (1, 2, 3, 4+ = triple plus a separate top screen); with no monitors picked the triple
+ * is shown, ghosted. Parts whose category has staff layer art stay ghosted (the art is drawn instead).
  */
 export function rigView(picked: Set<string>, screens: number, overridden: Set<string> = new Set()): RigView {
-  const has = (c: string) => picked.has(c);
-  const empty = picked.size === 0;
   const n = Math.max(0, Math.floor(screens));
-  const layout: RigScreens = empty ? "s3" : n >= 4 ? "s4" : n === 3 ? "s3" : n === 2 ? "s2" : n === 1 ? "s1" : has("mount") ? "st" : "s0";
-  const raised = has("motion");
-  const want: Record<RigOverlay, boolean> = {
-    pc: has("pc"),
-    headset: has("headset"),
-    sidemount: has("shifter") || has("handbrake"),
-    shifter: has("shifter"),
-    handbrake: has("handbrake"),
-  };
-  const cats: Record<RigOverlay, string[]> = { pc: ["pc"], headset: ["headset"], sidemount: ["shifter", "handbrake"], shifter: ["shifter"], handbrake: ["handbrake"] };
-  const overlays = RIG_OVERLAYS.filter((o) => want[o] && !cats[o].every((c) => overridden.has(c))).map((o) =>
-    raised && RIG_RIDES.includes(o) ? `${o}--raised` : o,
-  );
-  return { frame: `${layout}m${raised ? 1 : 0}`, screens: layout, raised, overlays, empty };
+  const variant: RigVariant = n >= 4 ? "s4" : n === 3 ? "s3" : n === 2 ? "s2" : n === 1 ? "s1" : "s3";
+  const on = new Set<RigPart>();
+  for (const c of picked) if (!overridden.has(c)) for (const p of rigPartsFor(c)) on.add(p);
+  return { variant, lit: RIG_PARTS.filter((p) => on.has(p)), empty: picked.size === 0 };
 }

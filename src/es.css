@@ -1831,15 +1831,31 @@ a.es-trust-item:hover .es-trust-value {
   background: #0f0f11;
 }
 .es-rp-stage { position: relative; width: 100%; background: #141416; }
-/* every photo and layer sits on the same 900 x 738 canvas (picture may be display: contents) */
-.es-rp-stage img { position: absolute; inset: 0; display: block; width: 100%; height: 100%; object-fit: contain; }
-.es-rp-frame { animation: es-rp-fade 360ms ease both; }
-.es-rp-frame.is-last { animation: none; }
-.es-rp-frame.is-empty { filter: grayscale(0.6) brightness(0.55); }
-.es-rp-layer { animation: es-rp-fade 420ms ease both; }
+/* Ghost-and-light-up preview: every layer sits on the same 900 x 738 canvas. The ghost is the whole
+   rig, see-through and outlined; each picked part is its photoreal cut-out laid exactly over it. */
+.es-rp-ghost { position: absolute; inset: 0; display: block; width: 100%; height: 100%; animation: es-rp-fade 360ms ease both; }
+.es-rp-ghost.is-last { animation: none; }
+.es-rp-part { position: absolute; pointer-events: none; }
+.es-rp-lit { position: absolute; inset: 0; display: block; width: 100%; height: 100%; opacity: 0; transition: opacity 700ms ease; }
+.es-rp-lit[data-loaded] { opacity: 1; }
+.es-rp-glow { position: absolute; inset: 0; opacity: 0; filter: drop-shadow(0 0 3px rgba(225, 6, 0, 0.85)); transition: opacity 300ms ease; }
+.es-rp-edge { position: absolute; inset: 0; background: #e10600; -webkit-mask-size: 100% 100%; mask-size: 100% 100%; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; }
+.es-rp-part.is-lit .es-rp-glow { opacity: 0.38; }
+.es-rp-part.is-adding .es-rp-glow { animation: es-rp-pulse 1800ms ease-out both; }
+.es-rp-part.is-hover .es-rp-glow { opacity: 0.95; filter: drop-shadow(0 0 4px rgba(255, 255, 255, 0.55)); animation: es-rp-flash 700ms ease-out both; }
+.es-rp-part.is-hover:not(.is-lit) .es-rp-edge { background: #fff; }
 @keyframes es-rp-fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes es-rp-pulse {
+  0% { opacity: 0; filter: drop-shadow(0 0 2px #e10600); }
+  14% { opacity: 1; filter: drop-shadow(0 0 10px #e10600) drop-shadow(0 0 3px #ff5a4f); }
+  34% { opacity: 0.55; filter: drop-shadow(0 0 5px #e10600); }
+  52% { opacity: 1; filter: drop-shadow(0 0 9px #e10600); }
+  100% { opacity: 0.38; filter: drop-shadow(0 0 3px rgba(225, 6, 0, 0.85)); }
+}
+@keyframes es-rp-flash { 0% { opacity: 0; } 35% { opacity: 1; } 100% { opacity: 0.95; } }
 @media (prefers-reduced-motion: reduce) {
-  .es-rp-frame, .es-rp-layer { animation: none; }
+  .es-rp-ghost, .es-rp-part .es-rp-glow { animation: none !important; }
+  .es-rp-lit, .es-rp-glow { transition: none; }
 }
 .es-rb-preview-note { position: relative; padding: 0.55rem 0.9rem 0.7rem; font-size: 0.72rem; color: var(--es-subtle); }
 .es-rb-summary { padding: 1rem 1.1rem; border: 1px solid var(--es-line); border-radius: var(--es-radius); background: var(--es-panel); }

@@ -112,6 +112,7 @@ function RigBuilder() {
 
   const map = useMemo(() => Object.fromEntries((products.data ?? []).map((p) => [p.sku, p])), [products.data]);
   const picked = useMemo(() => lines.map((l) => map[l.sku]).filter(Boolean) as Product[], [lines, map]);
+  const [hoverCat, setHoverCat] = useState<string | null>(null);
   const pickedCats = useMemo(() => new Set(picked.map((p) => p.category as string)), [picked]);
   const desktop = useDesktopLayout();
   const screens = useMemo(() => lines.reduce((n, l) => n + (map[l.sku]?.category === "monitor" ? l.qty || 1 : 0), 0), [lines, map]);
@@ -176,7 +177,14 @@ function RigBuilder() {
   const blocked = result.issues.some((i) => i.severity === "block") || (q ? !q.ok : false);
   const total = q?.total_inc_gst ?? null;
 
-  const preview = <RigPreview layers={layerStack(picked, builder.data?.layers ?? [])} picked={pickedCats} screens={screens} />;
+  const preview = <RigPreview layers={layerStack(picked, builder.data?.layers ?? [])} picked={pickedCats} screens={screens} highlight={hoverCat} />;
+  // hovering or focusing an option outlines the part it would add on the rig preview
+  const hoverProps = (cat: string) => ({
+    onMouseEnter: () => setHoverCat(cat),
+    onMouseLeave: () => setHoverCat((c) => (c === cat ? null : c)),
+    onFocus: () => setHoverCat(cat),
+    onBlur: () => setHoverCat((c) => (c === cat ? null : c)),
+  });
   return (
     <div>
       <JsonLd data={breadcrumbLd([{ name: "Home", path: "/" }, { name: "Rig builder", path: "/build" }])} />
@@ -207,7 +215,7 @@ function RigBuilder() {
               const inStep = picked.filter((p) => (s.categories as string[]).includes(p.category));
               return (
                 <li key={s.id}>
-                  <button type="button" onClick={() => goStep(i)} aria-current={i === stepIndex ? "step" : undefined} className={`es-rb-step ${i === stepIndex ? "is-current" : ""} ${inStep.length ? "is-done" : ""}`}>
+                  <button type="button" onClick={() => goStep(i)} {...hoverProps(s.categories[0])} aria-current={i === stepIndex ? "step" : undefined} className={`es-rb-step ${i === stepIndex ? "is-current" : ""} ${inStep.length ? "is-done" : ""}`}>
                     <span className="es-rb-step-n" aria-hidden="true">{inStep.length ? <Check className="size-3.5" /> : i + 1}</span>
                     <span className="es-rb-step-text">
                       <span className="es-rb-step-label">{s.label}</span>
@@ -299,7 +307,7 @@ function RigBuilder() {
                   const price = item.sellExGst > 0 && item.purchasable !== false;
                   return (
                     <li key={item.sku}>
-                      <article className={`es-rb-card ${isPicked ? "is-picked" : ""} ${blocks.length ? "is-blocked" : ""}`} aria-labelledby={`${ids}-${item.sku}`} data-testid={`builder-card-${item.sku}`}>
+                      <article className={`es-rb-card ${isPicked ? "is-picked" : ""} ${blocks.length ? "is-blocked" : ""}`} {...hoverProps(item.category)} aria-labelledby={`${ids}-${item.sku}`} data-testid={`builder-card-${item.sku}`}>
                         <div className="es-rb-card-photo">
                           <ProductPhoto src={productImage(item)} alt={item.name} label={item.brand} sizes="(min-width: 1024px) 22vw, 90vw" />
                           {badge ? <span className="es-rb-badge" data-testid="builder-badge">{badge}</span> : null}
