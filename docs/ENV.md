@@ -2,7 +2,7 @@
 
 There are two places configuration lives:
 
-1. **Frontend build** (Netlify / Bolt / Vercel env, or `.env.local` for dev). Only `VITE_*`
+1. **Frontend build** (Netlify / Vercel env, or `.env.local` for dev). Only `VITE_*`
    variables are read, and every one of them ends up in the public JS bundle. **Never put a
    secret in a `VITE_*` variable.** Template: [`.env.example`](../.env.example).
 2. **Supabase Edge Function secrets** (`supabase secrets set ...` or Dashboard → Edge Functions
@@ -25,7 +25,7 @@ Supabase. Do not set them by hand.
 | Variable | Used by | Required | Purpose |
 | --- | --- | --- | --- |
 | `SITE_URL` | create-checkout-session, send-mail, CORS | **yes** | Public origin. Stripe return URLs and links in emails are always built from this, never from the request. Must be `https://`. |
-| `ALLOWED_ORIGINS` | every browser-facing function | recommended | Comma-separated extra origins allowed by CORS (staging, Bolt preview, `http://localhost:5173`). `SITE_URL` is always allowed. Browser calls from any other origin get 403. |
+| `ALLOWED_ORIGINS` | every browser-facing function | recommended | Comma-separated extra origins allowed by CORS (staging, deploy previews, `http://localhost:5173`). `SITE_URL` is always allowed. Browser calls from any other origin get 403. |
 | `INTERNAL_FUNCTION_SECRET` | stripe-webhook → send-mail | yes, if Stripe is on | Shared secret in the `X-Internal-Secret` header. Generate with `openssl rand -hex 32`. Without it, payment receipts are not emailed. |
 | `STRIPE_SECRET_KEY` | create-checkout-session, refund-payment, billing-config | for card payments | Empty means card payments stay off and checkout uses the quote/deposit-invoice flow. |
 | `STRIPE_WEBHOOK_SECRET` | stripe-webhook | **yes, if Stripe is on** | Endpoint signing secret (`whsec_...`). Without it the webhook refuses every event (fails closed). |

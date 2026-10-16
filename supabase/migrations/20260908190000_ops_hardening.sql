@@ -1,6 +1,6 @@
 /*
 Ops hardening: draft/publish, inventory, compatibility rules, customer orders, last-admin lock, seed catalogue.
-Bolt/Supabase compatible — no TanStack server functions.
+Supabase-only — no TanStack server functions.
 */
 
 alter table public.catalog_products add column if not exists listing_status text not null default 'published';
@@ -49,7 +49,7 @@ insert into public.compatibility_rules (id, left_sku, right_sku, severity, reaso
   ('quad-tr120', 'quad-mount', 'tr120s', 'block', 'Four-screen frame is specified on Exodus XR1 only.', null)
 on conflict (id) do nothing;
 
--- Seed core SKUs so packages/checker work even on a fresh Bolt project
+-- Seed core SKUs so packages/checker work even on a fresh project
 -- Fresh-replay fix: seed rows have no author; 20260909095343 later makes this permanent.
 alter table public.catalog_products alter column created_by drop not null;
 

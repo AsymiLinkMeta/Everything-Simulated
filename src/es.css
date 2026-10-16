@@ -1,4 +1,4 @@
-/* Vanilla design system — works without Tailwind (Bolt.new + TanStack). */
+/* Vanilla design system — works without Tailwind. */
 /* Le Mans 24H-inspired: gloss black, racing red, white. */
 
 :root {
@@ -1470,7 +1470,7 @@ select.es-input {
   color: var(--es-paper);
 }
 
-/* Token utility fallbacks so Tailwind v3 / Bolt still paint the theme */
+/* Token utility fallbacks so the theme paints even without Tailwind's generated utilities */
 .bg-ink { background-color: var(--es-ink); }
 .bg-panel { background-color: var(--es-panel); }
 .bg-raised { background-color: var(--es-raised); }
