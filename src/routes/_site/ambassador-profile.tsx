@@ -120,7 +120,7 @@ export function AmbassadorProfile() {
         ])}
       />
       <PageHero
-        kicker={[ambassador.motorsport, ambassador.series, ambassador.className].filter(Boolean).join(" · ") || "Ambassador"}
+        kicker={[ambassador.teamStatus, ambassador.motorsport, ambassador.series, ambassador.className].filter(Boolean).join(" · ") || "Ambassador"}
         title={ambassador.name}
         lead={ambassador.bio || undefined}
         image={ambassador.photo || crate?.image || "/rigs/haptic.jpg"}
