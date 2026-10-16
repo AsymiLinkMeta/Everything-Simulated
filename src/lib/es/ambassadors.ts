@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/db";
-import { publicCopy } from "./placeholder-copy";
+import { isPlaceholderCopy, publicCopy } from "./placeholder-copy";
 import { livePackages, resolvePrebuildSlug } from "./prebuilds";
 import type { PackageSpec } from "./types";
 
@@ -176,13 +176,22 @@ export function invalidateAmbassadorCache() {
   fetchPromise = null;
 }
 
-export type AmbassadorRow = Ambassador & { id: string; userId?: string; sortOrder: number };
+/** Editor view (staff and the ambassador themselves): raw copy, with seeded placeholder text flagged rather than hidden. */
+export type AmbassadorRow = Ambassador & { id: string; userId?: string; sortOrder: number; placeholderBio: boolean };
 
 type FullDbRow = DbRow & { id: string; user_id: string | null };
 
 function toFullRow(row: FullDbRow): AmbassadorRow {
   const a = toAmbassador(row as DbRow);
-  return { ...a, id: row.id, userId: row.user_id ?? undefined, sortOrder: row.sort_order };
+  return {
+    ...a,
+    bio: (row.bio ?? "").trim(),
+    rigNote: row.rig_note?.trim() || undefined,
+    placeholderBio: isPlaceholderCopy(row.bio),
+    id: row.id,
+    userId: row.user_id ?? undefined,
+    sortOrder: row.sort_order,
+  };
 }
 
 export async function fetchMyAmbassadorProfile(): Promise<AmbassadorRow | null> {

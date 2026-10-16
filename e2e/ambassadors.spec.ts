@@ -63,6 +63,44 @@ test.describe("referral links", () => {
     await info.attach("profile", { body: await page.screenshot({ fullPage: true }), contentType: "image/png" });
   });
 
+  test("staff portal: branded QR card downloads as PNG, SVG and PDF for any ambassador; placeholder bio is flagged", async ({ browser }, info) => {
+    const tag = `${Date.now().toString(36)}${info.project.name[0]}`.toLowerCase();
+    const slug = `e2e-qr-${tag}`;
+    const code = `QR-${tag}`.toUpperCase().slice(0, 24);
+    const name = `Qr Driver ${tag}`;
+    exec(`insert into ambassadors (slug, name, code, team_status, bio, published, sort_order) values ('${slug}', '${name}', '${code}', 'Test Racing', 'Placeholder. Bio is theirs to fill.', true, 998)`);
+    const staff = await asStaff(browser);
+    await staff.goto("/staff/ambassadors");
+    const card = staff.locator(".es-card", { hasText: name }).first();
+    await expect(card.getByText("Placeholder bio")).toBeVisible();
+    await card.getByRole("button", { name: "QR", exact: true }).click();
+    const img = card.getByTestId("branded-qr");
+    await expect(img).toBeVisible();
+    const expected = new URL(`/ambassadors/${slug}?ref=${code}`, staff.url()).toString();
+    await expect(img).toHaveAttribute("alt", `Branded QR code for ${name}: ${expected}`);
+    for (const kind of ["PNG", "SVG", "PDF"] as const) {
+      const [dl] = await Promise.all([staff.waitForEvent("download"), card.getByRole("button", { name: `Download ${kind}` }).click()]);
+      expect(dl.suggestedFilename()).toBe(`es-ambassador-${slug}-qr.${kind.toLowerCase()}`);
+      const buf = fs.readFileSync((await dl.path())!);
+      if (kind === "PNG") {
+        const png = PNG.sync.read(buf);
+        expect(png.width).toBeGreaterThanOrEqual(1024);
+        expect(jsQR(new Uint8ClampedArray(png.data), png.width, png.height)?.data).toBe(expected);
+      } else if (kind === "SVG") {
+        const svg = buf.toString("utf8");
+        expect(svg).toContain("<svg");
+        expect(svg).toContain(`${name} · Test Racing`);
+        expect(svg).toContain("EVERYTHING SIMULATED");
+        expect(svg).toContain("data:image/png;base64,");
+      } else {
+        expect(buf.subarray(0, 8).toString("latin1")).toBe("%PDF-1.4");
+        expect(buf.toString("latin1")).toContain("/DCTDecode");
+      }
+    }
+    await info.attach("staff-branded-qr", { body: await card.screenshot(), contentType: "image/png" });
+    exec(`delete from ambassadors where slug = '${slug}'`);
+  });
+
   test("anon cannot read clicks, settings or commissions", async ({ request }) => {
     const h = { apikey: process.env.LOCAL_ANON_KEY ?? "", Authorization: `Bearer ${process.env.LOCAL_ANON_KEY ?? ""}` };
     for (const t of ["referral_clicks", "ambassador_settings", "ambassador_commissions", "ambassador_guardians", "ambassador_terms"]) {

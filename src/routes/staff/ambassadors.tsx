@@ -18,7 +18,8 @@ import { DefaultRateWarning, PayoutsPanel, ProgrammeSettingsPanel, RateEditor, u
 import { LoadError } from "@/components/es/bits";
 import { toast } from "@/lib/toast";
 import type { AmbassadorRow, AmbassadorSocial, AmbassadorTier, RigSpec } from "@/lib/es/ambassadors";
-import { QrCode } from "@/components/es/qr-code";
+import { BrandedQrCard } from "@/components/es/branded-qr";
+import { isPlaceholderCopy } from "@/lib/es/placeholder-copy";
 
 export const Route = createFileRoute("/staff/ambassadors")({
   component: StaffAmbassadors,
@@ -105,6 +106,11 @@ function AmbassadorList() {
                   <p className="text-sm text-muted truncate">
                     {a.code} · {tierLabel(tiers.data, a.tier)} · {a.published ? "Published" : "Draft"}
                     {a.userId ? " · Linked" : ""}
+                    {a.placeholderBio ? (
+                      <span className="ml-1 rounded bg-amber-500/15 px-1.5 py-0.5 text-xs font-medium text-amber-300" title="The bio is placeholder text and is hidden on the public profile until real copy is added.">
+                        Placeholder bio
+                      </span>
+                    ) : null}
                     {guardians.data?.[a.id]?.required ? ` · Guardian ${guardians.data[a.id].status}` : ""}
                   </p>
                 </div>
@@ -132,7 +138,7 @@ function AmbassadorList() {
             </div>
             {qrSlug === a.slug && (
               <div className="mt-3 pt-3 border-t border-white/10 flex justify-center">
-                <QrCode url={ambassadorShareUrl(a)} size={180} filename={`es-ambassador-${a.slug}`} label={`Referral QR code for ${a.name}`} />
+                <BrandedQrCard url={ambassadorShareUrl(a)} name={a.name} team={a.teamStatus} filename={`es-ambassador-${a.slug}-qr`} />
               </div>
             )}
             {openId === a.id && (
@@ -281,6 +287,9 @@ function AmbassadorForm({ initial, onClose }: { initial: AmbassadorRow | null; o
         <label className="block">
           <span className="text-sm text-muted">Bio</span>
           <textarea className="mt-1 block w-full rounded-lg border border-white/10 bg-raised px-3 py-2 text-sm" rows={3} value={bio} onChange={(e) => setBio(e.target.value)} />
+          {isPlaceholderCopy(bio) ? (
+            <span className="mt-1 block text-xs text-amber-300">Placeholder text: hidden on the public profile until you replace it with the real bio.</span>
+          ) : null}
         </label>
         <div className="grid gap-4 sm:grid-cols-3">
           <label className="block">
