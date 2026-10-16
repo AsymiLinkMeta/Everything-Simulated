@@ -38,6 +38,7 @@ ap.add_argument("--force", action="store_true", help="re-render outputs that alr
 ap.add_argument("--az", type=float, default=30)
 ap.add_argument("--el", type=float, default=14)
 ap.add_argument("--dist", type=float, default=7.4)
+ap.add_argument("--dof", type=int, default=1)
 args = ap.parse_args(argv)
 os.makedirs(args.out, exist_ok=True)
 
@@ -216,7 +217,7 @@ r.threads_mode = "AUTO"
 
 fit_camera()
 # slight depth of field, focused on the wheel
-cam_data.dof.use_dof = True
+cam_data.dof.use_dof = bool(args.dof) and args.mode != "parts"  # part masks must line up with the beauty
 cam_data.dof.focus_distance = (mm(1000, 0, 900) - cam.location).dot(VIEW)
 cam_data.dof.aperture_fstop = 4.0
 
@@ -296,6 +297,62 @@ def render(path):
     print("wrote", path, flush=True)
 
 
+# ----------------------------------------------------------------------------- part passes
+# The builder shows the whole rig as a ghost and lights up each picked part. One beauty render per
+# screen layout with every part in it (motion platform and all add-ons included), plus an
+# anti-aliased mask per part from the object index pass; pack_parts.py cuts the parts out of the
+# beauty and draws the ghost and the outlines from the masks, so every layer lines up exactly.
+PART_GROUPS = {
+    "chassis": ["chassis", "chassis-back"],
+    "seat": ["seat"],
+    "wheelbase": ["wheelbase"],
+    "wheel": ["wheel"],
+    "pedals": ["pedals"],
+    "mount": ["mount", "mount-sides", "mount-top"],
+    "screens": ["screen-center", "screen-sides", "screen-dual", "screen-top"],
+    "motion": ["motion", "motion-back"],
+    "pc": ["pc"],
+    "headset": ["headset"],
+    "sidemount": ["sidemount"],
+    "shifter": ["shifter"],
+    "handbrake": ["handbrake"],
+}
+PART_VARIANTS = ["s1", "s2", "s3", "s4"]
+
+
+def setup_part_passes(out_dir, key):
+    for i, (part, colls) in enumerate(PART_GROUPS.items(), start=1):
+        for cn in colls:
+            for ob in COLL[cn].objects:
+                ob.pass_index = i
+    bpy.context.view_layer.use_pass_object_index = True
+    scene.use_nodes = True
+    nt = scene.node_tree
+    nt.nodes.clear()
+    rl = nt.nodes.new("CompositorNodeRLayers")
+    comp = nt.nodes.new("CompositorNodeComposite")
+    nt.links.new(rl.outputs["Image"], comp.inputs["Image"])
+    fo = nt.nodes.new("CompositorNodeOutputFile")
+    fo.base_path = out_dir
+    fo.format.file_format = "PNG"
+    fo.format.color_mode = "BW"
+    fo.format.color_depth = "8"
+    try:  # masks are data: no view transform
+        fo.format.color_management = "OVERRIDE"
+        fo.format.view_settings.view_transform = "Standard"
+        fo.format.view_settings.look = "None"
+    except Exception as e:  # noqa: BLE001
+        print("color override failed", e, flush=True)
+    fo.file_slots.clear()
+    for i, part in enumerate(PART_GROUPS, start=1):
+        idm = nt.nodes.new("CompositorNodeIDMask")
+        idm.index = i
+        idm.use_antialiasing = True
+        nt.links.new(rl.outputs["IndexOB"], idm.inputs[0])
+        fo.file_slots.new(f"mask-{key}-{part}-")
+        nt.links.new(idm.outputs[0], fo.inputs[-1])
+
+
 only = set(filter(None, args.only.split(",")))
 if args.mode == "frame":
     show_frame(FRAMES[args.key], args.key.endswith("m1"))
@@ -318,4 +375,21 @@ elif args.mode in ("overlays", "full"):
     if args.mode == "full":  # the reference: everything in one render, to check overlays against
         show_frame(FRAMES["s3m1"] + OVERLAYS, True)
         render(os.path.join(args.out, "full-s3m1-all.png"))
+elif args.mode == "parts":
+    pdir = os.path.join(args.out, "parts")
+    os.makedirs(pdir, exist_ok=True)
+    every = [c for g in PART_GROUPS.values() for c in g]
+    for key in PART_VARIANTS:
+        if only and key not in only:
+            continue
+        layers = [c for c in every if c not in {"screen-center", "screen-sides", "screen-dual", "screen-top", "mount", "mount-sides", "mount-top"}]
+        layers += SCREENS[key]
+        path = os.path.join(pdir, f"beauty-{key}.png")
+        if os.path.exists(path) and not args.force:
+            print("skip", path, flush=True)
+            continue
+        show_frame(layers, True)
+        setup_part_passes(pdir, key)
+        scene.frame_set(1)
+        render(path)
 print("render done", flush=True)
