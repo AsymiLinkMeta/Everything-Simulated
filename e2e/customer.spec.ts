@@ -39,8 +39,10 @@ test.describe("customer app", () => {
     await page.locator("select").first().selectOption("demo");
     await page.getByRole("button", { name: "Request booking" }).click();
     await expect(page.getByText(/request(ed)?|booked|thanks/i).first()).toBeVisible();
-    const rows = sql(`select b.* from bookings b join auth.users u on u.id::text = b.user_id::text where u.email = 'customer@es.local'`);
-    expect(rows.length).toBeGreaterThan(0);
+    // The text matcher can match the button label before the insert lands, so poll the table.
+    await expect
+      .poll(() => sql(`select b.* from bookings b join auth.users u on u.id::text = b.user_id::text where u.email = 'customer@es.local'`).length)
+      .toBeGreaterThan(0);
   });
 
   test("open a service ticket and reply", async ({ page }) => {
