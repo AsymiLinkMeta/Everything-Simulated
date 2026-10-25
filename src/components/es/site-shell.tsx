@@ -2,7 +2,8 @@ import "./es-chrome";
 import { Link, Outlet, useLocation } from "@tanstack/react-router";
 import { ChevronDown, Facebook, Instagram, Phone, ShoppingCart } from "lucide-react";
 import { useEffect, useState } from "react";
-import { CookieDisclaimer, AuthSlot, Logo } from "./bits";
+import { AuthSlot, Logo } from "./bits";
+import { ConsentBanner, CookieSettingsButton } from "./consent-banner";
 import { ReferralCapture } from "./referral-capture";
 import { useCart } from "@/lib/es/cart-store";
 import { useQuery } from "@tanstack/react-query";
@@ -177,6 +178,8 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
                 <Link to="/faqs">FAQs</Link>
                 {" · "}
                 <Link to="/order">Track an order</Link>
+                {" · "}
+                <CookieSettingsButton />
               </li>
             </ul>
           </div>
@@ -189,7 +192,7 @@ export function SiteShell({ children }: { children?: React.ReactNode }) {
           <a href="https://asymilinkmeta.com" target="_blank" rel="noopener noreferrer" style={{ color: "var(--es-muted)" }}>AsymiLink Meta</a>
         </p>
       </footer>
-      <CookieDisclaimer />
+      <ConsentBanner />
     </div>
   );
 }

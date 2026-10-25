@@ -46,7 +46,9 @@ function Checkout() {
   const setPostcode = useCart((s) => s.setPostcode);
   const clear = useCart((s) => s.clear);
   useQuery({ queryKey: ["ambassadors"], queryFn: fetchAmbassadors });
-  const referredBy = referralCode ? getCachedAmbassadorByCode(referralCode) : undefined;
+  // A code typed here wins; otherwise the attribution cookie or, without cookie consent, this visit's referral.
+  const creditedCode = referralCode || getReferralCode() || "";
+  const referredBy = creditedCode ? getCachedAmbassadorByCode(creditedCode) : undefined;
   // What will actually be charged, priced by quote_cart() in the database.
   const quote = useServerQuote({ lines, postcode, prebuild: prebuildSlug, driverWeightKg });
   const q = quote.data;
@@ -136,7 +138,8 @@ function Checkout() {
         phone,
         address,
         prebuild: prebuildSlug,
-        // Last touch: a code typed here wins, else the 90-day attribution cookie.
+        // Last touch: a code typed here wins, else the 90-day attribution cookie (with consent)
+        // or the referral held for this visit (without).
         referralCode: referralCode || getReferralCode() || undefined,
       };
       const res = user
