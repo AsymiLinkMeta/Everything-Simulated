@@ -8,8 +8,32 @@ export const authFile = (role: Role) => `e2e/.auth/${role}.json`;
 
 type Problems = { console: string[]; page: string[]; network: string[] };
 
-/** Collects console errors, uncaught exceptions and failed same-origin/API requests. */
-export const test = base.extend<{ problems: Problems }>({
+/** Cookie consent record the app reads (src/lib/es/consent.ts). */
+export const CONSENT_KEY = "es-consent";
+export type ConsentChoice = "accept" | "reject" | null;
+
+/**
+ * Collects console errors, uncaught exceptions and failed same-origin/API requests.
+ * `consent` presets the visitor's cookie choice for the default context (accept, so the
+ * banner stays out of the way of other flows); consent.spec.ts sets it to null.
+ */
+export const test = base.extend<{ problems: Problems; consent: ConsentChoice }>({
+  consent: ["accept", { option: true }],
+  context: async ({ context, consent }, use) => {
+    if (consent) {
+      await context.addInitScript(
+        ([key, referral]) => {
+          try {
+            if (!localStorage.getItem(key)) localStorage.setItem(key, JSON.stringify({ v: 1, referral, ts: new Date().toISOString() }));
+          } catch {
+            /* about:blank and opaque origins have no storage */
+          }
+        },
+        [CONSENT_KEY, consent === "accept"] as const,
+      );
+    }
+    await use(context);
+  },
   problems: async ({ page }, use) => {
     const p: Problems = { console: [], page: [], network: [] };
     page.on("console", (m: ConsoleMessage) => {
