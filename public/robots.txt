@@ -58,5 +58,13 @@ Allow: /
 Disallow: /app
 Disallow: /staff
 
+User-agent: OAI-SearchBot
+User-agent: Claude-SearchBot
+User-agent: Claude-User
+User-agent: Perplexity-User
+Allow: /
+Disallow: /app
+Disallow: /staff
+
 Sitemap: https://www.everythingsimulated.com.au/sitemap.xml
 Host: https://www.everythingsimulated.com.au
