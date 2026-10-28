@@ -4,3 +4,5 @@ export function applyHead(
   opts: { url: string; noindex: boolean },
 ): { html: string; title: string; description: string; canonical: string | null };
 export function rewriteRedirects(redirects: string, prerendered: string[]): string;
+
+export function shellHtml(template: string): string;

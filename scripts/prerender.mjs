@@ -118,9 +118,21 @@ export function rewriteRedirects(redirects, prerendered) {
   return `${out.join("\n").trimEnd()}\n`;
 }
 
+/**
+ * The SPA shell serves many URLs (product pages, account screens), so its static head must not
+ * claim to be the home page: drop the canonical, hreflang and og:url. The app sets the right ones
+ * once the route renders.
+ */
+export function shellHtml(template) {
+  return template
+    .replace(/\s*<link\s+rel="canonical"[^>]*>/, "")
+    .replace(/\s*<link\s+rel="alternate"\s+hreflang="[^"]*"[^>]*>/g, "")
+    .replace(/\s*<meta\s+property="og:url"[^>]*>/, "");
+}
+
 async function main() {
   const template = await readFile(join(dist, "index.html"), "utf8");
-  await write("spa.html", template);
+  await write("spa.html", shellHtml(template));
 
   await build({
     root,

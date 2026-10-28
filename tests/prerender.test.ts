@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { applyHead, rewriteRedirects } from "../scripts/prerender.mjs";
+import { applyHead, rewriteRedirects, shellHtml } from "../scripts/prerender.mjs";
 import { pageHead } from "@/lib/es/seo";
 
 const template = `<!doctype html><html><head>
@@ -40,5 +40,15 @@ describe("prerender rewriteRedirects", () => {
   it("serves prerendered pages from files, the rest from the shell, and 404s the catch-all", () => {
     const input = ["/racing /index.html 200", "/shop/* /index.html 200", "/old /new 301", "/* /index.html 404"].join("\n");
     expect(rewriteRedirects(input, ["/racing"])).toBe(["/shop/* /spa.html 200", "/old /new 301", "/* /404.html 404", ""].join("\n"));
+  });
+});
+
+describe("prerender shellHtml", () => {
+  it("drops the home-page canonical, hreflang and og:url from the SPA shell", () => {
+    const out = shellHtml(template);
+    expect(out).not.toContain('rel="canonical"');
+    expect(out).not.toContain("hreflang");
+    expect(out).not.toContain("og:url");
+    expect(out).toContain("<title>Shell title</title>");
   });
 });
