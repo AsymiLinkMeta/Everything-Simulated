@@ -7,6 +7,7 @@ import { AppProviders } from "@/components/es/providers";
 import { ScrollManager } from "@/components/es/scroll-manager";
 import { fetchProducts } from "@/lib/es/product-cache";
 import { hydratePrebuilds } from "@/lib/es/prebuilds";
+import { capturePrerenderSnapshot } from "@/lib/prerender";
 import "./es.css";
 import "./index.css";
 
@@ -30,7 +31,10 @@ function idle() {
 if (document.readyState === "complete") whenIdle();
 else window.addEventListener("load", whenIdle, { once: true });
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
+const rootEl = document.getElementById("root")!;
+capturePrerenderSnapshot(rootEl);
+
+ReactDOM.createRoot(rootEl).render(
   <React.StrictMode>
     <BrowserRouter>
       <AuthProvider>

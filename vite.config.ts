@@ -114,12 +114,16 @@ function normaliseOrigin(raw: string | undefined): string {
   }
 }
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode, isSsrBuild }) => {
   const env = loadEnv(mode, root, "VITE_");
   const origin = normaliseOrigin(env.VITE_SITE_URL);
   const noindex = env.VITE_NOINDEX === "true";
   return {
-    plugins: [react(), siteHost(origin, noindex), routePreload(root), spaRedirects(root), seoFiles(origin, env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY)],
+    // The build-time prerender (scripts/prerender.mjs) only needs React; the dist/ post-processing
+    // plugins run once, for the client build.
+    plugins: isSsrBuild
+      ? [react()]
+      : [react(), siteHost(origin, noindex), routePreload(root), spaRedirects(root), seoFiles(origin, env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY)],
     resolve: {
       alias: {
         "@": path.resolve(root, "src"),

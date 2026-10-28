@@ -1,7 +1,8 @@
 import { lazy, Suspense, type ComponentType } from "react";
-import { Navigate, Route, Routes, useParams } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
 import { SiteShell } from "@/components/es/site-shell";
 import { RouteError } from "@/components/es/route-error";
+import { prerenderSnapshotFor } from "@/lib/prerender";
 import { NotFoundPage } from "@/routes/not-found";
 import { Route as HomeRoute } from "@/routes/index";
 
@@ -89,10 +90,18 @@ const StaffAmbassadors = lazyRoute(() => import("@/routes/staff/ambassadors"));
 const AppShell = lazy(() => import("@/components/es/app-shell").then((m) => ({ default: m.AppShell })));
 const StaffShell = lazy(() => import("@/components/es/staff-shell").then((m) => ({ default: m.StaffShell })));
 
+/** While a page's chunk loads: the prerendered page for this URL if there is one, else "Loading…". */
+function PageLoading() {
+  const { pathname } = useLocation();
+  const html = prerenderSnapshotFor(pathname);
+  if (html) return <div style={{ display: "contents" }} dangerouslySetInnerHTML={{ __html: html }} />;
+  return <PortalLoading />;
+}
+
 function Page({ C }: { C: ComponentType }) {
   return (
     <SiteShell>
-      <Suspense fallback={<PortalLoading />}>
+      <Suspense fallback={<PageLoading />}>
         <C />
       </Suspense>
     </SiteShell>

@@ -9,6 +9,7 @@ import {
 } from "react-router-dom";
 
 import { SITE_ORIGIN } from "@/lib/site";
+import { setPrerenderHead } from "@/lib/prerender";
 
 export { Outlet, Navigate, useLocation };
 
@@ -123,6 +124,14 @@ export function createFileRoute(_path: string) {
     function RoutedPage() {
       const params = useParams() as Record<string, string>;
       const loc = useLocation();
+      if (import.meta.env.SSR && typeof opts.head === "function") {
+        // Build-time prerender: record this page's head tags (effects don't run on the server).
+        try {
+          setPrerenderHead(opts.head({ params, loaderData: load(params) }));
+        } catch {
+          // loader may throw notFound; the page body handles it
+        }
+      }
       useEffect(() => {
         try {
           if (typeof opts.head === "function") applyHeadPayload(opts.head({ params, loaderData: load(params) }));

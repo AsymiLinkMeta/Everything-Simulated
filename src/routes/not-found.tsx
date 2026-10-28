@@ -2,18 +2,21 @@ import { useEffect } from "react";
 import { Link, applyHeadPayload, useLocation } from "@tanstack/react-router";
 import { Button } from "@/components/ui/button";
 import { pageHead } from "@/lib/es/seo";
+import { setPrerenderHead } from "@/lib/prerender";
+
+const notFoundHead = (path: string) =>
+  pageHead({
+    title: "Page not found | Everything Simulated",
+    description: "That page, product or city is not on the site.",
+    path,
+    index: false,
+  });
 
 export function NotFoundPage() {
   const loc = useLocation();
+  if (import.meta.env.SSR) setPrerenderHead(notFoundHead(loc.pathname || "/"));
   useEffect(() => {
-    applyHeadPayload(
-      pageHead({
-        title: "Page not found | Everything Simulated",
-        description: "That page, product or city is not on the site.",
-        path: loc.pathname || "/",
-        index: false,
-      }),
-    );
+    applyHeadPayload(notFoundHead(loc.pathname || "/"));
   }, [loc.pathname]);
   return (
     <main className="grid min-h-dvh place-items-center bg-ink px-5 text-paper">
