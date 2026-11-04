@@ -25,7 +25,9 @@ test.describe("rig builder", () => {
     await expect(page.getByTestId("builder-card-tr120s")).toContainText("In your build");
     await expect(total(page)).toContainText("1 part");
     await expect(total(page)).toContainText(/\$\d/);
-    await expect(steps(page).getByRole("button", { name: /Chassis/ })).toContainText(/ES Pro 120/i);
+    // The step chip shows the picked chassis by its catalogue name (renamed in prod data, seeded by migrations here).
+    const [chassis] = sql<{ name: string }>(`select name from catalog_products where sku = 'tr120s'`);
+    await expect(steps(page).getByRole("button", { name: /Chassis/ })).toContainText(chassis.name);
   });
 
   test("conflicts are explained on the card and blocked parts can't be chosen", async ({ page }) => {
