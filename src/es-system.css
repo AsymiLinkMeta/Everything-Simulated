@@ -788,3 +788,8 @@ body:has(.es-sticky-buy) .ds-cookie { bottom: calc(4.75rem + env(safe-area-inset
 body:has(.es-rb-total) .ds-cookie { bottom: calc(5.25rem + env(safe-area-inset-bottom)); }
 .es-rb-total { background: rgba(10, 10, 14, 0.97); border-top-color: var(--ds-line-2); }
 .es-rb-total-spacer { height: calc(6rem + env(safe-area-inset-bottom)); }
+.ds-lines { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--ds-line); font-size: var(--ds-fs-sm); }
+.ds-lines li { display: flex; justify-content: space-between; gap: var(--ds-s4); padding: var(--ds-s3) 0; border-bottom: 1px solid var(--ds-line); min-height: var(--ds-tap); align-items: center; }
+.ds-lines a { color: var(--ds-text); text-decoration: none; }
+.ds-lines a:hover { text-decoration: underline; text-underline-offset: 3px; }
+.ds-buybox .ds-actions { display: grid; gap: var(--ds-s3); }

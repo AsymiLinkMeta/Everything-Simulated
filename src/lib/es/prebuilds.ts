@@ -64,6 +64,8 @@ export type Prebuild = {
   blurb: string;
   description: string;
   image: string;
+  /** Extra photo URLs (prebuilds.gallery, jsonb array). Absent until the gallery migration is applied. */
+  gallery?: string[];
   price_ex_gst: number;
   highlights: string[];
   specs: Record<string, string>;
@@ -121,6 +123,7 @@ function shapePrebuild(prebuild: Prebuild, comps: PrebuildComponent[], price?: P
     highlights: Array.isArray(prebuild.highlights) ? prebuild.highlights : [],
     specs: prebuild.specs && typeof prebuild.specs === "object" && !Array.isArray(prebuild.specs) ? prebuild.specs : {},
     capabilities: Array.isArray(prebuild.capabilities) ? prebuild.capabilities : [],
+    gallery: Array.isArray(prebuild.gallery) ? prebuild.gallery.filter((u): u is string => typeof u === "string" && /^(\/[^/\s]|https:\/\/)/.test(u.trim())) : [],
     components: comps,
   };
 }

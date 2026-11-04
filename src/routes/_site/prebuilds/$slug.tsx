@@ -1,12 +1,14 @@
 import { createFileRoute, Link, applyHeadPayload } from "@tanstack/react-router";
 import { SiteImage } from "@/components/es/site-image";
 import { useQuery } from "@tanstack/react-query";
-import { useEffect } from "react";
-import { BackButton, IncGst, JsonLd, LineName, Money } from "@/components/es/bits";
+import { useEffect, useState } from "react";
+import { Check } from "lucide-react";
+import { EsFallback } from "@/components/es/product-photo";
+import { RigCard } from "@/components/es/rig-card";
+import { JsonLd, LineName, Money } from "@/components/es/bits";
 import { StickyBuyBar } from "@/components/es/sticky-buy-bar";
 import { TrustBar } from "@/components/es/trust-bar";
 import { toast } from "@/lib/toast";
-import { Button } from "@/components/ui/button";
 import { breadcrumbLd, pageHead, productLd } from "@/lib/es/seo";
 import { fetchPrebuildBySlug, fetchPublishedPrebuilds } from "@/lib/es/prebuilds";
 import { fetchProducts, getCachedProductMap } from "@/lib/es/product-cache";
@@ -36,6 +38,7 @@ function PrebuildDetailPage() {
   const loadLines = useCart((s) => s.setLines);
   const cartPrebuild = useCart((s) => s.prebuildSlug);
   const p = prebuild.data;
+  const [hero, setHero] = useState<string | null>(null);
   const added = Boolean(p && cartPrebuild === p.slug);
   function addBuild() {
     if (!p) return;
@@ -58,30 +61,34 @@ function PrebuildDetailPage() {
 
   if (prebuild.isPending) {
     return (
-      <div className="mx-auto w-full max-w-6xl px-4 py-16">
-        <div className="h-96 animate-pulse rounded-2xl bg-raised" />
+      <div className="ds-container">
+        <div className="ds-pdp" role="status" aria-busy="true" aria-label="Loading prebuild">
+          <div className="ds-gallery-main ds-skeleton" />
+          <div className="ds-buybox">
+            <div className="ds-skeleton" style={{ height: "1rem", width: "25%" }} />
+            <div className="ds-skeleton" style={{ height: "3rem", width: "80%", marginTop: "1rem" }} />
+          </div>
+        </div>
       </div>
     );
   }
 
   if (prebuild.isError) {
     return (
-      <div role="alert" className="mx-auto w-full max-w-6xl px-4 py-16 text-center">
-        <h1 className="text-2xl font-medium">We couldn't load this prebuild</h1>
-        <p className="mt-4 text-muted">Check your connection and try again.</p>
-        <Button className="mt-6" onClick={() => void prebuild.refetch()}>Try again</Button>
+      <div role="alert" className="ds-container ds-section">
+        <h1 className="ds-h1">We couldn't load this prebuild</h1>
+        <p className="ds-lead mt-4">Check your connection and try again.</p>
+        <button type="button" className="ds-btn mt-6" onClick={() => void prebuild.refetch()}>Try again</button>
       </div>
     );
   }
 
   if (!p) {
     return (
-      <div className="mx-auto w-full max-w-6xl px-4 py-16 text-center">
-        <h1 className="text-2xl font-medium">Prebuild not found</h1>
-        <p className="mt-4 text-muted">This rig may have been removed or is no longer published.</p>
-        <Link to="/prebuilds" className="mt-6 inline-block text-sm text-paper underline-offset-4 hover:underline">
-          View all prebuilds
-        </Link>
+      <div className="ds-container ds-section">
+        <h1 className="ds-h1">Prebuild not found</h1>
+        <p className="ds-lead mt-4">This rig may have been removed or is no longer published.</p>
+        <Link to="/prebuilds" className="ds-btn ds-btn-secondary mt-6">View all prebuilds</Link>
       </div>
     );
   }
@@ -90,10 +97,12 @@ function PrebuildDetailPage() {
     ? Object.fromEntries(products.data.map((item) => [item.sku, item]))
     : getCachedProductMap();
   const others = (allPrebuilds.data ?? []).filter((o) => o.id !== p.id).slice(0, 3);
+  const photos = [...new Set([p.image, ...(p.gallery ?? [])].filter(Boolean))];
+  const shown = hero && photos.includes(hero) ? hero : photos[0];
+  const price = p.purchasable && p.effective_price_ex_gst ? p.effective_price_ex_gst : null;
 
   return (
-    <div className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-16">
-      <BackButton />
+    <div className="ds-container">
       <JsonLd
         data={breadcrumbLd([
           { name: "Home", path: "/" },
@@ -113,150 +122,146 @@ function PrebuildDetailPage() {
         })}
       />
 
-      <div className="grid grid-cols-1 gap-10 md:grid-cols-2">
-        {p.image ? (
-          <SiteImage src={p.image} alt={p.name} className="es-card h-80 w-full object-cover md:h-full" priority sizes="(min-width: 768px) 50vw, 100vw" />
-        ) : (
-          <div className="es-card flex h-80 items-center justify-center bg-raised text-muted md:h-full">
-            No image
+      <div className="ds-pdp">
+        <div className="min-w-0">
+          <nav aria-label="Breadcrumb">
+            <ol className="ds-crumbs">
+              <li><Link to="/prebuilds">Prebuilds</Link></li>
+              <li aria-current="page">{p.name}</li>
+            </ol>
+          </nav>
+          <div className="ds-gallery-main">
+            {shown ? (
+              <SiteImage src={shown} alt={p.name} priority sizes="(min-width: 960px) 55vw, 100vw" />
+            ) : (
+              <EsFallback alt={p.name} fallbackKey="fallback:prebuild" label={p.kicker || "Prebuilt rig"} />
+            )}
           </div>
-        )}
-        <div>
-          {p.kicker && <p className="es-kicker">{p.kicker}</p>}
-          <h1 className="mt-3 text-4xl font-medium">{p.name}</h1>
-          {p.blurb && <p className="mt-4 text-muted">{p.blurb}</p>}
-          {p.purchasable && p.effective_price_ex_gst ? (
-            <>
-              <p className="mt-6 text-3xl font-medium">
-                <Money cents={p.effective_price_ex_gst} gst />
-              </p>
-              <p className="mt-1">
-                <IncGst cents={p.effective_price_ex_gst} />
-              </p>
-            </>
-          ) : (
-            <p className="mt-6 text-2xl font-medium">Enquire for price</p>
-          )}
-
-          {p.highlights.length > 0 && (
-            <ul className="mt-6 space-y-2 text-sm">
-              {p.highlights.map((h) => (
-                <li key={h} className="text-muted">{h}</li>
+          {photos.length > 1 ? (
+            <div className="ds-thumbs">
+              {photos.slice(0, 8).map((src, i) => (
+                <button key={src} type="button" onClick={() => setHero(src)} aria-label={`Show photo ${i + 1}`} aria-current={shown === src}>
+                  <img src={src} alt="" loading="lazy" decoding="async" />
+                </button>
               ))}
-            </ul>
-          )}
+            </div>
+          ) : null}
+        </div>
 
-          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <div className="ds-buybox">
+          <p className="ds-eyebrow">{p.kicker || "Prebuilt rig"}</p>
+          <h1 className="ds-h1">{p.name}</h1>
+          {p.blurb ? <p className="ds-lead mt-4">{p.blurb}</p> : null}
+          {price ? (
+            <p className="ds-buybox-price">
+              {p.price_source === "parts" ? "From " : ""}
+              <Money cents={price} gst />
+              <small>Price includes GST. Freight is calculated in the cart.</small>
+            </p>
+          ) : (
+            <p className="ds-buybox-price">Enquire for price</p>
+          )}
+          <div className="ds-actions">
             {p.purchasable ? (
               <>
-                <Button onClick={addBuild} data-testid="prebuild-add">
-                  {added ? "In your cart" : "Add to cart"}
-                </Button>
-                <Button variant="outline" asChild>
-                  <Link to="/checkout" onClick={addBuild}>
-                    Buy this build
-                  </Link>
-                </Button>
-                <Link to="/compatibility" className="text-sm text-muted underline-offset-4 hover:text-paper hover:underline sm:ml-2">
-                  Customise it in the checker
+                <button type="button" className="ds-btn ds-btn-light ds-btn-lg ds-btn-block" onClick={addBuild} data-testid="prebuild-add" aria-pressed={added}>
+                  {added ? <><Check className="size-4" aria-hidden="true" /> In your cart</> : "Add to cart"}
+                </button>
+                <Link to="/checkout" onClick={addBuild} className="ds-btn ds-btn-secondary ds-btn-lg ds-btn-block">
+                  Buy this build
                 </Link>
               </>
             ) : (
-              <Button asChild>
-                <Link to="/contact">Enquire about this build</Link>
-              </Button>
+              <Link to="/contact" className="ds-btn ds-btn-lg ds-btn-block">Enquire about this build</Link>
             )}
           </div>
+          {p.highlights.length > 0 ? (
+            <ul className="ds-checklist mt-6">
+              {p.highlights.map((h) => (
+                <li key={h}><Check className="size-4" aria-hidden="true" />{h}</li>
+              ))}
+            </ul>
+          ) : null}
+          {p.purchasable ? (
+            <p className="ds-small mt-6">
+              Want to change a part? <Link to="/compatibility" className="ds-link">Customise it in the checker</Link>.
+            </p>
+          ) : null}
         </div>
       </div>
-      <TrustBar className="mt-10 rounded-xl border" />
-      {p.purchasable && p.effective_price_ex_gst ? (
-        <StickyBuyBar
-          name={p.name}
-          priceExGst={p.effective_price_ex_gst}
-          actionLabel={added ? "In your cart" : "Add to cart"}
-          onAction={addBuild}
-        />
+
+      <TrustBar />
+      {price ? (
+        <StickyBuyBar name={p.name} priceExGst={price} actionLabel={added ? "In your cart" : "Add to cart"} onAction={addBuild} />
       ) : null}
 
-      {p.description && (
-        <div className="mt-16">
-          <h2 className="text-2xl font-medium">About this build</h2>
-          <div className="mt-4 max-w-3xl whitespace-pre-line text-sm leading-7 text-muted">{p.description}</div>
-        </div>
-      )}
-
-      {p.capabilities.length > 0 && (
-        <div className="mt-12">
-          <h2 className="text-2xl font-medium">Capabilities</h2>
-          <ul className="mt-4 grid gap-3 sm:grid-cols-2">
-            {p.capabilities.map((c) => (
-              <li key={c} className="es-card flex items-center gap-3 px-4 py-3 text-sm">
-                <span className="size-2 shrink-0 rounded-full bg-esred" />
-                {c}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-
-      {Object.keys(p.specs).length > 0 && (
-        <div className="mt-12">
-          <h2 className="text-2xl font-medium">Specifications</h2>
-          <dl className="mt-4 divide-y divide-line rounded-xl border border-line">
-            {Object.entries(p.specs).map(([key, val]) => (
-              <div key={key} className="flex justify-between px-4 py-3 text-sm">
-                <dt className="font-medium">{key}</dt>
-                <dd className="text-muted">{val}</dd>
-              </div>
-            ))}
-          </dl>
-        </div>
-      )}
-
-      {p.components.length > 0 && (
-        <>
-          <h2 className="mt-16 text-2xl font-medium">What's in the build</h2>
-          <ul className="mt-6 divide-y divide-line rounded-xl border border-line">
-            {p.components.map((comp) => {
-              const item = productMap[comp.sku];
-              return (
-                <li key={comp.sku} className="flex items-center justify-between px-4 py-3 text-sm">
-                  <Link to="/shop/$sku" params={{ sku: comp.sku }} className="hover:text-paper">
-                    <LineName sku={comp.sku} />
-                    <span className="text-muted"> x {comp.qty}</span>
-                  </Link>
-                  <span className="text-muted">
-                    {item && item.sellExGst > 0 ? <Money cents={item.sellExGst * comp.qty} /> : "Included"}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-        </>
-      )}
-
-      {others.length > 0 && (
-        <div className="mt-16">
-          <h2 className="text-xl font-medium">Other prebuilds</h2>
-          <div className="mt-4 grid grid-cols-2 gap-4 md:grid-cols-3">
-            {others.map((o) => (
-              <Link
-                key={o.id}
-                to="/prebuilds/$slug"
-                params={{ slug: o.slug }}
-                className="es-card p-5"
-              >
-                {o.kicker && <p className="es-kicker">{o.kicker}</p>}
-                <p className="mt-1 font-medium">{o.name}</p>
-                <p className="mt-1 text-sm text-muted">
-                  {o.purchasable && o.effective_price_ex_gst ? <>{o.price_source === "parts" ? "From " : ""}<Money cents={o.effective_price_ex_gst} gst /></> : "Enquire for price"}
-                </p>
-              </Link>
-            ))}
+      <section className="ds-section">
+        <div className="ds-grid-2">
+          {p.components.length > 0 ? (
+            <div>
+              <h2 className="ds-h2">What's in the build</h2>
+              <ul className="ds-lines mt-5">
+                {p.components.map((comp) => {
+                  const item = productMap[comp.sku];
+                  return (
+                    <li key={comp.sku}>
+                      <Link to="/shop/$sku" params={{ sku: comp.sku }}>
+                        <LineName sku={comp.sku} />
+                        {comp.qty > 1 ? <span className="ds-muted"> × {comp.qty}</span> : null}
+                      </Link>
+                      <span className="ds-muted tabular-nums">{item && item.sellExGst > 0 ? <Money cents={item.sellExGst * comp.qty} /> : "Included"}</span>
+                    </li>
+                  );
+                })}
+              </ul>
+            </div>
+          ) : null}
+          <div>
+            {Object.keys(p.specs).length > 0 ? (
+              <>
+                <h2 className="ds-h2">Specifications</h2>
+                <table className="ds-specs-table mt-5">
+                  <tbody>
+                    {Object.entries(p.specs).map(([key, val]) => (
+                      <tr key={key}>
+                        <th scope="row">{key}</th>
+                        <td>{val}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </>
+            ) : null}
+            {p.capabilities.length > 0 ? (
+              <>
+                <h2 className="ds-h2 mt-10">Capabilities</h2>
+                <ul className="ds-checklist mt-5">
+                  {p.capabilities.map((c) => (
+                    <li key={c}><Check className="size-4" aria-hidden="true" />{c}</li>
+                  ))}
+                </ul>
+              </>
+            ) : null}
           </div>
         </div>
-      )}
+        {p.description ? (
+          <div className="mt-12" style={{ maxWidth: "44rem" }}>
+            <h2 className="ds-h2">About this build</h2>
+            <div className="ds-body mt-4 whitespace-pre-line">{p.description}</div>
+          </div>
+        ) : null}
+      </section>
+
+      {others.length > 0 ? (
+        <section className="ds-section ds-section-tight">
+          <h2 className="ds-h2">Other prebuilds</h2>
+          <div className="ds-rig-grid mt-6">
+            {others.map((o) => (
+              <RigCard key={o.id} prebuild={o} />
+            ))}
+          </div>
+        </section>
+      ) : null}
     </div>
   );
 }
