@@ -129,7 +129,7 @@ function HomeHero() {
           {tall ? <source media={MOBILE_MEDIA} type="image/webp" srcSet={rigSrcSet(tall)} sizes="100vw" /> : null}
           {tall ? <source media={MOBILE_MEDIA} srcSet={tall} /> : null}
           <source type="image/webp" srcSet={rigSrcSet(wide)} sizes="100vw" />
-          <img src={wide} alt="Everything Simulated racing simulator with curved triple screens in the studio" width={2400} height={1350} fetchPriority="high" loading="eager" decoding="sync" />
+          <img src={wide} alt="Everything Simulated racing simulator with curved triple screens in the studio" width={2400} height={1350} {...{ fetchpriority: "high" }} loading="eager" decoding="sync" />
         </picture>
       </div>
       <div className="ds-container ds-hero-copy">

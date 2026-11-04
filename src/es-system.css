@@ -728,7 +728,7 @@ a.ds-card:hover .ds-card-media img, .ds-card.is-link:hover .ds-card-media img { 
 }
 .ds-cookie p { flex: 1 1 16rem; margin: 0; line-height: 1.45; }
 .ds-cookie a { color: var(--ds-text); }
-.ds-cookie-actions { display: flex; gap: var(--ds-s2); flex: none; }
+.ds-cookie-actions { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ds-s2); flex: none; }
 .ds-cookie .ds-btn { min-height: var(--ds-tap); padding: 0 var(--ds-s4); font-size: var(--ds-fs-xs); }
 @media (max-width: 560px) {
   .ds-cookie { left: 0; right: 0; bottom: 0; border-radius: 0; border-inline: 0; border-bottom: 0; padding: var(--ds-s3) var(--ds-gutter) calc(var(--ds-s3) + env(safe-area-inset-bottom)); }
@@ -777,7 +777,7 @@ a.ds-card:hover .ds-card-media img, .ds-card.is-link:hover .ds-card-media img { 
 .ds-cookie-title:focus { outline: none; }
 .ds-cookie-title:focus-visible { outline: 2px solid var(--ds-red); outline-offset: 3px; border-radius: 4px; }
 .ds-cookie-status { color: var(--ds-text); }
-.ds-cookie-actions .ds-btn { min-width: 8.5rem; }
+.ds-cookie-actions .ds-btn { min-width: 9.5rem; width: 100%; }
 .ds-cookie-actions .ds-btn[aria-pressed="true"] { border-color: var(--ds-text); color: var(--ds-text); }
 @media (max-width: 560px) {
   .ds-cookie-actions { width: 100%; }
