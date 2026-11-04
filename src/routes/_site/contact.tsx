@@ -67,7 +67,7 @@ function Contact() {
             <Mail className="size-5 text-esred" aria-hidden="true" />
             <span>
               <span className="es-kicker block">Email us</span>
-              <span className="mt-1 block text-lg [overflow-wrap:anywhere]">{BRAND.email}</span>
+              <span className="mt-1 block text-base sm:text-lg [overflow-wrap:anywhere]">{BRAND.email}</span>
             </span>
           </a>
         </div>
