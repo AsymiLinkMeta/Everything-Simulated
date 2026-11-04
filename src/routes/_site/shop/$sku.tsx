@@ -140,7 +140,7 @@ function ProductPage() {
           {item.purchasable ? (
             <p className="ds-buybox-price">
               <Money cents={item.sellExGst} gst />
-              <small>Price includes GST. Freight is calculated in the cart.</small>
+              <small>Prices exclude GST. GST and freight are added in the cart.</small>
             </p>
           ) : (
             <p className="ds-buybox-price">Enquire for price</p>

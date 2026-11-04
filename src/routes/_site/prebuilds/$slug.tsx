@@ -156,7 +156,7 @@ function PrebuildDetailPage() {
             <p className="ds-buybox-price">
               {p.price_source === "parts" ? "From " : ""}
               <Money cents={price} gst />
-              <small>Price includes GST. Freight is calculated in the cart.</small>
+              <small>Prices exclude GST. GST and freight are added in the cart.</small>
             </p>
           ) : (
             <p className="ds-buybox-price">Enquire for price</p>

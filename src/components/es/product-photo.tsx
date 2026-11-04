@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { SiteImage } from "./site-image";
 import { isProductPhoto } from "@/lib/es/product-photos";
@@ -30,10 +31,11 @@ export function EsFallback({
   const media = useSiteMedia();
   const item = categoryMedia(media.data, category, fallbackKey);
   const name = label || categoryLabel(category);
-  if (item) {
+  const [artFailed, setArtFailed] = useState<string | null>(null);
+  if (item && artFailed !== item.url) {
     return (
       <div className={`ds-fallback has-art ${className}`} data-testid="photo-fallback">
-        <SiteImage src={item.url} alt={alt} sizes={sizes} />
+        <SiteImage src={item.url} alt={alt} sizes={sizes} onFailed={() => setArtFailed(item.url)} />
       </div>
     );
   }
@@ -64,8 +66,9 @@ export function ProductPhoto({
   label?: string;
   category?: string | null;
 }) {
-  if (isProductPhoto(src)) {
-    return <SiteImage src={src} alt={alt} priority={priority} sizes={sizes} className={className} />;
+  const [failed, setFailed] = useState<string | null>(null);
+  if (isProductPhoto(src) && failed !== src) {
+    return <SiteImage src={src} alt={alt} priority={priority} sizes={sizes} className={className} onFailed={() => setFailed(src ?? null)} />;
   }
   return <EsFallback category={category} alt={alt} className={className} sizes={sizes} label={label} />;
 }
