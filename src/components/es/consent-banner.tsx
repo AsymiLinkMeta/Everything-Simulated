@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useId, useRef, useState } from "react";
 import { Link } from "@tanstack/react-router";
-import { Cookie, X } from "lucide-react";
+import { X } from "lucide-react";
 import { onConsentOpen, openConsentSettings, readConsent, writeConsent, type ConsentRecord } from "@/lib/es/consent";
 
 const fmt = (iso: string) => {
@@ -67,38 +67,31 @@ export function ConsentBanner() {
   if (!open) return null;
 
   return (
-    <section className="es-consent" role="region" aria-labelledby={titleId} aria-describedby={descId} data-testid="cookie-consent">
-      <div className="es-consent-inner">
-        <div className="es-consent-copy">
-          <h2 id={titleId} ref={titleRef} tabIndex={-1} className="es-consent-title">
-            <Cookie aria-hidden="true" className="es-consent-icon" />
-            Cookies on Everything Simulated
-          </h2>
-          <p id={descId}>
-            We only use what keeps the site working: your cart, your sign-in and this choice. With your OK we also set two
-            first-party cookies when you arrive through an ambassador's link or QR code, so they're credited for your quote or order
-            for 90 days. No advertising or analytics cookies.{" "}
-            <Link to="/privacy#cookies" className="es-consent-link">
-              Cookie details
-            </Link>
-          </p>
-          {record ? (
-            <p className="es-consent-status" data-testid="cookie-consent-status">
-              Your current choice: <strong>{record.referral ? "Accepted" : "Rejected"}</strong> on {fmt(record.ts)}. You can change it
-              at any time.
-            </p>
-          ) : null}
-        </div>
-        <div className="es-consent-actions">
-          <button type="button" className="es-consent-btn" onClick={() => choose(false)} aria-pressed={record ? !record.referral : undefined}>
-            Reject cookies
-          </button>
-          <button type="button" className="es-consent-btn" onClick={() => choose(true)} aria-pressed={record ? record.referral : undefined}>
-            Accept cookies
-          </button>
-        </div>
+    <section className="ds-cookie" role="region" aria-labelledby={titleId} aria-describedby={descId} data-testid="cookie-consent">
+      <div className="ds-cookie-copy">
+        <h2 id={titleId} ref={titleRef} tabIndex={-1} className="ds-cookie-title">
+          Cookies on Everything Simulated
+        </h2>
+        <p id={descId}>
+          Essential cookies keep your cart and sign-in working. With your OK, an ambassador's link also sets two first-party
+          cookies so they're credited for 90 days. No ads or analytics.{" "}
+          <Link to="/privacy#cookies">Cookie details</Link>
+        </p>
         {record ? (
-          <button type="button" className="es-consent-close" onClick={close} aria-label="Close cookie settings and keep my choice">
+          <p className="ds-cookie-status" data-testid="cookie-consent-status">
+            Your choice: <strong>{record.referral ? "Accepted" : "Rejected"}</strong> on {fmt(record.ts)}.
+          </p>
+        ) : null}
+      </div>
+      <div className="ds-cookie-actions">
+        <button type="button" className="ds-btn ds-btn-secondary" onClick={() => choose(false)} aria-pressed={record ? !record.referral : undefined}>
+          Reject cookies
+        </button>
+        <button type="button" className="ds-btn ds-btn-secondary" onClick={() => choose(true)} aria-pressed={record ? record.referral : undefined}>
+          Accept cookies
+        </button>
+        {record ? (
+          <button type="button" className="ds-icon-btn" onClick={close} aria-label="Close cookie settings and keep my choice">
             <X aria-hidden="true" className="size-4" />
           </button>
         ) : null}

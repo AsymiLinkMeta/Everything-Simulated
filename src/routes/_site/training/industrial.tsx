@@ -29,7 +29,7 @@ function IndustrialTraining() {
         kicker="Industrial"
         title="Industrial & Heavy Vehicle Training Simulators"
         lead="Plant, truck, forklift and excavator training simulators. We spec controls, visuals and the operating environment to your requirements. Each build is quoted individually."
-        image="/rigs/starter.jpg"
+        image="/rigs/es-cat-chassis.jpg"
         tone="adventure"
       />
       <div className="es-body">
@@ -41,8 +41,8 @@ function IndustrialTraining() {
           <ImageCards
             columns={2}
             cards={[
-              { to: "/events", image: "/rigs/showroom.jpg", kicker: "Venue", title: "Group days", hint: "Corporate and training groups on the warehouse floor." },
-              { to: "/contact", image: "/rigs/motion.jpg", kicker: "Enquire", title: "Spec the cab", hint: "No public catalogue." },
+              { to: "/events", image: "/rigs/es-cat-screens.jpg", kicker: "Venue", title: "Group days", hint: "Corporate and training groups on the warehouse floor." },
+              { to: "/contact", image: "/rigs/es-cat-motion.jpg", kicker: "Enquire", title: "Spec the cab", hint: "No public catalogue." },
             ]}
           />
         </div>

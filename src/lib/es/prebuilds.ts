@@ -378,7 +378,7 @@ export function prebuildToPackage(p: PrebuildWithComponents): PackageSpec {
     kicker: p.kicker,
     priceExGst: p.effective_price_ex_gst ?? 0,
     blurb: p.blurb,
-    image: p.image || (p.imageDeferred ? "" : "/rigs/starter.jpg"),
+    image: p.image || "",
     lines: p.components.map((c) => ({ sku: c.sku, qty: c.qty })),
     highlights: p.highlights,
     popular: p.featured,

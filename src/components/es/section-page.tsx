@@ -102,38 +102,47 @@ export function PageIntro({
   );
 }
 
+/**
+ * Page header. With `image` it's a studio "stage" (render on the right, copy bottom-left);
+ * without, a compact text header. Tool and policy pages use the text header so the content
+ * starts above the fold.
+ */
 export function PageHero({
   kicker,
   title,
   lead,
   image,
-  tone = "race",
   children,
 }: {
   kicker: string;
   title: string;
   lead?: string;
   image?: string;
+  /** @deprecated kept for call-site compatibility; the redesign uses one tone. */
   tone?: "race" | "adventure";
   children?: ReactNode;
 }) {
+  const copy = (
+    <>
+      <p className="ds-eyebrow">{kicker}</p>
+      <h1 className="ds-h1">{title}</h1>
+      {lead ? <p className="ds-lead mt-5">{lead}</p> : null}
+      {children ? <div className="mt-7">{children}</div> : null}
+    </>
+  );
+  if (!image) {
+    return (
+      <header className="ds-pagehead">
+        <div className="ds-container">{copy}</div>
+      </header>
+    );
+  }
   return (
-    <header className={`es-stage es-stage-${tone}`}>
-      {image ? <SiteImage src={image} className="es-stage-img" priority /> : null}
-      <div className="es-stage-veil" />
-      <div className="es-stage-copy">
-        <div className="es-lights" aria-hidden="true">
-          <i />
-          <i />
-          <i />
-          <i />
-          <i />
-        </div>
-        <p className="es-kicker es-kicker-telemetry">{kicker}</p>
-        <h1>{title}</h1>
-        {lead ? <p className="es-lead">{lead}</p> : null}
-        {children}
+    <header className="ds-stage">
+      <div className="ds-stage-art">
+        <SiteImage src={image} alt="" priority width={1800} height={1013} />
       </div>
+      <div className="ds-container">{copy}</div>
     </header>
   );
 }

@@ -1,4 +1,3 @@
-import { STAGE_IMAGES } from "@/lib/es/stage-images";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "@/lib/toast";
@@ -54,7 +53,6 @@ function Contact() {
         kicker="Workshop"
         title="Contact the Workshop"
         lead="Call us directly for a showroom demo, or send an enquiry below — it goes straight to the team."
-        image={STAGE_IMAGES["/contact"]}
       />
       <div className="es-body mx-auto max-w-3xl">
         <div className="grid gap-3 sm:grid-cols-2">

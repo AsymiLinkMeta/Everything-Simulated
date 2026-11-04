@@ -20,14 +20,14 @@ export const Route = createFileRoute("/_site/racing")({
 });
 
 const TOOL_IMAGES: Record<string, string> = {
-  "/prebuilds": "/rigs/haptic.jpg",
-  "/shop": "/rigs/starter.jpg",
-  "/compatibility": "/rigs/motion.jpg",
-  "/app/build": "/rigs/haptic.jpg",
-  "/app/chat": "/rigs/starter.jpg",
-  "/studio": "/rigs/showroom.jpg",
-  "/guides": "/rigs/starter.jpg",
-  "/faqs": "/rigs/motion.jpg",
+  "/prebuilds": "/rigs/es-cat-wheel.jpg",
+  "/shop": "/rigs/es-cat-chassis.jpg",
+  "/compatibility": "/rigs/es-cat-motion.jpg",
+  "/app/build": "/rigs/es-cat-wheel.jpg",
+  "/app/chat": "/rigs/es-cat-chassis.jpg",
+  "/studio": "/rigs/es-cat-screens.jpg",
+  "/guides": "/rigs/es-cat-chassis.jpg",
+  "/faqs": "/rigs/es-cat-motion.jpg",
 };
 
 function RacingHub() {
@@ -105,7 +105,7 @@ function RacingHub() {
       {spotlight ? (
         <section className="es-body pt-0">
           <MediaSplit
-            image={spotlightImage || "/rigs/haptic.jpg"}
+            image={spotlightImage || "/rigs/es-cat-wheel.jpg"}
             kicker={spotlight.kicker || "Featured"}
             title={spotlight.name}
             lead={spotlight.blurb || spotlight.description}
@@ -127,7 +127,7 @@ function RacingHub() {
           <ImageCards
             cards={RACING_TOOLS.slice(0, 6).map((t) => ({
               to: t.to,
-              image: TOOL_IMAGES[t.to] || "/rigs/haptic.jpg",
+              image: TOOL_IMAGES[t.to] || "/rigs/es-cat-wheel.jpg",
               kicker: t.label,
               title: t.label,
               hint: t.hint,

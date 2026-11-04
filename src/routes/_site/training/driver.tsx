@@ -29,7 +29,7 @@ function DriverTraining() {
         kicker="Driver"
         title="Motorsport & Junior Driver Training"
         lead="Juniors and race drivers already train on our four-screen racing simulators. Pedal spacing, torque limits and coaching displays are fitted in the studio before dispatch. Group sessions for professional and amateur drivers run as warehouse events."
-        image="/rigs/haptic.jpg"
+        image="/rigs/es-cat-wheel.jpg"
         tone="race"
       >
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -45,9 +45,9 @@ function DriverTraining() {
         <div className="mt-10">
           <ImageCards
             cards={[
-              { to: "/racing", image: "/rigs/motion.jpg", kicker: "Hardware", title: "Racing tools", hint: "The rigs the program runs on." },
-              { to: "/events", image: "/rigs/showroom.jpg", kicker: "Groups", title: "Group days", hint: "Professional and amateur sessions at the warehouse." },
-              { to: "/ambassadors", image: "/rigs/haptic.jpg", kicker: "People", title: "Ambassadors", hint: "Drivers the workshop stands with." },
+              { to: "/racing", image: "/rigs/es-cat-motion.jpg", kicker: "Hardware", title: "Racing tools", hint: "The rigs the program runs on." },
+              { to: "/events", image: "/rigs/es-cat-screens.jpg", kicker: "Groups", title: "Group days", hint: "Professional and amateur sessions at the warehouse." },
+              { to: "/ambassadors", image: "/rigs/es-cat-wheel.jpg", kicker: "People", title: "Ambassadors", hint: "Drivers the workshop stands with." },
             ]}
           />
         </div>

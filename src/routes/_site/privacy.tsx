@@ -1,4 +1,3 @@
-import { STAGE_IMAGES } from "@/lib/es/stage-images";
 import { createFileRoute } from "@tanstack/react-router";
 import { pageHead } from "@/lib/es/seo";
 import { PageHero } from "@/components/es/section-page";
@@ -84,7 +83,7 @@ function Privacy() {
   const tel = BRAND.phone.replace(/\s/g, "");
   return (
     <article>
-      <PageHero kicker="Legal" title="Privacy Policy" lead="How we handle your data — account, quote and booking information stays with the workshop." image={STAGE_IMAGES["/privacy"]} />
+      <PageHero kicker="Legal" title="Privacy Policy" lead="How we handle your data — account, quote and booking information stays with the workshop." />
       <div className="es-body mx-auto max-w-3xl text-sm leading-relaxed text-muted">
         <p className="text-paper" data-testid="privacy-updated">
           Last updated: <time dateTime={LAST_UPDATED_ISO}>{LAST_UPDATED}</time>

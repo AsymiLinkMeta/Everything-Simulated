@@ -1,10 +1,11 @@
 import { createFileRoute, Link, notFound, applyHeadPayload } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { BookOpen, Boxes, Check, Package } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { CartPanel } from "@/components/es/cart-panel";
-import { BackButton, CheckPills, JsonLd, Money, IncGst, ProductTile } from "@/components/es/bits";
+import { BookOpen, Boxes, Check, Gauge, Package, ShieldCheck, ShoppingCart, Truck } from "lucide-react";
+import { CheckPills, JsonLd, Money, ProductTile } from "@/components/es/bits";
+import { leadTimeLabel } from "@/lib/es/lead-time";
+import { categoryLabel } from "@/lib/es/site-media";
+import { useCartDrawer } from "@/lib/es/cart-drawer-store";
 import { fetchProducts, productImage } from "@/lib/es/product-cache";
 import { ProductPhoto } from "@/components/es/product-photo";
 import { StickyBuyBar } from "@/components/es/sticky-buy-bar";
@@ -32,6 +33,7 @@ function ProductPage() {
   const products = useQuery({ queryKey: ["products"], queryFn: () => fetchProducts() });
   const item = products.data?.find((p) => p.sku === sku);
   const add = useCart((s) => s.add);
+  const showCart = useCartDrawer((s) => s.show);
   const result = useCart((s) => s.result)();
   const inCart = useCart((s) => s.lines.some((l) => l.sku === sku));
   const unique = item ? UNIQUE_CATEGORIES.has(item.category) : false;
@@ -39,10 +41,10 @@ function ProductPage() {
   function addItem() {
     if (!item) return;
     add(item.sku);
-    toast.success(`${item.name} added to your cart`);
+    toast.success(`${item.name} added to your cart`, { action: { label: "View cart", onClick: showCart } });
   }
   const related = item
-    ? (products.data ?? []).filter((p) => p.category === item.category && p.sku !== item.sku).slice(0, 3)
+    ? (products.data ?? []).filter((p) => p.category === item.category && p.sku !== item.sku).slice(0, 4)
     : [];
   const uniqueGallery = item ? productPhotos([item.image, ...(item.images ?? [])]) : [];
   const [hero, setHero] = useState<string>("");
@@ -67,18 +69,30 @@ function ProductPage() {
 
   if (products.isPending) {
     return (
-      <div className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-16">
-        <BackButton />
-        <p className="text-sm text-muted">Loading…</p>
+      <div className="ds-container">
+        <div className="ds-pdp" role="status" aria-busy="true" aria-label="Loading product">
+          <div className="ds-gallery-main ds-skeleton" />
+          <div className="ds-buybox">
+            <div className="ds-skeleton" style={{ height: "1rem", width: "25%" }} />
+            <div className="ds-skeleton" style={{ height: "3rem", width: "80%", marginTop: "1rem" }} />
+            <div className="ds-skeleton" style={{ height: "2rem", width: "35%", marginTop: "1.5rem" }} />
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!item) throw notFound();
+  const lead = leadTimeLabel(item.leadWeeks);
+  const details = [
+    item.whatsIncluded?.length ? "included" : null,
+    item.specs && Object.keys(item.specs).length ? "specs" : null,
+    item.mountCompatibility ? "mounts" : null,
+    item.compare ? "compare" : null,
+  ].filter(Boolean);
 
   return (
-    <div className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-16">
-      <BackButton />
+    <div className="ds-container">
       <JsonLd
         data={breadcrumbLd([
           { name: "Home", path: "/" },
@@ -87,155 +101,148 @@ function ProductPage() {
         ])}
       />
       <JsonLd data={catalogProductLd(item)} />
-      <div className="grid min-w-0 grid-cols-1 gap-8 lg:grid-cols-[1fr_1fr_320px]">
-        <div>
-          <ProductPhoto
-            src={hero || productImage(item)}
-            alt={item.name}
-            label={item.brand}
-            priority
-            sizes="(min-width: 1024px) 34vw, 100vw"
-            className="es-card h-80 w-full object-cover md:h-[28rem]"
-          />
+      <div className="ds-pdp">
+        <div className="min-w-0">
+          <nav aria-label="Breadcrumb">
+            <ol className="ds-crumbs">
+              <li><Link to="/shop">Shop</Link></li>
+              <li><Link to="/shop">{categoryLabel(item.category)}</Link></li>
+            </ol>
+          </nav>
+          <div className="ds-gallery-main">
+            <ProductPhoto
+              src={hero || productImage(item)}
+              alt={item.name}
+              category={item.category}
+              priority
+              sizes="(min-width: 960px) 55vw, 100vw"
+            />
+          </div>
           {uniqueGallery.length > 1 ? (
-            <div className="mt-3 flex gap-2 overflow-x-auto">
-              {uniqueGallery.slice(0, 8).map((src) => (
+            <div className="ds-thumbs">
+              {uniqueGallery.slice(0, 8).map((src, i) => (
                 <button
                   key={src}
                   type="button"
                   onClick={() => setHero(src)}
-                  className={`size-16 shrink-0 overflow-hidden rounded-md border ${
-                    hero === src ? "border-paper" : "border-line"
-                  }`}
-                  aria-label={`Show photo ${uniqueGallery.indexOf(src) + 1}`}
-                  aria-pressed={hero === src}
+                  aria-label={`Show photo ${i + 1}`}
+                  aria-current={hero === src}
                 >
-                  <img src={src} alt="" className="size-full object-cover" />
+                  <img src={src} alt="" loading="lazy" decoding="async" />
                 </button>
               ))}
             </div>
           ) : null}
         </div>
-        <div>
-          <p className="es-kicker">{item.brand}</p>
-          <h1 className="mt-2 text-3xl font-medium">{item.name}</h1>
+        <div className="ds-buybox">
+          <p className="ds-eyebrow">{item.brand}</p>
+          <h1 className="ds-h1">{item.name}</h1>
           {item.purchasable ? (
-            <>
-              <p className="mt-4 text-2xl">
-                <Money cents={item.sellExGst} gst />
-              </p>
-              <p>
-                <IncGst cents={item.sellExGst} />
-              </p>
-            </>
+            <p className="ds-buybox-price">
+              <Money cents={item.sellExGst} gst />
+              <small>Price includes GST. Freight is calculated in the cart.</small>
+            </p>
           ) : (
-            <p className="mt-4 text-2xl">Enquire for price</p>
+            <p className="ds-buybox-price">Enquire for price</p>
           )}
-          <p className="mt-4 text-sm text-muted" data-testid="stock-line">
-            {stockLabel(item.stock).long || item.stock} · usually {item.leadWeeks[0]}–{item.leadWeeks[1]} weeks to build and ship
-          </p>
-          {item.description ? <p className="mt-4 text-sm leading-6 text-muted">{item.description}</p> : null}
-          {item.notes ? <p className="mt-3 text-sm text-muted">{item.notes}</p> : null}
-          {item.maxNm ? <p className="mt-2 text-sm text-muted">{item.maxNm}Nm rating</p> : null}
-          <div className="mt-6">
-            <CheckPills result={result} />
+          <div className="ds-actions">
+            {item.purchasable ? (
+              <button type="button" className="ds-btn ds-btn-light ds-btn-lg ds-btn-block" onClick={addItem} aria-pressed={inCart && unique}>
+                {inCart ? <Check className="size-4" aria-hidden="true" /> : <ShoppingCart className="size-4" aria-hidden="true" />} {addLabel}
+              </button>
+            ) : (
+              <Link to="/contact" className="ds-btn ds-btn-light ds-btn-lg ds-btn-block">Enquire for price</Link>
+            )}
           </div>
-          {item.purchasable ? (
-            <Button className="mt-8" onClick={addItem}>
-              {addLabel}
-            </Button>
-          ) : (
-            <Button className="mt-8" asChild>
-              <Link to="/contact">Enquire for price</Link>
-            </Button>
-          )}
-          <p className="mt-4 text-sm text-muted">
-            The cart checks every part against the rest of your build. If a mix won't work, we won't take a deposit on it.
-          </p>
+          <ul className="ds-facts">
+            <li data-testid="stock-line">
+              <Truck className="size-4" aria-hidden="true" />
+              <span>
+                <strong>{stockLabel(item.stock).long || item.stock}</strong>
+                {lead ? <> · usually {lead} to build and ship</> : null}
+              </span>
+            </li>
+            <li>
+              <ShieldCheck className="size-4" aria-hidden="true" />
+              <span>Checked against the rest of your build before we take a deposit</span>
+            </li>
+            {item.maxNm ? (
+              <li>
+                <Gauge className="size-4" aria-hidden="true" />
+                <span><strong>{item.maxNm} Nm</strong> rating</span>
+              </li>
+            ) : null}
+          </ul>
+          {inCart ? (
+            <div className="mt-5">
+              <CheckPills result={result} />
+            </div>
+          ) : null}
+          {item.description ? <p className="ds-body mt-6">{item.description}</p> : null}
+          {item.notes ? <p className="ds-small mt-3">{item.notes}</p> : null}
         </div>
-        <CartPanel compact />
       </div>
       {item.purchasable ? (
         <StickyBuyBar name={`${item.brand} ${item.name}`} priceExGst={item.sellExGst} actionLabel={addLabel} onAction={addItem} />
       ) : null}
 
-      {(item.whatsIncluded?.length || item.mountCompatibility || item.specs || item.compare || item.assemblyManualUrl) ? (
-        <div className="mt-12 grid grid-cols-1 gap-6 lg:grid-cols-2">
-          {item.whatsIncluded?.length ? (
-            <div className="es-card p-5">
-              <div className="flex items-center gap-2">
-                <Package className="size-4 text-esred" />
-                <h2 className="text-base font-medium">What's included</h2>
+      {details.length || item.assemblyManualUrl ? (
+        <section className="ds-section ds-section-tight" aria-label="Details">
+          <div className="ds-grid ds-grid-2">
+            {item.whatsIncluded?.length ? (
+              <div>
+                <h2 className="ds-h3"><Package className="size-4" aria-hidden="true" /> What's included</h2>
+                <ul className="ds-checklist">
+                  {item.whatsIncluded.map((inc, i) => (
+                    <li key={i}><Check className="size-4" aria-hidden="true" /> <span>{inc}</span></li>
+                  ))}
+                </ul>
               </div>
-              <ul className="mt-3 space-y-1.5">
-                {item.whatsIncluded.map((inc, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm">
-                    <Check className="mt-0.5 size-3.5 shrink-0 text-muted" />
-                    <span>{inc}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-
-          {item.mountCompatibility ? (
-            <div className="es-card p-5">
-              <div className="flex items-center gap-2">
-                <Boxes className="size-4 text-esred" />
-                <h2 className="text-base font-medium">Mount compatibility</h2>
+            ) : null}
+            {item.specs && Object.keys(item.specs).length ? (
+              <div>
+                <h2 className="ds-h3">Specifications</h2>
+                <table className="ds-specs-table">
+                  <tbody>
+                    {Object.entries(item.specs).map(([key, value]) => (
+                      <tr key={key}><th scope="row">{key}</th><td>{value}</td></tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
-              <p className="mt-3 text-sm text-muted whitespace-pre-line">{item.mountCompatibility}</p>
-            </div>
-          ) : null}
-
-          {item.specs && Object.keys(item.specs).length ? (
-            <div className="es-card p-5">
-              <h2 className="text-base font-medium">Specifications</h2>
-              <dl className="mt-3 divide-y divide-line">
-                {Object.entries(item.specs).map(([key, value]) => (
-                  <div key={key} className="flex justify-between gap-4 py-2 text-sm">
-                    <dt className="text-muted">{key}</dt>
-                    <dd className="text-right font-medium">{value}</dd>
-                  </div>
-                ))}
-              </dl>
-            </div>
-          ) : null}
-
-          {item.compare ? (
-            <div className="es-card p-5">
-              <h2 className="text-base font-medium">Compare</h2>
-              <p className="mt-3 text-sm text-muted whitespace-pre-line">{item.compare}</p>
-            </div>
-          ) : null}
-
-          {item.assemblyManualUrl ? (
-            <div className="es-card p-5">
-              <div className="flex items-center gap-2">
-                <BookOpen className="size-4 text-esred" />
-                <h2 className="text-base font-medium">Assembly manual</h2>
+            ) : null}
+            {item.mountCompatibility ? (
+              <div>
+                <h2 className="ds-h3"><Boxes className="size-4" aria-hidden="true" /> Mount compatibility</h2>
+                <p className="ds-small whitespace-pre-line">{item.mountCompatibility}</p>
               </div>
-              <a
-                href={item.assemblyManualUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="mt-3 inline-block text-sm text-paper underline underline-offset-4 hover:text-esred"
-              >
-                View assembly guide
-              </a>
-            </div>
-          ) : null}
-        </div>
+            ) : null}
+            {item.compare ? (
+              <div>
+                <h2 className="ds-h3">Compare</h2>
+                <p className="ds-small whitespace-pre-line">{item.compare}</p>
+              </div>
+            ) : null}
+            {item.assemblyManualUrl ? (
+              <div>
+                <h2 className="ds-h3"><BookOpen className="size-4" aria-hidden="true" /> Assembly manual</h2>
+                <a href={item.assemblyManualUrl} target="_blank" rel="noopener noreferrer" className="ds-link">View assembly guide</a>
+              </div>
+            ) : null}
+          </div>
+        </section>
       ) : null}
       {related.length ? (
-        <div className="mt-16">
-          <h2 className="text-xl font-medium">Same category</h2>
-          <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3">
+        <section className="ds-section ds-section-tight" aria-labelledby="related-title">
+          <div className="ds-section-head">
+            <h2 id="related-title" className="ds-h2">More {categoryLabel(item.category).toLowerCase()} options</h2>
+          </div>
+          <div className="ds-product-grid">
             {related.map((p) => (
               <ProductTile key={p.sku} item={p} />
             ))}
           </div>
-        </div>
+        </section>
       ) : null}
     </div>
   );

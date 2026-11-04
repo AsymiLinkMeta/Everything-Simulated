@@ -40,10 +40,10 @@ function DronesPage() {
         <ImageCards
           columns={2}
           cards={[
-            { to: "/studio", image: "/rigs/showroom.jpg", kicker: "Studio", title: "See the layout", hint: "Control layout before we build." },
-            { to: "/training", image: "/rigs/starter.jpg", kicker: "Training", title: "Hours on the sticks", hint: "Programs that run on drone simulators." },
-            { to: "/aircraft", image: "/rigs/haptic.jpg", kicker: "Aircraft", title: "Manned next door", hint: "Helicopter and fixed-wing sit on the same floor." },
-            { to: "/contact", image: "/rigs/motion.jpg", kicker: "Enquire", title: "RePL, FPV or ops", hint: "Tell us the brief. We are not a CASA RTO." },
+            { to: "/studio", image: "/rigs/es-cat-screens.jpg", kicker: "Studio", title: "See the layout", hint: "Control layout before we build." },
+            { to: "/training", image: "/rigs/es-cat-chassis.jpg", kicker: "Training", title: "Hours on the sticks", hint: "Programs that run on drone simulators." },
+            { to: "/aircraft", image: "/rigs/es-cat-wheel.jpg", kicker: "Aircraft", title: "Manned next door", hint: "Helicopter and fixed-wing sit on the same floor." },
+            { to: "/contact", image: "/rigs/es-cat-motion.jpg", kicker: "Enquire", title: "RePL, FPV or ops", hint: "Tell us the brief. We are not a CASA RTO." },
           ]}
         />
         <PhoneStrip title="We Build the Simulator" lead="Licensing and certification courses are delivered by accredited partners. If you need a qualification, we will refer you to the right provider." />

@@ -1,4 +1,3 @@
-import { STAGE_IMAGES } from "@/lib/es/stage-images";
 import { createFileRoute } from "@tanstack/react-router";
 import { CITIES } from "@/lib/es/catalog";
 import { itemListLd, pageHead } from "@/lib/es/seo";
@@ -23,13 +22,12 @@ function Australia() {
         kicker="Coverage"
         title="Australia-Wide Simulator Delivery"
         lead="One workshop. Every capital city. Professional crate freight with optional white-glove installation."
-        image={STAGE_IMAGES["/au"]}
       />
       <div className="es-body">
         <ImageCards
           cards={CITIES.map((c) => ({
             to: `/au/${c.slug}`,
-            image: c.slug === "gold-coast" ? "/rigs/showroom.jpg" : "/rigs/haptic.jpg",
+            image: c.slug === "gold-coast" ? "/rigs/es-cat-screens.jpg" : "/rigs/es-cat-wheel.jpg",
             kicker: c.state,
             title: c.name,
             hint: c.note,
