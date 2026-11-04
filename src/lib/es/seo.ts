@@ -106,7 +106,7 @@ export function websiteLd() {
     inLanguage: "en-AU",
     publisher: { "@id": `${ORIGIN}/#org` },
     description:
-      "Gold Coast assembled racing simulators. Simagic, Trak Racer, Exodus and SIMRIG. Compatibility checked before deposit. Crate freight Australia-wide.",
+      "Gold Coast assembled racing simulators. Simagic, Exodus and SIMRIG on Everything Simulated chassis. Compatibility checked before deposit. Crate freight Australia-wide.",
   };
 }
 
@@ -152,7 +152,6 @@ export function localBusinessLd(cityName?: string) {
     knowsAbout: [
       "Sim racing",
       "Simagic",
-      "Trak Racer",
       "Exodus",
       "SIMRIG",
       "Direct drive wheelbases",
@@ -340,7 +339,7 @@ export const FAQS = [
     a: "Book a Gold Coast showroom session. We set pedal spacing and wheel height on the actual chassis before the crate leaves.",
   },
   {
-    q: "Will Simagic parts fit a Trak Racer or Exodus chassis?",
+    q: "Will Simagic parts fit my chassis?",
     a: "The build app runs a deterministic compatibility checker before deposit. It checks every part pair against our compatibility rules, flags the adapters and mounts a combination needs, and blocks pairings that don't work. The full rule list is on the compatibility page.",
   },
   {

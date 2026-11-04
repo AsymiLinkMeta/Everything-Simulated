@@ -25,12 +25,12 @@ test.describe("rig builder", () => {
     await expect(page.getByTestId("builder-card-tr120s")).toContainText("In your build");
     await expect(total(page)).toContainText("1 part");
     await expect(total(page)).toContainText(/\$\d/);
-    await expect(steps(page).getByRole("button", { name: /Chassis/ })).toContainText(/TR120S/i);
+    await expect(steps(page).getByRole("button", { name: /Chassis/ })).toContainText(/ES Pro 120/i);
   });
 
   test("conflicts are explained on the card and blocked parts can't be chosen", async ({ page }) => {
     const [rule] = sql<{ reason: string }>(`select reason from compatibility_rules where left_sku = 'sr2' and right_sku = 'tr120s' and severity = 'block'`);
-    test.skip(!rule, "no SR2/TR120S block rule seeded");
+    test.skip(!rule, "no SR2/ES Pro 120 block rule seeded");
     await page.goto("/build?step=chassis");
     await page.getByTestId("builder-card-tr120s").getByRole("button", { name: "Choose" }).click();
     await steps(page).getByRole("button", { name: /Motion/ }).click();

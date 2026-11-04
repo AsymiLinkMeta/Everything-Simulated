@@ -183,7 +183,7 @@ function Chat() {
         <Textarea
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="Will SR2 fit a TR120S with my 90kg driver?"
+          placeholder="Will SR2 fit the ES Pro 120 with my 90kg driver?"
           maxLength={4000}
         />
         <div className="flex flex-wrap gap-2">
