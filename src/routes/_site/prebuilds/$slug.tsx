@@ -39,6 +39,7 @@ function PrebuildDetailPage() {
   const cartPrebuild = useCart((s) => s.prebuildSlug);
   const p = prebuild.data;
   const [hero, setHero] = useState<string | null>(null);
+  const [failed, setFailed] = useState<string[]>([]);
   const added = Boolean(p && cartPrebuild === p.slug);
   function addBuild() {
     if (!p) return;
@@ -97,7 +98,9 @@ function PrebuildDetailPage() {
     ? Object.fromEntries(products.data.map((item) => [item.sku, item]))
     : getCachedProductMap();
   const others = (allPrebuilds.data ?? []).filter((o) => o.id !== p.id).slice(0, 3);
-  const photos = [...new Set([p.image, ...(p.gallery ?? [])].filter(Boolean))];
+  const photos = [...new Set([p.image, ...(p.gallery ?? [])].filter(Boolean))].filter(
+    (src, i) => i === 0 || !failed.includes(src as string),
+  ) as string[];
   const shown = hero && photos.includes(hero) ? hero : photos[0];
   const price = p.purchasable && p.effective_price_ex_gst ? p.effective_price_ex_gst : null;
 
@@ -141,7 +144,13 @@ function PrebuildDetailPage() {
             <div className="ds-thumbs">
               {photos.slice(0, 8).map((src, i) => (
                 <button key={src} type="button" onClick={() => setHero(src)} aria-label={`Show photo ${i + 1}`} aria-current={shown === src}>
-                  <img src={src} alt="" loading="lazy" decoding="async" />
+                  <img
+                    src={src}
+                    alt=""
+                    loading="lazy"
+                    decoding="async"
+                    onError={() => setFailed((f) => (f.includes(src) ? f : [...f, src]))}
+                  />
                 </button>
               ))}
             </div>
