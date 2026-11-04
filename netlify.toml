@@ -10,6 +10,9 @@
 
 [build.environment]
   NODE_VERSION = "22"
+  # scripts/data/*.sql hold the public Storage URLs (same host as VITE_SUPABASE_URL, which is public in the
+  # bundle anyway). Keep the secrets scan on for everything else.
+  SECRETS_SCAN_OMIT_PATHS = "scripts/data/*"
 
 # Production builds fail rather than ship a sitemap.xml / llms.txt without the
 # catalogue (they are generated from Supabase at build time; see vite.config.ts).
