@@ -30,6 +30,7 @@ ap.add_argument("--width", type=int, default=0, help="override every shot's widt
 ap.add_argument("--only", default="")
 ap.add_argument("--force", action="store_true")
 ap.add_argument("--list", action="store_true")
+ap.add_argument("--real", action="store_true", help="close-up material pass (realism.py) and product framing")
 args = ap.parse_args(argv)
 os.makedirs(args.out, exist_ok=True)
 
@@ -88,9 +89,17 @@ CAT_VIEW = {"chassis": (32, 16), "seat": (38, 12), "wheel": (40, 8), "pedals": (
 for k, layers in CATS.items():
     az, el = CAT_VIEW[k]
     shot(f"cat-{k}", layers, az, el, 9 / 16, 1800, region=(0.30, 0.94, 0.08, 0.92), lifted=k == "motion", dof=2.8, hide=("Pedal cable",))
-    shot(f"part-{k}", layers, az, el, 1.0, 1200, region=(0.10, 0.90, 0.12, 0.88), lifted=k == "motion", dof=2.8,
-         hide=("Pedal cable",))
+    # square product art: the whole part with breathing room on every side; a deeper focus at --real
+    shot(f"part-{k}", layers, az, el, 1.0, 1200,
+         region=(0.15, 0.85, 0.16, 0.84) if args.real else (0.10, 0.90, 0.12, 0.88),
+         lifted=k == "motion", dof=6.3 if args.real else 2.8, hide=("Pedal cable",))
 shot("plate", [], 30, 12, 9 / 16, 1600, fit=CORE)
+
+if args.real:
+    sys.path.insert(0, HERE)
+    import realism  # noqa: E402
+
+    realism.apply()
 
 if args.list:
     print("\n".join(SHOTS))
