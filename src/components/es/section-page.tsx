@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { SiteImage } from "@/components/es/site-image";
 import { Link } from "@tanstack/react-router";
 import { BRAND } from "@/lib/es/catalog";
@@ -122,6 +122,8 @@ export function PageHero({
   tone?: "race" | "adventure";
   children?: ReactNode;
 }) {
+  // art that fails to load drops the stage, so a missing render never leaves an empty dark band
+  const [artFailed, setArtFailed] = useState(false);
   const copy = (
     <>
       <p className="ds-eyebrow">{kicker}</p>
@@ -130,7 +132,7 @@ export function PageHero({
       {children ? <div className="mt-7">{children}</div> : null}
     </>
   );
-  if (!image) {
+  if (!image || artFailed) {
     return (
       <header className="ds-pagehead">
         <div className="ds-container">{copy}</div>
@@ -140,7 +142,7 @@ export function PageHero({
   return (
     <header className="ds-stage">
       <div className="ds-stage-art">
-        <SiteImage src={image} alt="" priority width={1800} height={1013} />
+        <SiteImage src={image} alt="" priority width={1800} height={1013} onFailed={() => setArtFailed(true)} />
       </div>
       <div className="ds-container">{copy}</div>
     </header>

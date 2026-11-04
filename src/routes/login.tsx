@@ -227,15 +227,15 @@ function Login() {
               </Button>
             </form>
             {staff ? (
-              <a href="/login" className="block text-sm text-muted">
+              <a href="/login" className="flex min-h-11 items-center text-sm text-muted hover:text-paper">
                 Customer? Sign In in the header.
               </a>
             ) : (
-              <div className="space-y-2">
+              <div>
                 {mode !== "new" ? (
                   <button
                     type="button"
-                    className="text-sm text-muted"
+                    className="flex min-h-11 items-center text-sm text-muted hover:text-paper"
                     onClick={() => {
                       setMode(mode === "up" ? "in" : "up");
                       setError(null);
@@ -247,7 +247,7 @@ function Login() {
                 ) : null}
                 <button
                   type="button"
-                  className="block text-sm text-muted"
+                  className="flex min-h-11 items-center text-sm text-muted hover:text-paper"
                   onClick={() => {
                     setMode(mode === "reset" || mode === "new" ? "in" : "reset");
                     setError(null);
@@ -262,13 +262,13 @@ function Login() {
         ) : (
           <p className="text-sm text-muted">{staff ? "Login is disabled." : "Sign-in is disabled."}</p>
         )}
-        <Link to="/" className="block text-sm text-muted">
+        <Link to="/" className="flex min-h-11 items-center text-sm text-muted hover:text-paper">
           Back to the site
         </Link>
         {!staff ? (
-          <p className="border-t border-line pt-4 text-xs text-subtle">
+          <p className="border-t border-line pt-2 text-sm text-subtle">
             Workshop team?{" "}
-            <a href="/login?portal=staff" className="underline underline-offset-4 hover:text-paper">
+            <a href="/login?portal=staff" className="inline-flex min-h-11 items-center underline underline-offset-4 hover:text-paper">
               Staff login
             </a>
           </p>
