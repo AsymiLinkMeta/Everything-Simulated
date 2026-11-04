@@ -28,7 +28,6 @@ import {
 import { stockLabel } from "@/lib/es/stock";
 import { pageHead, breadcrumbLd } from "@/lib/es/seo";
 import { JsonLd, Money } from "@/components/es/bits";
-import { PageHero } from "@/components/es/section-page";
 import { ProductPhoto } from "@/components/es/product-photo";
 import { RigPreview } from "@/components/es/rig-preview";
 import { Button } from "@/components/ui/button";
@@ -187,11 +186,11 @@ function RigBuilder() {
   return (
     <div>
       <JsonLd data={breadcrumbLd([{ name: "Home", path: "/" }, { name: "Rig builder", path: "/build" }])} />
-      <PageHero
-        kicker="Rig builder"
-        title="Build your rig, step by step"
-        lead="Nine steps, live workshop prices and a compatibility check on every part."
-      />
+      <header className="ds-toolhead ds-container">
+        <p className="ds-eyebrow">Rig builder</p>
+        <h1 className="ds-h2">Build your rig</h1>
+        <p className="ds-muted">Nine steps, live workshop prices and a compatibility check on every part.</p>
+      </header>
 
       <div className="es-body es-rb">
         {prebuilds.data?.length ? (

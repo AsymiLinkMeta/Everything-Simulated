@@ -793,3 +793,9 @@ body:has(.es-rb-total) .ds-cookie { bottom: calc(5.25rem + env(safe-area-inset-b
 .ds-lines a { color: var(--ds-text); text-decoration: none; }
 .ds-lines a:hover { text-decoration: underline; text-underline-offset: 3px; }
 .ds-buybox .ds-actions { display: grid; gap: var(--ds-s3); }
+
+/* Builder opens straight into the tool: compact header, no hero. */
+.ds-toolhead { padding-block: var(--ds-s6) var(--ds-s4); }
+.ds-toolhead .ds-h2 { margin-top: var(--ds-s2); }
+.ds-toolhead .ds-muted { margin-top: var(--ds-s2); }
+.ds-toolhead + .es-rb { padding-top: 0; }
