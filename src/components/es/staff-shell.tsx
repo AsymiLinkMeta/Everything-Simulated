@@ -107,7 +107,7 @@ export function StaffShell() {
   return (
     <div className="es-staff">
       <div className="es-staff-bg" aria-hidden="true">
-        <img src="/rigs/hero-poster.jpg" alt="" />
+        <img src="/rigs/es-hero-wide.jpg" alt="" />
       </div>
       <aside className="es-sidebar">
         <div className="es-sidebar-head">

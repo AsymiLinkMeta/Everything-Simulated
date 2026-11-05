@@ -36,7 +36,7 @@ function CityPage() {
         kicker={`${city.state} · Australia-wide`}
         title={`Racing Simulators Delivered to ${city.name}`}
         lead={city.note}
-        image="/rigs/showroom.jpg"
+        image="/rigs/es-cat-screens.jpg"
       />
       <div className="es-body">
         <BackButton />

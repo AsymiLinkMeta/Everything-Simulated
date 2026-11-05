@@ -1,4 +1,4 @@
-import { PrebuildPhoto, SiteImage } from "@/components/es/site-image";
+import { PrebuildPhoto } from "@/components/es/site-image";
 import { createFileRoute, Link, applyHeadPayload } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -21,6 +21,8 @@ import { LoadError } from "@/components/es/bits";
 import { BRAND } from "@/lib/es/content";
 import { ORIGIN, breadcrumbLd, pageHead } from "@/lib/es/seo";
 import { fetchPublishedPrebuilds } from "@/lib/es/prebuilds";
+import { PersonPhoto } from "@/components/es/person-photo";
+import { isProductPhoto } from "@/lib/es/product-photos";
 
 export const Route = createFileRoute("/_site/ambassador-profile")({
   head: () =>
@@ -123,7 +125,7 @@ export function AmbassadorProfile() {
         kicker={[ambassador.teamStatus, ambassador.motorsport, ambassador.series, ambassador.className].filter(Boolean).join(" · ") || "Ambassador"}
         title={ambassador.name}
         lead={ambassador.bio || undefined}
-        image={ambassador.photo || crate?.image || "/rigs/haptic.jpg"}
+        image={isProductPhoto(ambassador.photo) ? ambassador.photo : "/rigs/es-cat-wheel.jpg"}
         tone="race"
       >
         <div className="mt-4">
@@ -161,11 +163,11 @@ export function AmbassadorProfile() {
       <div className="es-body">
         <div className="es-media-split">
           <div className="es-media-split-frame">
-            {crate ? <PrebuildPhoto prebuild={crate} fallback={ambassador.photo || "/rigs/haptic.jpg"} alt="" /> : <SiteImage src={ambassador.photo || "/rigs/haptic.jpg"} alt="" />}
+            {crate ? <PrebuildPhoto prebuild={crate} fallback="/rigs/es-cat-wheel.jpg" alt="" /> : <PersonPhoto name={ambassador.name} src={ambassador.photo} />}
           </div>
           <div className="es-media-split-copy">
             <p className="es-kicker">Their rig</p>
-            <h2>{crate ? crate.name : "Rig pending"}</h2>
+            <h2>{crate ? crate.name : "Rig being specced"}</h2>
             {crate ? (
               <>
                 <p className="text-sm leading-6 text-muted">{ambassador.rigNote || crate.blurb}</p>

@@ -1,12 +1,11 @@
 import { STAGE_IMAGES } from "@/lib/es/stage-images";
 import { TrustBar } from "@/components/es/trust-bar";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { PrebuildPhoto } from "@/components/es/site-image";
+import { RigCard, RigCardSkeleton } from "@/components/es/rig-card";
 import { useQuery } from "@tanstack/react-query";
-import { JsonLd, LoadError, Money } from "@/components/es/bits";
+import { JsonLd, LoadError } from "@/components/es/bits";
 import { itemListLd, pageHead } from "@/lib/es/seo";
 import { fetchPublishedPrebuilds } from "@/lib/es/prebuilds";
-import type { PrebuildWithComponents } from "@/lib/es/prebuilds";
 import { PageHero } from "@/components/es/section-page";
 
 export const Route = createFileRoute("/_site/prebuilds/")({
@@ -27,48 +26,33 @@ function PrebuildsPage() {
     <div>
       <JsonLd data={itemListLd("Prebuilt racing simulators", "/prebuilds", items.map((p) => ({ name: p.name, path: `/prebuilds/${p.slug}` })))} />
       <PageHero
-        kicker="Turn-key"
-        title="Prebuilt Racing Simulators"
-        lead="Every rig is assembled, tested and photographed on the Gold Coast before dispatch."
+        kicker="Prebuilds"
+        title="Ready-to-drive rigs"
+        lead="Complete racing simulators, assembled, tested and set up on the Gold Coast before they ship."
         image={STAGE_IMAGES["/prebuilds"]}
       />
       <TrustBar />
-      <div className="es-body">
-        <h2 className="sr-only">Available prebuilds</h2>
-        {prebuilds.isPending ? (
-          <div className="es-pack-grid">{[1, 2, 3].map((i) => <div key={i} className="aspect-square animate-pulse bg-raised" />)}</div>
-        ) : prebuilds.isError ? (
-          <LoadError what="the prebuilds" onRetry={() => void prebuilds.refetch()} />
-        ) : items.length === 0 ? (
-          <p className="text-muted">No prebuilt rigs available right now.</p>
-        ) : (
-          <div className="es-pack-grid">
-            {items.map((p) => (
-              <PrebuildCard key={p.id} prebuild={p} />
-            ))}
-          </div>
-        )}
-        <p className="mt-10 text-sm text-muted">
-          Prefer parts? <Link to="/shop" className="text-paper">Open the shop</Link> or <Link to="/compatibility" className="text-paper">run the checker</Link>.
-        </p>
-      </div>
+      <section className="ds-section ds-section-tight">
+        <div className="ds-container">
+          <h2 className="ds-visually-hidden">Available prebuilds</h2>
+          {prebuilds.isPending ? (
+            <div className="ds-rig-grid" role="status" aria-busy="true" aria-label="Loading prebuilds">{[1, 2, 3].map((i) => <RigCardSkeleton key={i} />)}</div>
+          ) : prebuilds.isError ? (
+            <LoadError what="the prebuilds" onRetry={() => void prebuilds.refetch()} />
+          ) : items.length === 0 ? (
+            <p className="ds-muted">No prebuilt rigs are listed right now. <Link to="/build" className="ds-link">Build one from parts</Link>.</p>
+          ) : (
+            <div className="ds-rig-grid">
+              {items.map((p, i) => (
+                <RigCard key={p.id} prebuild={p} priority={i === 0} />
+              ))}
+            </div>
+          )}
+          <p className="ds-small mt-10">
+            Prefer to choose every part? <Link to="/build" className="ds-link">Open the builder</Link> or <Link to="/shop" className="ds-link">browse the shop</Link>.
+          </p>
+        </div>
+      </section>
     </div>
-  );
-}
-
-function PrebuildCard({ prebuild }: { prebuild: PrebuildWithComponents }) {
-  return (
-    <Link to="/prebuilds/$slug" params={{ slug: prebuild.slug }} className="es-pack-tile">
-      <div className="es-pack-tile-frame">
-        <PrebuildPhoto prebuild={prebuild} alt={prebuild.name} sizes="(min-width: 1024px) 33vw, 100vw" placeholder={<div className="grid size-full place-items-center bg-raised text-muted">No image</div>} />
-      </div>
-      <div className="es-pack-tile-meta">
-        <h3>{prebuild.name}</h3>
-        <p className="mt-2 text-sm text-muted">{prebuild.blurb}</p>
-        <p className="mt-3 text-lg font-medium">
-          {prebuild.purchasable ? <>{prebuild.price_source === "parts" ? "From " : ""}<Money cents={prebuild.effective_price_ex_gst} gst /></> : "Enquire for price"}
-        </p>
-      </div>
-    </Link>
   );
 }

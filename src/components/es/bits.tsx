@@ -1,3 +1,4 @@
+import { useCartDrawer } from "@/lib/es/cart-drawer-store";
 import { useState } from "react";
 import { ProductPhoto } from "./product-photo";
 import { stockLabel } from "@/lib/es/stock";
@@ -14,6 +15,7 @@ import { product, productImage, getCachedProductMap } from "@/lib/es/product-cac
 import { useCart } from "@/lib/es/cart-store";
 import { UNIQUE_CATEGORIES } from "@/lib/es/checkCart";
 import { cn } from "@/lib/utils";
+import { leadTimeLabel } from "@/lib/es/lead-time";
 
 export function BackButton({ label = "Back" }: { label?: string }) {
   return (
@@ -25,6 +27,21 @@ export function BackButton({ label = "Back" }: { label?: string }) {
       <ArrowLeft className="size-4" />
       {label}
     </button>
+  );
+}
+
+/** Header/footer brand: the ES mark plus the Teko wordmark. */
+export function BrandMark() {
+  return (
+    <Link to="/" className="ds-brand" aria-label="Everything Simulated home">
+      <picture>
+        <source type="image/webp" srcSet="/logo-192.webp" />
+        <img src="/logo-192.png" alt="" width={192} height={192} decoding="async" />
+      </picture>
+      <span className="ds-wordmark" aria-hidden="true">
+        Everything <b>Simulated</b>
+      </span>
+    </Link>
   );
 }
 
@@ -109,9 +126,9 @@ export function CheckPills({ result }: { result: CheckResult }) {
       {warns.length ? (
         <span className="rounded-md bg-warn/15 px-2 py-1 text-warn">{warns.length} notes</span>
       ) : null}
-      <span className="rounded-md bg-raised px-2 py-1 text-muted">
-        {result.leadWeeks[0]}–{result.leadWeeks[1]} wks
-      </span>
+      {leadTimeLabel(result.leadWeeks, "wks") ? (
+        <span className="rounded-md bg-raised px-2 py-1 text-muted">{leadTimeLabel(result.leadWeeks, "wks")}</span>
+      ) : null}
     </div>
   );
 }
@@ -281,7 +298,7 @@ export function PackageCard({ pack }: { pack: PackageSpec }) {
   return (
     <Link to="/prebuilds/$slug" params={{ slug: pack.slug }} className="es-card group flex flex-col overflow-hidden">
       <div className="relative aspect-video overflow-hidden">
-        <PrebuildPhoto prebuild={pack} fallback="/rigs/starter.jpg" alt={pack.name} className="size-full object-cover transition-transform duration-300 group-hover:scale-105" sizes="(min-width: 1024px) 33vw, 100vw" />
+        <PrebuildPhoto prebuild={pack} fallback="/rigs/es-cat-chassis.jpg" alt={pack.name} className="size-full object-cover transition-transform duration-300 group-hover:scale-105" sizes="(min-width: 1024px) 33vw, 100vw" />
         <span className="es-kicker" style={{ position: "absolute", left: 16, top: 16, background: "rgba(7,7,8,0.8)", padding: "4px 8px", borderRadius: 8 }}>
           {pack.kicker}
         </span>
@@ -297,46 +314,49 @@ export function PackageCard({ pack }: { pack: PackageSpec }) {
   );
 }
 
-export function ProductTile({ item }: { item: Product }) {
+export function ProductTile({ item, priority }: { item: Product; priority?: boolean }) {
   const add = useCart((s) => s.add);
   const inCart = useCart((s) => s.lines.some((l) => l.sku === item.sku));
+  const showCart = useCartDrawer((s) => s.show);
   const buyable = item.purchasable ?? item.sellExGst > 0;
   return (
-    <Link to="/shop/$sku" params={{ sku: item.sku }} className="es-card group overflow-hidden">
-      <div className="relative aspect-video bg-raised">
-        <ProductPhoto src={productImage(item)} alt={item.name} label={item.brand} className="size-full object-cover opacity-90" sizes="(min-width: 1024px) 25vw, 50vw" />
+    <article className="ds-tile" data-testid="product-tile">
+      <div className="ds-tile-media">
+        <ProductPhoto src={productImage(item)} alt={item.name} category={item.category} priority={priority} sizes="(min-width: 1280px) 22vw, (min-width: 768px) 33vw, 50vw" />
         {item.stock === "indent" ? (
-          <span
-            className="absolute left-3 top-3 rounded-md bg-ink/80 px-2 py-1 text-[11px] uppercase tracking-wide text-muted"
-            title={stockLabel(item.stock).long}
-          >
+          <span className="ds-tile-stock" title={stockLabel(item.stock).long}>
             {stockLabel(item.stock).short}
           </span>
         ) : null}
-        {buyable ? (
-          <button
-            type="button"
-            aria-label={`Add ${item.name} to cart`}
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              add(item.sku);
-              toast.success(inCart && !UNIQUE_CATEGORIES.has(item.category) ? "Quantity updated" : "Added to build");
-            }}
-            className="absolute bottom-2 right-2 z-10 grid size-11 place-items-center rounded-full bg-paper text-ink shadow-lg transition-all duration-200 hover:scale-105"
-          >
-            {inCart ? <Check className="size-4" /> : <Plus className="size-4" />}
-          </button>
-        ) : null}
       </div>
-      <div className="space-y-1 p-4">
-        <p className="es-kicker">{item.brand}</p>
-        <h3 className="font-medium">{item.name}</h3>
-        <p className="text-sm text-muted">
-          {buyable ? <Money cents={item.sellExGst} gst /> : "Enquire for price"}
-        </p>
+      <div className="ds-tile-body">
+        <p className="ds-tile-brand">{item.brand}</p>
+        <h3 className="ds-tile-name">
+          <Link to="/shop/$sku" params={{ sku: item.sku }} className="ds-stretch">
+            {item.name}
+          </Link>
+        </h3>
+        <div className="ds-tile-foot">
+          <p className="ds-tile-price">{buyable ? <Money cents={item.sellExGst} gst /> : "Enquire for price"}</p>
+          {buyable ? (
+            <button
+              type="button"
+              aria-label={`Add ${item.name} to cart`}
+              onClick={() => {
+                add(item.sku);
+                toast.success(inCart && !UNIQUE_CATEGORIES.has(item.category) ? "Quantity updated" : "Added to build", {
+                  action: { label: "View cart", onClick: showCart },
+                });
+              }}
+              className="ds-icon-btn ds-add ds-above"
+              aria-pressed={inCart}
+            >
+              {inCart ? <Check className="size-4" aria-hidden="true" /> : <Plus className="size-4" aria-hidden="true" />}
+            </button>
+          ) : null}
+        </div>
       </div>
-    </Link>
+    </article>
   );
 }
 

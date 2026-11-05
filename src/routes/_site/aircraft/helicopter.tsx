@@ -29,7 +29,7 @@ function HelicopterPage() {
         kicker="Rotary"
         title="Helicopter Simulators"
         lead="Collective, cyclic and anti-torque control layouts for training and procedure rehearsal — specced to your requirements and assembled on the Gold Coast."
-        image="/rigs/showroom.jpg"
+        image="/rigs/es-cat-screens.jpg"
         tone="adventure"
       >
         <div className="mt-8 flex flex-col gap-3 sm:flex-row">
@@ -57,8 +57,8 @@ function HelicopterPage() {
           <ImageCards
             columns={2}
             cards={[
-              { to: "/aircraft/flight", image: "/rigs/motion.jpg", kicker: "Fixed-wing", title: "Flight", hint: "Same floor, different controls." },
-              { to: "/studio", image: "/rigs/haptic.jpg", kicker: "Studio", title: "Sit the layout", hint: "Consult before the crate." },
+              { to: "/aircraft/flight", image: "/rigs/es-cat-motion.jpg", kicker: "Fixed-wing", title: "Flight", hint: "Same floor, different controls." },
+              { to: "/studio", image: "/rigs/es-cat-wheel.jpg", kicker: "Studio", title: "Sit the layout", hint: "Consult before the crate." },
             ]}
           />
         </div>

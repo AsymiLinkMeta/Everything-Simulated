@@ -35,9 +35,9 @@ function TrainingHub() {
         <div className="mt-10">
           <ImageCards
             cards={[
-              { to: "/training/driver", image: "/rigs/haptic.jpg", kicker: "Driver", title: "Kart. Road. Motorsport.", hint: "Four-screen coaching on the racing crates." },
-              { to: "/events", image: "/rigs/showroom.jpg", kicker: "Groups", title: "Pro and amateur days", hint: "Warehouse group training plus catering. Enquire, not a calendar." },
-              { to: "/training/industrial", image: "/rigs/starter.jpg", kicker: "Industrial", title: "Plant and heavy vehicle", hint: "Truck, side-kart, excavator — enquire, not a shop." },
+              { to: "/training/driver", image: "/rigs/es-cat-wheel.jpg", kicker: "Driver", title: "Kart. Road. Motorsport.", hint: "Four-screen coaching on the racing crates." },
+              { to: "/events", image: "/rigs/es-cat-screens.jpg", kicker: "Groups", title: "Pro and amateur days", hint: "Warehouse group training plus catering. Enquire, not a calendar." },
+              { to: "/training/industrial", image: "/rigs/es-cat-chassis.jpg", kicker: "Industrial", title: "Plant and heavy vehicle", hint: "Truck, side-kart, excavator — enquire, not a shop." },
             ]}
           />
         </div>

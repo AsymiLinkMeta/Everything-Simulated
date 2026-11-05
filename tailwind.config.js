@@ -22,10 +22,14 @@ export default {
         warn: "#c4a15a",
       },
       borderRadius: {
-        card: "12px",
-        lg: "16px",
-        md: "12px",
-        sm: "8px",
+        // One corner for cards, buttons and inputs: the --radius token (15px) in es-system.css.
+        card: "var(--radius, 15px)",
+        sm: "var(--radius, 15px)",
+        md: "var(--radius, 15px)",
+        lg: "var(--radius, 15px)",
+        xl: "var(--radius, 15px)",
+        "2xl": "var(--radius, 15px)",
+        "3xl": "var(--radius, 15px)",
       },
       fontFamily: {
         sans: ["Outfit", "ui-sans-serif", "system-ui", "sans-serif"],

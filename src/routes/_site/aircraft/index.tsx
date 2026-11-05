@@ -35,9 +35,9 @@ function AircraftHub() {
         <div className="mt-10">
           <ImageCards
             cards={[
-              { to: "/aircraft/helicopter", image: "/rigs/showroom.jpg", kicker: "Rotary", title: "Helicopter", hint: "Collective, cyclic and anti-torque layouts for rehearsal." },
-              { to: "/aircraft/flight", image: "/rigs/motion.jpg", kicker: "Fixed-wing", title: "Flight", hint: "Same workshop, different controls. Enquire, not a catalogue." },
-              { to: "/studio", image: "/rigs/haptic.jpg", kicker: "Studio", title: "Sit the layout", hint: "Gold Coast consult before anything crates." },
+              { to: "/aircraft/helicopter", image: "/rigs/es-cat-screens.jpg", kicker: "Rotary", title: "Helicopter", hint: "Collective, cyclic and anti-torque layouts for rehearsal." },
+              { to: "/aircraft/flight", image: "/rigs/es-cat-motion.jpg", kicker: "Fixed-wing", title: "Flight", hint: "Same workshop, different controls. Enquire, not a catalogue." },
+              { to: "/studio", image: "/rigs/es-cat-wheel.jpg", kicker: "Studio", title: "Sit the layout", hint: "Gold Coast consult before anything crates." },
             ]}
           />
         </div>

@@ -1,4 +1,3 @@
-import { STAGE_IMAGES } from "@/lib/es/stage-images";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import { toast } from "@/lib/toast";
@@ -54,10 +53,9 @@ function Contact() {
         kicker="Workshop"
         title="Contact the Workshop"
         lead="Call us directly for a showroom demo, or send an enquiry below — it goes straight to the team."
-        image={STAGE_IMAGES["/contact"]}
       />
       <div className="es-body mx-auto max-w-3xl">
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)]">
           <a href={`tel:${BRAND.phone.replace(/\s/g, "")}`} className="es-contact-action" data-testid="contact-call">
             <Phone className="size-5 text-esred" aria-hidden="true" />
             <span>
@@ -69,7 +67,7 @@ function Contact() {
             <Mail className="size-5 text-esred" aria-hidden="true" />
             <span>
               <span className="es-kicker block">Email us</span>
-              <span className="mt-1 block break-all text-lg">{BRAND.email}</span>
+              <span className="mt-1 block text-base sm:text-lg [overflow-wrap:anywhere]">{BRAND.email}</span>
             </span>
           </a>
         </div>

@@ -13,7 +13,14 @@ import "./index.css";
 // Warm the catalogue and prebuild caches once the page has painted. Pages that need the
 // data on first render ask for it themselves; this only fills the cache for later
 // navigation, so it must not compete with the route's own JS and hero image.
+// Only routes where a catalogue or prebuild page is a likely next click warm the cache;
+// policy, sign-in, account and staff pages never pay for it.
+const WARM_PATHS = /^\/(?:$|shop|build|builds|prebuilds|racing|compatibility|checkout|order|studio|ambassadors|drivers|au)(?:\/|$)/;
+function shouldWarm(path: string) {
+  return WARM_PATHS.test(path);
+}
 function warmCaches() {
+  if (!shouldWarm(window.location.pathname)) return;
   fetchProducts().catch(() => {});
   hydratePrebuilds().catch(() => {});
 }

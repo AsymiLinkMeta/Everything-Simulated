@@ -20,15 +20,22 @@ type Props = Omit<ImgHTMLAttributes<HTMLImageElement>, "src"> & {
   src: string | null | undefined;
   priority?: boolean;
   sizes?: string;
+  /** Called once if the image fails to load; the image is removed so no broken-image icon shows. */
+  onFailed?: () => void;
 };
 
-export function SiteImage({ src, priority = false, sizes = "100vw", alt = "", ...rest }: Props) {
-  if (!src) return null;
+export function SiteImage({ src, priority = false, sizes = "100vw", alt = "", onFailed, ...rest }: Props) {
+  const [failed, setFailed] = useState<string | null>(null);
+  if (!src || failed === src) return null;
   const webp = rigSrcSet(src);
   const img = (
     <img
       src={src}
       alt={alt}
+      onError={() => {
+        setFailed(src);
+        onFailed?.();
+      }}
       loading={priority ? "eager" : "lazy"}
       decoding={priority ? "sync" : "async"}
       {...(priority ? { fetchpriority: "high" } : {})}

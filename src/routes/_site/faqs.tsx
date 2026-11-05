@@ -1,4 +1,3 @@
-import { STAGE_IMAGES } from "@/lib/es/stage-images";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { BRAND, GUIDES } from "@/lib/es/catalog";
 import { livePackages } from "@/lib/es/prebuilds";
@@ -28,7 +27,6 @@ function FAQs() {
         kicker="Questions"
         title="Frequently Asked Questions"
         lead="Pricing, motion vs haptic, component compatibility, Australia-wide delivery and warranty — the same answers we give on the workshop floor."
-        image={STAGE_IMAGES["/faqs"]}
       />
       <div className="es-body mx-auto max-w-3xl">
         <ol className="es-rail">

@@ -1,4 +1,3 @@
-import { STAGE_IMAGES } from "@/lib/es/stage-images";
 import { createFileRoute } from "@tanstack/react-router";
 import { JsonLd, LoadError } from "@/components/es/bits";
 import { PageHero, PhoneStrip } from "@/components/es/section-page";
@@ -32,7 +31,6 @@ function PartnersPage() {
         kicker="Industry"
         title="Hardware & Industry Partners"
         lead="The brands we install, the venues we partner with and the industry names behind our builds. Every listing represents an active working relationship."
-        image={STAGE_IMAGES["/partners"]}
         tone="race"
       />
       <div className="es-body">

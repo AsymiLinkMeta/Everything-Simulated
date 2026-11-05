@@ -507,7 +507,7 @@ function PrebuildForm({
           <Textarea
             value={aiInput}
             onChange={(e) => setAiInput(e.target.value)}
-            placeholder="e.g. Entry-level rig for juniors with Simagic Alpha Mini, Trak Racer TR80, single monitor, under $15k"
+            placeholder="e.g. Entry-level rig for juniors with Simagic Alpha Mini, ES Pro 120 chassis, single monitor, under $15k"
             rows={2}
             className="flex-1"
           />
@@ -517,7 +517,7 @@ function PrebuildForm({
         </form>
         <div className="flex flex-wrap gap-2">
           {[
-            "Starter rig with Simagic Alpha Mini and TR80",
+            "Starter rig with Simagic Alpha Mini and ES Pro 120",
             "Haptic rig with VNPX Active Pedals and haptic seat",
             "Motion rig with Exodus XR1 and SIMRIG SR2",
           ].map((suggestion) => (

@@ -30,7 +30,7 @@ function GuidePage() {
     <article>
       <JsonLd data={breadcrumbLd([{ name: "Home", path: "/" }, { name: "Guides", path: "/guides" }, { name: guide.title, path: `/guides/${guide.slug}` }])} />
       <JsonLd data={articleLd({ ...guide, body: guide.body.map(fill) })} />
-      <PageHero kicker="Guide" title={guide.title} lead={guide.description} image="/rigs/haptic.jpg" />
+      <PageHero kicker="Guide" title={guide.title} lead={guide.description} />
       <div className="es-body mx-auto max-w-2xl">
         <BackButton />
         <div className="space-y-5 text-base leading-relaxed">

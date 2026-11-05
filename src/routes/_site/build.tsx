@@ -27,9 +27,7 @@ import {
 } from "@/lib/es/builder-core";
 import { stockLabel } from "@/lib/es/stock";
 import { pageHead, breadcrumbLd } from "@/lib/es/seo";
-import { STAGE_IMAGES } from "@/lib/es/stage-images";
 import { JsonLd, Money } from "@/components/es/bits";
-import { PageHero } from "@/components/es/section-page";
 import { ProductPhoto } from "@/components/es/product-photo";
 import { RigPreview } from "@/components/es/rig-preview";
 import { Button } from "@/components/ui/button";
@@ -188,12 +186,11 @@ function RigBuilder() {
   return (
     <div>
       <JsonLd data={breadcrumbLd([{ name: "Home", path: "/" }, { name: "Rig builder", path: "/build" }])} />
-      <PageHero
-        kicker="Rig builder"
-        title="Build your rig, step by step"
-        lead="Nine steps, live prices from the workshop catalogue, and a compatibility check on every part before you pay a deposit."
-        image={STAGE_IMAGES["/compatibility"]}
-      />
+      <header className="ds-toolhead ds-container">
+        <p className="ds-eyebrow">Rig builder</p>
+        <h1 className="ds-h2">Build your rig</h1>
+        <p className="ds-muted">Nine steps, live workshop prices and a compatibility check on every part.</p>
+      </header>
 
       <div className="es-body es-rb">
         {prebuilds.data?.length ? (
@@ -309,7 +306,7 @@ function RigBuilder() {
                     <li key={item.sku}>
                       <article className={`es-rb-card ${isPicked ? "is-picked" : ""} ${blocks.length ? "is-blocked" : ""}`} {...hoverProps(item.category)} aria-labelledby={`${ids}-${item.sku}`} data-testid={`builder-card-${item.sku}`}>
                         <div className="es-rb-card-photo">
-                          <ProductPhoto src={productImage(item)} alt={item.name} label={item.brand} sizes="(min-width: 1024px) 22vw, 90vw" />
+                          <ProductPhoto src={productImage(item)} alt={item.name} category={item.category} sizes="(min-width: 1024px) 22vw, 90vw" />
                           {badge ? <span className="es-rb-badge" data-testid="builder-badge">{badge}</span> : null}
                         </div>
                         <div className="es-rb-card-body">
