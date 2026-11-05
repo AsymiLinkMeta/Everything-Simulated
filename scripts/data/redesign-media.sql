@@ -3,7 +3,7 @@
 -- renders in Supabase Storage (public bucket product-images, folder site/), uploaded from
 -- public/rigs/es-*.jpg. Absolute URLs so every deployed build (preview or production) can
 -- load them; images live in data, the UI has no SKU -> image map.
--- Motion has one render so far; add es-prebuild-motion-2..4 to its gallery once rendered.
+-- Motion gallery extended to 4 renders by motion-prebuild-gallery.sql.
 --
 -- Run:      psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/data/redesign-media.sql
 -- Rollback: psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f scripts/data/redesign-media-rollback.sql
