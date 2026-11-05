@@ -1,10 +1,11 @@
-/* Site-wide corner: 15px on every bordered module. Full-bleed hero/chapters stay square. */
+/* Site-wide corner: var(--radius) (15px, set in es-system.css) on every card and button.
+   Full-bleed hero/chapters stay square; round icon buttons stay round. */
 
 :root {
-  --es-radius: 15px;
-  --es-radius-sm: 15px;
-  --es-radius-md: 15px;
-  --es-radius-lg: 15px;
+  --es-radius: var(--radius, 15px);
+  --es-radius-sm: var(--radius, 15px);
+  --es-radius-md: var(--radius, 15px);
+  --es-radius-lg: var(--radius, 15px);
 }
 
 .es-card,
@@ -33,7 +34,7 @@
 .es-header-signin,
 .es-menu-toggle,
 .es-nav-drop-panel a {
-  border-radius: 15px;
+  border-radius: var(--radius, 15px);
 }
 
 .es-card,
@@ -69,12 +70,12 @@
 }
 
 .es-offer-grid > article {
-  border-radius: 15px;
+  border-radius: var(--radius, 15px);
 }
 
 .es-page input,
 .es-page textarea,
 .es-page select,
-.es-page [class*="rounded"] {
-  border-radius: 15px;
+.es-page [class*="rounded"]:not(.rounded-full):not(.rounded-none) {
+  border-radius: var(--radius, 15px);
 }

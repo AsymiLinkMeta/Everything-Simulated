@@ -53,8 +53,10 @@
   --ds-gutter: clamp(1.25rem, 0.6rem + 3vw, 3rem);
   --ds-header-h: 4rem;
   --ds-tap: 2.75rem; /* 44px */
-  --ds-radius: 6px;
-  --ds-radius-lg: 10px;
+  /* One corner for every card and button (Patrick: 15px). Round icon buttons and badges stay round. */
+  --radius: 15px;
+  --ds-radius: var(--radius);
+  --ds-radius-lg: var(--radius);
   --ds-ease: cubic-bezier(0.2, 0.7, 0.2, 1);
 
   /* Legacy tokens re-pointed so older pages pick up the system. */
@@ -67,8 +69,8 @@
   --es-line: #24242e;
   --es-line-bright: #34343f;
   --es-red-text: var(--ds-red-text);
-  --es-radius: var(--ds-radius);
-  --es-radius-sm: 4px;
+  --es-radius: var(--radius);
+  --es-radius-sm: var(--radius);
   --es-radius-md: var(--ds-radius);
   --es-radius-lg: var(--ds-radius-lg);
   --es-gloss-sheen: none;
@@ -448,7 +450,7 @@ body.ds-lock { overflow: hidden; }
   min-height: var(--ds-tap);
   padding: 0 var(--ds-s4);
   border: 1px solid var(--ds-line-2);
-  border-radius: 999px;
+  border-radius: var(--radius);
   background: transparent;
   color: var(--ds-text-2);
   font: inherit; font-size: var(--ds-fs-sm); font-weight: 500;
@@ -626,7 +628,7 @@ a.ds-card:hover .ds-card-media img, .ds-card.is-link:hover .ds-card-media img { 
 .ds-search {
   display: flex; align-items: center; gap: var(--ds-s2);
   min-height: var(--ds-tap); padding: 0 var(--ds-s4);
-  border: 1px solid var(--ds-line-2); border-radius: 999px; background: var(--ds-surface);
+  border: 1px solid var(--ds-line-2); border-radius: var(--radius); background: var(--ds-surface);
   color: var(--ds-text-2);
 }
 .ds-search input { width: 100%; min-width: 0; border: 0; background: transparent; color: var(--ds-text); font: inherit; font-size: var(--ds-fs-md); outline: none; }
@@ -734,7 +736,7 @@ a.ds-card:hover .ds-card-media img, .ds-card.is-link:hover .ds-card-media img { 
 .ds-cookie-actions { display: grid; grid-template-columns: 1fr 1fr; gap: var(--ds-s2); flex: none; }
 .ds-cookie .ds-btn { min-height: var(--ds-tap); padding: 0 var(--ds-s4); font-size: var(--ds-fs-xs); }
 @media (max-width: 560px) {
-  .ds-cookie { left: 0; right: 0; bottom: 0; border-radius: 0; border-inline: 0; border-bottom: 0; padding: var(--ds-s3) var(--ds-gutter) calc(var(--ds-s3) + env(safe-area-inset-bottom)); }
+  .ds-cookie { left: 8px; right: 8px; bottom: calc(8px + env(safe-area-inset-bottom)); padding: var(--ds-s3) var(--ds-s4); }
   .ds-cookie p { flex-basis: 100%; font-size: var(--ds-fs-xs); }
   .ds-cookie-actions { width: 100%; }
   .ds-cookie-actions .ds-btn { flex: 1; }
@@ -748,7 +750,7 @@ a.ds-card:hover .ds-card-media img, .ds-card.is-link:hover .ds-card-media img { 
 
 /* ---------- Skeletons ---------- */
 .ds-skeleton { background: linear-gradient(90deg, var(--ds-surface) 0%, #17171d 50%, var(--ds-surface) 100%); background-size: 200% 100%; border-radius: var(--ds-radius); animation: ds-shimmer 1.4s linear infinite; }
-.ds-card-media.ds-skeleton { border-radius: 0; aspect-ratio: 4 / 3; }
+.ds-card-media.ds-skeleton { border-radius: var(--radius) var(--radius) 0 0; aspect-ratio: 4 / 3; }
 @keyframes ds-shimmer { to { background-position: -200% 0; } }
 @media (prefers-reduced-motion: reduce) { .ds-skeleton { animation: none; } }
 .ds-card-foot .ds-price { margin: 0; }
@@ -802,3 +804,26 @@ body:has(.es-rb-total) .ds-cookie { bottom: calc(5.25rem + env(safe-area-inset-b
 .ds-toolhead .ds-h2 { margin-top: var(--ds-s2); }
 .ds-toolhead .ds-muted { margin-top: var(--ds-s2); }
 .ds-toolhead + .es-rb { padding-top: 0; }
+
+/* ---------- one corner (--radius) on floating panels ---------- */
+/* Cart drawer, mobile menu and the builder's sticky total float 8px off the edges so their corners show. */
+.ds-drawer {
+  top: 8px; right: 8px; bottom: 8px;
+  width: min(calc(100% - 16px), 28rem);
+  border: 1px solid var(--ds-line-2);
+  border-radius: var(--radius);
+  overflow: hidden;
+}
+.ds-menu {
+  inset: calc(var(--ds-header-h) + 8px) 8px calc(8px + env(safe-area-inset-bottom)) 8px;
+  border: 1px solid var(--ds-line);
+  border-radius: var(--radius);
+}
+.es-rb-total {
+  left: max(8px, calc((100vw - 76rem) / 2));
+  right: max(8px, calc((100vw - 76rem) / 2));
+  bottom: calc(8px + env(safe-area-inset-bottom));
+  padding: 0.6rem 0.6rem 0.6rem 1rem;
+  border: 1px solid var(--ds-line-2);
+  border-radius: var(--radius);
+}

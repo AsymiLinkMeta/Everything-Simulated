@@ -181,7 +181,7 @@
 .es-offer-grid > article {
   padding: 1.35rem 1.2rem 1.5rem;
   background: var(--es-panel);
-  border-radius: 0;
+  border-radius: var(--radius);
   box-shadow: none;
   transform: none;
 }
