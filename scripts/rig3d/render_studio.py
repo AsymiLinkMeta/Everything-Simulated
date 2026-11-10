@@ -87,7 +87,7 @@ CATS = {
 }
 # What the camera frames, when it isn't every layer shown (the rest runs out of frame as context).
 CAT_FIT = {"shifter": ["sidemount", "shifter", "handbrake"], "seat": ["seat"], "wheel": ["wheelbase", "wheel"], "pedals": ["pedals"]}
-CAT_VIEW = {"chassis": (32, 16), "seat": (38, 12), "wheel": (40, 8), "pedals": (20, 38), "screens": (24, 8),
+CAT_VIEW = {"chassis": (32, 16), "seat": (38, 12), "wheel": (55, 10), "pedals": (20, 38), "screens": (24, 8),
             "motion": (30, 10), "shifter": (58, 16), "pc": (35, 12)}
 for k, layers in CATS.items():
     az, el = CAT_VIEW[k]
