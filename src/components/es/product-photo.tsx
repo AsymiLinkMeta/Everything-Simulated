@@ -20,6 +20,7 @@ export function EsFallback({
   sizes,
   label,
   fallbackKey = "fallback:product",
+  priority,
 }: {
   category?: string | null;
   alt: string;
@@ -27,6 +28,8 @@ export function EsFallback({
   sizes?: string;
   label?: string;
   fallbackKey?: string;
+  /** Above-the-fold tile (often the LCP image): eager + fetchpriority=high. */
+  priority?: boolean;
 }) {
   const media = useSiteMedia();
   const item = categoryMedia(media.data, category, fallbackKey);
@@ -35,7 +38,7 @@ export function EsFallback({
   if (item && artFailed !== item.url) {
     return (
       <div className={`ds-fallback has-art ${className}`} data-testid="photo-fallback">
-        <SiteImage src={item.url} alt={alt} sizes={sizes} onFailed={() => setArtFailed(item.url)} />
+        <SiteImage src={item.url} alt={alt} sizes={sizes} priority={priority} width={item.width ?? undefined} height={item.height ?? undefined} onFailed={() => setArtFailed(item.url)} />
       </div>
     );
   }
@@ -70,5 +73,5 @@ export function ProductPhoto({
   if (isProductPhoto(src) && failed !== src) {
     return <SiteImage src={src} alt={alt} priority={priority} sizes={sizes} className={className} onFailed={() => setFailed(src ?? null)} />;
   }
-  return <EsFallback category={category} alt={alt} className={className} sizes={sizes} label={label} />;
+  return <EsFallback category={category} alt={alt} className={className} sizes={sizes} label={label} priority={priority} />;
 }

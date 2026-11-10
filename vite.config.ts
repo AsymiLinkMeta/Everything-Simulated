@@ -114,12 +114,29 @@ function normaliseOrigin(raw: string | undefined): string {
   }
 }
 
+/** Warm the TLS connection to Supabase (catalogue data and Storage images) before the app runs. */
+function supabasePreconnect(supabaseUrl: string | undefined): Plugin {
+  let href = "";
+  try {
+    if (supabaseUrl) href = new URL(supabaseUrl).origin;
+  } catch {
+    href = "";
+  }
+  return {
+    name: "es-supabase-preconnect",
+    transformIndexHtml(html) {
+      if (!href) return html;
+      return html.replace("<!-- Self-hosted fonts", `<link rel="preconnect" href="${href}" crossorigin />\n    <link rel="preconnect" href="${href}" />\n    <!-- Self-hosted fonts`);
+    },
+  };
+}
+
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, root, "VITE_");
   const origin = normaliseOrigin(env.VITE_SITE_URL);
   const noindex = env.VITE_NOINDEX === "true";
   return {
-    plugins: [react(), siteHost(origin, noindex), routePreload(root), spaRedirects(root), seoFiles(origin, env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY)],
+    plugins: [react(), siteHost(origin, noindex), supabasePreconnect(env.VITE_SUPABASE_URL), routePreload(root), spaRedirects(root), seoFiles(origin, env.VITE_SUPABASE_URL, env.VITE_SUPABASE_ANON_KEY)],
     resolve: {
       alias: {
         "@": path.resolve(root, "src"),

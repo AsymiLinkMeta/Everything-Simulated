@@ -7,6 +7,7 @@ import { AppProviders } from "@/components/es/providers";
 import { ScrollManager } from "@/components/es/scroll-manager";
 import { fetchProducts } from "@/lib/es/product-cache";
 import { hydratePrebuilds } from "@/lib/es/prebuilds";
+import { fetchSiteMedia } from "@/lib/es/site-media";
 import "./es.css";
 import "./index.css";
 
@@ -34,6 +35,14 @@ function idle() {
   if (ric) ric(warmCaches, { timeout: 3000 });
   else setTimeout(warmCaches, 1);
 }
+// On shop and product pages the LCP image is a catalogue tile whose art comes from
+// catalog_products + site_media. Start both requests now, in parallel with the page's
+// lazy chunk, instead of after it has loaded and rendered.
+if (/^\/shop(?:\/|$)/.test(window.location.pathname)) {
+  fetchProducts().catch(() => {});
+  fetchSiteMedia().catch(() => {});
+}
+
 if (document.readyState === "complete") whenIdle();
 else window.addEventListener("load", whenIdle, { once: true });
 

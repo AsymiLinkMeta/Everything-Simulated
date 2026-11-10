@@ -144,13 +144,7 @@ function PrebuildDetailPage() {
             <div className="ds-thumbs">
               {photos.slice(0, 8).map((src, i) => (
                 <button key={src} type="button" onClick={() => setHero(src)} aria-label={`Show photo ${i + 1}`} aria-current={shown === src}>
-                  <img
-                    src={src}
-                    alt=""
-                    loading="lazy"
-                    decoding="async"
-                    onError={() => setFailed((f) => (f.includes(src) ? f : [...f, src]))}
-                  />
+                  <SiteImage src={src} sizes="120px" onFailed={() => setFailed((f) => (f.includes(src) ? f : [...f, src]))} />
                 </button>
               ))}
             </div>

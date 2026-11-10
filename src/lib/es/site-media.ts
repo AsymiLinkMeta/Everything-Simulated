@@ -39,7 +39,23 @@ export function toSiteMedia(rows: unknown[]): SiteMedia {
   return out;
 }
 
-export async function fetchSiteMedia(): Promise<SiteMedia> {
+let inflight: Promise<SiteMedia> | null = null;
+
+/** Deduped: main.tsx starts this before the page chunk loads on catalogue routes. */
+export function fetchSiteMedia(): Promise<SiteMedia> {
+  if (!inflight) {
+    inflight = loadSiteMedia();
+    // Keep the result briefly so the page's own query reuses the early request; after that
+    // (or on error) a refetch goes to the network again.
+    inflight.then(
+      () => setTimeout(() => (inflight = null), 15_000),
+      () => (inflight = null),
+    );
+  }
+  return inflight;
+}
+
+async function loadSiteMedia(): Promise<SiteMedia> {
   const { data, error } = await supabase.from("site_media").select("key, url, alt, width, height");
   if (error) {
     if (isMissingTable(error)) return {};

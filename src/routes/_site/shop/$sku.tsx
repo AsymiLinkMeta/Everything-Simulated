@@ -8,6 +8,7 @@ import { categoryLabel } from "@/lib/es/site-media";
 import { useCartDrawer } from "@/lib/es/cart-drawer-store";
 import { fetchProducts, productImage } from "@/lib/es/product-cache";
 import { ProductPhoto } from "@/components/es/product-photo";
+import { SiteImage } from "@/components/es/site-image";
 import { StickyBuyBar } from "@/components/es/sticky-buy-bar";
 import { productPhotos } from "@/lib/es/product-photos";
 import { stockLabel } from "@/lib/es/stock";
@@ -128,7 +129,7 @@ function ProductPage() {
                   aria-label={`Show photo ${i + 1}`}
                   aria-current={hero === src}
                 >
-                  <img src={src} alt="" loading="lazy" decoding="async" />
+                  <SiteImage src={src} sizes="120px" />
                 </button>
               ))}
             </div>
