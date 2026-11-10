@@ -13,9 +13,11 @@
 --   * staff_inbox accepted read_at from anon, so a notice could arrive already "read".
 -- Staff (is_staff()) and server roles (service_role / postgres, e.g. edge functions) are
 -- unaffected. NOT applied to prod: needs Patrick's OK.
+-- The functions are SECURITY INVOKER on purpose: inside a SECURITY DEFINER function current_user is
+-- the owner, so the "current_user in (anon, authenticated)" test would never match.
 
 create or replace function public.guard_support_ticket()
-returns trigger language plpgsql security definer set search_path = public as $$
+returns trigger language plpgsql security invoker set search_path = public as $$
 begin
   if current_user not in ('anon', 'authenticated') or public.is_staff() then
     return new;
@@ -51,7 +53,7 @@ create trigger guard_support_ticket before insert or update on public.support_ti
   for each row execute function public.guard_support_ticket();
 
 create or replace function public.guard_support_message()
-returns trigger language plpgsql security definer set search_path = public as $$
+returns trigger language plpgsql security invoker set search_path = public as $$
 begin
   if current_user not in ('anon', 'authenticated') or public.is_staff() then
     return new;
@@ -72,7 +74,7 @@ create trigger guard_support_message before insert or update on public.support_m
   for each row execute function public.guard_support_message();
 
 create or replace function public.guard_staff_inbox()
-returns trigger language plpgsql security definer set search_path = public as $$
+returns trigger language plpgsql security invoker set search_path = public as $$
 begin
   if current_user not in ('anon', 'authenticated') or public.is_staff() then
     return new;
