@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { rigSrcSet } from "@/components/es/site-image";
 
-const SB = "https://wejllrdvkufsdxcfwwvl.supabase.co/storage/v1/object/public/product-images";
+const SB = "https://exampleref.supabase.co/storage/v1/object/public/product-images";
 
 describe("rigSrcSet", () => {
   it("maps bundled /rigs photos to their WebP widths", () => {
