@@ -76,9 +76,9 @@ for slug, layers, lifted in (("starter", STARTER, False), ("haptic", HAPTIC, Fal
 # category heroes (wide) and the same parts as square product fallbacks
 CATS = {
     "chassis": ["chassis", "chassis-back"],
-    "seat": ["seat"],
-    "wheel": ["wheelbase", "wheel"],
-    "pedals": ["pedals"],
+    "seat": ["chassis-back", "chassis", "seat"],
+    "wheel": ["chassis-back", "chassis", "wheelbase", "wheel"],
+    "pedals": ["chassis-back", "chassis", "pedals"],
     "screens": QUAD,
     "motion": CORE + MOTION,
     # Shown bolted to the cockpit: on its own the side mount's arm hung in the air above the floor.
@@ -86,8 +86,8 @@ CATS = {
     "pc": ["pc"],
 }
 # What the camera frames, when it isn't every layer shown (the rest runs out of frame as context).
-CAT_FIT = {"shifter": ["sidemount", "shifter", "handbrake"]}
-CAT_VIEW = {"chassis": (32, 16), "seat": (38, 12), "wheel": (40, 8), "pedals": (52, 16), "screens": (24, 8),
+CAT_FIT = {"shifter": ["sidemount", "shifter", "handbrake"], "seat": ["seat"], "wheel": ["wheelbase", "wheel"], "pedals": ["pedals"]}
+CAT_VIEW = {"chassis": (32, 16), "seat": (38, 12), "wheel": (40, 8), "pedals": (20, 38), "screens": (24, 8),
             "motion": (30, 10), "shifter": (58, 16), "pc": (35, 12)}
 for k, layers in CATS.items():
     az, el = CAT_VIEW[k]
