@@ -73,9 +73,10 @@ function Contact() {
         </div>
         {sent ? (
           <div className="es-card mt-8 space-y-3 p-6">
-            <p className="font-medium">Received. The workshop will reply in the app.</p>
+            <p className="font-medium" role="status">Received. Your enquiry is with the workshop.</p>
+            <p className="text-muted">Replies appear in your account. Sign in or create one with {email.trim()} to see them, or call us if it's urgent.</p>
             <Button asChild>
-              <Link to="/login">Sign in to view messages</Link>
+              <Link to="/login">Sign in to view replies</Link>
             </Button>
           </div>
         ) : (

@@ -125,22 +125,34 @@ export async function createTicket(input: {
   if (!email.includes("@")) throw new Error("Email is required");
   name = name || email.split("@")[0];
 
-  const { data, error } = await supabase
-    .from("support_tickets")
-    .insert({
-      user_id: user?.id ?? null,
-      contact_email: email,
-      contact_name: name,
-      order_id: input.orderId?.trim() || null,
-      subject,
-      body,
-      status: "open",
-      referral_code: getReferralCode(),
-    })
-    .select("*")
-    .maybeSingle();
+  // The id is made here and the insert asks for no row back: logged-out visitors (the
+  // public contact form) may insert a ticket but have no SELECT policy, so
+  // `insert().select()` failed for them with "violates row-level security policy".
+  const now = new Date().toISOString();
+  const ticket: SupportTicket = {
+    id: crypto.randomUUID(),
+    user_id: user?.id ?? null,
+    contact_email: email,
+    contact_name: name,
+    order_id: input.orderId?.trim() || null,
+    subject,
+    body,
+    status: "open",
+    created_at: now,
+    updated_at: now,
+  };
+  const { error } = await supabase.from("support_tickets").insert({
+    id: ticket.id,
+    user_id: ticket.user_id,
+    contact_email: email,
+    contact_name: name,
+    order_id: ticket.order_id,
+    subject,
+    body,
+    status: "open",
+    referral_code: getReferralCode(),
+  });
   if (error) throw new Error(error.message);
-  const ticket = data as SupportTicket;
   await supabase.from("support_messages").insert({
     ticket_id: ticket.id,
     author_id: user?.id ?? null,
