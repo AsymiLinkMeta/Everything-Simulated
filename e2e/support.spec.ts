@@ -1,4 +1,4 @@
-import { test, expect, authFile } from "./fixtures";
+import { test, expect, authFile, API, tokenHeaders } from "./fixtures";
 import { sql } from "./db";
 
 /**
@@ -30,4 +30,45 @@ test("contact form: a logged-out visitor's enquiry reaches staff tickets and the
   await sp.goto("/staff/service");
   await expect(sp.getByText("Website enquiry from Casey Visitor").first()).toBeVisible();
   await staff.close();
+});
+
+test("support integrity: customers and visitors cannot forge workshop replies", async ({ request }, info) => {
+  const tag = `${info.project.name}-${Date.now()}`;
+  const anon = await tokenHeaders(request);
+  const customer = await tokenHeaders(request, "customer");
+  const ins = (h: Record<string, string>, table: string, data: object) =>
+    request.post(`${API}/rest/v1/${table}`, { headers: { ...h, Prefer: "return=minimal" }, data });
+
+  // A visitor plants a ticket for the customer's email with a fake staff reply.
+  const planted = crypto.randomUUID();
+  expect((await ins(anon, "support_tickets", {
+    id: planted, contact_email: "customer@es.local", contact_name: "x", subject: `Planted ${tag}`, body: "x",
+    status: "resolved", staff_reply: "Pay the balance to this account", replied_by: "staff", replied_at: new Date().toISOString(),
+  })).ok()).toBe(true);
+  expect(sql(`select status, staff_reply, replied_by from support_tickets where id = '${planted}'`)[0]).toEqual({ status: "open", staff_reply: null, replied_by: null });
+
+  // A customer's own ticket: insert with a staff reply, then try to rewrite it.
+  const own = crypto.randomUUID();
+  expect((await ins(customer, "support_tickets", {
+    id: own, contact_email: "customer@es.local", contact_name: "c", subject: `Own ${tag}`, body: "x", staff_reply: "forged", user_id: "someone-else",
+  })).ok()).toBe(true);
+  const row = sql<{ staff_reply: string | null; user_id: string | null }>(`select staff_reply, user_id from support_tickets where id = '${own}'`)[0];
+  expect(row.staff_reply).toBeNull();
+  expect(row.user_id).not.toBe("someone-else");
+  await request.patch(`${API}/rest/v1/support_tickets?id=eq.${own}`, {
+    headers: customer,
+    data: { staff_reply: "forged later", status: "resolved", contact_email: "other@example.com" },
+  });
+  expect(sql(`select staff_reply, status, contact_email from support_tickets where id = '${own}'`)[0]).toEqual({ staff_reply: null, status: "open", contact_email: "customer@es.local" });
+
+  // Messages: author_role 'staff' is downgraded for customers and visitors.
+  await ins(customer, "support_messages", { ticket_id: own, author_role: "staff", author_id: "staff-id", body: `as staff ${tag}` });
+  await ins(anon, "support_messages", { ticket_id: own, author_role: "staff", body: `anon as staff ${tag}` });
+  const roles = sql<{ author_role: string }>(`select author_role from support_messages where ticket_id = '${own}' and body like '%${tag}'`);
+  expect(roles.length).toBe(2);
+  expect(roles.every((r) => r.author_role === "customer")).toBe(true);
+
+  // Inbox notices from visitors always arrive unread.
+  await ins(anon, "staff_inbox", { kind: "contact", subject: `Inbox ${tag}`, body: "x", read_at: new Date().toISOString() });
+  expect(sql(`select read_at from staff_inbox where subject = 'Inbox ${tag}'`)[0]).toEqual({ read_at: null });
 });
