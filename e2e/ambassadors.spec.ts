@@ -320,6 +320,7 @@ test.describe("ambassador self-edits", () => {
       await page.getByRole("button", { name: "Save profile" }).click();
       await expect(page.getByText("Saved", { exact: true })).toBeVisible();
     } finally {
+      exec(`update ambassadors set name = '${before.name.replace(/'/g, "''")}' where id = '${before.id}'`);
       for (const a of all) exec(`update ambassadors set photo = ${a.photo === null ? "null" : `'${a.photo.replace(/'/g, "''")}'`} where id = '${a.id}'`);
     }
   });

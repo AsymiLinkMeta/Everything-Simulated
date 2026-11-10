@@ -63,8 +63,10 @@ test("support integrity: customers and visitors cannot forge workshop replies", 
 
   // Messages: author_role 'staff' is downgraded for customers and visitors.
   await ins(customer, "support_messages", { ticket_id: own, author_role: "staff", author_id: "staff-id", body: `as staff ${tag}` });
-  await ins(anon, "support_messages", { ticket_id: own, author_role: "staff", body: `anon as staff ${tag}` });
-  const roles = sql<{ author_role: string }>(`select author_role from support_messages where ticket_id = '${own}' and body like '%${tag}'`);
+  await ins(anon, "support_messages", { ticket_id: planted, author_role: "staff", body: `anon as staff ${tag}` });
+  // Visitors can't post into a signed-in customer's ticket at all (20261110100000).
+  expect((await ins(anon, "support_messages", { ticket_id: own, author_role: "customer", body: `anon into own ${tag}` })).ok()).toBe(false);
+  const roles = sql<{ author_role: string }>(`select author_role from support_messages where ticket_id in ('${own}', '${planted}') and body like '%${tag}'`);
   expect(roles.length).toBe(2);
   expect(roles.every((r) => r.author_role === "customer")).toBe(true);
 
@@ -94,9 +96,10 @@ test("guest tickets: a visitor using a customer's email does not reach their acc
   });
   expect(post.ok()).toBe(false);
   const cp = await (await browser.newContext({ storageState: authFile("customer") })).newPage();
+  const listed = cp.waitForResponse((r) => r.url().includes("/rest/v1/support_tickets") && r.request().method() === "GET");
   await cp.goto("/app/service");
   await expect(cp.getByRole("heading", { level: 1 })).toBeVisible();
-  await cp.waitForLoadState("networkidle");
+  expect(JSON.stringify(await (await listed).json())).not.toContain(planted);
   await expect(cp.getByText(subject)).toHaveCount(0);
 
   // A visitor cannot post into a signed-in customer's ticket either.
@@ -115,6 +118,7 @@ test("guest tickets: a visitor using a customer's email does not reach their acc
   // Staff see it flagged as an unverified guest ticket.
   const sp = await (await browser.newContext({ storageState: authFile("admin") })).newPage();
   await sp.goto("/staff/service");
+  await sp.getByRole("button", { name: "Tickets", exact: true }).click();
   await sp.getByText(subject).first().click();
   await expect(sp.getByTestId("guest-ticket")).toBeVisible();
   await info.attach("guest-ticket-staff", { body: await sp.screenshot({ fullPage: true }), contentType: "image/png" });
