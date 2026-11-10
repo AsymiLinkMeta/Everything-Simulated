@@ -16,6 +16,7 @@ import {
   type GuardianStatus,
 } from "@/lib/es/ambassadors";
 import { aud, audExact } from "@/lib/utils";
+import { earningsHint, ratePercent, unsetRateNotice } from "@/lib/es/commission-rate";
 
 const STATUS_LABEL: Record<string, string> = {
   pending: "Pending: deposit paid",
@@ -23,10 +24,6 @@ const STATUS_LABEL: Record<string, string> = {
   paid: "Paid out",
   void: "Void",
 };
-
-function pct(rate: number | null) {
-  return rate === null ? "not set" : `${(rate * 100).toFixed(rate * 100 < 10 ? 1 : 0).replace(/\.0$/, "")}%`;
-}
 
 /** Clicks, leads, sales and earnings for one ambassador (their own, or any for staff). */
 export function AmbassadorDashboardPanel({ ambassadorId, staff = false }: { ambassadorId?: string; staff?: boolean }) {
@@ -48,6 +45,7 @@ export function AmbassadorDashboardPanel({ ambassadorId, staff = false }: { amba
   if (q.isError) return <LoadError what="the dashboard" onRetry={() => void q.refetch()} />;
   const d = q.data;
   if (!d) return <p className="text-sm text-muted">No ambassador profile is linked to this account.</p>;
+  const notice = unsetRateNotice(d, staff);
 
   return (
     <section className="space-y-4" aria-labelledby="amb-dash-h">
@@ -68,11 +66,9 @@ export function AmbassadorDashboardPanel({ ambassadorId, staff = false }: { amba
           </select>
         </label>
       </div>
-      {d.rate_source === "unset" ? (
-        <p role="status" className="rounded-md border border-warn/40 bg-warn/10 p-3 text-sm text-warn">
-          {staff
-            ? "No commission rate is set for this ambassador and there is no default rate. Sales are tracked; amounts are calculated once a rate is set."
-            : "Your commission rate hasn't been set yet. Every sale is still tracked and will be calculated once the workshop sets it."}
+      {notice ? (
+        <p role="status" className="rounded-md border border-warn/40 bg-warn/10 p-3 text-sm text-warn" data-testid="rate-notice">
+          {notice}
         </p>
       ) : null}
       <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" data-testid="ambassador-stats">
@@ -82,7 +78,7 @@ export function AmbassadorDashboardPanel({ ambassadorId, staff = false }: { amba
         <Stat
           label="Earnings"
           value={audExact(d.earnings.pending + d.earnings.approved + d.earnings.paid)}
-          hint={`Rate ${pct(d.rate)}${d.rate_source === "default" ? " (default)" : ""}${d.earnings.uncalculated ? ` · ${d.earnings.uncalculated} not calculated` : ""}`}
+          hint={earningsHint(d)}
         />
       </dl>
       <dl className="grid gap-3 text-sm sm:grid-cols-3">
@@ -128,7 +124,10 @@ function CommissionList({ d }: { d: AmbassadorDashboard }) {
               <td className="py-2 font-mono text-xs">{c.ref}</td>
               <td>{new Date(c.date).toLocaleDateString("en-AU")}</td>
               <td className="tabular-nums">{aud(c.basis_ex_gst)}</td>
-              <td className="tabular-nums">{c.amount_cents === null ? <span className="text-muted">Not calculated</span> : audExact(c.amount_cents)}</td>
+              <td className="tabular-nums">
+                {c.amount_cents === null ? <span className="text-muted">Not calculated</span> : audExact(c.amount_cents)}
+                {c.amount_cents !== null && c.rate !== null ? <span className="block text-xs text-muted">at {ratePercent(c.rate)}</span> : null}
+              </td>
               <td>
                 {STATUS_LABEL[c.status] ?? c.status}
                 {c.void_reason ? <span className="block text-xs text-muted">{c.void_reason}</span> : null}

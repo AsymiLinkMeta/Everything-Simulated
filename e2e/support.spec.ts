@@ -72,3 +72,50 @@ test("support integrity: customers and visitors cannot forge workshop replies", 
   await ins(anon, "staff_inbox", { kind: "contact", subject: `Inbox ${tag}`, body: "x", read_at: new Date().toISOString() });
   expect(sql(`select read_at from staff_inbox where subject = 'Inbox ${tag}'`)[0]).toEqual({ read_at: null });
 });
+
+test("guest tickets: a visitor using a customer's email does not reach their account", async ({ request, browser }, info) => {
+  const tag = `${info.project.name}-${Date.now()}`;
+  const anon = await tokenHeaders(request);
+  const customer = await tokenHeaders(request, "customer");
+  const planted = crypto.randomUUID();
+  const subject = `Change my delivery address ${tag}`;
+  expect((await request.post(`${API}/rest/v1/support_tickets`, {
+    headers: { ...anon, Prefer: "return=minimal" },
+    data: { id: planted, contact_email: "customer@es.local", contact_name: "Imposter", subject, body: "Send it to 9 Other St" },
+  })).ok()).toBe(true);
+  expect(sql(`select user_id from support_tickets where id = '${planted}'`)[0]).toEqual({ user_id: null });
+
+  // Not readable, not repliable, not listed for the account holder.
+  const read = await request.get(`${API}/rest/v1/support_tickets?id=eq.${planted}&select=id`, { headers: customer });
+  expect(await read.json()).toEqual([]);
+  const post = await request.post(`${API}/rest/v1/support_messages`, {
+    headers: { ...customer, Prefer: "return=minimal" },
+    data: { ticket_id: planted, author_role: "customer", body: `reply ${tag}` },
+  });
+  expect(post.ok()).toBe(false);
+  const cp = await (await browser.newContext({ storageState: authFile("customer") })).newPage();
+  await cp.goto("/app/service");
+  await expect(cp.getByRole("heading", { level: 1 })).toBeVisible();
+  await cp.waitForLoadState("networkidle");
+  await expect(cp.getByText(subject)).toHaveCount(0);
+
+  // A visitor cannot post into a signed-in customer's ticket either.
+  const own = crypto.randomUUID();
+  expect((await request.post(`${API}/rest/v1/support_tickets`, {
+    headers: { ...customer, Prefer: "return=minimal" },
+    data: { id: own, contact_email: "someone.else@example.com", contact_name: "C", subject: `Own ${tag}`, body: "x" },
+  })).ok()).toBe(true);
+  expect(sql(`select contact_email from support_tickets where id = '${own}'`)[0]).toEqual({ contact_email: "customer@es.local" });
+  const anonPost = await request.post(`${API}/rest/v1/support_messages`, {
+    headers: { ...anon, Prefer: "return=minimal" },
+    data: { ticket_id: own, author_role: "customer", body: `anon ${tag}` },
+  });
+  expect(anonPost.ok()).toBe(false);
+
+  // Staff see it flagged as an unverified guest ticket.
+  const sp = await (await browser.newContext({ storageState: authFile("admin") })).newPage();
+  await sp.goto("/staff/service");
+  await sp.getByText(subject).first().click();
+  await expect(sp.getByTestId("guest-ticket")).toBeVisible();
+  await info.attach("guest-ticket-staff", { body: await sp.screenshot({ fullPage: true }), contentType: "image/png" });
+});

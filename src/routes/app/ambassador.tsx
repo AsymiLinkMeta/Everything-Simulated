@@ -145,7 +145,10 @@ function AmbassadorSelfEdit() {
           </label>
           <label className="block">
             <span className="text-sm text-muted">Photo URL</span>
-            <Input value={photo} onChange={(e) => setPhoto(e.target.value)} placeholder="/rigs/your-photo.jpg" />
+            <Input value={photo} onChange={(e) => setPhoto(e.target.value)} placeholder="/rigs/your-photo.jpg" aria-describedby="amb-photo-help" />
+            <span id="amb-photo-help" className="mt-1 block text-xs text-muted">
+              A site image (/rigs/...) or a photo the workshop has uploaded for you. Links to other websites aren't accepted. To change the name on your profile, ask the workshop.
+            </span>
           </label>
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block"><span className="text-sm text-muted">Motorsport</span><Input value={motorsport} onChange={(e) => setMotorsport(e.target.value)} placeholder="e.g. Karting" /></label>

@@ -16,6 +16,7 @@ import {
   type ProgrammeSettings,
 } from "@/lib/es/ambassadors";
 import { audExact } from "@/lib/utils";
+import { rowRate } from "@/lib/es/commission-rate";
 
 /** "5" or "5%" -> 0.05; "" -> null. Throws on anything else. */
 export function parsePercent(raw: string): number | null {
@@ -37,7 +38,8 @@ export function DefaultRateWarning({ settings }: { settings?: ProgrammeSettings 
   return (
     <p role="alert" className="rounded-md border border-warn/40 bg-warn/10 p-3 text-sm text-warn" data-testid="default-rate-warning">
       No default commission rate is set, so commissions are recorded without an amount (unless the ambassador has their own
-      rate). Set one under Programme settings; every open commission is recalculated straight away.
+      rate). Set one under Programme settings; every open commission is recalculated straight away. Commissions already paid out
+      keep the rate they were paid at.
     </p>
   );
 }
@@ -295,7 +297,7 @@ export function PayoutsPanel() {
                     <td className="font-mono text-xs">{r.order_id}{r.invoice_number ? <span className="block text-muted">{r.invoice_number}</span> : null}</td>
                     <td>{new Date(r.order_date).toLocaleDateString("en-AU")}</td>
                     <td className="tabular-nums">{audExact(r.basis_ex_gst)}</td>
-                    <td>{r.rate === null ? <span className="text-warn">not set</span> : `${toPercent(r.rate)}%`}</td>
+                    <td>{(() => { const rr = rowRate(r); return rr.warn ? <span className="text-warn">{rr.text}</span> : rr.text; })()}</td>
                     <td className="tabular-nums">{r.amount_cents === null ? "—" : audExact(r.amount_cents)}</td>
                     <td>
                       {r.status}
