@@ -81,18 +81,23 @@ CATS = {
     "pedals": ["pedals"],
     "screens": QUAD,
     "motion": CORE + MOTION,
-    "shifter": ["sidemount", "shifter", "handbrake"],
+    # Shown bolted to the cockpit: on its own the side mount's arm hung in the air above the floor.
+    "shifter": ["chassis-back", "chassis", "seat", "sidemount", "shifter", "handbrake"],
     "pc": ["pc"],
 }
+# What the camera frames, when it isn't every layer shown (the rest runs out of frame as context).
+CAT_FIT = {"shifter": ["sidemount", "shifter", "handbrake"]}
 CAT_VIEW = {"chassis": (32, 16), "seat": (38, 12), "wheel": (40, 8), "pedals": (52, 16), "screens": (24, 8),
-            "motion": (30, 10), "shifter": (40, 12), "pc": (35, 12)}
+            "motion": (30, 10), "shifter": (58, 16), "pc": (35, 12)}
 for k, layers in CATS.items():
     az, el = CAT_VIEW[k]
-    shot(f"cat-{k}", layers, az, el, 9 / 16, 1800, region=(0.30, 0.94, 0.08, 0.92), lifted=k == "motion", dof=2.8, hide=("Pedal cable",))
+    fit = CAT_FIT.get(k)
+    ctx = k in CAT_FIT  # leave room round a framed sub-assembly so the rig it's bolted to reads
+    shot(f"cat-{k}", layers, az, el, 9 / 16, 1800, region=(0.42, 0.86, 0.14, 0.86) if ctx else (0.30, 0.94, 0.08, 0.92), lifted=k == "motion", dof=2.8, hide=("Pedal cable",), fit=fit)
     # square product art: the whole part with breathing room on every side; a deeper focus at --real
     shot(f"part-{k}", layers, az, el, 1.0, 1200,
-         region=(0.15, 0.85, 0.16, 0.84) if args.real else (0.10, 0.90, 0.12, 0.88),
-         lifted=k == "motion", dof=6.3 if args.real else 2.8, hide=("Pedal cable",))
+         region=(0.24, 0.76, 0.2, 0.8) if ctx else (0.15, 0.85, 0.16, 0.84) if args.real else (0.10, 0.90, 0.12, 0.88),
+         lifted=k == "motion", dof=6.3 if args.real else 2.8, hide=("Pedal cable",), fit=fit)
 shot("plate", [], 30, 12, 9 / 16, 1600, fit=CORE)
 
 if args.real:
@@ -100,6 +105,89 @@ if args.real:
     import realism  # noqa: E402
 
     realism.apply()
+
+
+
+def detail_side_mount():
+    """Render-time finish for the shifter/handbrake close-ups (rig.blend is untouched): softened
+    edges on the blocky bodies, black anodised bracket with cap screws, and an H-pattern gate."""
+    def mat(name, base, metal, rough, coat=0.0):
+        m = bpy.data.materials.get(name) or bpy.data.materials.new(name)
+        m.use_nodes = True
+        b = m.node_tree.nodes["Principled BSDF"]
+        b.inputs["Base Color"].default_value = (*base, 1)
+        b.inputs["Metallic"].default_value = metal
+        b.inputs["Roughness"].default_value = rough
+        b.inputs["Coat Weight"].default_value = coat
+        return m
+    # Same finish as the extrusions they bolt to (dark diffuse materials read grey under the key).
+    anod = bpy.data.materials.get("Black anodised aluminium") or mat("ES anodised black", (0.012, 0.012, 0.014), 1.0, 0.35)
+    body = mat("ES graphite body", (0.02, 0.02, 0.022), 0.85, 0.3, coat=0.4)
+    screw = mat("ES cap screw", (0.55, 0.56, 0.58), 1.0, 0.22)
+    for name, m in (("Side bracket", anod), ("Shifter body", body), ("Handbrake body", body)):
+        ob = bpy.data.objects.get(name)
+        if not ob:
+            continue
+        ob.data.materials.clear()
+        ob.data.materials.append(m)
+        if not any(md.type == "BEVEL" for md in ob.modifiers):
+            bv = ob.modifiers.new("Soft edges", "BEVEL")
+            bv.width = 0.004
+            bv.segments = 4
+            bv.limit_method = "ANGLE"
+        for p in ob.data.polygons:
+            p.use_smooth = True
+        if hasattr(ob.data, "set_sharp_from_angle"):
+            ob.data.set_sharp_from_angle(angle=math.radians(40))
+    br = bpy.data.objects.get("Side bracket")
+    sh = bpy.data.objects.get("Shifter body")
+    if br and not bpy.data.objects.get("Bracket screw 0"):
+        lo = Vector(min((br.matrix_world @ v.co for v in br.data.vertices), key=lambda q: q.x + q.y))
+        hi = Vector(max((br.matrix_world @ v.co for v in br.data.vertices), key=lambda q: q.x + q.y))
+        top = max((br.matrix_world @ v.co).z for v in br.data.vertices)
+        coll = br.users_collection[0]
+        for i, (fx, fy) in enumerate(((0.07, 0.1), (0.93, 0.1), (0.07, 0.9), (0.93, 0.9))):
+            bpy.ops.mesh.primitive_cylinder_add(vertices=24, radius=0.0055, depth=0.004,
+                                                location=(lo.x + (hi.x - lo.x) * fx, lo.y + (hi.y - lo.y) * fy, top + 0.002))
+            ob = bpy.context.active_object
+            ob.name = f"Bracket screw {i}"
+            ob.data.materials.append(screw)
+            for c in ob.users_collection:
+                c.objects.unlink(ob)
+            coll.objects.link(ob)
+    if sh and not bpy.data.objects.get("Shifter gate"):
+        top = max((sh.matrix_world @ v.co).z for v in sh.data.vertices)
+        cx = sum((sh.matrix_world @ v.co).x for v in sh.data.vertices) / len(sh.data.vertices)
+        cy = sum((sh.matrix_world @ v.co).y for v in sh.data.vertices) / len(sh.data.vertices)
+        bpy.ops.mesh.primitive_cube_add(size=1, location=(cx, cy, top + 0.0015))
+        gate = bpy.context.active_object
+        gate.name = "Shifter gate"
+        gate.scale = (0.084, 0.054, 0.003)
+        bpy.ops.object.transform_apply(scale=True)
+        gate.data.materials.append(anod)
+        bv = gate.modifiers.new("Soft edges", "BEVEL")
+        bv.width = 0.0012
+        bv.segments = 3
+        # H-pattern slots cut into the gate plate
+        slots = [((cx, cy, top + 0.0015), (0.006, 0.040, 0.01))] + [((cx + dx, cy, top + 0.0015), (0.006, 0.040, 0.01)) for dx in (-0.024, 0.024)]
+        slots.append(((cx, cy, top + 0.0015), (0.054, 0.006, 0.01)))
+        for loc, dims in slots:
+            bpy.ops.mesh.primitive_cube_add(size=1, location=loc)
+            cut = bpy.context.active_object
+            cut.scale = dims
+            cut.hide_render = True
+            cut.name = "Slot cutter gate"
+            bo = gate.modifiers.new("Slot", "BOOLEAN")
+            bo.operation = "DIFFERENCE"
+            bo.object = cut
+        for c in gate.users_collection:
+            c.objects.unlink(gate)
+        sh.users_collection[0].objects.link(gate)
+    bpy.context.view_layer.update()
+
+
+if any(n.endswith("-shifter") for n in (args.only.split(",") if args.only else SHOTS)):
+    detail_side_mount()
 
 if args.list:
     print("\n".join(SHOTS))
