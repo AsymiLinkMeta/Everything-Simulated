@@ -1,0 +1,15 @@
+{
+  "name": "Everything Simulated",
+  "short_name": "Everything Simulated",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#070708",
+  "theme_color": "#070708",
+  "icons": [
+    { "src": "/favicon-48x48.png", "sizes": "48x48", "type": "image/png" },
+    { "src": "/favicon-96x96.png", "sizes": "96x96", "type": "image/png" },
+    { "src": "/favicon-192x192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/favicon-512x512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
