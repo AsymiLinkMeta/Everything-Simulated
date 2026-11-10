@@ -205,8 +205,8 @@ function PrebuildsEditor() {
 
   return (
     <div className="mx-auto w-full max-w-5xl space-y-6 p-6">
-      <div className="flex items-center justify-between">
-        <div>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="min-w-0">
           <p className="es-kicker">Admin</p>
           <h1 className="mt-1 text-3xl font-medium">Prebuilt Simulators</h1>
           <p className="mt-2 text-sm text-muted">
@@ -230,8 +230,8 @@ function PrebuildsEditor() {
       ) : (
         <div className="space-y-2">
           {items.map((p, idx) => (
-            <div key={p.id} className="es-card flex items-center gap-3 p-4">
-              <GripVertical className="size-4 shrink-0 text-muted" />
+            <div key={p.id} className="es-card flex flex-wrap items-center gap-3 p-4 sm:flex-nowrap">
+              <GripVertical className="hidden size-4 shrink-0 text-muted sm:block" aria-hidden="true" />
               <div className="flex shrink-0 flex-col gap-0.5">
                 <button
                   type="button"
@@ -266,7 +266,7 @@ function PrebuildsEditor() {
                     {p.status}
                   </span>
                 </div>
-                <div className="flex items-center gap-3 text-xs text-muted">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted">
                   <span>{p.kicker || "No label"}</span>
                   <span title={p.price_ex_gst > 0 ? "Package price" : "Derived from priced parts"}>
                     {p.enquiry_only ? "Enquiry only" : <Money cents={p.effective_price_ex_gst} gst />}
@@ -276,9 +276,11 @@ function PrebuildsEditor() {
                   <span>{p.components.length} component{p.components.length !== 1 ? "s" : ""}</span>
                 </div>
               </div>
-              <div className="flex shrink-0 items-center gap-1">
+              <div className="ml-auto flex shrink-0 items-center gap-1">
                 <button
                   type="button"
+                  aria-label={p.featured ? `Remove ${p.name} from featured` : `Feature ${p.name}`}
+                  aria-pressed={p.featured}
                   className={`rounded p-1.5 transition-colors ${p.featured ? "text-warn" : "text-muted hover:text-warn"}`}
                   onClick={() => handleToggleFeatured(p.id, !p.featured)}
                   title={p.featured ? "Remove from featured" : "Add to featured"}
@@ -290,6 +292,8 @@ function PrebuildsEditor() {
                   className="rounded p-1.5 text-muted hover:text-paper"
                   onClick={() => setExpandedId(expandedId === p.id ? null : p.id)}
                   title="Toggle details"
+                  aria-label={`Details for ${p.name}`}
+                  aria-expanded={expandedId === p.id}
                 >
                   {expandedId === p.id ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
                 </button>
@@ -301,6 +305,7 @@ function PrebuildsEditor() {
                   className="rounded p-1.5 text-muted hover:text-esred"
                   onClick={() => handleDelete(p.id)}
                   title="Delete"
+                  aria-label={`Delete ${p.name}`}
                 >
                   <Trash2 className="size-4" />
                 </button>

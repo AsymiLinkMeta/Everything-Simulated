@@ -304,8 +304,8 @@ function BrandsAdmin() {
 
   return (
     <div className="space-y-8">
-      <div className="flex items-end justify-between">
-        <div>
+      <div className="flex flex-wrap items-end justify-between gap-4">
+        <div className="min-w-0">
           <p className="es-kicker">Showroom</p>
           <h1 className="mt-2 text-3xl font-medium">Brands</h1>
           <p className="mt-2 text-sm text-muted">

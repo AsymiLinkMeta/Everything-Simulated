@@ -387,3 +387,9 @@
     transition: none;
   }
 }
+
+/* Customer app header: icon + label tabs need a gap (they ran together: "[icon]HOME"). */
+.es-app-header .es-nav-link {
+  gap: 0.4rem;
+  padding: 0 0.6rem;
+}

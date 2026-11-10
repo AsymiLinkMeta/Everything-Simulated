@@ -114,7 +114,7 @@ export function AppShell() {
           <Outlet />
         </Suspense>
       </div>
-      <nav className="es-tabbar es-app-tabbar" aria-label="App">
+      <nav className="es-tabbar es-app-tabbar" aria-label="App tabs">
         {tabs.map((t) => (
           <Link
             key={t.to}
