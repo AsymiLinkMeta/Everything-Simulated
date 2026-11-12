@@ -52,12 +52,32 @@ The older full-frame modes (`frames`, `overlays`, `full`, with pack_frames.py) a
 
 ## Look
 
-- Studio: charcoal cyclorama with a soft floor reflection, softbox key / fill / top, two strip lights
-  for edge highlights on the black anodised extrusions, `studio_small_09` HDRI for reflections.
+- Studio: charcoal cyclorama (near-black, roughness 0.96 so the Key does not paint a hot ellipse),
+  softbox key / fill / top, two strip lights for T-slot edges, `studio_small_09` HDRI (strength 0.38)
+  for wrap and reflections. The Key and strips are light-linked off the cyclorama.
 - Camera: rear three-quarter, 30 degrees round from behind, 14 degrees up, about 90 mm on full frame at
-  7.4 m, f/4 focused on the wheel; AgX Punchy; 160 samples + OpenImageDenoise at 2x, downscaled.
+  7.4 m, f/4 focused on the wheel; AgX Medium High Contrast; 128–192 samples + OpenImageDenoise.
+  Marketing stills: `render_studio.py --real --force`.
 - Materials: black anodised aluminium (anisotropic, roughness drift, fine scratches), textured powder
   coat, CC0 fabric normal maps on the seat, grained leatherette bolsters with red stitching and piping,
   carbon wheel plate, rubber, machined aluminium. Brand red is `#e10600` (`--es-red`).
 - Screens show a rendered race track (sky HDRI, asphalt/grass textures, kerbs, armco, generic unbranded
   GT cars): one wide driver's-eye panorama split across the triple, a chase-cam view on the top screen.
+
+
+## Photoreal pass (2026-11-12)
+
+Geometry and materials were tightened against public component specs (40-series T-slot opening 8.2 mm
+and depth 11 mm with a proper T chamber; 12 Nm-class DD envelope 281 × 130 × 110 mm; 32" 16:9 1000R
+active area 697 × 392 mm, 4 mm air between neighbouring bezels). The H-pattern shifter and hydraulic-
+style handbrake are modelled as assemblies (gate, boot, leather knob/grip, pivot, cables) rather than
+bevelled boxes. Pedal faces have rubber pads on a matte black tray; motion corners are cylindrical
+linear actuators with stainless pistons, rubber bellows and pads. The wheel rim is Alcantara-style
+suede with leather sidewalls and a double lock-stitch.
+
+Still-image output lives in `/workspace/es-redesign/photoreal/final/` (not live). Packed as
+`es-*-pr1.jpg` (+ WebP) and uploaded additively to Storage. Data script
+`scripts/data/photoreal-art-pr1.sql` (rollback alongside) is ready to apply after the look is
+approved; it must not be run before that. The home hero is a static `/rigs/es-hero-wide.jpg` and
+needs a follow-up pack into `public/rigs` once approved. Builder ghost layers (`pack_parts.py`)
+still use the previous beauty pass until they are re-rendered.

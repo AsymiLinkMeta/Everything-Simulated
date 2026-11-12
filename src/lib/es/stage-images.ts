@@ -5,7 +5,7 @@
  * product and prebuild images come from the database.
  */
 export const STAGE_IMAGES = {
-  "/": "/rigs/es-hero-wide.jpg",
+  "/": "/rigs/es-hero-wide-pr1.jpg",
   "/racing": "/rigs/es-cat-motion.jpg",
   "/prebuilds": "/rigs/es-cat-screens.jpg",
   "/compatibility": "/rigs/es-cat-chassis.jpg",

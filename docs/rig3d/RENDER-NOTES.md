@@ -9,3 +9,9 @@
 - Packed: frames 20-34 KB AVIF / 30-45 KB WebP each, overlays 2-4 KB; empty view 30 KB AVIF. 964 KB in total.
 - Screenshots and sheets (box-local, untracked): `e2e/.shots/*-{390,1440}[-preview].png`, `contact-{390,1440}.png`,
   `compare-vs-reference.png`.
+
+- 2026-11-12: photoreal / accuracy pass (Patrick t46u). Pipeline in build_rig.py, realism.py,
+  render_studio.py. Finals at 128 samples + OIDN, AgX Medium High Contrast, in
+  `/workspace/es-redesign/photoreal/final/`. Before/after sheets:
+  `/workspace/es-redesign/shots/photoreal-2026-11-12/`. New storage names `es-*-pr1` only;
+  `scripts/data/photoreal-art-pr1.sql` is ready, not applied. ES branding only.

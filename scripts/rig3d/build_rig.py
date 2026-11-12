@@ -159,7 +159,8 @@ MAT = {
     "alu": rough_variation(add_bump(principled("Black anodised aluminium", (0.024, 0.025, 0.028), 0.9, 0.32, **{"Anisotropic": 0.45, "Coat Weight": 0.12, "Coat Roughness": 0.25}), 900, 0.03), 0.27, 0.36, 8, 0.04),
     "alu_bright": rough_variation(principled("Machined aluminium", (0.62, 0.63, 0.65), 1.0, 0.22, **{"Anisotropic": 0.7}), 0.16, 0.3, 50, 0.08),
     # textured powder coat: orange-peel bump, satin
-    "steel": add_bump(principled("Black powder coat", (0.02, 0.021, 0.024), 0.0, 0.5), 450, 0.12, distance=0.0006),
+    # matte black powder coat: high roughness, low specular so large faces (pedal tray, deck) stay dark under studio lights
+    "steel": add_bump(principled("Black powder coat", (0.010, 0.010, 0.012), 0.0, 0.82, **{"Specular IOR Level": 0.12, "Coat Weight": 0.0}), 380, 0.08, distance=0.0004),
     "plastic": rough_variation(principled("Satin black plastic", (0.014, 0.014, 0.016), 0.0, 0.45, **{"Specular IOR Level": 0.3}), 0.4, 0.55, 25),
     "cap": add_bump(principled("End cap", (0.012, 0.012, 0.013), 0.0, 0.6), 1600, 0.2),
     "bolt": principled("Black oxide screw", (0.035, 0.036, 0.04), 0.85, 0.32),
@@ -174,7 +175,31 @@ MAT = {
     "cable": add_bump(principled("Braided cable", (0.012, 0.012, 0.013), 0.0, 0.6, **{"Sheen Weight": 0.5, "Specular IOR Level": 0.3}), 2600, 0.5, distance=0.0005),
     "lcd": principled("Wheel display", (0.0, 0.0, 0.0), 0.0, 0.1, **{"Emission Color": (0.2, 0.6, 1.0, 1), "Emission Strength": 1.5, "Coat Weight": 1.0}),
     "spring": principled("Spring steel", (0.6, 0.6, 0.62), 1.0, 0.25),
+    "stainless": rough_variation(principled("Stainless steel", (0.55, 0.56, 0.58), 1.0, 0.16, **{"Anisotropic": 0.4, "Coat Weight": 0.15, "Coat Roughness": 0.08}), 0.11, 0.22, 90, 0.06),
 }
+
+
+def leather_mat(name, color=(0.016, 0.012, 0.010)):
+    """Grained automotive leather: fine voronoi grain, soft sheen, slightly oily coat."""
+    m = principled(name, color, 0.0, 0.46, **{"Sheen Weight": 0.28, "Sheen Roughness": 0.38, "Specular IOR Level": 0.42, "Coat Weight": 0.12, "Coat Roughness": 0.28})
+    nt = m.node_tree
+    b = nt.nodes["Principled BSDF"]
+    tc = nt.nodes.new("ShaderNodeTexCoord")
+    vor = node(nt, "ShaderNodeTexVoronoi", Scale=780.0)
+    nt.links.new(tc.outputs["Object"], vor.inputs["Vector"])
+    bump = node(nt, "ShaderNodeBump", Strength=0.22, Distance=0.00035)
+    nt.links.new(vor.outputs["Distance"], bump.inputs["Height"])
+    nt.links.new(bump.outputs["Normal"], b.inputs["Normal"])
+    return m
+
+
+MAT["leather"] = leather_mat("Automotive leather")
+MAT["leather_tan"] = leather_mat("Tan leather stitch", (0.22, 0.09, 0.04))
+# Large flat trays (pedal plate, heel rest). A separate name so the --real brushed pass
+# cannot turn it into anisotropic metal, which reads as a silver slab under studio lights.
+MAT["plate"] = add_bump(principled("Matte black plate", (0.007, 0.0075, 0.008), 0.0, 0.94,
+                                  **{"Specular IOR Level": 0.04, "Coat Weight": 0.0, "Sheen Weight": 0.0}),
+                        280, 0.06, distance=0.0003)
 
 
 def seat_material():
@@ -232,22 +257,29 @@ def seat_material():
     b.inputs["Sheen Roughness"].default_value = 0.4
     b.inputs["Specular IOR Level"].default_value = 0.25  # fabric scatters, it doesn't shine
     # red stitching just inside the bolster seam
-    band = nt.nodes.new("ShaderNodeMath"); band.operation = "COMPARE"
-    band.inputs[1].default_value = 0.6; band.inputs[2].default_value = 0.005
-    nt.links.new(absu.outputs[0], band.inputs[0])
+    # two rows of ES-red lock-stitch just inside the bolster seam (wide enough to read at part scale)
+    def _stitch_row(at, width=0.016):
+        bd = nt.nodes.new("ShaderNodeMath"); bd.operation = "COMPARE"
+        bd.inputs[1].default_value = at; bd.inputs[2].default_value = width
+        nt.links.new(absu.outputs[0], bd.inputs[0])
+        return bd
+    band = _stitch_row(0.585, 0.016)
+    band2 = _stitch_row(0.655, 0.014)
+    bands = nt.nodes.new("ShaderNodeMath"); bands.operation = "MAXIMUM"
+    nt.links.new(band.outputs[0], bands.inputs[0]); nt.links.new(band2.outputs[0], bands.inputs[1])
     dash = nt.nodes.new("ShaderNodeMath"); dash.operation = "SINE"
-    vs = nt.nodes.new("ShaderNodeMath"); vs.operation = "MULTIPLY"; vs.inputs[1].default_value = 1400
+    vs = nt.nodes.new("ShaderNodeMath"); vs.operation = "MULTIPLY"; vs.inputs[1].default_value = 860
     nt.links.new(sep.outputs["Y"], vs.inputs[0]); nt.links.new(vs.outputs[0], dash.inputs[0])
-    dpos = nt.nodes.new("ShaderNodeMath"); dpos.operation = "GREATER_THAN"; dpos.inputs[1].default_value = -0.2
+    dpos = nt.nodes.new("ShaderNodeMath"); dpos.operation = "GREATER_THAN"; dpos.inputs[1].default_value = -0.15
     nt.links.new(dash.outputs[0], dpos.inputs[0])
     stitch = nt.nodes.new("ShaderNodeMath"); stitch.operation = "MULTIPLY"
-    nt.links.new(band.outputs[0], stitch.inputs[0]); nt.links.new(dpos.outputs[0], stitch.inputs[1])
+    nt.links.new(bands.outputs[0], stitch.inputs[0]); nt.links.new(dpos.outputs[0], stitch.inputs[1])
     base = nt.nodes.new("ShaderNodeMix"); base.data_type = "RGBA"
     base.inputs["A"].default_value = (0.011, 0.011, 0.012, 1)   # fabric, a touch lighter than the leather
     base.inputs["B"].default_value = (0.008, 0.008, 0.009, 1)
     nt.links.new(mask.outputs[0], base.inputs["Factor"])
     col = nt.nodes.new("ShaderNodeMix"); col.data_type = "RGBA"
-    col.inputs["B"].default_value = (0.6, 0.004, 0.002, 1)
+    col.inputs["B"].default_value = (0.72, 0.006, 0.003, 1)
     nt.links.new(base.outputs["Result"], col.inputs["A"])
     nt.links.new(stitch.outputs[0], col.inputs["Factor"])
     nt.links.new(col.outputs["Result"], b.inputs["Base Color"])
@@ -412,20 +444,34 @@ def mesh_obj(name, bm, mat, smooth_angle=None, bevel=None):
     return ob
 
 
-def section_with_slots(w, h, slot=8.0, depth=5.5, pitch=40.0):
-    """Outline (mm, centred) of a w x h T-slot extrusion: a groove in every 40 mm cell of each face."""
+def section_with_slots(w, h, slot=8.2, depth=11.0, pitch=40.0, throat=2.2, chamber=14.0):
+    """Outline (mm, centred) of a w x h 40-series T-slot extrusion.
+
+    Public 4040 / 16040 specs: 8.2 mm opening, ~11 mm deep, widening to ~14 mm after a
+    ~2.2 mm lip. One slot per 40 mm cell on every face (four on a 160 face, two on an 80,
+    one on a 40). Outer corners chamfered 1 mm so the extrusion isn't knife-edged.
+    """
     pts = []
+    chamfer = 1.0
+    widen = (chamber - slot) / 2
 
     def side(p0, p1, inward):
         length = (p1 - p0).length
         d = (p1 - p0).normalized()
         cells = max(1, round(length / pitch))
-        pts.append(p0.copy())
+        pts.append(p0 + d * chamfer)
         for i in range(cells):
             c = (i + 0.5) * length / cells
             a = p0 + d * (c - slot / 2)
             bpt = p0 + d * (c + slot / 2)
-            pts.extend([a, a + inward * depth, a + inward * depth + d * 0.0, bpt + inward * depth, bpt])
+            lip_a = a + inward * throat
+            lip_b = bpt + inward * throat
+            ch_a = lip_a - d * widen
+            ch_b = lip_b + d * widen
+            back_a = ch_a + inward * (depth - throat)
+            back_b = ch_b + inward * (depth - throat)
+            pts.extend([a, lip_a, ch_a, back_a, back_b, ch_b, lip_b, bpt])
+        pts.append(p1 - d * chamfer)
 
     hw, hh = w / 2, h / 2
     corners = [Vector((-hw, -hh)), Vector((hw, -hh)), Vector((hw, hh)), Vector((-hw, hh))]
@@ -499,6 +545,29 @@ def cylinder(name, p0, p1, r, mat, segs=48, bevel=0.0008, smooth=True):
     d = (Vector(p1) - Vector(p0)).normalized()
     ref = Vector((0, 0, 1)) if abs(d.z) < 0.9 else Vector((1, 0, 0))
     return extrude(name, sec, p0, p1, d.cross(ref), mat, bevel=bevel, smooth=30 if smooth else None)
+
+
+def frustum(name, p0, p1, r0, r1, mat, segs=32, bevel=0.0005):
+    """Truncated cone (mm): used for shifter boots and tapered housings."""
+    p0, p1 = Vector(p0), Vector(p1)
+    d = (p1 - p0).normalized()
+    ref = Vector((0, 0, 1)) if abs(d.z) < 0.9 else Vector((1, 0, 0))
+    u = d.cross(ref).normalized()
+    v = d.cross(u).normalized()
+    bm = bmesh.new()
+    a, b = [], []
+    for i in range(segs):
+        ang = 2 * math.pi * i / segs
+        cs, sn = math.cos(ang), math.sin(ang)
+        a.append(bm.verts.new(mm(*(p0 + u * (r0 * cs) + v * (r0 * sn)))))
+        b.append(bm.verts.new(mm(*(p1 + u * (r1 * cs) + v * (r1 * sn)))))
+    for i in range(segs):
+        j = (i + 1) % segs
+        bm.faces.new((a[i], a[j], b[j], b[i]))
+    bm.faces.new(list(reversed(a)))
+    bm.faces.new(b)
+    bmesh.ops.recalc_face_normals(bm, faces=bm.faces)
+    return mesh_obj(name, bm, mat, bevel=bevel, smooth_angle=40)
 
 
 def torus(name, c, axis, R, r, mat, maj=96, mnr=24):
@@ -602,11 +671,11 @@ for s, side in [(1, "L"), (-1, "R")]:
         cylinder(f"Foot {side}{x}", (x, s * RAIL_Y, 0), (x, s * RAIL_Y, RZ0), 22, MAT["rubber"])
     # red dust strips in the upper and lower slots of the outer face
     for zc in (RZ - 40, RZ + 40):
-        box(f"Slot strip {side}{zc}", (LEN / 2, s * (RAIL_Y + 20 - 2.2), zc), (LEN - 8, 3.5, 7), MAT["red"], bevel=0.0003)
+        box(f"Slot strip {side}{zc}", (LEN / 2, s * (RAIL_Y + 20 - 1.1), zc), (LEN - 8, 2.2, 6.4), MAT["red"], bevel=0.0002)
     # uprights, side-mounted, with corner brackets fore and aft
     profile(f"Upright {side}", ((UP_X0 + UP_X1) / 2, s * UP_Y, RZ0), ((UP_X0 + UP_X1) / 2, s * UP_Y, UP_TOP), 160, 40, u=(1, 0, 0))
     for zc in (300, 500, 700):
-        box(f"Upright strip {side}{zc}", ((UP_X0 + UP_X1) / 2, s * (UP_Y + 20 - 2.2), zc), (7, 3.5, 160), MAT["red"], bevel=0.0003)
+        box(f"Upright strip {side}{zc}", ((UP_X0 + UP_X1) / 2, s * (UP_Y + 20 - 1.1), zc), (6.4, 2.2, 160), MAT["red"], bevel=0.0002)
     for x, dirx in ((UP_X0, -1), (UP_X1, 1)):
         tri = [(0, 0), (190 * dirx, 0), (0, 300)]
         if dirx < 0:
@@ -621,7 +690,7 @@ for s, side in [(1, "L"), (-1, "R")]:
 for x, nm in ((20, "Rear cross"), (LEN - 20, "Front cross")):
     profile(nm, (x, -RAIL_Y + 20, RZ), (x, RAIL_Y - 20, RZ), 160, 40, u=(0, 0, 1))
     for zc in (RZ - 40, RZ + 40):
-        box(f"{nm} strip {zc}", (x + (22.2 if x > 700 else -22.2), 0, zc), (3.5, 2 * RAIL_Y - 50, 7), MAT["red"], bevel=0.0003)
+        box(f"{nm} strip {zc}", (x + (21.1 if x > 700 else -21.1), 0, zc), (2.2, 2 * RAIL_Y - 50, 6.4), MAT["red"], bevel=0.0002)
 for x in (300, 600):
     profile(f"Seat cross {x}", (x, -RAIL_Y + 20, RZ1 - 20), (x, RAIL_Y - 20, RZ1 - 20), 40, 80, u=(0, 0, 1))
 # wheel deck: a 120 x 40 channel across the uprights on red anodised side plates
@@ -631,7 +700,7 @@ for s, side in [(1, "L"), (-1, "R")]:
     plate(f"Deck side plate {side}", rounded_rect(220, 180, 14), (DECK_X, s * (UP_Y - 20), DECK_Z), (1, 0, 0), (0, 0, 1), 8 * s, MAT["red_anod"])
     for bx, bz in ((-70, -60), (0, -60), (70, -60), (-45, 50), (45, 50)):
         bolt(f"Deck bolt {side}{bx}{bz}", (DECK_X + bx, s * (UP_Y - 28), DECK_Z + bz), (0, -s, 0), r=6.5)
-plate("Wheel deck plate", rounded_rect(300, 260, 8), (DECK_X - 20, 0, DECK_Z + 20), (1, 0, 0), (0, 1, 0), 6, MAT["steel"])
+plate("Wheel deck plate", rounded_rect(300, 260, 8), (DECK_X - 20, 0, DECK_Z + 20), (1, 0, 0), (0, 1, 0), 6, MAT["alu"])
 for bx in (-125, 125):
     for by in (-105, 105):
         bolt(f"Deck plate bolt {bx}{by}", (DECK_X - 20 + bx, by, DECK_Z + 26), (0, 0, 1), r=5)
@@ -667,27 +736,57 @@ decal("Brand deck plate L", "brand-wordmark-white.png", (DECK_X, UP_Y - 28, DECK
 layer("wheelbase")
 TILT = math.radians(12)
 AX = Vector((-math.cos(TILT), 0, math.sin(TILT)))  # from the motor's front toward the driver
-MB0 = Vector((DECK_X + 70, 0, DECK_Z + 26 + 78))
-MB1 = MB0 + AX * 230
+# Public 12 Nm-class DD envelope: 281 mm long x 130 mm wide x 110 mm tall (Simagic Alpha EVO
+# published dims used as a size reference only; housing is a generic ES die-cast, no logos).
+# Front face stays where the old 230 mm body ended so the wheel's ergonomic position is unchanged;
+# the extra 51 mm extends rearward. Body sits ~15 mm lower to match the 110 mm height.
+MB_L, MB_W, MB_H = 281.0, 130.0, 110.0
+OLD_MB0 = Vector((DECK_X + 70, 0, DECK_Z + 26 + 78))
+FRONT = OLD_MB0 + AX * 230 + Vector((0, 0, -15))
+CENTER = FRONT - AX * (MB_L / 2)
+MB0, MB1 = FRONT - AX * MB_L, FRONT
 mrot = Matrix.Rotation(-TILT, 4, "Y")
-box("Motor body", tuple(MB0 + AX * 115), (230, 140, 140), MAT["motor"], bevel=0.012, rot=mrot)
-box("Motor clamp", tuple(MB0 + AX * 115 - Vector((0, 0, 70))), (160, 170, 24), MAT["plastic"], bevel=0.003)
-for k in range(8):  # cooling fins on the top
-    a = MB0 + AX * (40 + k * 20) + Vector((0, 0, 72))
-    box(f"Fin {k}", tuple(a), (6, 120, 8), MAT["motor"], bevel=0.001, rot=mrot)
-for k in range(9):  # heatsink fins down both flanks
+box("Motor body", tuple(CENTER), (MB_L, MB_W, MB_H), MAT["motor"], bevel=0.014, rot=mrot)
+# front CNC flange and a thin ES-red accent ring (not a wraparound stripe on a cube)
+box("Motor front plate", tuple(FRONT - AX * 4), (10, MB_W + 2, MB_H + 2), MAT["alu"], bevel=0.004, rot=mrot)
+cylinder("Motor face", tuple(FRONT), tuple(FRONT + AX * 6), 50, MAT["alu"], segs=64)
+cylinder("Motor face ring", tuple(FRONT + AX * 5.5), tuple(FRONT + AX * 7), 52, MAT["red_anod"], segs=64)
+# shallow side vents (recessed grills, not toy heatsink fins)
+for k in range(8):
     for sy in (1, -1):
-        a = MB0 + AX * (30 + k * 20) + Vector((0, sy * 72, 8))
-        box(f"Side fin {k}{sy}", tuple(a), (5, 8, 100), MAT["motor"], bevel=0.0008, rot=mrot)
-box("Motor stripe", tuple(MB0 + AX * 190), (6, 142.5, 142.5), MAT["red"], bevel=0.003, rot=mrot)
-cylinder("Motor face", tuple(MB1), tuple(MB1 + AX * 8), 56, MAT["gloss"], segs=64)
-cylinder("Shaft hub", tuple(MB1 + AX * 8), tuple(MB1 + AX * 34), 30, MAT["alu_bright"], segs=40)
+        a = CENTER + AX * (-90 + k * 24) + Vector((0, sy * (MB_W / 2 + 0.4), 0))
+        box(f"Side vent {k}{sy}", tuple(a), (14, 1.6, 62), MAT["gloss"], bevel=0, rot=mrot)
+# rear panel with a power inlet and USB port, cables leave from here (not from under a floating plate)
+REAR = FRONT - AX * MB_L
+box("Motor rear plate", tuple(REAR + AX * 3), (8, MB_W - 4, MB_H - 4), MAT["plastic"], bevel=0.002, rot=mrot)
+cylinder("Power inlet", tuple(REAR - Vector((0, 28, -8))), tuple(REAR - AX * 10 - Vector((0, 28, -8))), 9, MAT["stainless"], segs=24)
+box("USB port", tuple(REAR - AX * 4 + Vector((0, 28, -10))), (8, 14, 8), MAT["gloss"], bevel=0.0004, rot=mrot)
+# clamp: 16 mm black-anodised plate sitting ON the deck (top at DECK_Z+26 = 806), bolted through
+CLAMP_Z = DECK_Z + 26 + 8
+box("Motor clamp", (CENTER.x, 0, CLAMP_Z), (210, 168, 16), MAT["alu"], bevel=0.002)
+for bx, by in ((-80, -60), (80, -60), (-80, 60), (80, 60), (0, -60), (0, 60)):
+    bolt(f"Clamp bolt {bx}{by}", (CENTER.x + bx, by, CLAMP_Z + 8), (0, 0, 1), r=5)
+cylinder("Shaft hub", tuple(FRONT + AX * 6), tuple(FRONT + AX * 28), 22, MAT["stainless"], segs=48)
+# power and USB leave the rear ports and drop to the upright loom (replaces the old mid-body dangle)
+pwr0 = REAR - AX * 10 - Vector((0, 28, -8))
+usb0 = REAR - AX * 6 + Vector((0, 28, -10))
+cable("Motor power lead", [tuple(pwr0), tuple(pwr0 + Vector((25, -15, -25))), (DECK_X + 90, -50, DECK_Z + 8),
+                           (UP_X1 + 12, -(UP_Y - 48), DECK_Z - 50)], r=4.2)
+cable("Motor USB lead", [tuple(usb0), tuple(usb0 + Vector((20, 10, -20))), (DECK_X + 90, -20, DECK_Z + 8),
+                         (UP_X1 + 12, -(UP_Y - 48) - 11, DECK_Z - 50)], r=2.6)
+# keep MB0/MB1 names for the wheel block below
+MB0, MB1 = FRONT - AX * MB_L, FRONT
 
 # ---- wheel: 300 mm round rim, three spokes, quick release, paddles ---------------------
 layer("wheel")
 WC = MB1 + AX * 80
-cylinder("Quick release", tuple(MB1 + AX * 34), tuple(WC - AX * 6), 28, MAT["alu_bright"], segs=40)
-cylinder("QR collar", tuple(MB1 + AX * 40), tuple(MB1 + AX * 50), 32, MAT["red_anod"], segs=40)
+# QR-50-class barrel (50 mm nominal) with a grooved collar and a red anodised release ring
+cylinder("Quick release", tuple(MB1 + AX * 28), tuple(WC - AX * 8), 25, MAT["stainless"], segs=48)
+cylinder("QR grooves", tuple(MB1 + AX * 36), tuple(MB1 + AX * 52), 26.2, MAT["alu"], segs=48)
+cylinder("QR collar", tuple(MB1 + AX * 52), tuple(MB1 + AX * 62), 28, MAT["red_anod"], segs=48)
+cylinder("QR release", tuple(MB1 + AX * 62), tuple(MB1 + AX * 70), 30, MAT["alu_bright"], segs=48)
+for gi in range(4):
+    cylinder(f"QR groove {gi}", tuple(MB1 + AX * (38 + gi * 3.2)), tuple(MB1 + AX * (39.4 + gi * 3.2)), 26.6, MAT["gloss"], segs=40)
 def suede(name):
     """Alcantara-style grip: very matte, a soft sheen, fine nap from a CC0 fabric normal map."""
     m = principled(name, (0.011, 0.011, 0.012), 0.0, 0.95, **{"Specular IOR Level": 0.15, "Sheen Weight": 0.5, "Sheen Roughness": 0.3})
@@ -703,10 +802,32 @@ def suede(name):
     return m
 
 
-# round-section rim (31 mm grip) in suede, with a red centre marker at 12 o'clock
-torus("Rim", tuple(WC), AX, 150, 15.5, suede("Suede grip"), 160, 32)
+# 300 mm GT rim, 31 mm Alcantara-style grip, leather sidewalls, double lock-stitch, red 12 o'clock marker
+torus("Rim", tuple(WC), AX, 150, 15.5, suede("Suede grip"), 192, 40)
+# leather sidewalls (inner and outer faces of the rim)
+for side, nm in ((-1, "inner"), (1, "outer")):
+    # sit the thinner leather torus on the rim's side (tube angle ~70 deg toward AX)
+    off = AX * (15.5 * 0.72 * side)
+    rad = 150 + 15.5 * 0.22
+    torus(f"Rim leather {nm}", tuple(WC + AX * (11.5 * side)), AX, rad, 4.2, MAT["leather"], 160, 16)
 wu = AX.cross(Vector((0, 0, 1))).normalized()
 wv = AX.cross(wu).normalized()
+# two rows of tan lock-stitches around each leather/Alcantara seam (~4 mm stitches, 3 mm gaps)
+def _rim_stitches(name, side, tube_ang, n=96):
+    """Scattered 4 mm thread cylinders on the rim surface at a given tube angle (radians from the AX plane)."""
+    ca, sa = math.cos(tube_ang), math.sin(tube_ang)
+    for i in range(n):
+        if i % 2:
+            continue  # gap between stitches
+        a = 2 * math.pi * (i + 0.15 * side) / n
+        radial = (wu * math.cos(a) + wv * math.sin(a))
+        # surface point of the major+minor torus
+        c = WC + radial * (150 + 15.5 * ca) + AX * (15.5 * sa * side)
+        tang = (-wu * math.sin(a) + wv * math.cos(a))
+        cylinder(f"{name} {i}", tuple(c - tang * 2.0), tuple(c + tang * 2.0), 0.45, MAT["leather_tan"], segs=8, bevel=0)
+
+_rim_stitches("Stitch outer", 1, math.radians(50), 100)
+_rim_stitches("Stitch inner", -1, math.radians(50), 100)
 plate("Wheel plate", rounded_rect(200, 110, 26), WC - AX * 4, wu, wv, -8, MAT["carbon"])
 plate("Wheel display", rounded_rect(70, 26, 3), WC - AX * 1.0 + wv * 28, wu, wv, -1.5, MAT["lcd"])
 for k, sx in enumerate((-70, 70)):  # rotary encoders
@@ -718,8 +839,8 @@ for ang in (180, 0, 270):
     side = AX.cross(dvec)
     a = WC + dvec * 50
     b = WC + dvec * 138
-    sec = rounded_rect(30, 7, 3, 3)
-    extrude(f"Spoke {ang}", [Vector(p) for p in sec], tuple(a), tuple(b), side, MAT["alu_bright"], bevel=0.0005)
+    sec = rounded_rect(34, 12, 4, 4)
+    extrude(f"Spoke {ang}", [Vector(p) for p in sec], tuple(a), tuple(b), side, MAT["alu"], bevel=0.0012)
 for ang, col, rr in ((15, "red", 62), (165, "red", 62), (35, "plastic", 58), (145, "plastic", 58), (-12, "plastic", 64), (192, "plastic", 64),
                      (330, "alu_bright", 50), (210, "alu_bright", 50), (300, "plastic", 40), (240, "plastic", 40)):
     dvec = wu * math.cos(math.radians(ang)) + wv * math.sin(math.radians(ang))
@@ -736,10 +857,10 @@ PA = math.radians(18)
 PU = Vector((math.cos(PA), 0, math.sin(PA)))  # up the plate, toward the front
 PN = Vector((-math.sin(PA), 0, math.cos(PA)))  # plate normal, toward the driver
 P0 = Vector((1000, 0, 120))
-plate("Pedal plate", [(y, x + 210) for (y, x) in rounded_rect(560, 420, 10)], P0, (0, 1, 0), PU, -6, MAT["steel"])
+plate("Pedal plate", [(y, x + 210) for (y, x) in rounded_rect(560, 420, 10)], P0, (0, 1, 0), PU, -6, MAT["plate"])
 for k, yy in enumerate((-180, -90, 90, 180)):  # mounting slots
     box(f"Plate slot {k}", tuple(P0 + PU * 230 + Vector((0, yy, 0)) + PN * 0.6), (300, 9, 1), MAT["gloss"], bevel=0, rot=Matrix.Rotation(-PA, 4, "Y"))
-plate("Heel rest", rounded_rect(560, 70, 8), P0 + PU * 4, (0, 1, 0), PN, 6, MAT["steel"])
+plate("Heel rest", rounded_rect(560, 70, 8), P0 + PU * 4, (0, 1, 0), PN, 6, MAT["plate"])
 decal("Brand heel rest", "brand-lockup.png", tuple(P0 + PU * 3.2 + PN * 36), tuple(-PU), tuple(PN), 250)
 for s in (1, -1):  # side brackets from the plate to the rails
     plate(f"Pedal bracket {s}", [(0, 0), (420, 0), (420, 150), (0, 40)], (1000, s * (RAIL_Y - 26), 60), (1, 0, 0), (0, 0, 1), 6 * s, MAT["steel"])
@@ -773,10 +894,12 @@ def pedal(name, y, arm, face_h, red):
         q = pivot + d * (L * f)
         cylinder(f"{name} spacer {f}", tuple(q - Y * 11), tuple(q + Y * 11), 4.5, MAT["bolt"], segs=16)
     face_c = tip - d * (face_h * 0.45)
-    plate(f"{name} face", rounded_rect(84, face_h, 14), face_c - Y * 0 + e * 6, Y, d, 7, MAT["alu_bright"])
-    for k in range(4 if face_h > 120 else 3):  # grip slots across the face
-        q = face_c + e * 13.2 + d * (-face_h * 0.3 + k * 22)
-        box(f"{name} face slot {k}", tuple(q), (6, 56, 1.2), MAT["gloss"], bevel=0, rot=Matrix.Rotation(math.atan2(-d.z, d.x), 4, "Y"))
+    plate(f"{name} face", rounded_rect(84, face_h, 14), face_c - Y * 0 + e * 6, Y, d, 7, MAT["alu"])
+    # 4 mm rubber grip pad on the face (load-cell pedal faces are rubber, not bare aluminium)
+    plate(f"{name} pad", rounded_rect(80, face_h - 6, 12), face_c + e * 13.4, Y, d, 4, MAT["rubber"], bevel=0.0006)
+    for k in range(4 if face_h > 120 else 3):  # grip grooves cut into the rubber
+        q = face_c + e * 16.0 + d * (-face_h * 0.3 + k * 22)
+        box(f"{name} face slot {k}", tuple(q), (5, 54, 2.0), MAT["gloss"], bevel=0, rot=Matrix.Rotation(math.atan2(-d.z, d.x), 4, "Y"))
     # spring / damper or elastomers + load cell, from the front of the rail to the back of the arm
     mount_a = base + PU * 150 + PN * 18
     mount_b = pivot + d * (L * 0.5) + e * 14
@@ -815,22 +938,63 @@ profile("Side arm", (SM_X, -RAIL_Y - 20, RZ + 20), (SM_X, -RAIL_Y - 260, RZ + 20
 profile("Side post", (SM_X, SM_Y, RZ + 60), (SM_X, SM_Y, 470), 40, 40, u=(1, 0, 0))
 box("Side bracket", (SM_X - 10, SM_Y, 495), (220, 150, 50), MAT["steel"], bevel=0.003)
 layer("shifter")
-box("Shifter body", (SM_X + 40, SM_Y, 545), (90, 60, 50), MAT["plastic"])
-cylinder("Shifter boot", (SM_X + 40, SM_Y, 570), (SM_X + 40, SM_Y, 584), 18, MAT["rubber"])
-cylinder("Shifter lever", (SM_X + 40, SM_Y, 584), (SM_X + 25, SM_Y, 690), 6.5, MAT["alu_bright"], segs=24)
-cylinder("Shifter knob", (SM_X + 24, SM_Y, 688), (SM_X + 22, SM_Y, 730), 21, MAT["gloss"], segs=40)
-cylinder("Knob ring", (SM_X + 24, SM_Y, 698), (SM_X + 24, SM_Y, 706), 21.6, MAT["red_anod"], segs=40)
+# Generic 6-speed short-throw H-pattern: ~120 x 86 x 54 CNC aluminium body, H-gate, rubber boot,
+# 12 mm stainless shaft, 44 mm leather knob. Mounted on the side bracket with M5 cap screws.
+SX, SY, SZ = SM_X + 42, SM_Y, 548
+box("Shifter body", (SX, SY, SZ), (122, 88, 54), MAT["alu"], bevel=0.004)
+box("Shifter gate", (SX, SY, SZ + 28), (114, 80, 3.5), MAT["alu_bright"], bevel=0.0008)
+# H-gate recesses (three verticals + one horizontal) — read as slots without a boolean
+for dx in (-28, 0, 28):
+    box(f"Shifter slot V{dx}", (SX + dx, SY, SZ + 30.2), (5.0, 44, 4.2), MAT["gloss"], bevel=0)
+box("Shifter slot H", (SX, SY, SZ + 30.2), (62, 5.0, 4.2), MAT["gloss"], bevel=0)
+frustum("Shifter boot", (SX, SY, SZ + 32), (SX - 6, SY, SZ + 62), 24, 10, MAT["rubber"], segs=36)
+cylinder("Shifter lever", (SX - 6, SY, SZ + 58), (SX - 20, SY, 708), 6.0, MAT["stainless"], segs=28)
+# leather knob: a short barrel with a slight dome, red anodised ring, flat top
+cylinder("Shifter knob", (SX - 19, SY, 704), (SX - 23, SY, 748), 22, MAT["leather"], segs=48)
+cylinder("Knob ring", (SX - 20, SY, 716), (SX - 20.5, SY, 724), 22.6, MAT["red_anod"], segs=48)
+cylinder("Knob top", (SX - 23, SY, 746), (SX - 23.5, SY, 750), 16, MAT["gloss"], segs=32)
+for dx, dy in ((52, 35), (52, -35), (-52, 35), (-52, -35)):
+    bolt(f"Shifter bolt {dx}{dy}", (SX + dx, SY + dy, SZ + 27), (0, 0, 1), r=3.2, h=3.0)
+cable("Shifter cable", [
+    (SX + 62, SY, SZ - 4), (SX + 90, SY - 10, SZ - 30), (SM_X + 20, SM_Y - 8, RZ + 40),
+    (SM_X, -RAIL_Y - 30, RZ + 8), (SM_X - 200, -RAIL_Y + 30, RZ1 + 6), (200, -RAIL_Y + 30, RZ1 + 6),
+], r=2.4)
+
 layer("handbrake")
-box("Handbrake body", (SM_X - 60, SM_Y, 560), (80, 50, 80), MAT["plastic"])
-cylinder("Handbrake lever", (SM_X - 60, SM_Y, 580), (SM_X - 130, SM_Y, 780), 9, MAT["alu_bright"], segs=24)
-cylinder("Handbrake grip", (SM_X - 124, SM_Y, 762), (SM_X - 150, SM_Y, 840), 17, MAT["rubber"], segs=32)
-cylinder("Handbrake cap", (SM_X - 150, SM_Y, 840), (SM_X - 152, SM_Y, 850), 17.5, MAT["red_anod"], segs=32)
+# Hydraulic-style handbrake: machined pivot housing, 290 mm lever at ~50 deg, Alcantara/rubber grip,
+# red lock button. Pivot bolt through the cheeks is visible.
+HX, HY, HZ = SM_X - 72, SM_Y, 548
+box("Handbrake body", (HX, HY, HZ), (98, 60, 50), MAT["alu"], bevel=0.005)
+# two pivot cheeks and a stainless axle
+for sy in (-1, 1):
+    plate(f"Handbrake cheek {sy}", rounded_rect(46, 40, 6), (HX + 18, HY + sy * 28, HZ + 6), (1, 0, 0), (0, 0, 1), 6 * sy, MAT["red_anod"], bevel=0.0008)
+cylinder("Handbrake pivot", (HX + 18, HY - 36, HZ + 6), (HX + 18, HY + 36, HZ + 6), 7, MAT["stainless"], segs=28)
+for sy in (-1, 1):
+    cylinder(f"Handbrake pivot nut {sy}", (HX + 18, HY + sy * 34, HZ + 6), (HX + 18, HY + sy * 38, HZ + 6), 9, MAT["bolt"], segs=6, smooth=False)
+HB_DIR = Vector((-math.cos(math.radians(50)), 0, math.sin(math.radians(50))))
+HB_PIV = Vector((HX + 18, HY, HZ + 6))
+cylinder("Handbrake lever", tuple(HB_PIV), tuple(HB_PIV + HB_DIR * 185), 8, MAT["alu_bright"], segs=28)
+# a few lightening holes along the lever (read as a perforated race lever)
+for t in (0.28, 0.42, 0.56, 0.70):
+    q = HB_PIV + HB_DIR * (185 * t)
+    cylinder(f"Handbrake hole {t}", tuple(q - Vector((0, 10, 0))), tuple(q + Vector((0, 10, 0))), 4.2, MAT["gloss"], segs=16)
+cylinder("Handbrake grip", tuple(HB_PIV + HB_DIR * 175), tuple(HB_PIV + HB_DIR * 290), 16, MAT["leather"], segs=36)
+cylinder("Handbrake cap", tuple(HB_PIV + HB_DIR * 288), tuple(HB_PIV + HB_DIR * 304), 16.5, MAT["red_anod"], segs=32)
+cylinder("Handbrake button", tuple(HB_PIV + HB_DIR * 302), tuple(HB_PIV + HB_DIR * 310), 8, MAT["red"], segs=24)
+for dx, dy in ((36, 22), (36, -22), (-36, 22), (-36, -22)):
+    bolt(f"Handbrake bolt {dx}{dy}", (HX + dx, HY + dy, HZ + 25), (0, 0, 1), r=3.2, h=3.0)
+cable("Handbrake cable", [
+    (HX - 50, HY, HZ - 8), (HX - 80, HY - 15, HZ - 40), (SM_X - 40, SM_Y - 8, RZ + 40),
+    (SM_X - 20, -RAIL_Y - 30, RZ + 8),
+], r=2.2)
 
 # ---- GT bucket seat on brackets and a slider, reclined 25 deg ---------------------------------
 layer("seat")
 for s in (1, -1):
     box(f"Slider rail {s}", (460, s * 160, RZ1 + 13), (440, 34, 26), MAT["alu_bright"])
-    plate(f"Seat bracket {s}", [(0, 0), (330, 0), (300, 150), (40, 170)], (300, s * 268, RZ1 + 26), (1, 0, 0), (0, 0, 1), 6 * s, MAT["steel"])
+    plate(f"Seat bracket {s}", [(0, 0), (330, 0), (300, 150), (40, 170)], (300, s * 268, RZ1 + 26), (1, 0, 0), (0, 0, 1), 6 * s, MAT["alu"])
+    for bx, bz in ((50, 22), (280, 22), (70, 140), (250, 130)):
+        bolt(f"Seat bracket bolt {s}{bx}{bz}", (300 + bx, s * (268 + 6), RZ1 + 26 + bz), (0, s, 0), r=5, h=4)
 box("Slider bar", (640, 0, RZ1 + 18), (30, 300, 12), MAT["alu_bright"])
 
 
@@ -1012,7 +1176,7 @@ for _ob in COLL["pc"].objects:
 for i in range(4):
     cylinder(f"PC foot {i}", (PCX - 90 + 180 * (i % 2), PCY - 200 + 400 * (i // 2), 0), (PCX - 90 + 180 * (i % 2), PCY - 200 + 400 * (i // 2), 10), 14, MAT["rubber"])
 
-# ---- motion: four corner actuators bolted outboard of the rails (modelled in the raised pose) -----
+# ---- motion: four corner linear actuators (cylindrical industrial style) in the raised pose -----
 layer("motion")
 LZ = MOTION_LIFT * 1000
 for x in (110, LEN - 110):
@@ -1020,26 +1184,43 @@ for x in (110, LEN - 110):
         layer("motion-back" if s > 0 else "motion")  # the far-side pair draws behind the frame
         y = s * (RAIL_Y + 20 + 85)
         box(f"Actuator bracket {x}{s}", (x, s * (RAIL_Y + 20 + 10), RZ + LZ), (190, 20, 150), MAT["steel"], bevel=0.002)
-        box(f"Actuator body {x}{s}", (x, y, RZ + LZ + 40), (170, 130, 300), MAT["motor"], bevel=0.006)
-        for k in range(7):  # heatsink ribs on the outer face
-            box(f"Actuator rib {x}{s}{k}", (x - 60 + k * 20, y + s * 67, RZ + LZ + 60), (6, 6, 220), MAT["motor"], bevel=0.0008)
-        box(f"Actuator cap {x}{s}", (x, y, RZ + LZ + 194), (176, 136, 12), MAT["plastic"], bevel=0.003)
-        box(f"Actuator band {x}{s}", (x, y + s * 65.6, RZ + LZ - 60), (170, 1.5, 10), MAT["red"], bevel=0)
-        bottom = RZ + LZ + 40 - 150
-        cylinder(f"Actuator piston {x}{s}", (x, y, 22), (x, y, bottom), 42, MAT["gloss"], segs=40)
-        cylinder(f"Actuator foot {x}{s}", (x, y, 0), (x, y, 22), 62, MAT["silver"], segs=48)
+        for bx, bz in ((-60, -40), (60, -40), (-60, 40), (60, 40)):
+            bolt(f"Actuator bracket bolt {x}{s}{bx}{bz}", (x + bx, s * (RAIL_Y + 20 + 20), RZ + LZ + bz), (0, s, 0), r=5, h=3.5)
+        # cylindrical housing ~120 mm diameter, ~250 mm tall — typical electric linear-actuator envelope
+        body_lo = RZ + LZ + 40 - 110
+        body_hi = RZ + LZ + 40 + 140
+        cylinder(f"Actuator body {x}{s}", (x, y, body_lo), (x, y, body_hi), 62, MAT["motor"], segs=48, bevel=0.002)
+        cylinder(f"Actuator cap {x}{s}", (x, y, body_hi), (x, y, body_hi + 10), 64, MAT["alu"], segs=48)
+        cylinder(f"Actuator band {x}{s}", (x, y, body_lo + 20), (x, y, body_lo + 28), 63.2, MAT["red_anod"], segs=48)
+        # chrome piston, rubber bellows, steel foot with a rubber pad (not a furniture puck)
+        cylinder(f"Actuator piston {x}{s}", (x, y, 20), (x, y, body_lo + 4), 28, MAT["stainless"], segs=40)
+        folds = 7
+        for k in range(folds):
+            z = 28 + (body_lo - 36) * (k + 0.5) / folds
+            torus(f"Actuator bellows {x}{s}{k}", (x, y, z), (0, 0, 1), 34, 5.5, MAT["rubber"], 28, 10)
+        cylinder(f"Actuator foot {x}{s}", (x, y, 5), (x, y, 22), 42, MAT["steel"], segs=48)
+        cylinder(f"Actuator foot pad {x}{s}", (x, y, 0), (x, y, 5), 46, MAT["rubber"], segs=48)
+        # power lead from the housing down to the motion controller
+        cable(f"Actuator cable {x}{s}", [
+            (x + 10, y, body_lo + 40), (x + 40, y * 0.6, 50), (720, y * 0.25, 50), (720, 0, 80),
+        ], r=3.0)
 layer("motion-back")
-box("Motion controller", (720, 0, 40), (260, 220, 80), MAT["plastic"], bevel=0.004)
+box("Motion controller", (720, 0, 50), (280, 220, 90), MAT["alu"], bevel=0.004)
+for bx, by in ((-110, -85), (110, -85), (-110, 85), (110, 85)):
+    bolt(f"Controller bolt {bx}{by}", (720 + bx, by, 95), (0, 0, 1), r=4, h=3)
+cable("Motion mains", [(720, 0, 10), (720, -80, 8), (400, -RAIL_Y - 40, 8), (40, -RAIL_Y - 40, 8), (10, -RAIL_Y - 80, 8)], r=4.0)
 
 # ---- freestanding display stand and curved screens -------------------------------------------
 ST_X = 1520      # stand posts
 ST_Y = 600
 BAR_Z = 1040     # crossbar centre
 SB = 840         # screen bottom
-SW, SH = 720, 420
+# 32" 16:9 1000R: active area 697.3 x 392.3 mm (MSI / Samsung published), 11 mm bezel each side
+# → outer 719.3 x 414.3 mm. Neighbouring bezels almost touch (4 mm air gap).
+SW, SH = 719, 414
 SIDE = math.radians(55)
 CX = 1400        # chord line of the centre screen
-GAP = 20         # visible gap between neighbouring panels (each has its own full bezel)
+GAP = 4          # air between neighbouring bezels; real triples sit nearly edge-to-edge
 layer("mount")
 for s, side in [(1, "L"), (-1, "R")]:
     profile(f"Stand foot {side}", (1180, s * ST_Y, 20), (1780, s * ST_Y, 20), 40, 80, u=(0, 0, 1))
@@ -1163,7 +1344,23 @@ for s, side in [(1, "L"), (-1, "R")]:
 layer("screen-top")
 # a distinct, smaller panel on its own posts, centred over the centre screen and tilted down at the driver
 # same panel and the same 1000R curve as the others
-curved_monitor("Top screen", (CX - 20, SW / 2, 0), (CX - 20, -SW / 2, 0), SB + SH + 40, SH, screen=screen_material(TOP), tilt=10)
+curved_monitor("Top screen", (CX - 20, SW / 2, 0), (CX - 20, -SW / 2, 0), SB + SH + 16, SH, screen=screen_material(TOP), tilt=10)
+
+# display cables: a loose loom from each panel housing into the stand post, then to the floor
+layer("mount")
+cable("Screen loom", [
+    (CX - 50, 0, SB + SH * 0.5), (ST_X - 80, 0, BAR_Z), (ST_X, -ST_Y + 40, BAR_Z - 80),
+    (ST_X, -ST_Y + 40, 160), (ST_X, -ST_Y + 40, 20), (1180, -ST_Y, 12),
+], r=4.5, ties=[((ST_X, -ST_Y + 40, z), (0, 1, 0)) for z in (400, 700, 1000)])
+for s, side in ((1, "L"), (-1, "R")):
+    cable(f"Side screen cable {side}", [
+        (CX + 40, s * (SW / 2 + 80), SB + SH * 0.45), (ST_X - 60, s * ST_Y, BAR_Z - 40),
+        (ST_X, s * ST_Y, 400),
+    ], r=3.2)
+layer("mount-top")
+cable("Top screen cable", [
+    (CX - 40, 80, SB + SH + 16 + SH * 0.5), (ST_X - 60, 80, 1500), (ST_X - 40, -ST_Y + 80, BAR_Z),
+], r=3.2)
 
 os.makedirs(os.path.dirname(OUT), exist_ok=True)
 for im in bpy.data.images:  # pack the brand and screen art; CC0 textures stay in the gitignored cache

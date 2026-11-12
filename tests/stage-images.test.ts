@@ -33,7 +33,7 @@ describe("stage image preload", () => {
     expect(run("/racing/")?.imagesrcset).toBe(
       "/rigs/es-cat-motion-640.webp 640w, /rigs/es-cat-motion-1024.webp 1024w, /rigs/es-cat-motion-1600.webp 1600w",
     );
-    expect(run("/")?.imagesrcset).toContain("es-hero-wide-1024.webp");
+    expect(run("/")?.imagesrcset).toContain("es-hero-wide-pr1-1024.webp");
     expect(run("/", true)?.imagesrcset).toContain("es-hero-tall-1024.webp");
     // Text-first and tool pages don't preload art.
     expect(run("/shop")).toBeUndefined();
