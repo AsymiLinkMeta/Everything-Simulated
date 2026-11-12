@@ -4,7 +4,7 @@ Physically grounded material pass for close-up studio renders (render_studio.py 
 The builder's materials are tuned for small, fast previews; up close they read as plastic. This pass
 rebuilds the hero materials: brushed machined alloy with anisotropic highlights, black and graphite
 anodised alloy, a 2x2 twill carbon weave under a clear coat, napped Alcantara-style suede on the rim
-and an emissive wheel display with real dash art. Only node trees change; geometry is untouched.
+and an emissive wheel display with real dash art. Node trees change here; geometry accuracy lives in build_rig.py (real 40-series T-slots, DD envelope, H-pattern, rubber pedal faces, motion bellows).
 """
 import os
 
@@ -94,7 +94,7 @@ def carbon(name="Carbon fibre"):
     bump.inputs["Distance"].default_value = 0.0002
     nt.links.new(ck.outputs["Fac"], bump.inputs["Height"])
     nt.links.new(bump.outputs["Normal"], b.inputs["Normal"])
-    setv(b, metal=0.0, rough=0.3, aniso=0.85, spec=0.6, coat=1.0, coat_rough=0.035)
+    setv(b, metal=0.0, rough=0.28, aniso=0.85, spec=0.45, coat=0.7, coat_rough=0.09)
     return m
 
 
@@ -150,10 +150,22 @@ def apply():
     bpy.data.materials.get("Machined aluminium") and brushed("Machined aluminium", (0.64, 0.65, 0.67))
     brushed("Motor housing", (0.035, 0.036, 0.04), rough=(0.28, 0.4), aniso=0.55)
     bpy.data.materials.get("Black anodised aluminium") and brushed(
-        "Black anodised aluminium", (0.03, 0.031, 0.034), rough=(0.3, 0.42), aniso=0.5)
+        "Black anodised aluminium", (0.018, 0.019, 0.021), rough=(0.28, 0.40), aniso=0.55)
     graphite = brushed("Graphite anodised", (0.09, 0.092, 0.1), rough=(0.24, 0.34), aniso=0.6)
+    # stainless and black oxide stay metallic; rubber stays matte with a finer grain
+    if bpy.data.materials.get("Stainless steel"):
+        brushed("Stainless steel", (0.56, 0.57, 0.59), rough=(0.10, 0.20), aniso=0.45)
+    if bpy.data.materials.get("Black oxide screw"):
+        brushed("Black oxide screw", (0.04, 0.041, 0.045), rough=(0.28, 0.4), aniso=0.3)
     cf = carbon()
     suede()
+    # tighten the suede nap: slightly more bump than the default close-up pass
+    m = bpy.data.materials.get("Suede grip")
+    if m:
+        for n in m.node_tree.nodes:
+            if n.type == "BUMP":
+                n.inputs["Strength"].default_value = 0.32
+                n.inputs["Distance"].default_value = 0.00035
     for ob in bpy.data.collections["wheel"].objects:
         if ob.name == "Wheel display" and ob.material_slots:
             display(ob)

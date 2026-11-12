@@ -9,3 +9,10 @@
 - Packed: frames 20-34 KB AVIF / 30-45 KB WebP each, overlays 2-4 KB; empty view 30 KB AVIF. 964 KB in total.
 - Screenshots and sheets (box-local, untracked): `e2e/.shots/*-{390,1440}[-preview].png`, `contact-{390,1440}.png`,
   `compare-vs-reference.png`.
+
+- 2026-11-12: photoreal / accuracy pass (Patrick t46u). Pipeline in build_rig.py, realism.py,
+  render_studio.py. Finals at 128 samples + OIDN, AgX Medium High Contrast, in
+  `/workspace/es-redesign/photoreal/final/`. Before/after sheets:
+  `/workspace/es-redesign/shots/photoreal-2026-11-12/`. New storage names `es-*-pr1` only;
+  `scripts/data/photoreal-art-pr1.sql` is ready, not applied. ES branding only.
+- 2026-11-12 (phase 2): seat weave, visible H-gate, logo-only deck plates, rebuilt part-pc, starter/haptic prebuilds, cat-* wides, hero-tall, builder ghosts with #e10600 outline. Sheets in `/workspace/es-redesign/shots/photoreal-pr2-2026-11-12/`. New storage names `es-*-pr2` only; `photoreal-art-pr2.sql` is ready, not applied.

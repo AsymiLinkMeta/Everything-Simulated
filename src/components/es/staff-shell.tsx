@@ -23,6 +23,7 @@ import {
   Settings,
   Layers,
 } from "lucide-react";
+import { STAGE_IMAGES } from "@/lib/es/stage-images";
 import { useCurrentUserState } from "@/lib/auth/use-current-user";
 import { getProfile } from "@/lib/es/server";
 import { unreadInboxCount } from "@/lib/es/inbox";
@@ -107,7 +108,7 @@ export function StaffShell() {
   return (
     <div className="es-staff">
       <div className="es-staff-bg" aria-hidden="true">
-        <img src="/rigs/es-hero-wide.jpg" alt="" />
+        <img src={STAGE_IMAGES["/"]} alt="" />
       </div>
       <aside className="es-sidebar">
         <div className="es-sidebar-head">

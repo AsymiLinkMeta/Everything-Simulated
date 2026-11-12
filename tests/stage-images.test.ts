@@ -15,7 +15,7 @@ describe("stage image preload", () => {
   });
   it("builds a script that preloads the current page's photo, art-directed on phones", () => {
     const script = stagePreloadScript();
-    expect(script).toContain('"/racing":"es-cat-motion"');
+    expect(script).toContain('"/racing":"es-cat-motion-pr2"');
     const head = { appended: [] as Record<string, string>[] };
     const fakeLink = () => {
       const attrs: Record<string, string> = {};
@@ -31,10 +31,10 @@ describe("stage image preload", () => {
       return head.appended[0];
     };
     expect(run("/racing/")?.imagesrcset).toBe(
-      "/rigs/es-cat-motion-640.webp 640w, /rigs/es-cat-motion-1024.webp 1024w, /rigs/es-cat-motion-1600.webp 1600w",
+      "/rigs/es-cat-motion-pr2-640.webp 640w, /rigs/es-cat-motion-pr2-1024.webp 1024w, /rigs/es-cat-motion-pr2-1600.webp 1600w",
     );
-    expect(run("/")?.imagesrcset).toContain("es-hero-wide-1024.webp");
-    expect(run("/", true)?.imagesrcset).toContain("es-hero-tall-1024.webp");
+    expect(run("/")?.imagesrcset).toContain("es-hero-wide-pr1-1024.webp");
+    expect(run("/", true)?.imagesrcset).toContain("es-hero-tall-pr2-1024.webp");
     // Text-first and tool pages don't preload art.
     expect(run("/shop")).toBeUndefined();
     expect(run("/privacy")).toBeUndefined();

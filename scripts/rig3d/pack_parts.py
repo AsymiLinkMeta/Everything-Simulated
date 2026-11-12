@@ -78,11 +78,13 @@ for v in VARIANTS:
     g = b * (1 - cover) + ghost_rgb * cover
     line = np.zeros((H, W), np.float32)
     for m in masks_big.values():
-        outer = arr(morph(m, k, "max"))
+        outer = arr(morph(m, max(k + 1, 2), "max"))
         inner = arr(morph(m, max(1, k // 2), "min"))
         line = np.maximum(line, np.clip(outer - inner, 0, 1))
     line = arr(to_img(line, "L").filter(ImageFilter.GaussianBlur(0.6 * k)))[..., None]
-    g = g * (1 - line * 0.6) + np.array([0.82, 0.83, 0.86], np.float32) * line * 0.6
+    # ES brand red #e10600 outline around every part on the ghost
+    es_red = np.array([0xE1 / 255.0, 0x06 / 255.0, 0.0], np.float32)
+    g = g * (1 - line * 0.85) + es_red * line * 0.85
     ghost = to_img(g, "RGB").resize(size, Image.LANCZOS)
     entry = {"ghost": None, "parts": {}}
     entry["ghost"], sizes[f"ghost-{v}"] = write(ghost, f"ghost-{v}", quality=86)

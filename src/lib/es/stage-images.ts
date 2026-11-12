@@ -5,21 +5,21 @@
  * product and prebuild images come from the database.
  */
 export const STAGE_IMAGES = {
-  "/": "/rigs/es-hero-wide.jpg",
-  "/racing": "/rigs/es-cat-motion.jpg",
-  "/prebuilds": "/rigs/es-cat-screens.jpg",
-  "/compatibility": "/rigs/es-cat-chassis.jpg",
-  "/ambassadors": "/rigs/es-cat-seat.jpg",
-  "/studio": "/rigs/es-cat-wheel.jpg",
-  "/events": "/rigs/es-cat-screens.jpg",
-  "/drones": "/rigs/es-cat-pc.jpg",
-  "/aircraft": "/rigs/es-cat-shifter.jpg",
-  "/training": "/rigs/es-cat-pedals.jpg",
+  "/": "/rigs/es-hero-wide-pr1.jpg",
+  "/racing": "/rigs/es-cat-motion-pr2.jpg",
+  "/prebuilds": "/rigs/es-cat-screens-pr2.jpg",
+  "/compatibility": "/rigs/es-cat-chassis-pr2.jpg",
+  "/ambassadors": "/rigs/es-cat-seat-pr2.jpg",
+  "/studio": "/rigs/es-cat-wheel-pr2.jpg",
+  "/events": "/rigs/es-cat-screens-pr2.jpg",
+  "/drones": "/rigs/es-cat-pc-pr2.jpg",
+  "/aircraft": "/rigs/es-cat-shifter-pr2.jpg",
+  "/training": "/rigs/es-cat-pedals-pr2.jpg",
 } as const;
 
 /** Art-directed portrait crops for phones (max-width: 767px). Same naming as STAGE_IMAGES. */
 export const STAGE_IMAGES_MOBILE: Partial<Record<keyof typeof STAGE_IMAGES, string>> = {
-  "/": "/rigs/es-hero-tall.jpg",
+  "/": "/rigs/es-hero-tall-pr2.jpg",
 };
 
 export const MOBILE_MEDIA = "(max-width: 767px)";

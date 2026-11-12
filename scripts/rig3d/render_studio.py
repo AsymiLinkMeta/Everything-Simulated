@@ -88,16 +88,25 @@ CATS = {
 # What the camera frames, when it isn't every layer shown (the rest runs out of frame as context).
 CAT_FIT = {"shifter": ["sidemount", "shifter", "handbrake"], "seat": ["seat"], "wheel": ["wheelbase", "wheel"], "pedals": ["pedals"]}
 CAT_VIEW = {"chassis": (32, 16), "seat": (38, 12), "wheel": (55, 10), "pedals": (20, 38), "screens": (24, 8),
-            "motion": (30, 10), "shifter": (58, 16), "pc": (35, 12)}
+            "motion": (30, 10), "shifter": (40, 46), "pc": (58, 10)}
 for k, layers in CATS.items():
     az, el = CAT_VIEW[k]
     fit = CAT_FIT.get(k)
     ctx = k in CAT_FIT  # leave room round a framed sub-assembly so the rig it's bolted to reads
-    shot(f"cat-{k}", layers, az, el, 9 / 16, 1800, region=(0.42, 0.86, 0.14, 0.86) if ctx else (0.30, 0.94, 0.08, 0.92), lifted=k == "motion", dof=2.8, hide=("Pedal cable",), fit=fit)
+    hide = ("Pedal cable", "Wheelbase cable 0", "Wheelbase cable 1", "Motor power lead", "Motor USB lead")
+    if k in ("pedals", "seat"):
+        hide = hide + ("Wheel deck plate",)
+    if k in ("wheel", "shifter", "pedals", "seat"):
+        # logo-only deck plates still get cropped at tight angles; hide them on close-ups
+        hide = hide + ("Brand deck plate R", "Brand deck plate L")
+    # shifter close-ups: fill more of the frame so the H-gate is readable
+    cat_region = (0.28, 0.80, 0.12, 0.88) if k == "shifter" else ((0.42, 0.86, 0.14, 0.86) if ctx else (0.30, 0.94, 0.08, 0.92))
+    part_region = (0.16, 0.84, 0.14, 0.86) if k == "shifter" else ((0.24, 0.76, 0.2, 0.8) if ctx else (0.15, 0.85, 0.16, 0.84) if args.real else (0.10, 0.90, 0.12, 0.88))
+    shot(f"cat-{k}", layers, az, el, 9 / 16, 1800, region=cat_region, lifted=k == "motion", dof=2.8, hide=hide, fit=fit)
     # square product art: the whole part with breathing room on every side; a deeper focus at --real
     shot(f"part-{k}", layers, az, el, 1.0, 1200,
-         region=(0.24, 0.76, 0.2, 0.8) if ctx else (0.15, 0.85, 0.16, 0.84) if args.real else (0.10, 0.90, 0.12, 0.88),
-         lifted=k == "motion", dof=6.3 if args.real else 2.8, hide=("Pedal cable",), fit=fit)
+         region=part_region,
+         lifted=k == "motion", dof=6.3 if args.real else 2.8, hide=hide, fit=fit)
 shot("plate", [], 30, 12, 9 / 16, 1600, fit=CORE)
 
 if args.real:
@@ -291,15 +300,18 @@ def build_studio(target, view, scale):
     C = Vector((target.x, target.y, 0))
     t = target
     s = scale
-    area("Key", C - H * 3.0 * s + SIDE * 2.4 * s + Vector((0, 0, 3.2 * s)), 2.2 * s, 900 * s * s, (1.0, 0.98, 0.95), 1.4 * s, t)
-    area("Fill", C - H * 3.6 * s - SIDE * 2.8 * s + Vector((0, 0, 1.6 * s)), 3.0 * s, 70 * s * s, (0.95, 0.97, 1.0), 2.0 * s, t)
-    area("Top", C + Vector((0, 0, 3.4 * s)), 2.6 * s, 520 * s * s, size_y=1.8 * s, target=C, spread=50)
-    area("Strip L", C + H * 1.0 * s + SIDE * 2.4 * s + Vector((0, 0, 1.3 * s)), 0.3 * s, 700 * s * s, (0.92, 0.95, 1.0), 2.6 * s, t)
-    area("Strip R", C + H * 0.6 * s - SIDE * 2.6 * s + Vector((0, 0, 1.3 * s)), 0.3 * s, 700 * s * s, (0.92, 0.95, 1.0), 2.6 * s, t)
-    # a low warm rim from behind, and a soft glow on the wall behind the subject for separation
-    area("Rim", C + H * 2.6 * s + Vector((0, 0, 0.5 * s)), 2.2 * s, 120 * s * s, (1.0, 0.93, 0.88), 0.5 * s, t)
-    area("Wall", C + H * 1.2 * s + Vector((0, 0, 0.2 * s)), 2.0 * s, 90 * s * s, (0.85, 0.88, 0.95), 2.0 * s,
+    # Softer product lighting: a moderate key (the old 900-energy key blew a hot cyc patch on the left),
+    # a larger fill, a top pool for contact shadows, and thin strips to draw T-slot edges.
+    area("Key", C - H * 3.0 * s + SIDE * 2.4 * s + Vector((0, 0, 3.2 * s)), 2.6 * s, 380 * s * s, (1.0, 0.98, 0.95), 1.8 * s, t)
+    area("Fill", C - H * 3.6 * s - SIDE * 2.8 * s + Vector((0, 0, 1.6 * s)), 3.4 * s, 110 * s * s, (0.95, 0.97, 1.0), 2.2 * s, t)
+    area("Top", C + Vector((0, 0, 3.4 * s)), 3.0 * s, 360 * s * s, size_y=2.2 * s, target=C, spread=60)
+    area("Strip L", C + H * 1.0 * s + SIDE * 2.4 * s + Vector((0, 0, 1.3 * s)), 0.3 * s, 480 * s * s, (0.92, 0.95, 1.0), 2.6 * s, t)
+    area("Strip R", C + H * 0.6 * s - SIDE * 2.6 * s + Vector((0, 0, 1.3 * s)), 0.3 * s, 480 * s * s, (0.92, 0.95, 1.0), 2.6 * s, t)
+    area("Rim", C + H * 2.6 * s + Vector((0, 0, 0.5 * s)), 2.2 * s, 90 * s * s, (1.0, 0.93, 0.88), 0.5 * s, t)
+    area("Wall", C + H * 1.2 * s + Vector((0, 0, 0.2 * s)), 2.0 * s, 50 * s * s, (0.85, 0.88, 0.95), 2.0 * s,
          C + H * 6.0 * s + Vector((0, 0, 1.6 * s)))
+    # a low, wide kicker aimed at the floor just under the subject, to tighten contact shadows
+    # (no ground-kiss: a downward kicker painted a hot ellipse on the cyclorama)
 
 
 world = bpy.data.worlds.new("Studio HDRI")
@@ -308,7 +320,7 @@ wn = world.node_tree
 env = wn.nodes.new("ShaderNodeTexEnvironment")
 env.image = bpy.data.images.load(os.path.join(CACHE, "studio_small_09_2k.hdr"), check_existing=True)
 wn.links.new(env.outputs["Color"], wn.nodes["Background"].inputs["Color"])
-wn.nodes["Background"].inputs["Strength"].default_value = 0.12
+wn.nodes["Background"].inputs["Strength"].default_value = 0.38
 scene.world = world
 
 CYC = []
@@ -345,9 +357,9 @@ def build_cyc(target, view, scale):
     cm = bpy.data.materials.get("Studio black") or bpy.data.materials.new("Studio black")
     cm.use_nodes = True
     cb = cm.node_tree.nodes["Principled BSDF"]
-    cb.inputs["Base Color"].default_value = (0.0032, 0.0034, 0.0038, 1)
-    cb.inputs["Roughness"].default_value = 0.92
-    cb.inputs["Specular IOR Level"].default_value = 0.12
+    cb.inputs["Base Color"].default_value = (0.0022, 0.0024, 0.0028, 1)
+    cb.inputs["Roughness"].default_value = 0.96
+    cb.inputs["Specular IOR Level"].default_value = 0.04
     me.materials.append(cm)
     CYC.append(ob)
 
@@ -357,7 +369,9 @@ r.engine = "CYCLES"
 scene.cycles.device = "CPU"
 scene.cycles.samples = args.samples
 scene.cycles.use_adaptive_sampling = True
-scene.cycles.adaptive_threshold = 0.01
+scene.cycles.adaptive_threshold = 0.008
+scene.render.threads_mode = "FIXED"
+scene.render.threads = 8
 scene.cycles.use_denoising = True
 scene.cycles.denoiser = "OPENIMAGEDENOISE"
 scene.cycles.denoising_input_passes = "RGB_ALBEDO_NORMAL"
@@ -374,8 +388,9 @@ r.image_settings.color_depth = "8"
 r.film_transparent = False
 r.use_border = False
 scene.view_settings.view_transform = "AgX"
-scene.view_settings.look = "AgX - Punchy"
-scene.view_settings.exposure = 0.0
+# Punchy crushed the blacks into a video-game look; Medium High Contrast keeps studio contrast without clipping.
+scene.view_settings.look = "AgX - Medium High Contrast"
+scene.view_settings.exposure = 0.05
 scene.use_nodes = False
 
 
@@ -405,6 +420,27 @@ for name, s in SHOTS.items():
     scale = max(0.45, min(1.0, span / 2.4))
     build_studio(target, view, scale)
     build_cyc(target, view, scale)
+    # Keep the Key and edge strips off the cyclorama — they painted a hot ellipse
+    # in the hero's empty left (headline) region. Fill, Top, Rim and the HDRI still
+    # wrap the floor for contact.
+    rec = bpy.data.collections.get("Key receivers")
+    if rec is None:
+        rec = bpy.data.collections.new("Key receivers")
+    else:
+        for o in list(rec.objects):
+            rec.objects.unlink(o)
+    skip = {"Cyclorama", "Key", "Fill", "Top", "Strip L", "Strip R", "Rim", "Wall", "Ground kiss", "Camera", "RigLift"}
+    for o in scene.objects:
+        if o.name in skip or o.type not in {"MESH", "CURVE"}:
+            continue
+        try:
+            rec.objects.link(o)
+        except RuntimeError:
+            pass
+    for ln in ("Key", "Strip L", "Strip R"):
+        lo = bpy.data.objects.get(ln)
+        if lo:
+            lo.light_linking.receiver_collection = rec
     show(s["layers"], s["lifted"], s["hide"])
     r.filepath = path
     bpy.ops.render.render(write_still=True)
