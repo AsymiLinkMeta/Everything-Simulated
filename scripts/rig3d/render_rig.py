@@ -136,11 +136,11 @@ SIDE = Vector((-H.y, H.x, 0))                  # to the camera's left
 C = Vector((TARGET.x, TARGET.y, 0))
 # big soft key high over the camera's left shoulder, fill low on the right, broad top softbox,
 # and long strip lights behind both sides that draw bright edges down the black extrusions
-area("Key", C - H * 3.2 + SIDE * 2.6 + Vector((0, 0, 3.4)), 2.4, 1100, (1.0, 0.98, 0.95), size_y=1.6)
-area("Fill", C - H * 3.6 - SIDE * 2.8 + Vector((0, 0, 1.8)), 3.0, 220, (0.95, 0.97, 1.0), size_y=2.0)
-area("Top", C + Vector((0, 0, 3.6)), 3.0, 450, size_y=2.0, spread=60)
-area("Strip L", C + H * 1.0 + SIDE * 2.6 + Vector((0, 0, 1.4)), 0.35, 520, (0.92, 0.95, 1.0), size_y=2.8)
-area("Strip R", C + H * 0.6 - SIDE * 2.8 + Vector((0, 0, 1.4)), 0.35, 520, (0.92, 0.95, 1.0), size_y=2.8)
+area("Key", C - H * 3.2 + SIDE * 2.6 + Vector((0, 0, 3.4)), 2.4, 380, (1.0, 0.98, 0.95), size_y=1.6)
+area("Fill", C - H * 3.6 - SIDE * 2.8 + Vector((0, 0, 1.8)), 3.0, 110, (0.95, 0.97, 1.0), size_y=2.0)
+area("Top", C + Vector((0, 0, 3.6)), 3.0, 360, size_y=2.0, spread=60)
+area("Strip L", C + H * 1.0 + SIDE * 2.6 + Vector((0, 0, 1.4)), 0.35, 480, (0.92, 0.95, 1.0), size_y=2.8)
+area("Strip R", C + H * 0.6 - SIDE * 2.8 + Vector((0, 0, 1.4)), 0.35, 480, (0.92, 0.95, 1.0), size_y=2.8)
 area("Kicker", C + H * 2.4 + Vector((0, 0, 0.6)), 2.0, 50, (1.0, 0.96, 0.92), size_y=0.6, target=TARGET + Vector((0, 0, -0.5)))
 
 world = bpy.data.worlds.new("Studio HDRI")
@@ -149,7 +149,7 @@ wn = world.node_tree
 env = wn.nodes.new("ShaderNodeTexEnvironment")
 env.image = bpy.data.images.load(os.path.join(CACHE, "studio_small_09_2k.hdr"), check_existing=True)
 wn.links.new(env.outputs["Color"], wn.nodes["Background"].inputs["Color"])
-wn.nodes["Background"].inputs["Strength"].default_value = 0.35
+wn.nodes["Background"].inputs["Strength"].default_value = 0.38
 scene.world = world
 
 # seamless charcoal cyclorama: floor sweeping up into a back wall behind the rig
@@ -183,11 +183,26 @@ cm = bpy.data.materials.new("Charcoal sweep")
 cm.use_nodes = True
 cb = cm.node_tree.nodes["Principled BSDF"]
 cb.inputs["Base Color"].default_value = (0.006, 0.0062, 0.007, 1)
-cb.inputs["Roughness"].default_value = 0.6
-cb.inputs["Specular IOR Level"].default_value = 0.2
-cb.inputs["Coat Weight"].default_value = 0.1   # a soft, blurred floor reflection
-cb.inputs["Coat Roughness"].default_value = 0.22
+cb.inputs["Roughness"].default_value = 0.96
+cb.inputs["Specular IOR Level"].default_value = 0.04
+cb.inputs["Coat Weight"].default_value = 0.0
+cb.inputs["Coat Roughness"].default_value = 0.5
 me.materials.append(cm)
+
+# Keep the Key and edge strips off the cyclorama (same as render_studio.py).
+rec = bpy.data.collections.new("Key receivers")
+skip = {"Cyclorama", "Key", "Fill", "Top", "Strip L", "Strip R", "Kicker", "Camera", "RigLift"}
+for o in scene.objects:
+    if o.name in skip or o.type not in {"MESH", "CURVE"}:
+        continue
+    try:
+        rec.objects.link(o)
+    except RuntimeError:
+        pass
+for ln in ("Key", "Strip L", "Strip R"):
+    lo = bpy.data.objects.get(ln)
+    if lo:
+        lo.light_linking.receiver_collection = rec
 
 # ----------------------------------------------------------------------------- render settings
 r = scene.render
@@ -195,7 +210,7 @@ r.engine = "CYCLES"
 scene.cycles.device = "CPU"
 scene.cycles.samples = args.samples
 scene.cycles.use_adaptive_sampling = True
-scene.cycles.adaptive_threshold = 0.012
+scene.cycles.adaptive_threshold = 0.008
 scene.cycles.use_denoising = True
 scene.cycles.denoiser = "OPENIMAGEDENOISE"
 scene.cycles.denoising_input_passes = "RGB_ALBEDO_NORMAL"
@@ -211,8 +226,8 @@ r.resolution_percentage = 100
 r.image_settings.file_format = "PNG"
 r.image_settings.color_depth = "8"
 scene.view_settings.view_transform = "AgX"
-scene.view_settings.look = "AgX - Punchy"
-scene.view_settings.exposure = 0.0
+scene.view_settings.look = "AgX - Medium High Contrast"
+scene.view_settings.exposure = 0.05
 r.threads_mode = "AUTO"
 
 fit_camera()

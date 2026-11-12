@@ -15,3 +15,4 @@
   `/workspace/es-redesign/photoreal/final/`. Before/after sheets:
   `/workspace/es-redesign/shots/photoreal-2026-11-12/`. New storage names `es-*-pr1` only;
   `scripts/data/photoreal-art-pr1.sql` is ready, not applied. ES branding only.
+- 2026-11-12 (phase 2): seat weave, visible H-gate, logo-only deck plates, rebuilt part-pc, starter/haptic prebuilds, cat-* wides, hero-tall, builder ghosts with #e10600 outline. Sheets in `/workspace/es-redesign/shots/photoreal-pr2-2026-11-12/`. New storage names `es-*-pr2` only; `photoreal-art-pr2.sql` is ready, not applied.

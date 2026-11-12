@@ -202,9 +202,29 @@ MAT["plate"] = add_bump(principled("Matte black plate", (0.007, 0.0075, 0.008), 
                         280, 0.06, distance=0.0003)
 
 
+def weave_sockets(nt, vector_out, strength=2.0, distance=0.0013, box=True):
+    """Physical plain-weave (5 mm yarns, 0.240 m tile) as colour, roughness and bump.
+    Object-space vector in metres. Returns (color, rough, normal) sockets."""
+    s = 1.0 / 0.240
+    mp = node(nt, "ShaderNodeMapping", Scale=(s, s, s))
+    nt.links.new(vector_out, mp.inputs["Vector"])
+    col = nt.nodes.new("ShaderNodeTexImage"); col.image = cache_img("fabric_weave_col.png", colour=True)
+    ht = nt.nodes.new("ShaderNodeTexImage"); ht.image = cache_img("fabric_weave_height.png")
+    rg = nt.nodes.new("ShaderNodeTexImage"); rg.image = cache_img("fabric_weave_rough.png")
+    for tex in (col, ht, rg):
+        if box:
+            tex.projection = "BOX"
+            tex.projection_blend = 0.22
+        nt.links.new(mp.outputs["Vector"], tex.inputs["Vector"])
+    bump = node(nt, "ShaderNodeBump", Strength=strength, Distance=distance)
+    nt.links.new(ht.outputs["Color"], bump.inputs["Height"])
+    return col.outputs["Color"], rg.outputs["Color"], bump.outputs["Normal"]
+
+
 def seat_material():
-    """Black suede-like fabric insert (CC0 fabric normal map) between grained leatherette bolsters,
-    with red stitching along the seam. UV: U across the seat (-1..1), V along it (0..1)."""
+    """Black woven automotive cloth insert between grained leatherette bolsters,
+    with red stitching along the seam. UV: U across the seat (-1..1), V along it (0..1).
+    The weave itself is object-mapped so yarn size stays 5 mm on every surface."""
     m = bpy.data.materials.new("Seat fabric and leather")
     m.use_nodes = True
     nt = m.node_tree
@@ -216,48 +236,38 @@ def seat_material():
     nt.links.new(sep.outputs["X"], absu.inputs[0])
     mask = nt.nodes.new("ShaderNodeMath"); mask.operation = "GREATER_THAN"; mask.inputs[1].default_value = 0.62
     nt.links.new(absu.outputs[0], mask.inputs[0])
-    # fabric: tiled at ~6 cm (U spans ~0.5 m, V ~1.4 m)
-    mp = node(nt, "ShaderNodeMapping", Scale=(4.5, 24.0, 1.0))
-    nt.links.new(uv.outputs["UV"], mp.inputs["Vector"])
-    fn = nt.nodes.new("ShaderNodeTexImage"); fn.image = cache_img("fabric_pattern_07_nor_gl.jpg")
-    fr = nt.nodes.new("ShaderNodeTexImage"); fr.image = cache_img("fabric_pattern_07_Rough.jpg")
-    for t in (fn, fr):
-        nt.links.new(mp.outputs["Vector"], t.inputs["Vector"])
-    # leather grain: fine voronoi
-    vor = node(nt, "ShaderNodeTexVoronoi", Scale=900.0)
+    # weave on the cloth insert (object space — consistent 5 mm yarns)
     tc = nt.nodes.new("ShaderNodeTexCoord")
-    nt.links.new(tc.outputs["Object"], vor.inputs["Vector"])
-    leather_bump = node(nt, "ShaderNodeBump", Strength=0.25, Distance=0.0004)
-    nt.links.new(vor.outputs["Distance"], leather_bump.inputs["Height"])
-    fabric_nm = node(nt, "ShaderNodeNormalMap", Strength=1.2)
-    nt.links.new(fn.outputs["Color"], fabric_nm.inputs["Color"])
-    # quilted channels on the insert
+    wcol, wrough, wnorm = weave_sockets(nt, tc.outputs["Object"], strength=2.15, distance=0.00135)
+    # quilted channels on the insert, sitting on top of the weave
     wave = node(nt, "ShaderNodeTexWave", Scale=14.0)
     wave.wave_type = "BANDS"; wave.bands_direction = "Y"
     nt.links.new(uv.outputs["UV"], wave.inputs["Vector"])
-    quilt = node(nt, "ShaderNodeBump", Strength=0.3, Distance=0.003)
+    quilt = node(nt, "ShaderNodeBump", Strength=0.28, Distance=0.0024)
     nt.links.new(wave.outputs["Fac"], quilt.inputs["Height"])
-    nt.links.new(fabric_nm.outputs["Normal"], quilt.inputs["Normal"])
+    nt.links.new(wnorm, quilt.inputs["Normal"])
+    # leather grain on the bolsters
+    vor = node(nt, "ShaderNodeTexVoronoi", Scale=900.0)
+    nt.links.new(tc.outputs["Object"], vor.inputs["Vector"])
+    leather_bump = node(nt, "ShaderNodeBump", Strength=0.25, Distance=0.0004)
+    nt.links.new(vor.outputs["Distance"], leather_bump.inputs["Height"])
     nmix = nt.nodes.new("ShaderNodeMix"); nmix.data_type = "VECTOR"
     nt.links.new(mask.outputs[0], nmix.inputs["Factor"])
     nt.links.new(quilt.outputs["Normal"], nmix.inputs[4]); nt.links.new(leather_bump.outputs["Normal"], nmix.inputs[5])
     nt.links.new(nmix.outputs[1], b.inputs["Normal"])
-    # roughness: fabric map (very matte) vs leatherette (satin)
-    fr_m = node(nt, "ShaderNodeMapRange", **{"To Min": 0.75, "To Max": 1.0})
-    nt.links.new(fr.outputs["Color"], fr_m.inputs["Value"])
+    # roughness: woven cloth vs leatherette
     rough = nt.nodes.new("ShaderNodeMix"); rough.data_type = "FLOAT"
     rough.inputs["B"].default_value = 0.42
     nt.links.new(mask.outputs[0], rough.inputs["Factor"])
-    nt.links.new(fr_m.outputs["Result"], rough.inputs["A"])
+    # MapRange the weave rough (already 0-1-ish)
+    nt.links.new(wrough, rough.inputs["A"])
     nt.links.new(rough.outputs["Result"], b.inputs["Roughness"])
     shm = nt.nodes.new("ShaderNodeMix"); shm.data_type = "FLOAT"
-    shm.inputs["A"].default_value = 0.08; shm.inputs["B"].default_value = 0.0
+    shm.inputs["A"].default_value = 0.16; shm.inputs["B"].default_value = 0.0
     nt.links.new(mask.outputs[0], shm.inputs["Factor"])
     nt.links.new(shm.outputs["Result"], b.inputs["Sheen Weight"])
-    b.inputs["Sheen Roughness"].default_value = 0.4
-    b.inputs["Specular IOR Level"].default_value = 0.25  # fabric scatters, it doesn't shine
-    # red stitching just inside the bolster seam
-    # two rows of ES-red lock-stitch just inside the bolster seam (wide enough to read at part scale)
+    b.inputs["Sheen Roughness"].default_value = 0.48
+    b.inputs["Specular IOR Level"].default_value = 0.18
     def _stitch_row(at, width=0.016):
         bd = nt.nodes.new("ShaderNodeMath"); bd.operation = "COMPARE"
         bd.inputs[1].default_value = at; bd.inputs[2].default_value = width
@@ -275,7 +285,7 @@ def seat_material():
     stitch = nt.nodes.new("ShaderNodeMath"); stitch.operation = "MULTIPLY"
     nt.links.new(bands.outputs[0], stitch.inputs[0]); nt.links.new(dpos.outputs[0], stitch.inputs[1])
     base = nt.nodes.new("ShaderNodeMix"); base.data_type = "RGBA"
-    base.inputs["A"].default_value = (0.011, 0.011, 0.012, 1)   # fabric, a touch lighter than the leather
+    nt.links.new(wcol, base.inputs["A"])
     base.inputs["B"].default_value = (0.008, 0.008, 0.009, 1)
     nt.links.new(mask.outputs[0], base.inputs["Factor"])
     col = nt.nodes.new("ShaderNodeMix"); col.data_type = "RGBA"
@@ -287,20 +297,19 @@ def seat_material():
 
 
 MAT["seat"] = seat_material()
+
+
 def shell_material():
-    """The seat's back and sides: covered in the same black fabric as the insert (object-space
-    mapped), as on real fabric GT buckets."""
-    m = principled("Seat back fabric", (0.007, 0.007, 0.008), 0.0, 0.9, **{"Sheen Weight": 0.08, "Sheen Roughness": 0.5, "Specular IOR Level": 0.15})
+    """Seat back and sides: the same 5 mm woven automotive cloth, object-mapped."""
+    m = principled("Seat back fabric", (0.016, 0.016, 0.017), 0.0, 0.9,
+                   **{"Sheen Weight": 0.18, "Sheen Roughness": 0.5, "Specular IOR Level": 0.16})
     nt = m.node_tree
     b = nt.nodes["Principled BSDF"]
     tc = nt.nodes.new("ShaderNodeTexCoord")
-    mp = node(nt, "ShaderNodeMapping", Scale=(16.0, 16.0, 16.0))
-    nt.links.new(tc.outputs["Object"], mp.inputs["Vector"])
-    t = nt.nodes.new("ShaderNodeTexImage"); t.image = cache_img("fabric_pattern_07_nor_gl.jpg"); t.projection = "BOX"; t.projection_blend = 0.3
-    nt.links.new(mp.outputs["Vector"], t.inputs["Vector"])
-    nm = node(nt, "ShaderNodeNormalMap", Strength=1.0)
-    nt.links.new(t.outputs["Color"], nm.inputs["Color"])
-    nt.links.new(nm.outputs["Normal"], b.inputs["Normal"])
+    wcol, wrough, wnorm = weave_sockets(nt, tc.outputs["Object"], strength=2.35, distance=0.00145)
+    nt.links.new(wcol, b.inputs["Base Color"])
+    nt.links.new(wrough, b.inputs["Roughness"])
+    nt.links.new(wnorm, b.inputs["Normal"])
     return m
 
 
@@ -418,7 +427,7 @@ def decal(name, image, centre_mm, normal, up, width, kind="print", segs=1, wrap_
 
 PANO = "screen-pano.png"
 TOP = "screen-top.png"
-MAT["pc_glass"] = principled("Tinted glass", (0.45, 0.45, 0.48), 0.0, 0.02, **{"Transmission Weight": 1.0, "IOR": 1.5})
+MAT["pc_glass"] = principled("Tinted glass", (0.94, 0.96, 0.98), 0.0, 0.03, **{"Transmission Weight": 1.0, "IOR": 1.48, "Coat Weight": 0.0, "Specular IOR Level": 0.35})
 MAT["glow"] = principled("Red glow", (0.0, 0.0, 0.0), 0.0, 0.5, **{"Emission Color": (1.0, 0.03, 0.01, 1), "Emission Strength": 3.0})
 
 
@@ -723,14 +732,14 @@ for nm in BACK:
     COLL["chassis-back"].objects.link(ob)
 
 # ES branding on the frame: lockups on the rear and front crosses, the mark on the near upright,
-# the wordmark on the inside of both brand-red deck side plates
+# ES mark only on the inside of both brand-red deck side plates (a wordmark cropped to 'EVE' at close range)
 layer("chassis")
 decal("Brand rear cross", "brand-lockup.png", (0, 0, RZ), (-1, 0, 0), (0, 0, 1), 440)
 decal("Brand upright R", "brand-mark.png", ((UP_X0 + UP_X1) / 2, -UP_Y - 20, 690), (0, -1, 0), (0, 0, 1), 110)
-decal("Brand deck plate R", "brand-wordmark-white.png", (DECK_X, -(UP_Y - 28), DECK_Z), (0, 1, 0), (0, 0, 1), 170)
+decal("Brand deck plate R", "brand-mark.png", (DECK_X, -(UP_Y - 28), DECK_Z), (0, 1, 0), (0, 0, 1), 72)
 layer("chassis-back")
 decal("Brand front cross", "brand-lockup.png", (LEN, 0, RZ), (1, 0, 0), (0, 0, 1), 440)
-decal("Brand deck plate L", "brand-wordmark-white.png", (DECK_X, UP_Y - 28, DECK_Z), (0, -1, 0), (0, 0, 1), 170)
+decal("Brand deck plate L", "brand-mark.png", (DECK_X, UP_Y - 28, DECK_Z), (0, -1, 0), (0, 0, 1), 72)
 
 # ---- wheelbase: generic direct-drive motor on the deck, tilted up toward the driver --------------
 layer("wheelbase")
@@ -942,17 +951,38 @@ layer("shifter")
 # 12 mm stainless shaft, 44 mm leather knob. Mounted on the side bracket with M5 cap screws.
 SX, SY, SZ = SM_X + 42, SM_Y, 548
 box("Shifter body", (SX, SY, SZ), (122, 88, 54), MAT["alu"], bevel=0.004)
-box("Shifter gate", (SX, SY, SZ + 28), (114, 80, 3.5), MAT["alu_bright"], bevel=0.0008)
-# H-gate recesses (three verticals + one horizontal) — read as slots without a boolean
-for dx in (-28, 0, 28):
-    box(f"Shifter slot V{dx}", (SX + dx, SY, SZ + 30.2), (5.0, 44, 4.2), MAT["gloss"], bevel=0)
-box("Shifter slot H", (SX, SY, SZ + 30.2), (62, 5.0, 4.2), MAT["gloss"], bevel=0)
-frustum("Shifter boot", (SX, SY, SZ + 32), (SX - 6, SY, SZ + 62), 24, 10, MAT["rubber"], segs=36)
-cylinder("Shifter lever", (SX - 6, SY, SZ + 58), (SX - 20, SY, 708), 6.0, MAT["stainless"], segs=28)
+# Raised brushed-stainless H-gate. Slots are cut through the plate so the dark body
+# reads as the well; looking down you see a clear 6-speed H. Verticals run fore-aft (X).
+GATE = principled("Gate satin", (0.42, 0.43, 0.455), 1.0, 0.48, **{"Anisotropic": 0.28, "Coat Weight": 0.0, "Specular IOR Level": 0.45})
+gate = box("Shifter gate", (SX, SY, SZ + 29.4), (118, 86, 5.2), GATE, bevel=0.0005)
+# 10 mm slots so the H reads clearly from a three-quarter view
+slots = [((SX, SY + dy, SZ + 29.4), (56, 10.5, 9.0)) for dy in (-25, 0, 25)]
+slots.append(((SX, SY, SZ + 29.4), (10.5, 60, 9.0)))
+for i, (c, size) in enumerate(slots):
+    cut = box(f"Slot cutter gate {i}", c, size, MAT["plastic"], bevel=0)
+    cut.hide_render = True
+    cut.display_type = "WIRE"
+    cut.hide_viewport = True
+    bo = gate.modifiers.new(f"Slot {i}", "BOOLEAN")
+    bo.operation = "DIFFERENCE"
+    bo.object = cut
+    if hasattr(bo, "solver"):
+        try:
+            bo.solver = "FAST"
+        except TypeError:
+            bo.solver = "FLOAT"
+bv = gate.modifiers.new("Slot lip", "BEVEL")
+bv.width = 0.0008
+bv.segments = 3
+bv.limit_method = "ANGLE"
+# 3rd gear: centre lane, forward of the cross. A small dust boot sits under the plate, not over the H.
+GX, GY = SX + 16, SY
+frustum("Shifter boot", (GX, GY, SZ + 10), (GX, GY, SZ + 27.5), 14, 7, MAT["rubber"], segs=36)
+cylinder("Shifter lever", (GX, GY, SZ + 26), (GX - 8, GY, 708), 6.0, MAT["stainless"], segs=28)
 # leather knob: a short barrel with a slight dome, red anodised ring, flat top
-cylinder("Shifter knob", (SX - 19, SY, 704), (SX - 23, SY, 748), 22, MAT["leather"], segs=48)
-cylinder("Knob ring", (SX - 20, SY, 716), (SX - 20.5, SY, 724), 22.6, MAT["red_anod"], segs=48)
-cylinder("Knob top", (SX - 23, SY, 746), (SX - 23.5, SY, 750), 16, MAT["gloss"], segs=32)
+cylinder("Shifter knob", (GX - 8, GY, 704), (GX - 12, GY, 748), 22, MAT["leather"], segs=48)
+cylinder("Knob ring", (GX - 9, GY, 716), (GX - 9.5, GY, 724), 22.6, MAT["red_anod"], segs=48)
+cylinder("Knob top", (GX - 12, GY, 746), (GX - 12.5, GY, 750), 16, MAT["gloss"], segs=32)
 for dx, dy in ((52, 35), (52, -35), (-52, 35), (-52, -35)):
     bolt(f"Shifter bolt {dx}{dy}", (SX + dx, SY + dy, SZ + 27), (0, 0, 1), r=3.2, h=3.0)
 cable("Shifter cable", [
@@ -1139,42 +1169,192 @@ box("Visor stripe", (hc.x + 83, 0, hc.y - 20), (2, 120, 4), MAT["red"], bevel=0.
 
 # ---- PC tower beside the seat (driver's left) -------------------------------------------
 layer("pc")
-PCY = RAIL_Y + 330
-PCX = 650
-# mid-tower: aluminium frame, mesh front (toward the back of the rig, facing the camera), tinted
-# tempered-glass side showing a dark build: motherboard, a triple-fan GPU, tower cooler, RAM, PSU shroud
-CW, CD, CH = 470, 230, 490  # depth (x), width (y), height
-GY = PCY - CD / 2           # glass side
-box("Case frame top", (PCX, PCY, CH - 6), (CW, CD, 12), MAT["alu"], bevel=0.003)
-box("Case frame bottom", (PCX, PCY, 16), (CW, CD, 12), MAT["alu"], bevel=0.003)
-for xx in (PCX - CW / 2 + 6, PCX + CW / 2 - 6):
-    for yy in (GY + 6, PCY + CD / 2 - 6):
-        box(f"Case pillar {xx}{yy}", (xx, yy, CH / 2 + 5), (12, 12, CH - 22), MAT["alu"], bevel=0.002)
-box("Case back panel", (PCX, PCY + CD / 2 - 3, CH / 2 + 5), (CW - 12, 6, CH - 22), MAT["steel"], bevel=0.001)
-box("Case rear panel", (PCX + CW / 2 - 4, PCY, CH / 2 + 5), (6, CD - 12, CH - 22), MAT["steel"], bevel=0.001)
-box("Front mesh", (PCX - CW / 2 + 4, PCY, CH / 2 + 5), (5, CD - 14, CH - 24), add_bump(principled("Mesh grille", (0.01, 0.01, 0.011), 0.6, 0.5), 2200, 0.6, distance=0.001), bevel=0.001)
-cylinder("Power button", (PCX - CW / 2 + 1, PCY + 60, CH - 30), (PCX - CW / 2 - 3, PCY + 60, CH - 30), 7, MAT["alu_bright"], segs=24)
-box("Glass", (PCX, GY + 2, CH / 2 + 5), (CW - 16, 4, CH - 26), MAT["pc_glass"], bevel=0.001)
-box("Motherboard", (PCX + 40, PCY + CD / 2 - 12, 300), (305, 4, 300), principled("PCB", (0.012, 0.013, 0.014), 0.2, 0.45), bevel=0)
+# Mid-tower ATX envelope (~215 x 450 x 465 mm), generic mesh-front case with a tinted
+# tempered-glass side. Front (intakes) faces -X (toward the rear / typical camera);
+# glass faces -Y (toward the seat). No third-party marks — ES branding only.
+PCX, PCY = 650.0, RAIL_Y + 330
+CW, CD, CH = 450.0, 215.0, 465.0  # depth (X), width (Y), height (Z)
+FOOT = 12.0
+x0, x1 = PCX - CW / 2, PCX + CW / 2   # front, back
+y0, y1 = PCY - CD / 2, PCY + CD / 2   # glass, closed side
+z0 = FOOT
+z1 = FOOT + CH
+
+
+def _pc_mesh_mat():
+    m = principled("PC front mesh", (0.018, 0.019, 0.022), 1.0, 0.36)
+    nt = m.node_tree
+    b = nt.nodes["Principled BSDF"]
+    tc = nt.nodes.new("ShaderNodeTexCoord")
+    mp = node(nt, "ShaderNodeMapping", Scale=(1 / 0.120, 1 / 0.120, 1 / 0.120))
+    nt.links.new(tc.outputs["Object"], mp.inputs["Vector"])
+    img = nt.nodes.new("ShaderNodeTexImage")
+    img.image = cache_img("pc_mesh_front.png", colour=True)
+    img.projection = "FLAT"
+    nt.links.new(mp.outputs["Vector"], img.inputs["Vector"])
+    # The front is a YZ plane; use generated/object with a manual projection: Object Y,Z → U,V
+    # Box projection also works and wraps the thin sides.
+    img.projection = "BOX"
+    img.projection_blend = 0.05
+    tr = nt.nodes.new("ShaderNodeBsdfTransparent")
+    mix = nt.nodes.new("ShaderNodeMixShader")
+    nt.links.new(img.outputs["Alpha"], mix.inputs["Fac"])
+    nt.links.new(tr.outputs["BSDF"], mix.inputs[1])
+    nt.links.new(b.outputs["BSDF"], mix.inputs[2])
+    out = [n for n in nt.nodes if n.type == "OUTPUT_MATERIAL"][0]
+    for lnk in list(out.inputs["Surface"].links):
+        nt.links.remove(lnk)
+    nt.links.new(mix.outputs[0], out.inputs["Surface"])
+    nt.links.new(img.outputs["Color"], b.inputs["Base Color"])
+    try:
+        m.blend_method = "CLIP"
+        m.alpha_threshold = 0.45
+    except Exception:
+        pass
+    return m
+
+
+def _axial_fan(name, c, axis, r=54, depth=22, blades=8):
+    """Generic 120/140-style axial fan: torus shroud, hub, pitched blades. c and r in mm."""
+    ax = Vector(axis).normalized()
+    helper = Vector((0, 0, 1)) if abs(ax.z) < 0.9 else Vector((1, 0, 0))
+    u = ax.cross(helper).normalized()
+    v = ax.cross(u)
+    c = Vector(c)
+    torus(f"{name} shroud", tuple(c), tuple(ax), r - 2.2, 2.4, MAT["plastic"], 36, 10)
+    cylinder(f"{name} hub", tuple(c - ax * (depth * 0.35)), tuple(c + ax * (depth * 0.35)), r * 0.26, MAT["plastic"], segs=24)
+    cylinder(f"{name} cap", tuple(c + ax * (depth * 0.28)), tuple(c + ax * (depth * 0.46)), r * 0.2, MAT["alu"], segs=20)
+    pitch = math.radians(34)
+    for i in range(blades):
+        a = math.radians(360 * i / blades)
+        radial = u * math.cos(a) + v * math.sin(a)
+        tangent = -u * math.sin(a) + v * math.cos(a)
+        mid = c + radial * (r * 0.54)
+        ax_p = (ax * math.cos(pitch) + tangent * math.sin(pitch)).normalized()
+        tan_p = (tangent * math.cos(pitch) - ax * math.sin(pitch)).normalized()
+        rot = Matrix((
+            (ax_p.x, tan_p.x, radial.x, 0),
+            (ax_p.y, tan_p.y, radial.y, 0),
+            (ax_p.z, tan_p.z, radial.z, 0),
+            (0, 0, 0, 1),
+        ))
+        box(f"{name} blade {i}", tuple(mid), (2.0, 15.0, r * 0.66), MAT["plastic"], bevel=0.0003, rot=rot)
+
+
+PCB = principled("Motherboard PCB", (0.016, 0.07, 0.032), 0.05, 0.48)
+VRAM = principled("GPU shroud", (0.012, 0.012, 0.014), 0.15, 0.38, **{"Coat Weight": 0.25})
+LEDW = principled("Cool white LED", (0.0, 0.0, 0.0), 0.0, 0.4,
+                  **{"Emission Color": (0.85, 0.92, 1.0, 1), "Emission Strength": 5.0})
+
+# frame
+box("Case top", (PCX, PCY, z1 - 6), (CW, CD, 12), MAT["steel"], bevel=0.003)
+box("Case floor", (PCX, PCY, z0 + 6), (CW, CD, 12), MAT["steel"], bevel=0.003)
+# four corner pillars (12 x 12 mm)
+for xx in (x0 + 7, x1 - 7):
+    for yy in (y0 + 7, y1 - 7):
+        box(f"Case pillar {xx:.0f}{yy:.0f}", (xx, yy, (z0 + z1) / 2), (12, 12, CH - 20), MAT["steel"], bevel=0.0015)
+# closed side (driver's left / +Y) and rear
+box("Case side panel", (PCX, y1 - 3, (z0 + z1) / 2), (CW - 16, 6, CH - 22), MAT["steel"], bevel=0.001)
+box("Case rear panel", (x1 - 4, PCY, (z0 + z1) / 2), (6, CD - 14, CH - 22), MAT["steel"], bevel=0.001)
+# rear I/O, exhaust, PCI covers, PSU inlet
+_axial_fan("Rear fan", (x1 - 16, PCY + 20, z1 - 85), (-1, 0, 0), r=56, depth=20)
+# I/O shield block (rear, upper left from the back)
+box("IO shield", (x1 - 1, PCY - 55, z1 - 160), (4, 70, 160), MAT["alu"], bevel=0.0004)
+for k, zh in enumerate((z1 - 115, z1 - 140, z1 - 165, z1 - 190)):
+    box(f"IO port {k}", (x1 + 2, PCY - 55, zh), (6, 50, 10), MAT["gloss"], bevel=0.0003)
+# seven PCI slot covers
+for k in range(7):
+    box(f"PCI cover {k}", (x1 - 1, PCY - 15, z0 + 95 + k * 14), (5, 110, 10), MAT["steel"], bevel=0.0003)
+# PSU at the rear floor, IEC inlet and switch
+box("PSU", (x1 - 80, PCY, z0 + 50), (150, CD - 24, 86), MAT["steel"], bevel=0.002)
+cylinder("IEC inlet", (x1 + 2, PCY + 40, z0 + 48), (x1 + 10, PCY + 40, z0 + 48), 10, MAT["gloss"], segs=16)
+box("PSU switch", (x1 + 2, PCY + 18, z0 + 48), (6, 14, 10), MAT["red_anod"], bevel=0.0004)
+# honeycomb PSU intake (rear)
+box("PSU grate", (x1 - 1, PCY - 20, z0 + 50), (3, 90, 70),
+    add_bump(principled("PSU honeycomb", (0.02, 0.02, 0.022), 0.7, 0.45), 900, 0.5, distance=0.0008), bevel=0.0004)
+# front mesh + three 120 mm intakes just behind it
+MESH = _pc_mesh_mat()
+box("Front mesh", (x0 + 3, PCY, (z0 + z1) / 2), (4, CD - 18, CH - 26), MESH, bevel=0.0008)
+# front inner frame only — a solid lip would hide the intakes behind the mesh
+fw, fh = CD - 18, CH - 26
+box("Front lip T", (x0 + 9, PCY, z1 - 22), (10, fw, 16), MAT["steel"], bevel=0.0008)
+box("Front lip B", (x0 + 9, PCY, z0 + 22), (10, fw, 16), MAT["steel"], bevel=0.0008)
+box("Front lip L", (x0 + 9, y0 + 18, (z0 + z1) / 2), (10, 14, fh), MAT["steel"], bevel=0.0008)
+box("Front lip R", (x0 + 9, y1 - 18, (z0 + z1) / 2), (10, 14, fh), MAT["steel"], bevel=0.0008)
+for k, zh in enumerate((z0 + 95, z0 + 230, z0 + 365)):
+    _axial_fan(f"Intake {k}", (x0 + 32, PCY, zh), (-1, 0, 0), r=56, depth=25, blades=7)
+# power button + two USB + audio, front-top
+cylinder("Power button", (x0 - 1, PCY + 55, z1 - 28), (x0 - 6, PCY + 55, z1 - 28), 7.5, MAT["alu_bright"], segs=24)
+box("USB 0", (x0 - 1, PCY + 20, z1 - 28), (5, 14, 6), MAT["gloss"], bevel=0.0003)
+box("USB 1", (x0 - 1, PCY + 2, z1 - 28), (5, 14, 6), MAT["gloss"], bevel=0.0003)
+cylinder("Audio jack", (x0 - 1, PCY - 20, z1 - 28), (x0 - 4, PCY - 20, z1 - 28), 3.2, MAT["gloss"], segs=16)
+# ES mark on the front, below the button cluster
+decal("Brand PC", "brand-mark.png", (x0 - 3, PCY - 40, z1 - 80), (-1, 0, 0), (0, 0, 1), 48)
+# tempered glass on -Y, in a thin aluminium *frame* (four edges — a solid slab would hide the build)
+midz = (z0 + z1) / 2
+gw, gh = CW - 22, CH - 28
+box("Glass frame T", (PCX, y0 + 4, z1 - 20), (gw, 8, 14), MAT["alu"], bevel=0.0008)
+box("Glass frame B", (PCX, y0 + 4, z0 + 20), (gw, 8, 14), MAT["alu"], bevel=0.0008)
+box("Glass frame L", (PCX - CW / 2 + 18, y0 + 4, midz), (14, 8, gh), MAT["alu"], bevel=0.0008)
+box("Glass frame R", (PCX + CW / 2 - 18, y0 + 4, midz), (14, 8, gh), MAT["alu"], bevel=0.0008)
+box("Glass", (PCX, y0 + 2.2, midz), (CW - 40, 3.2, CH - 44), MAT["pc_glass"], bevel=0.0005)
+for sx, sz in ((-1, -1), (-1, 1), (1, -1), (1, 1)):
+    bolt(f"Glass screw {sx}{sz}", (PCX + sx * (CW / 2 - 28), y0 + 0.2, midz + sz * (CH / 2 - 26)), (0, -1, 0), r=3.0, h=2.4)
+# camera-invisible fill so the glass doesn't just reflect the dark studio
+LED_FILL = principled("Case fill LED", (0.0, 0.0, 0.0), 0.0, 0.5,
+                      **{"Emission Color": (0.92, 0.95, 1.0, 1), "Emission Strength": 3.2})
+fill = box("Case fill light", (PCX, PCY + 30, midz + 80), (CW - 100, 3, 40), LED_FILL, bevel=0)
+fill.visible_camera = False
+fill.visible_glossy = False
+fill.visible_transmission = False  # lights the interior, never seen as a panel
+# ---- interior (visible through the glass) ----
+# motherboard against the +Y wall, ATX-ish 305 x 244
+box("Motherboard", (PCX + 15, y1 - 22, z0 + 230), (305, 3.5, 244), PCB, bevel=0)
+# VRM heatsink, chipset, 24-pin, 8-pin
+box("VRM heatsink", (PCX + 120, y1 - 36, z0 + 320), (70, 28, 28), MAT["alu"], bevel=0.001)
+box("Chipset", (PCX + 20, y1 - 30, z0 + 185), (36, 14, 36), MAT["alu"], bevel=0.0006)
+box("24-pin", (PCX - 110, y1 - 36, z0 + 200), (12, 16, 54), MAT["plastic"], bevel=0.0004)
+box("8-pin CPU", (PCX + 130, y1 - 36, z0 + 330), (14, 16, 22), MAT["plastic"], bevel=0.0004)
+# four DIMM slots + two sticks
 for k in range(4):
-    box(f"RAM {k}", (PCX + 20 + k * 11, PCY + CD / 2 - 32, 360), (6, 36, 135), MAT["alu"], bevel=0.0005)
-box("Cooler tower", (PCX + 110, PCY + 20, 370), (60, 130, 150), MAT["motor"], bevel=0.002)
-box("Cooler fan", (PCX + 75, PCY + 20, 370), (26, 130, 130), MAT["plastic"], bevel=0.004)
-box("GPU", (PCX + 20, PCY - 10, 235), (320, 150, 62), MAT["plastic"], bevel=0.004)
-box("GPU backplate", (PCX + 20, PCY - 10, 268), (320, 150, 4), MAT["alu"], bevel=0.0008)
+    box(f"DIMM slot {k}", (PCX + 40, y1 - 38, z0 + 255 + k * 9), (8, 18, 140), MAT["plastic"], bevel=0.0003)
+for k in range(2):
+    box(f"RAM {k}", (PCX + 40, y1 - 48, z0 + 255 + k * 18), (6, 36, 138), MAT["alu"], bevel=0.0005)
+    box(f"RAM bar {k}", (PCX + 40, y1 - 66, z0 + 255 + k * 18), (4, 2, 120), LEDW, bevel=0)
+# tower cooler over the socket
+box("Cooler tower", (PCX + 95, PCY + 10, z0 + 325), (58, 125, 155), MAT["alu"], bevel=0.002)
+_axial_fan("Cooler fan", (PCX + 60, PCY + 10, z0 + 325), (-1, 0, 0), r=58, depth=24, blades=7)
+# GPU: 320 mm, 3-slot, three 90 mm fans, metal backplate, ES-red accent — no vendor marks
+GY_Z = z0 + 175
+box("GPU shroud", (PCX + 10, PCY - 5, GY_Z), (320, 118, 58), VRAM, bevel=0.003)
+box("GPU backplate", (PCX + 10, PCY - 5, GY_Z + 32), (320, 118, 3.5), MAT["alu"], bevel=0.0006)
+box("GPU accent", (PCX + 10, y0 + 28, GY_Z), (300, 1.6, 3), MAT["red_anod"], bevel=0)
 for k in range(3):
-    cylinder(f"GPU fan {k}", (PCX - 85 + k * 100, PCY - 10, 202), (PCX - 85 + k * 100, PCY - 10, 203.5), 44, MAT["gloss"], segs=40)
-box("GPU light bar", (PCX + 20, GY + 20, 235), (300, 2, 3), principled("White LED", (0.0, 0.0, 0.0), 0.0, 0.5, **{"Emission Color": (0.9, 0.95, 1.0, 1), "Emission Strength": 12.0}), bevel=0)
-box("PSU shroud", (PCX, PCY, 70), (CW - 20, CD - 20, 95), MAT["steel"], bevel=0.002)
-decal("Brand PSU shroud", "brand-lockup.png", (PCX, GY + 10, 70), (0, -1, 0), (0, 0, 1), 200)
-box("Case light", (PCX, GY + 12, CH - 22), (CW - 30, 3, 3), principled("Soft white LED", (0.0, 0.0, 0.0), 0.0, 0.5, **{"Emission Color": (0.9, 0.95, 1.0, 1), "Emission Strength": 10.0}), bevel=0)
-decal("Brand PC", "brand-mark.png", (PCX - CW / 2 - 1, PCY, CH - 70), (-1, 0, 0), (0, 0, 1), 52)
-# turn the case so its glass side faces back along the rig, toward the camera
-_M = Matrix.Translation(mm(PCX, PCY, 0)) @ Matrix.Rotation(math.radians(-90), 4, "Z") @ Matrix.Translation(-mm(PCX, PCY, 0))
-for _ob in COLL["pc"].objects:
-    _ob.data.transform(_M)
-for i in range(4):
-    cylinder(f"PC foot {i}", (PCX - 90 + 180 * (i % 2), PCY - 200 + 400 * (i // 2), 0), (PCX - 90 + 180 * (i % 2), PCY - 200 + 400 * (i // 2), 10), 14, MAT["rubber"])
+    _axial_fan(f"GPU fan {k}", (PCX - 90 + k * 100, PCY - 5, GY_Z - 30), (0, 0, -1), r=42, depth=16, blades=7)
+box("GPU 8-pin 0", (PCX + 155, PCY + 40, GY_Z + 8), (16, 22, 14), MAT["plastic"], bevel=0.0004)
+box("GPU 8-pin 1", (PCX + 155, PCY + 40, GY_Z - 10), (16, 22, 14), MAT["plastic"], bevel=0.0004)
+# PSU shroud across the lower third, ES lockup facing the glass
+box("PSU shroud", (PCX, PCY, z0 + 58), (CW - 22, CD - 22, 84), MAT["steel"], bevel=0.002)
+decal("Brand PSU shroud", "brand-lockup.png", (PCX, y0 + 16, z0 + 58), (0, -1, 0), (0, 0, 1), 180)
+# interior LED along the top of the glass
+box("Case light", (PCX, y0 + 18, z1 - 22), (CW - 40, 3, 3), LEDW, bevel=0)
+# cables: 24-pin, EPS, two GPU power, sleeved black
+cable("24-pin cable", [
+    (PCX - 110, y1 - 50, z0 + 200), (PCX - 130, PCY, z0 + 110), (PCX - 40, PCY, z0 + 70), (x1 - 80, PCY, z0 + 70),
+], r=3.6)
+cable("EPS cable", [
+    (PCX + 130, y1 - 50, z0 + 330), (PCX + 160, PCY + 40, z0 + 200), (PCX + 80, PCY + 20, z0 + 70),
+], r=2.8)
+cable("GPU power 0", [
+    (PCX + 155, PCY + 52, GY_Z + 8), (PCX + 200, PCY + 40, z0 + 120), (PCX + 80, PCY, z0 + 70),
+], r=2.6)
+# rear IEC lead dropping to the floor, then toward the back of the room
+cable("PC power lead", [
+    (x1 + 10, PCY + 40, z0 + 48), (x1 + 30, PCY + 50, 30), (x1 + 40, PCY + 80, FOOT), (x1 + 40, PCY + 140, 6),
+], r=4.0)
+# rubber feet
+for i, (fx, fy) in enumerate(((-1, -1), (-1, 1), (1, -1), (1, 1))):
+    cylinder(f"PC foot {i}", (PCX + fx * 180, PCY + fy * 80, 0), (PCX + fx * 180, PCY + fy * 80, FOOT), 14, MAT["rubber"])
 
 # ---- motion: four corner linear actuators (cylindrical industrial style) in the raised pose -----
 layer("motion")

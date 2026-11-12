@@ -88,7 +88,7 @@ CATS = {
 # What the camera frames, when it isn't every layer shown (the rest runs out of frame as context).
 CAT_FIT = {"shifter": ["sidemount", "shifter", "handbrake"], "seat": ["seat"], "wheel": ["wheelbase", "wheel"], "pedals": ["pedals"]}
 CAT_VIEW = {"chassis": (32, 16), "seat": (38, 12), "wheel": (55, 10), "pedals": (20, 38), "screens": (24, 8),
-            "motion": (30, 10), "shifter": (58, 16), "pc": (35, 12)}
+            "motion": (30, 10), "shifter": (40, 46), "pc": (58, 10)}
 for k, layers in CATS.items():
     az, el = CAT_VIEW[k]
     fit = CAT_FIT.get(k)
@@ -96,13 +96,16 @@ for k, layers in CATS.items():
     hide = ("Pedal cable", "Wheelbase cable 0", "Wheelbase cable 1", "Motor power lead", "Motor USB lead")
     if k in ("pedals", "seat"):
         hide = hide + ("Wheel deck plate",)
-    if k == "wheel":
-        # the inside wordmark is cropped to "EVE" at this angle; leave the plates unlettered
+    if k in ("wheel", "shifter", "pedals", "seat"):
+        # logo-only deck plates still get cropped at tight angles; hide them on close-ups
         hide = hide + ("Brand deck plate R", "Brand deck plate L")
-    shot(f"cat-{k}", layers, az, el, 9 / 16, 1800, region=(0.42, 0.86, 0.14, 0.86) if ctx else (0.30, 0.94, 0.08, 0.92), lifted=k == "motion", dof=2.8, hide=hide, fit=fit)
+    # shifter close-ups: fill more of the frame so the H-gate is readable
+    cat_region = (0.28, 0.80, 0.12, 0.88) if k == "shifter" else ((0.42, 0.86, 0.14, 0.86) if ctx else (0.30, 0.94, 0.08, 0.92))
+    part_region = (0.16, 0.84, 0.14, 0.86) if k == "shifter" else ((0.24, 0.76, 0.2, 0.8) if ctx else (0.15, 0.85, 0.16, 0.84) if args.real else (0.10, 0.90, 0.12, 0.88))
+    shot(f"cat-{k}", layers, az, el, 9 / 16, 1800, region=cat_region, lifted=k == "motion", dof=2.8, hide=hide, fit=fit)
     # square product art: the whole part with breathing room on every side; a deeper focus at --real
     shot(f"part-{k}", layers, az, el, 1.0, 1200,
-         region=(0.24, 0.76, 0.2, 0.8) if ctx else (0.15, 0.85, 0.16, 0.84) if args.real else (0.10, 0.90, 0.12, 0.88),
+         region=part_region,
          lifted=k == "motion", dof=6.3 if args.real else 2.8, hide=hide, fit=fit)
 shot("plate", [], 30, 12, 9 / 16, 1600, fit=CORE)
 

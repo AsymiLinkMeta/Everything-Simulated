@@ -81,3 +81,16 @@ Still-image output lives in `/workspace/es-redesign/photoreal/final/` (not live)
 approved; it must not be run before that. The home hero is a static `/rigs/es-hero-wide.jpg` and
 needs a follow-up pack into `public/rigs` once approved. Builder ghost layers (`pack_parts.py`)
 still use the previous beauty pass until they are re-rendered.
+
+## Photoreal phase 2 (2026-11-12)
+
+Seat: 5 mm object-mapped plain-weave cloth (gitignored `assets/rig3d/cache/fabric_weave_*.png`,
+2048-px tile, 48 yarns, 5 mm centres, 0.240 m object-mapped; bump from the height map). H-gate: boolean-cut satin plate, camera raised so the H
+reads. Deck side plates carry the ES mark only (the wordmark cropped to "EVE"). PC: mid-tower
+mesh-front case with tinted glass and a visible generic build, ES branding only. Starter and
+haptic prebuilds, wide `cat-*` heroes, `hero-tall`, and builder ghosts (ES red `#e10600`
+outline in `pack_parts.py`) are in this pass.
+
+Data: `scripts/data/photoreal-art-pr2.sql` (rollback alongside) is prepared and **not applied**.
+Stage images (`STAGE_IMAGES` cat-* and mobile hero-tall, including `/prebuilds`) are a code
+change on `feat/photoreal-pipeline` and go live only on merge (Patrick's "release").
