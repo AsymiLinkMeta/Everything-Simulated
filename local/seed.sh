@@ -58,5 +58,11 @@ psql "$DB" -q -1 -v ON_ERROR_STOP=1 -f ../supabase/migrations/20261015130000_ser
 psql "$DB" -q -1 -v ON_ERROR_STOP=1 -f ../supabase/migrations/20261016090000_ambassador_program.sql 2>&1 | grep -v NOTICE || true
 psql "$DB" -q -1 -v ON_ERROR_STOP=1 -f ../supabase/migrations/20261017090000_prebuild_price_source.sql 2>&1 | grep -v NOTICE || true
 psql "$DB" -q -1 -v ON_ERROR_STOP=1 -f ../supabase/migrations/20261017100000_hide_catalog_cost.sql 2>&1 | grep -v NOTICE || true
+# Those re-applies put back the function bodies they define, so replay every later migration too
+# (all idempotent): otherwise a later fix to one of those functions would be undone locally.
+for f in $(ls ../supabase/migrations/*.sql | sort); do
+  [[ "$(basename "$f")" > "20261017100000" ]] || continue
+  psql "$DB" -q -1 -v ON_ERROR_STOP=1 -f "$f" >/dev/null 2>&1 || echo "re-apply failed: $(basename "$f")"
+done
 psql "$DB" -qtAc "notify pgrst, 'reload schema'" >/dev/null
 echo "seeded: $(psql "$DB" -qtAc "select count(*) from catalog_products") products, $(psql "$DB" -qtAc "select count(*) from prebuilds") prebuilds, $(psql "$DB" -qtAc "select count(*) from profiles") profiles"

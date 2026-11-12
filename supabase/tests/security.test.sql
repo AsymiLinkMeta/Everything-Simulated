@@ -578,4 +578,146 @@ EXCEPTION WHEN check_violation THEN RAISE NOTICE 'ok - unknown builder badges ar
 END $$;
 RESET ROLE;
 
+-- ---- Guest tickets (20261110100000_support_guest_tickets) ----
+INSERT INTO auth.users (id, email, email_confirmed_at) VALUES ('00000000-0000-0000-0000-00000000000f', 'cust@example.com', now());
+SELECT pg_temp.as_user('00000000-0000-0000-0000-00000000000f');
+SELECT public.bootstrap_profile('cust@example.com', 'Cust');
+RESET ROLE;
+SELECT pg_temp.check((SELECT role FROM public.profiles WHERE user_id = '00000000-0000-0000-0000-00000000000f') = 'customer', 'fixture: a plain customer');
+-- A visitor files a ticket using customer a's email: it stays a guest ticket and a can't see it.
+SELECT pg_temp.as_anon();
+INSERT INTO public.support_tickets (id, contact_email, contact_name, subject, body)
+VALUES ('00000000-0000-4000-8000-00000000c001', 'cust@example.com', 'Imposter', 'Planted', 'Change my delivery address');
+INSERT INTO public.support_messages (ticket_id, author_role, body)
+VALUES ('00000000-0000-4000-8000-00000000c001', 'customer', 'first message');
+RESET ROLE;
+SELECT pg_temp.check((SELECT user_id IS NULL FROM public.support_tickets WHERE id = '00000000-0000-4000-8000-00000000c001'),
+  'a contact-form ticket stays a guest ticket');
+SELECT pg_temp.as_user('00000000-0000-0000-0000-00000000000f');
+SELECT pg_temp.check((SELECT count(*) = 0 FROM public.support_tickets WHERE id = '00000000-0000-4000-8000-00000000c001'),
+  'a guest ticket filed under a customer''s email does not appear in their account');
+SELECT pg_temp.check((SELECT count(*) = 0 FROM public.support_messages WHERE ticket_id = '00000000-0000-4000-8000-00000000c001'),
+  'nor do its messages');
+DO $$
+BEGIN
+  INSERT INTO public.support_messages (ticket_id, author_role, body) VALUES ('00000000-0000-4000-8000-00000000c001', 'customer', 'x');
+  RAISE EXCEPTION 'FAILED: customer posted into a guest ticket by email match';
+EXCEPTION WHEN insufficient_privilege THEN RAISE NOTICE 'ok - customers cannot post into a guest ticket that matches their email';
+END $$;
+-- A signed-in customer's ticket is theirs and always carries their own address.
+INSERT INTO public.support_tickets (id, contact_email, contact_name, subject, body)
+VALUES ('00000000-0000-4000-8000-00000000c002', 'someone.else@example.com', 'A', 'Mine', 'Help please');
+SELECT pg_temp.check((SELECT user_id = '00000000-0000-0000-0000-00000000000f' AND contact_email = 'cust@example.com'
+                        FROM public.support_tickets WHERE id = '00000000-0000-4000-8000-00000000c002'),
+  'a signed-in customer''s ticket is attached to them with their account email');
+INSERT INTO public.support_messages (ticket_id, author_role, body) VALUES ('00000000-0000-4000-8000-00000000c002', 'customer', 'follow-up');
+SELECT pg_temp.check((SELECT count(*) = 1 FROM public.support_messages WHERE ticket_id = '00000000-0000-4000-8000-00000000c002'),
+  'customers post and read messages on their own ticket');
+RESET ROLE;
+-- Visitors cannot post into an account's ticket.
+SELECT pg_temp.as_anon();
+DO $$
+BEGIN
+  INSERT INTO public.support_messages (ticket_id, author_role, body) VALUES ('00000000-0000-4000-8000-00000000c002', 'customer', 'x');
+  RAISE EXCEPTION 'FAILED: visitor posted into an account ticket';
+EXCEPTION WHEN insufficient_privilege THEN RAISE NOTICE 'ok - visitors cannot post into an account''s ticket';
+END $$;
+RESET ROLE;
+-- Staff can attach a checked guest ticket, and staff-created tickets for a verified email attach.
+SELECT pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
+UPDATE public.support_tickets SET user_id = '00000000-0000-0000-0000-00000000000f' WHERE id = '00000000-0000-4000-8000-00000000c001';
+INSERT INTO public.support_tickets (id, contact_email, contact_name, subject, body)
+VALUES ('00000000-0000-4000-8000-00000000c003', 'CUST@example.com', 'A', 'From staff', 'Call back'),
+       ('00000000-0000-4000-8000-00000000c004', 'unverified@example.com', 'U', 'From staff', 'Call back');
+RESET ROLE;
+SELECT pg_temp.check((SELECT user_id = '00000000-0000-0000-0000-00000000000f' FROM public.support_tickets WHERE id = '00000000-0000-4000-8000-00000000c003'),
+  'a staff-created ticket for a verified email attaches to that account');
+SELECT pg_temp.check((SELECT user_id IS NULL FROM public.support_tickets WHERE id = '00000000-0000-4000-8000-00000000c004'),
+  'a staff-created ticket for an unverified email stays a guest ticket');
+SELECT pg_temp.as_user('00000000-0000-0000-0000-00000000000f');
+SELECT pg_temp.check((SELECT count(*) = 3 FROM public.support_tickets WHERE id IN
+  ('00000000-0000-4000-8000-00000000c001', '00000000-0000-4000-8000-00000000c002', '00000000-0000-4000-8000-00000000c003')),
+  'the customer sees tickets once staff attach them');
+SELECT pg_temp.check(public.support_account_for_email('unverified@example.com') IS NULL
+                     AND public.support_account_for_email('cust@example.com') IS NULL,
+  'customers cannot look up which account owns an email');
+RESET ROLE;
+
+-- ---- Ambassador self-edits (20261110101000_ambassador_profile_limits) ----
+INSERT INTO storage.buckets (id, name, public) VALUES ('product-images', 'product-images', true) ON CONFLICT (id) DO NOTHING;
+INSERT INTO storage.objects (bucket_id, name) VALUES ('product-images', 'ambassadors/sec-amb.webp');
+UPDATE public.ambassador_settings SET value = '"https://proj.supabase.co"' WHERE key = 'photo_storage_origin';
+SELECT pg_temp.as_user('00000000-0000-0000-0000-00000000000e');
+DO $$
+BEGIN
+  UPDATE public.ambassadors SET name = 'Official ES Support' WHERE slug = 'sec-amb';
+  RAISE EXCEPTION 'FAILED: ambassador renamed themselves';
+EXCEPTION WHEN insufficient_privilege THEN RAISE NOTICE 'ok - ambassadors cannot rename themselves (%)', SQLERRM;
+END $$;
+DO $$
+DECLARE u text;
+BEGIN
+  FOREACH u IN ARRAY ARRAY['https://evil.example/pixel.gif', 'https://evil.example/x.jpg',
+                           'https://other.supabase.co/storage/v1/object/public/product-images/ambassadors/sec-amb.webp',
+                           'https://proj.supabase.co/storage/v1/object/public/product-images/ambassadors/missing.webp',
+                           'https://proj.supabase.co/storage/v1/object/public/product-images/../x.webp',
+                           '/rigs/../../etc/x.jpg', 'javascript:alert(1)', '//evil.example/x.jpg'] LOOP
+    BEGIN
+      UPDATE public.ambassadors SET photo = u WHERE slug = 'sec-amb';
+      RAISE EXCEPTION 'FAILED: photo % accepted', u;
+    EXCEPTION WHEN check_violation THEN NULL;
+    END;
+  END LOOP;
+  RAISE NOTICE 'ok - outside, missing or malformed photo URLs are refused';
+END $$;
+UPDATE public.ambassadors SET photo = '/rigs/haptic.jpg' WHERE slug = 'sec-amb';
+SELECT pg_temp.check((SELECT photo FROM public.ambassadors WHERE slug = 'sec-amb') = '/rigs/haptic.jpg', 'ambassadors can use a site image');
+UPDATE public.ambassadors SET photo = 'https://proj.supabase.co/storage/v1/object/public/product-images/ambassadors/sec-amb.webp' WHERE slug = 'sec-amb';
+SELECT pg_temp.check((SELECT photo LIKE '%/sec-amb.webp' FROM public.ambassadors WHERE slug = 'sec-amb'), 'ambassadors can use an image in our bucket');
+SELECT public.ambassador_self_update(p_photo => '', p_bio => 'New bio');
+SELECT pg_temp.check((SELECT bio = 'New bio' AND photo = '' FROM public.ambassadors WHERE slug = 'sec-amb'),
+  'ambassadors still edit their bio and clear their photo');
+DO $$
+BEGIN
+  PERFORM public.ambassador_self_update(p_photo => 'https://evil.example/x.jpg');
+  RAISE EXCEPTION 'FAILED: self-update RPC accepted an outside photo';
+EXCEPTION WHEN check_violation THEN RAISE NOTICE 'ok - the self-update RPC applies the same photo rule';
+END $$;
+RESET ROLE;
+SELECT pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
+UPDATE public.ambassadors SET name = 'Sec Ambassador Racing', photo = 'https://cdn.example/x.jpg' WHERE slug = 'sec-amb';
+SELECT pg_temp.check((SELECT name FROM public.ambassadors WHERE slug = 'sec-amb') = 'Sec Ambassador Racing', 'staff can still rename an ambassador');
+RESET ROLE;
+
+-- ---- Agent memory (20261110102000_agent_memory_staff_only) ----
+SELECT pg_temp.as_anon();
+DO $$
+BEGIN
+  PERFORM public.record_agent_memory('note', 'anon', 'planted');
+  RAISE EXCEPTION 'FAILED: anon wrote agent memory';
+EXCEPTION WHEN insufficient_privilege THEN RAISE NOTICE 'ok - visitors cannot write agent memory';
+END $$;
+RESET ROLE;
+SELECT pg_temp.as_user('00000000-0000-0000-0000-00000000000f');
+DO $$
+BEGIN
+  PERFORM public.record_agent_memory('note', 'customer', 'planted');
+  RAISE EXCEPTION 'FAILED: customer wrote agent memory';
+EXCEPTION WHEN insufficient_privilege THEN RAISE NOTICE 'ok - customers cannot write agent memory';
+END $$;
+RESET ROLE;
+SELECT pg_temp.as_user('00000000-0000-0000-0000-00000000000b');
+SELECT pg_temp.check(public.record_agent_memory('note', 'staff note', 'kept') IS NOT NULL, 'staff still write agent memory');
+RESET ROLE;
+INSERT INTO public.shop_orders (id, status, lines, total_ex_gst, total_inc_gst, shipping_name)
+VALUES ('ESO-SEC-BOM', 'pending', '[{"sku":"sec-priced","qty":2}]', 200000, 220000, 'Bom');
+SELECT pg_temp.check((SELECT body = '2× sec-priced' AND source = 'system' FROM public.agent_memory WHERE title = 'Won ESO-SEC-BOM'),
+  'new orders record their won bill of materials in the database');
+
+-- ---- search_path pinned (20261110103000_function_search_paths) ----
+SELECT pg_temp.check((SELECT bool_and(proconfig::text LIKE '%search_path=%') FROM pg_proc
+                       WHERE proname IN ('prevent_last_admin_demotion', 'ambassador_is_minor', 'builder_layers_touch')
+                         AND pronamespace = 'public'::regnamespace),
+  'advisor 0011: the three flagged functions have a fixed search_path');
+
 ROLLBACK;

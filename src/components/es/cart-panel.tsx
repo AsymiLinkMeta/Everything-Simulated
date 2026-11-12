@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CheckPills, IssueList, LineName } from "./bits";
 
-export function CartPanel({ compact = false }: { compact?: boolean }) {
+export function CartPanel({ compact = false, drawer = false }: { compact?: boolean; /** Inside the cart drawer: the drawer supplies the heading. */ drawer?: boolean }) {
   const [ready, setReady] = useState(false);
   useEffect(() => setReady(true), []);
   const { user } = useCurrentUserState();
@@ -50,18 +50,23 @@ export function CartPanel({ compact = false }: { compact?: boolean }) {
   }
 
   if (!ready) {
-    return <aside className="es-card h-64 animate-pulse p-5" />;
+    return drawer ? <div className="h-64 animate-pulse rounded-lg bg-raised" /> : <aside className="es-card h-64 animate-pulse p-5" />;
   }
 
+  const Root = drawer ? "div" : "aside";
   return (
-    <aside className="es-card space-y-5 p-5">
-      <div className="flex items-start justify-between gap-3">
-        <div>
-          <p className="es-kicker">Build</p>
-          <h2 className="text-lg font-medium">Your cart</h2>
+    <Root className={drawer ? "space-y-5" : "es-card space-y-5 p-5"}>
+      {drawer ? (
+        lines.length ? <CheckPills result={result} /> : null
+      ) : (
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <p className="es-kicker">Build</p>
+            <h2 className="text-lg font-medium">Your cart</h2>
+          </div>
+          {lines.length ? <CheckPills result={result} /> : null}
         </div>
-        {lines.length ? <CheckPills result={result} /> : null}
-      </div>
+      )}
       {!compact ? (
         <div className="flex flex-wrap gap-2">
           {(packs.data?.length ? packs.data : livePackages()).map((p) => (
@@ -152,7 +157,7 @@ export function CartPanel({ compact = false }: { compact?: boolean }) {
             onChange={(e) => setWeight(e.target.value ? Number(e.target.value) : undefined)}
           />
         </label>
-        <p className="col-span-2 text-[11px] leading-4 text-muted">
+        <p className="col-span-2 text-xs leading-5 text-muted">
           Postcode prices the freight. Driver weight only matters for motion rigs (we assume 80 kg if blank).
         </p>
       </div>
@@ -213,6 +218,6 @@ export function CartPanel({ compact = false }: { compact?: boolean }) {
           </button>
         ) : null}
       </div>
-    </aside>
+    </Root>
   );
 }

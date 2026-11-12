@@ -1,17 +1,17 @@
-import { STAGE_IMAGES } from "@/lib/es/stage-images";
-import { TrustBar } from "@/components/es/trust-bar";
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { SiteImage, PrebuildPhoto } from "@/components/es/site-image";
 import { useQuery } from "@tanstack/react-query";
-import { ArrowRight, MapPin } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { ArrowRight, Gauge, MapPin, ShieldCheck, Wrench } from "lucide-react";
 import { SiteShell } from "@/components/es/site-shell";
-import { JsonLd, LoadError, Money } from "@/components/es/bits";
-import { BRAND, CITIES } from "@/lib/es/catalog";
+import { JsonLd, LoadError } from "@/components/es/bits";
+import { TrustBar } from "@/components/es/trust-bar";
+import { RigCard, RigCardSkeleton } from "@/components/es/rig-card";
+import { PersonPhoto } from "@/components/es/person-photo";
+import { SiteImage, rigSrcSet } from "@/components/es/site-image";
+import { BRAND } from "@/lib/es/catalog";
 import { graphLd, localBusinessLd, organizationLd, pageHead, websiteLd, faqLd, FAQS } from "@/lib/es/seo";
-import { fetchBrands } from "@/lib/es/brands";
 import { fetchFeaturedPrebuilds } from "@/lib/es/prebuilds";
-import { PLATFORMS } from "@/lib/es/platforms";
+import { ambassadorProfilePath, fetchAmbassadors } from "@/lib/es/ambassadors";
+import { STAGE_IMAGES, STAGE_IMAGES_MOBILE, MOBILE_MEDIA } from "@/lib/es/stage-images";
 import { useLiveCopy } from "@/lib/es/live-copy";
 
 export const Route = createFileRoute("/")({
@@ -25,323 +25,188 @@ export const Route = createFileRoute("/")({
   component: Home,
 });
 
+const VALUES = [
+  { icon: Wrench, title: "Built and tested here", body: "Every rig is assembled, cable-managed and driven on the Gold Coast before it ships." },
+  { icon: ShieldCheck, title: "Compatibility checked", body: "Torque, payload, quick-release and mount clearances are verified on every part list." },
+  { icon: Gauge, title: "Try before you buy", body: "Book the studio and drive the rig set to your seating position before you commit." },
+  { icon: MapPin, title: "Australia-wide", body: "Crated freight from the workshop to your door, with setup support after delivery." },
+];
+
 export function Home() {
   const { fill } = useLiveCopy();
   const faqs = FAQS.map((f) => ({ q: f.q, a: fill(f.a) }));
-  const racing = PLATFORMS.find((p) => p.slug === "racing");
-  const rest = PLATFORMS.filter((p) => p.slug !== "racing");
 
   return (
     <SiteShell>
       <JsonLd data={graphLd(organizationLd(), websiteLd(), localBusinessLd(), faqLd(faqs))} />
-      <section className="es-hero">
-        <SiteImage src={STAGE_IMAGES["/"]} alt="Driver using a triple-screen racing simulator" className="es-hero-img" priority width={1948} height={908} />
-        <HeroVideo />
-        <div className="es-hero-mask" />
-        <div className="es-hero-copy">
-          <div className="es-lights" aria-hidden="true">
-            <i /><i /><i /><i /><i />
-          </div>
-          <p className="es-kicker es-kicker-telemetry">Gold Coast · Try before you buy · Australia-wide</p>
-          <h1>Australia's Turn-Key Simulator Workshop</h1>
-          <p className="lead">
-            Racing simulators ship now — motion, haptic, triple screens and an auxiliary display.
-            <span className="es-hero-more">
-              {" "}Aircraft, drone and training platforms are specced on the same Gold Coast floor.
-              Every build is assembled, tested and photographed before it leaves.
-            </span>
-          </p>
-          <div className="es-hero-actions">
-            <Link to="/racing" className="es-btn">
-              Enter the garage <ArrowRight className="size-4" />
-            </Link>
-            <Link to="/studio" className="es-btn es-btn-ghost">
-              Book a studio demo
-            </Link>
+      <HomeHero />
+      <TrustBar />
+
+      <section className="ds-section" aria-labelledby="values-title">
+        <div className="ds-container">
+          <h2 id="values-title" className="ds-visually-hidden">Why Everything Simulated</h2>
+          <div className="ds-values">
+            {VALUES.map(({ icon: Icon, title, body }) => (
+              <div key={title} className="ds-value">
+                <Icon className="size-5" aria-hidden="true" />
+                <h3>{title}</h3>
+                <p>{body}</p>
+              </div>
+            ))}
           </div>
         </div>
       </section>
-      <TrustBar />
-
-      {racing ? (
-        <Link to={racing.to} className="es-chapter">
-          <SiteImage src={racing.image} sizes="(min-width: 1024px) 50vw, 100vw" />
-          <div className="es-chapter-veil" />
-          <div className="es-chapter-copy">
-            <span className="es-chapter-idx">01</span>
-            <p className="es-kicker es-kicker-telemetry">{racing.kicker}</p>
-            <h2>{racing.name}</h2>
-            <p>{racing.blurb}</p>
-          </div>
-        </Link>
-      ) : null}
-
-      <div className="es-chapter-row">
-        {rest.map((platform, i) => (
-          <Link key={platform.slug} to={platform.to} className="es-chapter">
-            <SiteImage src={platform.image} sizes="(min-width: 1024px) 33vw, 100vw" />
-            <div className="es-chapter-veil" />
-            <div className="es-chapter-copy">
-              <span className="es-chapter-idx">{String(i + 2).padStart(2, "0")}</span>
-              <p className="es-kicker es-kicker-telemetry">{platform.kicker}</p>
-              <h2>{platform.name}</h2>
-              <p>{platform.blurb}</p>
-            </div>
-          </Link>
-        ))}
-      </div>
 
       <FeaturedPrebuilds />
 
-      <section className="es-body grid gap-12 md:grid-cols-[1fr_1.2fr]">
-        <div>
-          <p className="es-kicker es-kicker-telemetry">The build</p>
-          <h2 className="es-display mt-2 text-5xl">How We Build Your Simulator</h2>
-        </div>
-        <ol className="es-rail">
-          <li className="es-rail-step">
-            <strong>01 Configure your build</strong>
-            <span>Select from the same components our technicians use. Every part is compatibility-verified.</span>
-          </li>
-          <li className="es-rail-step">
-            <strong>02 Compatibility check</strong>
-            <span>Torque limits, payload ratings, quick-release and mount clearances — verified automatically.</span>
-          </li>
-          <li className="es-rail-step">
-            <strong>03 Try before you buy</strong>
-            <span>Book the Gold Coast showroom. Pedal spacing and wheel height are set to your driving position.</span>
-          </li>
-          <li className="es-rail-step">
-            <strong>04 Ongoing support</strong>
-            <span>Quotes, upgrades and service history remain in your account after delivery.</span>
-          </li>
-        </ol>
-      </section>
-
-      <BrandBanner />
-
-      <Link to="/studio" className="es-chapter">
-        <SiteImage src="/rigs/Everything_Simulated_Hero.jpg" alt="Driver using a racing simulator" />
-        <div className="es-chapter-veil" />
-        <div className="es-chapter-copy">
-          <p className="es-kicker es-kicker-telemetry">Studio</p>
-          <h2>Visit the Gold Coast Showroom</h2>
-          <p>
-            Book a hands-on session at the {BRAND.region} workshop.
-            Pedal spacing, wheel height and coaching displays are fitted to your driving position before dispatch.
-          </p>
-        </div>
-      </Link>
-
-      <section className="es-body">
-        <div className="mb-8 flex items-center gap-2">
-          <MapPin className="size-4 text-esred" />
-          <h2 className="es-display text-4xl">Delivered Australia-wide</h2>
-        </div>
-        <div className="es-city-grid">
-          {CITIES.map((c) => (
-            <Link key={c.slug} to="/au/$city" params={{ city: c.slug }} className="es-card es-city-card">
-              {c.name} <span>{c.state}</span>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section className="es-body pt-0">
-        <p className="es-kicker es-kicker-telemetry">FAQ</p>
-        <h2 className="es-display mt-2 text-4xl">Frequently Asked Questions</h2>
-        <dl className="mt-8 grid gap-6 md:grid-cols-2">
-          {faqs.slice(0, 4).map((item) => (
-            <div key={item.q} className="es-card p-5">
-              <dt className="font-medium">{item.q}</dt>
-              <dd className="mt-2 text-sm text-muted">{item.a}</dd>
+      <section className="ds-section">
+        <div className="ds-container ds-split">
+          <div className="ds-split-media ds-ratio-photo">
+            <SiteImage src="/rigs/es-cat-chassis.jpg" alt="Everything Simulated cockpit chassis in the studio" sizes="(min-width: 1024px) 50vw, 100vw" width={1600} height={1200} />
+          </div>
+          <div>
+            <p className="ds-eyebrow">Rig builder</p>
+            <h2 className="ds-h1">Spec it part by part</h2>
+            <p className="ds-lead">Pick a cockpit, base, wheel, pedals and screens. The builder checks every combination as you go and prices it live.</p>
+            <ol className="ds-steps">
+              <li><strong>Choose your parts</strong><span>The same components our technicians fit.</span></li>
+              <li><strong>Check it fits</strong><span>Clashes and limits are flagged before you pay.</span></li>
+              <li><strong>We build and ship it</strong><span>Assembled, tested and crated from the Gold Coast.</span></li>
+            </ol>
+            <div className="ds-actions">
+              <Link to="/build" className="ds-btn ds-btn-light ds-btn-lg">Open the builder <ArrowRight className="size-4" /></Link>
+              <Link to="/shop" className="ds-btn">Browse parts</Link>
             </div>
-          ))}
-        </dl>
-        <Link to="/faqs" className="mt-6 inline-flex items-center gap-1 text-sm text-paper underline-offset-4 hover:underline">
-          All FAQs <ArrowRight className="size-4" />
-        </Link>
+          </div>
+        </div>
+      </section>
+
+      <FeaturedAmbassadors />
+
+      <section className="ds-banner" aria-labelledby="studio-title">
+        <SiteImage src="/rigs/es-cat-screens.jpg" alt="" sizes="100vw" width={1600} height={900} />
+        <div className="ds-container">
+          <p className="ds-eyebrow">Gold Coast studio</p>
+          <h2 id="studio-title" className="ds-h1">Drive it before you buy it</h2>
+          <p className="ds-lead">Book a session at the {BRAND.region} workshop. Pedal spacing, wheel height and screens are set to you before anything ships.</p>
+          <div className="ds-actions">
+            <Link to="/studio" className="ds-btn ds-btn-light ds-btn-lg">Book a studio session</Link>
+            <Link to="/contact" className="ds-btn">Talk to the workshop</Link>
+          </div>
+        </div>
+      </section>
+
+      <section className="ds-section" aria-labelledby="faq-title">
+        <div className="ds-container">
+          <div className="ds-section-head">
+            <div>
+              <p className="ds-eyebrow">FAQ</p>
+              <h2 id="faq-title" className="ds-h1">Questions, answered</h2>
+            </div>
+            <Link to="/faqs" className="ds-link">All FAQs <ArrowRight className="size-4" /></Link>
+          </div>
+          <div className="ds-faq">
+            {faqs.slice(0, 4).map((item) => (
+              <details key={item.q}>
+                <summary>{item.q}</summary>
+                <p>{item.a}</p>
+              </details>
+            ))}
+          </div>
+        </div>
       </section>
     </SiteShell>
+  );
+}
+
+function HomeHero() {
+  const wide = STAGE_IMAGES["/"];
+  const tall = STAGE_IMAGES_MOBILE["/"];
+  return (
+    <section className="ds-hero" aria-labelledby="hero-title">
+      <div className="ds-hero-art">
+        <picture>
+          {tall ? <source media={MOBILE_MEDIA} type="image/webp" srcSet={rigSrcSet(tall)} sizes="100vw" /> : null}
+          {tall ? <source media={MOBILE_MEDIA} srcSet={tall} /> : null}
+          <source type="image/webp" srcSet={rigSrcSet(wide)} sizes="100vw" />
+          <img src={wide} alt="Everything Simulated racing simulator with curved triple screens in the studio" width={2400} height={1350} {...{ fetchpriority: "high" }} loading="eager" decoding="sync" />
+        </picture>
+      </div>
+      <div className="ds-container ds-hero-copy">
+        <p className="ds-eyebrow">Gold Coast simulator workshop</p>
+        <h1 id="hero-title" className="ds-display">Racing simulators, built properly.</h1>
+        <p className="ds-lead">Turn-key cockpits with motion, direct-drive and curved triple screens. Assembled, tested and shipped Australia-wide.</p>
+        <div className="ds-actions">
+          <Link to="/prebuilds" className="ds-btn ds-btn-light ds-btn-lg">Shop prebuilds <ArrowRight className="size-4" /></Link>
+          <Link to="/build" className="ds-btn ds-btn-lg">Build your own</Link>
+        </div>
+        <ul className="ds-hero-meta" aria-label="Also from the workshop">
+          <li><Link to="/aircraft">Aircraft</Link></li>
+          <li><Link to="/drones">Drones</Link></li>
+          <li><Link to="/training">Training</Link></li>
+        </ul>
+      </div>
+    </section>
   );
 }
 
 function FeaturedPrebuilds() {
   const featured = useQuery({ queryKey: ["featured-prebuilds"], queryFn: fetchFeaturedPrebuilds });
   const items = featured.data ?? [];
-
   return (
-    <section className="es-body">
-      <div className="mb-10 flex items-end justify-between gap-4">
-        <div>
-          <p className="es-kicker es-kicker-telemetry">Racing · live catalogue</p>
-          <h2 className="es-display mt-2 text-5xl">Prebuilt Racing Simulators</h2>
+    <section className="ds-section" aria-labelledby="prebuilds-title">
+      <div className="ds-container">
+        <div className="ds-section-head">
+          <div>
+            <p className="ds-eyebrow">Prebuilds</p>
+            <h2 id="prebuilds-title" className="ds-h1">Ready-to-drive rigs</h2>
+          </div>
+          <Link to="/prebuilds" className="ds-link">All prebuilds <ArrowRight className="size-4" /></Link>
         </div>
-        <Link to="/shop" className="hidden text-sm text-muted hover:text-paper md:inline">
-          Or spec from parts
-        </Link>
+        {featured.isPending ? (
+          <div className="ds-rig-grid" role="status" aria-busy="true" aria-label="Loading prebuilds">
+            {[0, 1, 2].map((i) => <RigCardSkeleton key={i} />)}
+          </div>
+        ) : featured.isError ? (
+          <LoadError what="the prebuilds" onRetry={() => void featured.refetch()} />
+        ) : items.length === 0 ? (
+          <p className="ds-muted">
+            No prebuilds are listed right now. <Link to="/build" className="ds-link">Build one from parts</Link>.
+          </p>
+        ) : (
+          <div className="ds-rig-grid">
+            {items.map((p) => <RigCard key={p.id} prebuild={p} />)}
+          </div>
+        )}
       </div>
-      {featured.isPending ? (
-        <div className="es-pack-grid" role="status" aria-busy="true" aria-label="Loading prebuilds">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="aspect-square animate-pulse rounded-xl bg-raised" />
-          ))}
-        </div>
-      ) : featured.isError ? (
-        <LoadError what="the prebuilds" onRetry={() => void featured.refetch()} />
-      ) : items.length === 0 ? (
-        <p className="text-muted">
-          No prebuilds are listed right now. <Link to="/shop" className="text-paper underline">Spec a rig from parts</Link> or{" "}
-          <Link to="/contact" className="text-paper underline">talk to the workshop</Link>.
-        </p>
-      ) : (
-        <div className="es-pack-grid">
-          {items.map((p) => (
-            <div key={p.id} className="group">
-              <Link to="/prebuilds/$slug" params={{ slug: p.slug }} className="es-pack-tile" aria-label={p.name}>
-                <div className="es-pack-tile-frame">
-                  <PrebuildPhoto
-                    prebuild={p}
-                    alt={p.name}
-                    sizes="(min-width: 1024px) 33vw, 100vw"
-                    placeholder={<div className="grid size-full place-items-center bg-raised text-muted">No image</div>}
-                  />
-                </div>
-              </Link>
-              <div className="es-pack-tile-meta">
-                <h3 className="text-paper">{p.name}</h3>
-                <p className="mt-2 text-sm leading-6 text-muted">{p.blurb}</p>
-                <p className="mt-4 text-lg font-medium text-paper">
-                  {p.purchasable ? <>{p.price_source === "parts" ? "From " : ""}<Money cents={p.effective_price_ex_gst} gst /></> : "Enquire for price"}
-                </p>
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
     </section>
   );
 }
 
-function HeroVideo() {
-  const desktopRef = useRef<HTMLVideoElement>(null);
-  const mobileRef = useRef<HTMLVideoElement>(null);
-  const [phase, setPhase] = useState<"playing" | "black" | "revealed">("playing");
-
-  useEffect(() => {
-    // Respect reduced-motion: show the poster frame, skip the intro.
-    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-      setPhase("revealed");
-      return;
-    }
-    const desktop = desktopRef.current;
-    const mobile = mobileRef.current;
-    const video = window.matchMedia("(max-width: 767px)").matches ? mobile : desktop;
-    if (!video) return;
-    let timer = 0;
-    const onEnded = () => {
-      setPhase("black");
-      timer = window.setTimeout(() => setPhase("revealed"), 1100);
-    };
-    // Skip the intro on data-saver or slow connections: the poster is the hero.
-    const conn = (navigator as Navigator & { connection?: { saveData?: boolean; effectiveType?: string } }).connection;
-    if (conn?.saveData || /(^|-)2g|3g/.test(conn?.effectiveType ?? "")) {
-      setPhase("revealed");
-      return;
-    }
-    video.addEventListener("ended", onEnded);
-    // Both videos are preload="none"; only the one for this viewport is fetched, and only
-    // once the page has loaded so it never competes with the hero image, fonts or app code.
-    let cancelled = false;
-    const start = () => {
-      if (cancelled) return;
-      video.preload = "auto";
-      video.play().catch(() => setPhase("revealed"));
-    };
-    const ric = (window as Window & { requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number }).requestIdleCallback;
-    const idle = () => (ric ? ric(start, { timeout: 1500 }) : window.setTimeout(start, 200));
-    if (document.readyState === "complete") idle();
-    else window.addEventListener("load", idle, { once: true });
-    return () => {
-      cancelled = true;
-      window.removeEventListener("load", idle);
-      video.removeEventListener("ended", onEnded);
-      window.clearTimeout(timer);
-    };
-  }, []);
-
+function FeaturedAmbassadors() {
+  const q = useQuery({ queryKey: ["ambassadors"], queryFn: fetchAmbassadors, staleTime: 10 * 60_000 });
+  const people = (q.data ?? []).filter((a) => a.published).slice(0, 4);
+  if (!people.length) return null;
   return (
-    <>
-      <div className={`es-hero-video-wrap${phase === "revealed" ? " is-finished" : ""}`}>
-        <video ref={desktopRef} className="es-hero-video es-hero-video-desktop" muted playsInline preload="none" aria-hidden="true">
-          <source src="/videos/hero-uw.mp4" type="video/mp4" />
-        </video>
-        <video ref={mobileRef} className="es-hero-video es-hero-video-mobile" muted playsInline preload="none" aria-hidden="true">
-          <source src="/videos/hero-mobile.mp4" type="video/mp4" />
-        </video>
-      </div>
-      <div className={`es-hero-blackout${phase !== "playing" ? " is-visible" : ""}${phase === "revealed" ? " is-fading" : ""}`} />
-    </>
-  );
-}
-
-function BrandLogo({
-  brand,
-  ariaHidden = false,
-}: {
-  brand: { id: string; name: string; icon_url: string | null; link_url: string | null };
-  ariaHidden?: boolean;
-}) {
-  const content = brand.icon_url ? (
-    <img src={brand.icon_url} alt={ariaHidden ? "" : brand.name} className="h-full w-full object-contain" loading="lazy" decoding="async" />
-  ) : (
-    <span className="text-base font-medium text-paper">{brand.name}</span>
-  );
-  const className = "group flex h-44 w-44 shrink-0 items-center justify-center rounded-xl border border-line bg-gloss p-6 transition-all duration-300 hover:border-esred hover:shadow-red-glow sm:h-52 sm:w-52";
-  if (!brand.link_url) return <div className={className}>{content}</div>;
-  return (
-    <a href={brand.link_url} target="_blank" rel="noopener noreferrer" className={className} aria-hidden={ariaHidden} tabIndex={ariaHidden ? -1 : 0}>
-      {content}
-    </a>
-  );
-}
-
-function listNames(names: string[]) {
-  if (names.length <= 1) return names.join("");
-  return `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
-}
-
-function BrandBanner() {
-  // Logos are fetched when the strip is about to scroll into view, not on first paint.
-  const ref = useRef<HTMLElement>(null);
-  const [near, setNear] = useState(false);
-  useEffect(() => {
-    const el = ref.current;
-    if (!el || near) return;
-    if (!("IntersectionObserver" in window)) return setNear(true);
-    const io = new IntersectionObserver((entries) => entries.some((e) => e.isIntersecting) && setNear(true), { rootMargin: "600px 0px" });
-    io.observe(el);
-    return () => io.disconnect();
-  }, [near]);
-  const brands = useQuery({ queryKey: ["brands"], queryFn: () => fetchBrands(), enabled: near });
-  const items = brands.data ?? [];
-  return (
-    <section ref={ref} className="border-y border-line bg-panel">
-      <div className="mx-auto w-full min-w-0 max-w-6xl overflow-x-hidden px-4 py-16">
-        <p className="es-kicker es-kicker-telemetry">Brands we spec</p>
-        <h2 className="es-display mt-2 text-4xl">Premium Hardware, Professionally Assembled</h2>
-        <p className="mt-2 max-w-2xl text-sm text-muted">
-          {items.length > 0 ? `${listNames(items.map((b) => b.name))} on the racing line. ` : ""}
-          Every simulator is compatibility-checked, assembled and quality-tested on the Gold Coast.
-        </p>
-        <div className="es-brand-marquee mt-8" role="region" aria-label="Brands we spec">
-          <div className="es-brand-track">
-            {Array.from({ length: 3 }, (_, setIndex) =>
-              items.map((brand, index) => (
-                <BrandLogo key={`${brand.id}-${setIndex}-${index}`} brand={brand} ariaHidden={setIndex > 0} />
-              )),
-            )}
+    <section className="ds-section" aria-labelledby="ambassadors-title">
+      <div className="ds-container">
+        <div className="ds-section-head">
+          <div>
+            <p className="ds-eyebrow">Ambassadors</p>
+            <h2 id="ambassadors-title" className="ds-h1">Driven by racers</h2>
           </div>
+          <Link to="/ambassadors" className="ds-link">Meet the team <ArrowRight className="size-4" /></Link>
+        </div>
+        <div className="ds-people">
+          {people.map((a) => (
+            <Link key={a.slug} to={ambassadorProfilePath(a.slug)} className="ds-person">
+              <div className="ds-media">
+                <PersonPhoto name={a.name} src={a.photo} sizes="(min-width: 1024px) 25vw, 50vw" />
+              </div>
+              <h3>{a.name}</h3>
+              {a.series || a.motorsport ? <p>{a.series || a.motorsport}</p> : null}
+            </Link>
+          ))}
         </div>
       </div>
     </section>

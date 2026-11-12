@@ -1,5 +1,6 @@
 import { STAGE_IMAGES } from "@/lib/es/stage-images";
 import { PrebuildPhoto } from "@/components/es/site-image";
+import { PersonPhoto } from "@/components/es/person-photo";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
 import { JsonLd, Money } from "@/components/es/bits";
@@ -123,7 +124,7 @@ function AmbassadorCard({ a, label }: { a: Ambassador; label: string }) {
   return (
     <li className="es-ambassador-card">
       <Link to={ambassadorProfilePath(a.slug)} className="es-ambassador-photo">
-        {a.photo ? <img src={a.photo} alt={a.name} loading="lazy" /> : <span className="es-kicker">Photo pending</span>}
+        <PersonPhoto name={a.name} src={a.photo} sizes="(min-width: 768px) 33vw, 100vw" />
       </Link>
       <div className="es-ambassador-card-head">
         <div>
@@ -158,7 +159,7 @@ function AmbassadorCard({ a, label }: { a: Ambassador; label: string }) {
       {crate ? (
         <div className="es-ambassador-rig">
           <div className="es-ambassador-rig-head">
-            <PrebuildPhoto prebuild={crate} fallback="/rigs/haptic.jpg" alt="" />
+            <PrebuildPhoto prebuild={crate} fallback="/rigs/es-cat-wheel.jpg" alt="" />
             <p>
               <span className="es-kicker">Their rig</span>
               <strong>{crate.name}</strong>

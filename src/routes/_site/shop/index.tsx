@@ -1,9 +1,8 @@
-import { STAGE_IMAGES } from "@/lib/es/stage-images";
 import { createFileRoute } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { JsonLd, ProductTile } from "@/components/es/bits";
-import { CartPanel } from "@/components/es/cart-panel";
+import { Search } from "lucide-react";
+import { JsonLd, LoadError, ProductTile } from "@/components/es/bits";
 import { fetchProducts } from "@/lib/es/product-cache";
 import { itemListLd, pageHead } from "@/lib/es/seo";
 import type { ProductCategory } from "@/lib/es/types";
@@ -43,45 +42,67 @@ function Shop() {
   const [cat, setCat] = useState<(typeof CATS)[number]["id"]>("all");
   const [q, setQ] = useState("");
   const products = useQuery({ queryKey: ["products"], queryFn: () => fetchProducts() });
+  const all = useMemo(() => products.data ?? [], [products.data]);
+  const counts = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const p of all) m.set(p.category, (m.get(p.category) ?? 0) + 1);
+    return m;
+  }, [all]);
+  const cats = CATS.filter((c) => c.id === "all" || counts.get(c.id));
   const items = useMemo(() => {
     const query = q.trim().toLowerCase();
-    return (products.data ?? []).filter((p) => {
+    return all.filter((p) => {
       if (cat !== "all" && p.category !== cat) return false;
       if (!query) return true;
       return p.name.toLowerCase().includes(query) || p.brand.toLowerCase().includes(query) || p.sku.toLowerCase().includes(query);
     });
-  }, [cat, q, products.data]);
+  }, [cat, q, all]);
   return (
     <div>
-      <JsonLd data={itemListLd("Sim racing parts Australia", "/shop", (products.data ?? []).slice(0, 40).map((p) => ({ name: `${p.brand} ${p.name}`, path: `/shop/${p.sku}` })))} />
+      <JsonLd data={itemListLd("Sim racing parts Australia", "/shop", all.slice(0, 40).map((p) => ({ name: `${p.brand} ${p.name}`, path: `/shop/${p.sku}` })))} />
       <PageHero
-        kicker="Catalogue"
-        title="Sim Racing Parts & Components"
-        lead="Every component in this catalogue is one we install, wire and ship. No third-party drop-shipping."
-        image={STAGE_IMAGES["/shop"]}
+        kicker="Parts shop"
+        title="Sim racing parts"
+        lead="Every part here is one we install, wire and support. Add parts to your build and the cart checks they fit."
       />
-      <div className="es-body">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-          <div className="flex gap-2 overflow-x-auto pb-2">
-            {CATS.map((c) => (
-              <button key={c.id} type="button" onClick={() => setCat(c.id)} className={`min-h-11 shrink-0 px-3 text-sm tracking-wide uppercase ${cat === c.id ? "bg-paper text-ink" : "border border-line text-muted"}`}>
+      <div className="ds-shop-bar">
+        <div className="ds-container">
+          <div className="ds-chips" role="toolbar" aria-label="Filter by category">
+            {cats.map((c) => (
+              <button key={c.id} type="button" onClick={() => setCat(c.id)} className="ds-chip" aria-pressed={cat === c.id}>
                 {c.label}
+                {c.id !== "all" ? <small>{counts.get(c.id)}</small> : null}
               </button>
             ))}
           </div>
-          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search SKU, brand, name" aria-label="Search parts" className="min-h-11 border border-line bg-transparent px-3 text-sm text-paper placeholder:text-muted sm:ml-auto sm:w-64" />
+          <label className="ds-search">
+            <Search className="size-4" aria-hidden="true" />
+            <input type="search" value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search parts" aria-label="Search parts" />
+          </label>
         </div>
-        <h2 className="sr-only">Parts</h2>
-        <div className="mt-8 grid min-w-0 grid-cols-[minmax(0,1fr)] gap-8 lg:grid-cols-[minmax(0,1fr)_320px]">
-          <div className="grid min-w-0 grid-cols-2 gap-4 xl:grid-cols-3">
-            {items.length ? items.map((item) => <ProductTile key={item.sku} item={item} />) : <p className="col-span-full text-sm text-muted">No parts match that filter.</p>}
-          </div>
-          <div className="lg:sticky lg:top-24 lg:self-start">
-            <CartPanel compact />
-          </div>
-        </div>
-        <PhoneStrip title="Need Help Choosing?" lead="The compatibility checker will flag any issues before you place a deposit." />
       </div>
+      <section className="ds-section ds-section-tight">
+        <div className="ds-container">
+          <h2 className="ds-visually-hidden">Parts</h2>
+          <p className="ds-small ds-muted" aria-live="polite">
+            {products.isPending ? "Loading parts…" : `${items.length} ${items.length === 1 ? "part" : "parts"}`}
+          </p>
+          {products.isError ? (
+            <LoadError what="the parts" onRetry={() => void products.refetch()} />
+          ) : products.isPending ? (
+            <div className="ds-product-grid" aria-hidden="true">
+              {Array.from({ length: 8 }, (_, i) => <div key={i} className="ds-tile"><div className="ds-tile-media ds-skeleton" /></div>)}
+            </div>
+          ) : items.length ? (
+            <div className="ds-product-grid">
+              {items.map((item, i) => <ProductTile key={item.sku} item={item} priority={i < 2} />)}
+            </div>
+          ) : (
+            <p className="ds-muted">No parts match that filter. <button type="button" className="ds-link" onClick={() => { setCat("all"); setQ(""); }}>Clear filters</button></p>
+          )}
+        </div>
+      </section>
+      <PhoneStrip title="Need help choosing?" lead="Call the workshop, or run the compatibility checker before you pay a deposit." />
     </div>
   );
 }

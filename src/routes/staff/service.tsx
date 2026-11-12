@@ -163,6 +163,7 @@ function StaffInbox() {
                   <p className="text-xs text-muted">
                     {t.contact_name || t.contact_email}
                     {t.order_id ? ` · ${t.order_id}` : ""}
+                    {t.user_id ? "" : " · Guest"}
                   </p>
                 </button>
               </li>
@@ -174,6 +175,11 @@ function StaffInbox() {
                 <h2 className="font-medium">{active.subject}</h2>
                 <p className="text-xs text-muted">
                   {active.contact_name} · {active.contact_email}
+                  {active.user_id ? null : (
+                    <span className="mt-1 block text-warn" data-testid="guest-ticket">
+                      Guest: sent while signed out, so the email isn't verified. Check it's really them before discussing an account or order.
+                    </span>
+                  )}
                   {active.order_id ? (
                     <>
                       {" · "}

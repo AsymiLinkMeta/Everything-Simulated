@@ -75,3 +75,19 @@ test.describe("server pricing", () => {
     await expect(page.getByRole("button", { name: /add to (cart|crate)/i })).toHaveCount(0);
   });
 });
+
+test("customer quotes are repriced from the database, whatever total the browser sends", async ({ request }, info) => {
+  const h = await tokenHeaders(request, "customer");
+  const me = await (await request.get(`${API}/auth/v1/user`, { headers: h })).json();
+  const id = `ES-PROBE-${info.project.name}-${Date.now()}`.toUpperCase();
+  const r = await request.post(`${API}/rest/v1/quotes`, {
+    headers: { ...h, Prefer: "return=minimal" },
+    data: { id, user_id: me.id, title: "Forged total", status: "quoted", lines: [{ sku: "alpha-15", qty: 1 }], check_ok: true, total_ex_gst: 1 },
+  });
+  expect(r.ok(), await r.text()).toBe(true);
+  const q = await request.post(`${API}/rest/v1/rpc/quote_cart`, { headers: await tokenHeaders(request), data: { p_lines: [{ sku: "alpha-15", qty: 1 }], p_postcode: null, p_prebuild: null, p_driver_kg: null } });
+  const expected = (await q.json()).items_ex_gst as number;
+  expect(expected).toBeGreaterThan(1);
+  const [row] = sql<{ total_ex_gst: number }>(`select total_ex_gst from quotes where id = '${id}'`);
+  expect(row.total_ex_gst).toBe(expected);
+});

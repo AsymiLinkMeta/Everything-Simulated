@@ -37,7 +37,7 @@ export const GUIDES: Guide[] = [
     body: [
       "Static (Starter) is the right first serious rig: consistent ergonomics, 12Nm direct drive, triples. It teaches muscle memory without a motion ceiling or power circuit.",
       "Haptic adds hydraulic brake and pedal/seat transducers. You feel lock-up and kerbs without the height, payload and crate of a motion platform. It is the most popular home build we ship.",
-      "Motion (SR2) heaves, rolls and pitches. It needs Exodus XR1, a payload check (driver + seat + screens) and usually a dedicated room. Do not mount SR2 on TR120S.",
+      "Motion (SR2) heaves, rolls and pitches. It needs Exodus XR1, a payload check (driver + seat + screens) and usually a dedicated room. Do not mount SR2 on the ES Pro 120.",
       "Juniors and tight rooms should start haptic-capable on XR1 even if motion is added later — the chassis is the expensive mistake to avoid.",
     ],
   },
@@ -57,7 +57,7 @@ export const GUIDES: Guide[] = [
     title: "Best sim racing setup for junior and karting drivers",
     description: "Adjustable seating, torque caps and coaching-ready triples for young drivers in Australia.",
     body: [
-      "Junior builds use the same XR1 or TR120S geometry with seat sliders, lower torque if needed, and a coaching overlay on the aux screen.",
+      "Junior builds use the same XR1 or ES Pro 120 geometry with seat sliders, lower torque if needed, and a coaching overlay on the aux screen.",
       "We keep force-feedback at 12Nm unless a coach asks for more. Pedals stay load-cell so braking is honest at smaller body weights.",
       "Book a Gold Coast demo so we can set pedal spacing and wheel height before the crate leaves.",
     ],
@@ -65,11 +65,11 @@ export const GUIDES: Guide[] = [
   {
     slug: "triple-screen-vs-ultrawide-iracing",
     title: "Triple screen vs ultrawide vs 57-inch for iRacing",
-    description: "FOV, CPU cost and mount limits on Exodus and Trak Racer chassis.",
+    description: "FOV, CPU cost and mount limits on Exodus and ES Pro 120 chassis.",
     body: [
       "Our Haptic and Motion packages ship triple 32-inch 240Hz AOC panels plus a 27-inch aux. That FOV is what we coach on.",
       "A single 57-inch ultrawide is a valid Starter alternative if the room is narrow — tell the build chatbot and we drop two monitors.",
-      "Four-screen mounts are Exodus-only. The checker blocks them on TR120S.",
+      "Four-screen mounts are Exodus-only. The checker blocks them on the ES Pro 120.",
     ],
   },
   {

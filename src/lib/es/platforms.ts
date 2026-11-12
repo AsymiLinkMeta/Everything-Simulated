@@ -15,7 +15,7 @@ export const PLATFORMS: {
     name: "Racing simulators",
     blurb:
       "Turn-key racing simulators with motion, haptic feedback and triple-plus-auxiliary screens, compatibility verified before deposit.",
-    image: "/rigs/haptic.jpg",
+    image: "/rigs/es-cat-wheel.jpg",
   },
   {
     slug: "aircraft",
@@ -24,7 +24,7 @@ export const PLATFORMS: {
     name: "Aircraft simulators",
     blurb:
       "Helicopter and fixed-wing cockpit simulators built on the same Gold Coast floor. Every aircraft build starts with a studio consultation.",
-    image: "/rigs/showroom.jpg",
+    image: "/rigs/es-cat-screens.jpg",
   },
   {
     slug: "drones",
@@ -33,7 +33,7 @@ export const PLATFORMS: {
     name: "Drone simulators",
     blurb:
       "Purpose-built FPV and ground-station trainers for commercial and recreational operators. Specced to your mission requirements.",
-    image: "/rigs/motion.jpg",
+    image: "/rigs/es-cat-motion.jpg",
   },
   {
     slug: "training",
@@ -42,15 +42,15 @@ export const PLATFORMS: {
     name: "Training",
     blurb:
       "Motorsport, driver coaching, aviation and industrial training programs. Professional instruction on the simulators we build.",
-    image: "/rigs/starter.jpg",
+    image: "/rigs/es-cat-chassis.jpg",
   },
 ];
 
 export const HOME_DOORS: { to: string; image: string; kicker: string; title: string; hint: string }[] = [
-  { to: "/prebuilds", image: "/rigs/haptic.jpg", kicker: "Live", title: "Prebuilds", hint: "Starter, Haptic and Motion packages ready to ship." },
-  { to: "/shop", image: "/rigs/starter.jpg", kicker: "Parts", title: "Shop", hint: "Every component we install, wire and ship." },
-  { to: "/ambassadors", image: "/rigs/motion.jpg", kicker: "People", title: "Ambassadors", hint: "The drivers we support and the rigs they train on." },
-  { to: "/studio", image: "/rigs/showroom.jpg", kicker: "Floor", title: "Studio", hint: "Test-drive your build before dispatch." },
+  { to: "/prebuilds", image: "/rigs/es-cat-wheel.jpg", kicker: "Live", title: "Prebuilds", hint: "Starter, Haptic and Motion packages ready to ship." },
+  { to: "/shop", image: "/rigs/es-cat-chassis.jpg", kicker: "Parts", title: "Shop", hint: "Every component we install, wire and ship." },
+  { to: "/ambassadors", image: "/rigs/es-cat-motion.jpg", kicker: "People", title: "Ambassadors", hint: "The drivers we support and the rigs they train on." },
+  { to: "/studio", image: "/rigs/es-cat-screens.jpg", kicker: "Floor", title: "Studio", hint: "Test-drive your build before dispatch." },
 ];
 
 export const RACING_TOOLS: PlatformLink[] = [

@@ -17,7 +17,7 @@
   color: var(--es-paper);
   background: var(--es-ink);
   border: 1px solid var(--es-line);
-  border-radius: 15px;
+  border-radius: var(--radius);
   text-decoration: none;
   font-size: 0.8rem;
   letter-spacing: 0.08em;
@@ -63,7 +63,7 @@
   flex-direction: column;
   background: var(--es-panel);
   border: 1px solid var(--es-line);
-  border-radius: 15px;
+  border-radius: var(--radius);
   overflow: hidden;
   color: inherit;
   text-decoration: none;
@@ -91,7 +91,7 @@
   min-height: 100%;
   background: var(--es-panel);
   border: 1px solid var(--es-line);
-  border-radius: 15px;
+  border-radius: var(--radius);
   overflow: hidden;
   color: inherit;
   text-decoration: none;
@@ -145,14 +145,14 @@
 }
 
 .es-tile-frame {
-  border-radius: 15px 15px 0 0;
+  border-radius: var(--radius) var(--radius) 0 0;
 }
 .es-media-split {
-  border-radius: 15px;
+  border-radius: var(--radius);
   overflow: hidden;
 }
 .es-cta-strip {
-  border-radius: 15px;
+  border-radius: var(--radius);
 }
 
 .es-body {

@@ -11,24 +11,41 @@ import { fetchPrebuildImage } from "@/lib/es/prebuilds";
 const LOCAL_RIG = /^\/rigs\/([A-Za-z0-9_+-]+)\.jpg$/;
 export const RIG_WIDTHS = [640, 1024, 1600] as const;
 
+/**
+ * ES studio renders in Supabase Storage (product-images/site/<name>.jpg) have WebP twins at
+ * the same widths (<name>-640|1024|1600.webp, capped at the source width), uploaded next to
+ * each JPEG. Only this folder is matched: catalogue uploads elsewhere have no twins.
+ */
+const STORAGE_SITE = /^(https:\/\/[a-z0-9]+\.supabase\.co\/storage\/v1\/object\/public\/product-images\/site\/)([A-Za-z0-9_+-]+)\.jpg$/;
+
 export function rigSrcSet(src: string | null | undefined): string | undefined {
-  const m = src ? LOCAL_RIG.exec(src) : null;
-  return m ? RIG_WIDTHS.map((w) => `/rigs/${m[1]}-${w}.webp ${w}w`).join(", ") : undefined;
+  if (!src) return undefined;
+  const m = LOCAL_RIG.exec(src);
+  if (m) return RIG_WIDTHS.map((w) => `/rigs/${m[1]}-${w}.webp ${w}w`).join(", ");
+  const s = STORAGE_SITE.exec(src);
+  return s ? RIG_WIDTHS.map((w) => `${s[1]}${s[2]}-${w}.webp ${w}w`).join(", ") : undefined;
 }
 
 type Props = Omit<ImgHTMLAttributes<HTMLImageElement>, "src"> & {
   src: string | null | undefined;
   priority?: boolean;
   sizes?: string;
+  /** Called once if the image fails to load; the image is removed so no broken-image icon shows. */
+  onFailed?: () => void;
 };
 
-export function SiteImage({ src, priority = false, sizes = "100vw", alt = "", ...rest }: Props) {
-  if (!src) return null;
+export function SiteImage({ src, priority = false, sizes = "100vw", alt = "", onFailed, ...rest }: Props) {
+  const [failed, setFailed] = useState<string | null>(null);
+  if (!src || failed === src) return null;
   const webp = rigSrcSet(src);
   const img = (
     <img
       src={src}
       alt={alt}
+      onError={() => {
+        setFailed(src);
+        onFailed?.();
+      }}
       loading={priority ? "eager" : "lazy"}
       decoding={priority ? "sync" : "async"}
       {...(priority ? { fetchpriority: "high" } : {})}

@@ -37,7 +37,8 @@ test.describe("structured data", () => {
 test.describe("cart and prebuild lists", () => {
   test("empty cart: no checks shown, checkout disabled", async ({ page }) => {
     await page.goto("/shop");
-    const cart = page.locator("aside").filter({ hasText: "Your cart" }).first();
+    await page.getByTestId("cart-button").click();
+    const cart = page.getByTestId("cart-drawer");
     await expect(cart.getByText(/Cart is empty/)).toBeVisible();
     await expect(cart.getByRole("button", { name: "Checkout" })).toBeDisabled();
   });
@@ -54,7 +55,7 @@ test.describe("cart and prebuild lists", () => {
     const [{ n }] = sql<{ n: number }>(`select count(*)::int as n from prebuilds where status='published' and coalesce(image,'') <> ''`);
     test.skip(!n, "no prebuild images seeded");
     await page.goto("/prebuilds");
-    const imgs = page.locator(".es-pack-tile-frame img");
+    const imgs = page.locator("[data-testid=rig-card] .ds-card-media img:not(.ds-fallback-mark)");
     await imgs.first().scrollIntoViewIfNeeded();
     await expect.poll(() => imgs.count()).toBeGreaterThan(0);
     await expect(imgs.first()).toHaveAttribute("src", /\S/);

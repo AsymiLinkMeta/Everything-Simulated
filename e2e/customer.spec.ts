@@ -57,7 +57,7 @@ test.describe("customer app", () => {
 
   test("AI adviser chat replies (mocked xAI)", async ({ page }) => {
     await page.goto("/app/chat");
-    await page.getByPlaceholder("Will SR2 fit a TR120S with my 90kg driver?").fill("Will SR2 fit a TR120S?");
+    await page.getByPlaceholder("Will SR2 fit the ES Pro 120 with my 90kg driver?").fill("Will SR2 fit the ES Pro 120?");
     await page.getByRole("button", { name: "Send", exact: true }).click();
     await expect(page.getByText(/Mock adviser/i).first()).toBeVisible({ timeout: 20_000 });
   });

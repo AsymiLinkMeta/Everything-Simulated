@@ -29,7 +29,7 @@ function FlightPage() {
         kicker="Fixed-wing"
         title="Fixed-Wing Flight Simulators"
         lead="Custom fixed-wing and jet trainer cockpits. Built on the same Gold Coast floor as our racing and rotary platforms — different controls, same build quality."
-        image="/rigs/showroom.jpg"
+        image="/rigs/es-cat-screens.jpg"
         tone="adventure"
       />
       <div className="es-body">
@@ -52,8 +52,8 @@ function FlightPage() {
           <ImageCards
             columns={2}
             cards={[
-              { to: "/aircraft/helicopter", image: "/rigs/showroom.jpg", kicker: "Rotary", title: "Helicopter", hint: "Collective and cyclic on the same floor." },
-              { to: "/training", image: "/rigs/starter.jpg", kicker: "Programs", title: "Training", hint: "Hours live here. Hardware lives on Racing." },
+              { to: "/aircraft/helicopter", image: "/rigs/es-cat-screens.jpg", kicker: "Rotary", title: "Helicopter", hint: "Collective and cyclic on the same floor." },
+              { to: "/training", image: "/rigs/es-cat-chassis.jpg", kicker: "Programs", title: "Training", hint: "Hours live here. Hardware lives on Racing." },
             ]}
           />
         </div>

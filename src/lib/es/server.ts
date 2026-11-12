@@ -576,15 +576,8 @@ export async function placeOrder(input: PlaceOrderInput | { data: PlaceOrderInpu
   const user = await getCurrentUser();
   await ensureProfile(user.id, user.email, data.name || user.user_metadata?.display_name);
   const res = await callPlaceOrder(data);
-  if (res.quote?.ok) {
-    void supabase.rpc("record_agent_memory", {
-      p_kind: "won_bom",
-      p_title: `Won ${res.id}`,
-      p_body: data.lines.map((l) => `${l.qty}× ${l.sku}`).join(", "),
-      p_payload: { orderId: res.id, lines: data.lines, totalExGst: res.quote.total_ex_gst },
-      p_source: "system",
-    });
-  }
+  // The "won" bill of materials is recorded by the database when the order row is created
+  // (zz_order_won_bom); record_agent_memory is staff-only.
   return res;
 }
 

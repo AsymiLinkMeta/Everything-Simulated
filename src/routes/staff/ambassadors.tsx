@@ -94,8 +94,8 @@ function AmbassadorList() {
       <div className="space-y-2">
         {rows.map((a) => (
           <div key={a.slug} className="es-card px-4 py-3">
-            <div className="flex items-center justify-between gap-4">
-              <div className="min-w-0 flex-1 flex items-center gap-3">
+            <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+              <div className="min-w-0 flex-1 basis-60 flex items-center gap-3">
                 {a.photo ? (
                   <img src={a.photo} alt="" className="size-10 rounded-full object-cover shrink-0" />
                 ) : (
@@ -115,7 +115,7 @@ function AmbassadorList() {
                   </p>
                 </div>
               </div>
-              <div className="flex gap-2 shrink-0">
+              <div className="flex flex-wrap gap-2">
                 <Button variant="outline" size="sm" aria-expanded={openId === a.id} onClick={() => setOpenId(openId === a.id ? null : a.id)}>
                   Programme
                 </Button>

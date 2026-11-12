@@ -4,17 +4,17 @@ import { exec, sql } from "./db";
 /** PR A ("quick wins") behaviour: honest photos, trust bar from the DB, one clear CTA, mobile buy bar, contact actions. */
 
 test.describe("product photos", () => {
-  test("a part with no real photo shows the 'Photo coming' tile, not stock rig art", async ({ page }) => {
+  test("a part with no real photo shows the Everything Simulated fallback tile, not stock rig art", async ({ page }) => {
     const [row] = sql<{ image: string | null }>(`select image from catalog_products where sku = 'aoc-32'`);
     expect(row.image ?? "").toMatch(/^\/rigs\/|^$/);
     await page.goto("/shop/aoc-32");
-    await expect(page.getByTestId("photo-coming").first()).toBeVisible();
+    await expect(page.getByTestId("photo-fallback").first()).toBeVisible();
     await expect(page.locator('main img[src^="/rigs/"]')).toHaveCount(0);
   });
 
   test("shop tiles never fall back to stock rig shots", async ({ page }) => {
     await page.goto("/shop");
-    await expect(page.getByTestId("photo-coming").first()).toBeVisible();
+    await expect(page.getByTestId("photo-fallback").first()).toBeVisible();
     await expect(page.locator('a[href^="/shop/"] img[src^="/rigs/"]')).toHaveCount(0);
   });
 });
@@ -22,7 +22,7 @@ test.describe("product photos", () => {
 test.describe("stock wording", () => {
   test("customers never see 'Indent'", async ({ page }) => {
     await page.goto("/shop");
-    await expect(page.getByTestId("photo-coming").first()).toBeVisible();
+    await expect(page.getByTestId("photo-fallback").first()).toBeVisible();
     await expect(page.locator("main")).not.toContainText(/\bindent\b/i);
   });
 });
@@ -103,8 +103,10 @@ test.describe("calls to action", () => {
     await page.goto("/prebuilds/haptic");
     await expect(page.getByTestId("prebuild-add")).toBeVisible();
     await expect(page.getByRole("link", { name: "Buy this build" })).toBeVisible();
-    // Primary buttons are the red gradient .es-btn without a quieter variant class (sticky bar is mobile-only, hidden on desktop).
-    const primaries = page.locator("main .es-btn:not(.es-btn-ghost):not(.es-btn-text):not(.es-btn-subtle):visible");
+    // Primary buttons are .ds-btn / legacy .es-btn without a quieter variant class (sticky bar is mobile-only, hidden on desktop).
+    const primaries = page.locator(
+      "main :is(.es-btn, .ds-btn):not(.es-btn-ghost):not(.es-btn-text):not(.es-btn-subtle):not(.ds-btn-secondary):visible",
+    );
     const n = await primaries.count();
     expect(n, `primary buttons on ${info.project.name}`).toBeLessThanOrEqual(info.project.name === "mobile" ? 2 : 1);
     await page.getByTestId("prebuild-add").click();

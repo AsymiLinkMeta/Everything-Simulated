@@ -2,7 +2,7 @@ import fs from "node:fs";
 import jsQR from "jsqr";
 import { PNG } from "pngjs";
 import type { Browser, Page } from "@playwright/test";
-import { test, expect, API, authFile } from "./fixtures";
+import { test, expect, API, authFile, tokenHeaders } from "./fixtures";
 import { sql, exec } from "./db";
 
 const SLUG = "carter-cosgrove-racing";
@@ -194,6 +194,23 @@ test.describe("programme (staff)", () => {
     await expect(driver.getByTestId("ambassador-stats")).toContainText("Sales");
     await expect(driver.getByText(`…${order.id.slice(-4)}`).first()).toBeVisible();
     await info.attach("driver-dashboard", { body: await driver.screenshot({ fullPage: true }), contentType: "image/png" });
+
+    // The rate is cleared later: the paid commission is locked in, so the dashboard must not put
+    // "rate not set" beside it as if the money were uncertain.
+    setSetting("default_commission_rate", "null");
+    await driver.reload();
+    await expect(driver.getByTestId("rate-notice")).toContainText("locked in");
+    await expect(driver.getByTestId("ambassador-stats")).toContainText("Paid amounts locked in");
+    await expect(driver.getByTestId("ambassador-stats")).not.toContainText(/Rate not set/);
+    await info.attach("driver-dashboard-rate-cleared", { body: await driver.screenshot({ fullPage: true }), contentType: "image/png" });
+    await staff.goto("/staff/ambassadors");
+    await staff.getByRole("tab", { name: "Commissions & payouts" }).click();
+    const paidRow = staff.getByTestId("commission-report").locator("tr", { hasText: order.id });
+    await expect(paidRow).toContainText("5%");
+    await expect(paidRow.locator(".text-warn")).toHaveCount(0);
+
+    // The won bill of materials is written by the database, not the browser.
+    expect(sql<{ n: number }>(`select count(*)::int n from agent_memory where kind = 'won_bom' and title = 'Won ${order.id}'`)[0].n).toBe(1);
   });
 
   async function fixtureMinor(tag: string) {
@@ -274,5 +291,47 @@ test.describe("driver portal", () => {
     await expect(page.getByLabel("Your referral link")).toHaveValue(new RegExp(`/ambassadors/${SLUG}\\?ref=${CODE}$`));
     await expect(page.getByTestId("ambassador-stats")).toBeVisible();
     expect(problems.page).toEqual([]);
+  });
+});
+
+test.describe("ambassador self-edits", () => {
+  // eslint-disable-next-line no-empty-pattern
+  test.beforeEach(({}, info) => test.skip(info.project.name !== "desktop", "edits shared seeded profiles; run once"));
+
+  test("no renames, and photos only from the site or our storage", async ({ request, browser }, info) => {
+    const before = sql<{ id: string; name: string; photo: string | null }>(`select id, name, photo from ambassadors where slug = '${SLUG}'`)[0];
+    const all = sql<{ id: string; photo: string | null }>(`select id, photo from ambassadors where user_id = (select id from auth.users where email = 'driver@es.local')`);
+    const driverH = await tokenHeaders(request, "driver");
+    const patch = (data: object) => request.patch(`${API}/rest/v1/ambassadors?slug=eq.${SLUG}`, { headers: { ...driverH, Prefer: "return=minimal" }, data });
+    try {
+      expect((await patch({ name: "ES Official Support" })).ok()).toBe(false);
+      expect((await patch({ photo: "https://evil.example/pixel.gif" })).ok()).toBe(false);
+      expect(sql(`select name, photo from ambassadors where slug = '${SLUG}'`)[0]).toEqual({ name: before.name, photo: before.photo });
+      expect((await patch({ photo: "/rigs/haptic.jpg" })).ok()).toBe(true);
+
+      const page = await (await browser.newContext({ storageState: authFile("driver") })).newPage();
+      await page.goto("/app/ambassador");
+      const photo = page.getByPlaceholder("/rigs/your-photo.jpg");
+      await photo.fill("https://evil.example/me.jpg");
+      await page.getByRole("button", { name: "Save profile" }).click();
+      await expect(page.getByText(/Photos must be a site image/)).toBeVisible();
+      await info.attach("ambassador-photo-refused", { body: await page.screenshot({ fullPage: true }), contentType: "image/png" });
+      await photo.fill("/rigs/motion.jpg");
+      await page.getByRole("button", { name: "Save profile" }).click();
+      await expect(page.getByText("Saved", { exact: true })).toBeVisible();
+    } finally {
+      exec(`update ambassadors set name = '${before.name.replace(/'/g, "''")}' where id = '${before.id}'`);
+      for (const a of all) exec(`update ambassadors set photo = ${a.photo === null ? "null" : `'${a.photo.replace(/'/g, "''")}'`} where id = '${a.id}'`);
+    }
+  });
+
+  test("visitors cannot write agent memory", async ({ request }) => {
+    const anon = await tokenHeaders(request);
+    const res = await request.post(`${API}/rest/v1/rpc/record_agent_memory`, {
+      headers: anon,
+      data: { p_kind: "note", p_title: "planted", p_body: "planted" },
+    });
+    expect(res.ok()).toBe(false);
+    expect(sql<{ n: number }>(`select count(*)::int n from agent_memory where title = 'planted'`)[0].n).toBe(0);
   });
 });

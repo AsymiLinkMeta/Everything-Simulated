@@ -441,14 +441,14 @@ function Catalog() {
                 <Search className="size-4 text-esred" />
                 <div>
                   <p className="text-sm font-medium">AI SKU search</p>
-                  <p className="text-xs text-muted">Searches official Simagic, Trak Racer AU and SIMRIG/Exodus catalogues. Does not invent a product.</p>
+                  <p className="text-xs text-muted">Searches official supplier catalogues. Does not invent a product.</p>
                 </div>
               </div>
               <div className="mt-3 flex flex-col gap-2 sm:flex-row">
                 <Input
                   value={skuSearch}
                   onChange={(e) => setSkuSearch(e.target.value)}
-                  placeholder="e.g. TR120S V2 or P1000-RS"
+                  placeholder="e.g. Alpha EVO 12 or P1000-RS"
                   disabled={searchingSku || generating}
                   onKeyDown={(e) => {
                     if (e.key === "Enter") {
@@ -719,7 +719,7 @@ function Catalog() {
                       whatsIncluded: e.target.value.split("\n").map((s) => s.trim()).filter(Boolean),
                     }))
                   }
-                  placeholder="1x TR120S V2 chassis\n1x Wheel deck\n1x Seat Slider"
+                  placeholder="1x Aluminium chassis\n1x Wheel deck\n1x Seat slider"
                 />
               </label>
               <label className="space-y-1 sm:col-span-2">
@@ -761,7 +761,7 @@ function Catalog() {
                   className="es-input min-h-16 resize-y"
                   value={editListing.compare ?? ""}
                   onChange={(e) => setEditListing((l) => ({ ...l!, compare: e.target.value }))}
-                  placeholder="The TR120S V2 uses thicker aluminium profile walls than the TR80…"
+                  placeholder="The ES Pro 120 uses thicker aluminium profile walls than…"
                 />
               </label>
               <label className="space-y-1">
@@ -818,7 +818,7 @@ function Catalog() {
                         .filter(Boolean),
                     }))
                   }
-                  placeholder="tr120s, xr1, alpha-evo-side-mount"
+                  placeholder="xr1, alpha-evo-12, side-mount"
                 />
               </label>
             </div>

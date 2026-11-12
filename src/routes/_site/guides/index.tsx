@@ -1,4 +1,3 @@
-import { STAGE_IMAGES } from "@/lib/es/stage-images";
 import { createFileRoute } from "@tanstack/react-router";
 import { GUIDES } from "@/lib/es/catalog";
 import { itemListLd, pageHead } from "@/lib/es/seo";
@@ -15,7 +14,7 @@ export const Route = createFileRoute("/_site/guides/")({
   component: Guides,
 });
 
-const GUIDE_IMAGES = ["/rigs/starter.jpg", "/rigs/haptic.jpg", "/rigs/motion.jpg", "/rigs/showroom.jpg"];
+const GUIDE_IMAGES = ["/rigs/es-cat-chassis.jpg", "/rigs/es-cat-wheel.jpg", "/rigs/es-cat-motion.jpg", "/rigs/es-cat-screens.jpg"];
 
 function Guides() {
   return (
@@ -25,7 +24,6 @@ function Guides() {
         kicker="Editorial"
         title="Sim Racing Buying Guides"
         lead="Written from hands-on experience with the builds we assemble — not affiliate parts lists."
-        image={STAGE_IMAGES["/guides"]}
       />
       <div className="es-body">
         <ImageCards

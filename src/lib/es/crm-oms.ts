@@ -317,15 +317,7 @@ export async function staffCreateOrder(input: {
   });
   if (error) throw new Error(rpcMessage(error));
   const res = data as { id: string; quote: ServerQuote };
-  if (res.quote?.ok) {
-    void supabase.rpc("record_agent_memory", {
-      p_kind: "won_bom",
-      p_title: `OMS ${res.id}`,
-      p_body: lines.map((l) => `${l.qty}× ${l.sku}`).join(", "),
-      p_payload: { orderId: res.id, lines, totalExGst: res.quote.total_ex_gst },
-      p_source: "staff",
-    });
-  }
+  // The "won" bill of materials is recorded by the database on insert (zz_order_won_bom).
   return { id: res.id, quote: res.quote };
 }
 
